@@ -11,6 +11,7 @@ import $ from 'jquery';
 import ReactUtils from 'react-utils';
 import ReactMarkdown from 'react-markdown';
 import onClickOutside from 'react-onclickoutside';
+import openExternal from 'open-external';
 import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
 
 import * as utils from './utils';
@@ -533,9 +534,8 @@ var App = React.createClass({
       }
     }).then((res)=>{
       if (res.data.version !== this.state.version) {
-        state.set({canUpgrade: true}, ()=>{
-          this.pollSaveData();
-        });
+        this.pollSaveData();
+        this.handleUpgrade();
       } else {
         this.pollSaveData();
       }
@@ -543,16 +543,21 @@ var App = React.createClass({
       this.pollSaveData();
     });
   },
-  fetchRemoteLocations(page=this.state.page){
+  fetchRemoteLocations(page=1){
     utils.ajax.get('/nmslocation', {
       params: {
         page: page
       }
     }).then((res)=>{
       let data = res.data;
-      if (page > 1) {
-        data.results = _.concat(this.props.s.remoteLocations.results, data.results)
+      if (this.state.remoteLocations.length === 0) {
+        this.state.remoteLocations = {
+          results: []
+        };
       }
+      data.results = _.concat(this.state.remoteLocations.results, data.results)
+      data.results = _.uniqBy(data.results, 'id');
+      data.results = _.orderBy(data.results, 'created', 'desc');
       state.set({
         remoteLocations: data,
         page: page
@@ -674,6 +679,24 @@ var App = React.createClass({
     state.set({
       width: window.innerWidth,
       height: window.innerHeight
+    });
+  },
+  handleUpgrade(){
+    var infoUrl = 'https://github.com/jaszhix/NoMansConnect/releases';
+    var helpMessage = 'A newer version of No Man\'s Connect was found.';
+
+    _.defer(()=>{
+      dialog.showMessageBox({
+        title: 'No Man\'s Connect Upgrade',
+        message: helpMessage,
+        buttons: ['OK', 'Check releases']
+      }, result=>{
+        if (result === 1) {
+          openExternal(infoUrl);
+        } else {
+          return;
+        }
+      });
     });
   },
   render(){
