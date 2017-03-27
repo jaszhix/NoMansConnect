@@ -59,7 +59,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jaszhix/nomansconnect.git"
+    "url": "git+https://github.com/jaszhix/NoMansConnect.git"
   },
   "author": {
     "name": "Jason Hicks",
@@ -68,7 +68,7 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jaszhix/nomansconnect/issues"
+    "url": "https://github.com/jaszhix/NoMansConnect/issues"
   },
   "keywords": [
     "electron",
@@ -79,7 +79,7 @@
     "webpack",
     "react-hot"
   ],
-  "homepage": "https://github.com/jaszhix/nomansconnect#readme",
+  "homepage": "https://github.com/jaszhix/NoMansConnect#readme",
   "jest": {
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/mocks/fileMock.js",
