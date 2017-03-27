@@ -608,7 +608,7 @@ var App = React.createClass({
     };
 
     if (mode && mode !== this.state.mode) {
-      this.stat.mode = mode;
+      this.state.mode = mode;
     }
 
     utils.exc(this.whichCmd).then((result)=>{

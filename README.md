@@ -1,4 +1,4 @@
-# No Man's Connnect
+# No Man's Connect
 
 This is a location manager that syncs your current game's coordinates, uploads them to a server, and indexes a list of everyone's coordinates using the app. It also provides a map that plots your coordinates relative to the center of the galaxy.
 
