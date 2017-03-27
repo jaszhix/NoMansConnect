@@ -1,0 +1,867 @@
+﻿<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Mnemosyne</name>
+    </assembly>
+    <members>
+        <member name="N:Mnemosyne">
+            <summary>Offers efficient copying, setting and zeroing operations.</summary>
+        </member>
+        <member name="T:Mnemosyne.Memory">
+            <summary>Offers efficient copying, setting and zeroing operations.</summary>
+            <threadsafety static="true">All methods of this static class are thread-safe in so far as they will not corrupt the class itself. Concurrent operations on the same block of memory are not thread-safe, except that one may safely copy from the same block.</threadsafety>
+        </member>
+        <member name="M:Mnemosyne.Memory.Copy(System.Void*,System.Void*,System.Int32)">
+            <summary>Copies a block of memory.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.CopyAligned(System.Void*,System.Void*,System.Int32)">
+            <summary>Copies a block of memory, when both destination and source are known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Set(System.Void*,System.Byte,System.Int32)">
+            <summary>Fills a block of memory.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.SetAligned(System.Void*,System.Byte,System.Int32)">
+            <summary>Fills a block of memory, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Zero(System.Void*,System.Int32)">
+            <summary>Clears a block of memory, filling it with zero.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.ZeroAligned(System.Void*,System.Int32)">
+            <summary>Clears a block of memory, filling it with zero, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Copy(System.Void*,System.Void*,System.UInt32)">
+            <summary>Copies a block of memory.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.CopyAligned(System.Void*,System.Void*,System.UInt32)">
+            <summary>Copies a block of memory, when both destination and source are known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Set(System.Void*,System.Byte,System.UInt32)">
+            <summary>Fills a block of memory.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.SetAligned(System.Void*,System.Byte,System.UInt32)">
+            <summary>Fills a block of memory, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Zero(System.Void*,System.UInt32)">
+            <summary>Clears a block of memory, filling it with zero.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.ZeroAligned(System.Void*,System.UInt32)">
+            <summary>Clears a block of memory, filling it with zero, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Copy(System.IntPtr,System.IntPtr,System.Int32)">
+            <summary>Copies a block of memory.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.CopyAligned(System.IntPtr,System.IntPtr,System.Int32)">
+            <summary>Copies a block of memory, when both destination and source are known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Set(System.IntPtr,System.Byte,System.Int32)">
+            <summary>Fills a block of memory.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.SetAligned(System.IntPtr,System.Byte,System.Int32)">
+            <summary>Fills a block of memory, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Zero(System.IntPtr,System.Int32)">
+            <summary>Clears a block of memory, filling it with zero.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.ZeroAligned(System.IntPtr,System.Int32)">
+            <summary>Clears a block of memory, filling it with zero, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Copy(System.IntPtr,System.IntPtr,System.UInt32)">
+            <summary>Copies a block of memory.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.CopyAligned(System.IntPtr,System.IntPtr,System.UInt32)">
+            <summary>Copies a block of memory, when both destination and source are known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Set(System.IntPtr,System.Byte,System.UInt32)">
+            <summary>Fills a block of memory.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.SetAligned(System.IntPtr,System.Byte,System.UInt32)">
+            <summary>Fills a block of memory, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Zero(System.IntPtr,System.UInt32)">
+            <summary>Clears a block of memory, filling it with zero.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.ZeroAligned(System.IntPtr,System.UInt32)">
+            <summary>Clears a block of memory, filling it with zero, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Copy(System.UIntPtr,System.UIntPtr,System.Int32)">
+            <summary>Copies a block of memory.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.CopyAligned(System.UIntPtr,System.UIntPtr,System.Int32)">
+            <summary>Copies a block of memory, when both destination and source are known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Set(System.UIntPtr,System.Byte,System.Int32)">
+            <summary>Fills a block of memory.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.SetAligned(System.UIntPtr,System.Byte,System.Int32)">
+            <summary>Fills a block of memory, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Zero(System.UIntPtr,System.Int32)">
+            <summary>Clears a block of memory, filling it with zero.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.ZeroAligned(System.UIntPtr,System.Int32)">
+            <summary>Clears a block of memory, filling it with zero, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="length"/> was less than zero.</exception>
+                            <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Copy(System.UIntPtr,System.UIntPtr,System.UInt32)">
+            <summary>Copies a block of memory.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.CopyAligned(System.UIntPtr,System.UIntPtr,System.UInt32)">
+            <summary>Copies a block of memory, when both destination and source are known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the position to copy to.</param>
+            <param name="source">Pointer to the position to copy from.</param>
+            <param name="length">The number of bytes to copy.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Set(System.UIntPtr,System.Byte,System.UInt32)">
+            <summary>Fills a block of memory.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.SetAligned(System.UIntPtr,System.Byte,System.UInt32)">
+            <summary>Fills a block of memory, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to fill.</param>
+            <param name="value">Value to fill the block with.</param>
+            <param name="length">The number of bytes to set to <paramref name="value"/>.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.Zero(System.UIntPtr,System.UInt32)">
+            <summary>Clears a block of memory, filling it with zero.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+            </remarks>
+        </member>
+        <member name="M:Mnemosyne.Memory.ZeroAligned(System.UIntPtr,System.UInt32)">
+            <summary>Clears a block of memory, filling it with zero, when the block is known to be correctly aligned.</summary>
+            <param name="dest">Pointer to the block of memory to clear.</param>
+            <param name="length">The number of bytes to set to zero.</param>
+                    <exception cref="T:System.NullReferenceException"><paramref name="dest"/> was null, or in lower protected memory.</exception>
+        <exception cref="T:System.AccessViolationException"><paramref name="dest"/> pointed to protected memory.</exception>
+                                    <remarks>
+                <para>Note that that an argument check is not done for null pointers. This is unusual with .NET/Mono assemblies, but justified for a few reasons</para>
+                <list type="bullet">
+                    <item>The sort of code that would use this library, is the sort of performance-critical code that would be prepared to skip some checks.</item>
+                    <item>Detecting null is easy, but detecting a too-low pointer caused by an offset from a null pointer is platform-dependent. As such we risk either refusing valid code (we blocked too high) or confusing users by throwing <see cref="T:System.NullReferenceException"/> instead of <see cref="T:System.ArgumentNullException"/> if we block too low. Better to just document that we throw <see cref="T:System.NullReferenceException"/>.</item>
+                    <item>As well as the possibility of <see cref="T:System.NullReferenceException"/>, and <see cref="T:System.AccessViolationException"/>, there’s the possibility of allowed but incorrect writes that cause strange fandango-on-the-core bugs. Since we can’t protect the user from all possibilities caused by incorrect arguments for destination and source, we don’t make an incomplete attempt.</item>
+                </list>
+                <note type="important">
+                    <para>The “-Aligned” methods are provided as an optimisation for callers who know the addresses they are passing are correctly aligned. Consequences of calling one of the “-Aligned” methods with misaligned addresses include:</para>
+                    <list type="number"> 
+                        <item>It makes no difference.</item>
+                        <item>It runs much slower.</item>
+                        <item>It gives incorrect results.</item>
+                        <item>It raises a <see cref="T:System.NullReferenceException"/> or an <see cref="T:System.AccessViolationException"/>.</item>
+                        <item>The application dies without a stack-trace.</item>
+                        <item>A Stop Screen (Blue Screen of Death or equivalent).</item>
+                        <item>The computer goes into shut-down.</item>
+                    </list>
+                    <para>A local variable or argument will be correctly aligned, as will a field unless it’s a field of a struct with an explicit layout.</para>
+                    <para>The first element of a managed array will be aligned. Other elements are only guaranteed to be aligned if the size of each element is less than the word size of the processor (4 bytes for 32-bit, 8 bytes for 64-bit).</para>
+                    <para>Note that the lack of an error on x86 or x86-64 does not prove you are using this method safely, as those two processors tolerate mis-aligned access well.</para>
+                </note>
+            </remarks>
+        </member>
+    </members>
+</doc>

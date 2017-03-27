@@ -1,0 +1,2430 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SpookilySharp</name>
+    </assembly>
+    <members>
+        <member name="T:SpookilySharp.HashCode128">
+            <summary>Represents a 128-bit hash code.</summary>
+        </member>
+        <member name="F:SpookilySharp.HashCode128.Zero">
+            <summary>A <see cref="T:SpookilySharp.HashCode128"/> that is all-zero. This is the same as the default value.</summary>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.#ctor(System.UInt64,System.UInt64)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.HashCode128"/> struct.</summary>
+            <param name="hash1">The first 64 bits of the hash code.</param>
+            <param name="hash2">The second 64 bits of the hash code.</param>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.#ctor(System.Int64,System.Int64)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.HashCode128"/> struct.</summary>
+            <param name="hash1">The first 64 bits of the hash code.</param>
+            <param name="hash2">The second 64 bits of the hash code.</param>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.TryParse(System.String,SpookilySharp.HashCode128@)">
+            <summary>Tries to parse a <see cref="T:SpookilySharp.HashCode128"/> from a string.</summary>
+            <returns><see langword="true"/>, if <paramref name="s"/> was converted successfully; otherwise <see langword="false"/>.</returns>
+            <param name="s">A <see cref="T:System.String"/> containing the hash code to convert.</param>
+            <param name="result">The 128-bit has code parsed from the string, or <see cref="F:SpookilySharp.HashCode128.Zero"/> if
+            the parsing was unsuccessful.</param>
+            <remarks>The value passed to <paramref name="s"/> must be a 32-digit hexadecimal number for this to succeed.
+            Leading, trailing and contained whitespace is allowed. A leading <c>0x</c> is permitted, but not required.
+            Leading zeros must not be omitted.</remarks>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.Parse(System.String)">
+            <summary>Produces a <see cref="T:SpookilySharp.HashCode128"/> from a string containing a 32-digit hexadecimal number.
+            Leading and trailing whitespace is allowed.</summary>
+            <param name="s">The <see cref="T:System.String"/> to parse.</param>
+            <returns>The <see cref="T:SpookilySharp.HashCode128"/> represented by <paramref name="s"/>.</returns>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> was null.</exception>
+            <exception cref="T:System.FormatException"><paramref name="s"/> did not contain a 32-digit hexadecimal
+            number.</exception> 
+            <remarks>The value passed to <paramref name="s"/> must be a 32-digit hexadecimal number for this to succeed.
+            Leading, trailing and contained whitespace is allowed. A leading <c>0x</c> is permitted, but not required.
+            Leading zeros must not be omitted.</remarks>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.op_Equality(SpookilySharp.HashCode128,SpookilySharp.HashCode128)">
+            <summary>Determines whether two <see cref="T:SpookilySharp.HashCode128"/> instances are equal.</summary>
+            <param name="x">The first <see cref="T:SpookilySharp.HashCode128"/> instance to compare.</param>
+            <param name="y">The second <see cref="T:SpookilySharp.HashCode128"/> instance to compare.</param>
+            <returns><see langword="true"/> if the two <see cref="T:SpookilySharp.HashCode128"/> instances are equal; otherwise,
+            <see langword="false"/>.</returns>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.op_Inequality(SpookilySharp.HashCode128,SpookilySharp.HashCode128)">
+            <summary>Determines whether two <see cref="T:SpookilySharp.HashCode128"/> instances are different.</summary>
+            <param name="x">The first <see cref="T:SpookilySharp.HashCode128"/> instance to compare.</param>
+            <param name="y">The second <see cref="T:SpookilySharp.HashCode128"/> instance to compare.</param>
+            <returns><see langword="true"/> if the two <see cref="T:SpookilySharp.HashCode128"/> instances are different; otherwise,
+            <see langword="false"/>.</returns>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.Equals(SpookilySharp.HashCode128)">
+            <inheritdoc/>
+            <remarks>Considers itself equal to an equal <see cref="T:SpookilySharp.HashCode128"/> instance, and to nothing
+            else.</remarks>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.Equals(System.Object)">
+            <summary>Determines whether the specified <see cref="T:System.Object"/> is equal to the current
+            <see cref="T:SpookilySharp.HashCode128"/>.</summary>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with the current <see cref="T:SpookilySharp.HashCode128"/>.</param>
+            <returns><see langword="true"/> if the specified <see cref="T:System.Object"/> is a boxed <see cref="T:SpookilySharp.HashCode128"/> with the
+            same value as the current; otherwise, <see langword="false"/>.</returns>
+        </member>
+        <member name="M:SpookilySharp.HashCode128.ToString">
+            <summary>Returns a <see cref="T:System.String"/> that represents the current <see cref="T:SpookilySharp.HashCode128"/>.</summary>
+            <returns>A <see cref="T:System.String"/> that represents the hash code as a 32-digit hexadecimal number.</returns>
+        </member>
+        <member name="P:SpookilySharp.HashCode128.Hash1">
+            <summary>Gets the first 64 bits of the hash code, as a <see cref="T:System.Int64"/>.</summary>
+            <value>The first 64 bits of the hash code.</value>
+        </member>
+        <member name="P:SpookilySharp.HashCode128.Hash2">
+            <summary>Gets the second 64 bits of the hash code, as a <see cref="T:System.Int64"/>.</summary>
+            <value>The second 64 bits of the hash code.</value>
+        </member>
+        <member name="P:SpookilySharp.HashCode128.UHash1">
+            <summary>Gets the first 64 bits of the hash code, as a <see cref="T:System.UInt64"/>.</summary>
+            <value>The first 64 bits of the hash code.</value>
+        </member>
+        <member name="P:SpookilySharp.HashCode128.UHash2">
+            <summary>Gets the second 64 bits of the hash code, as a <see cref="T:System.UInt64"/>.</summary>
+            <value>The second 64 bits of the hash code.</value>
+        </member>
+        <member name="T:SpookilySharp.Redistributor">
+            <summary> Redistributes bits of integers of different sizes. Among other possible uses, this can be useful when
+            hash codes from other sources have poor distribution. While this cannot improve the overall risk of collision
+            (indeed, will make it slightly worse), it can help when uses of hash codes are particularly sensitive to
+            collisions in the one section of bits, e.g. with power-of-two hash tables.</summary>
+        </member>
+        <member name="M:SpookilySharp.Redistributor.Rehash(System.UInt32,System.UInt32)">
+            <summary>Mixes the bits of an unsigned 32-bit integer.</summary>
+            <returns>A <see cref="T:System.UInt32"/> that could serve as a hash for the input.</returns>
+            <param name="message">A <see cref="T:System.UInt32"/> to re-hash.</param>
+            <param name="seed">A 32-bit seed.</param>
+            <remarks>This cannot improve the overall collision-risk of a poor hash, but does improve poor hashes that
+            suffer particularly in the lower bits, which includes a great many that are to be found in .NET and
+            Mono.</remarks>
+        </member>
+        <member name="M:SpookilySharp.Redistributor.Rehash(System.UInt32)">
+            <summary>Mixes the bits of an unsigned 32-bit integer.</summary>
+            <returns>A <see cref="T:System.UInt32"/> that could serve as a hash for the input.</returns>
+            <param name="message">A <see cref="T:System.UInt32"/> to re-hash.</param>
+            <remarks>This cannot improve the overall collision-risk of a poor hash, but does improve poor hashes that
+            suffer particularly in the lower bits, which includes a great many that are to be found in .NET and
+            Mono.</remarks>
+        </member>
+        <member name="M:SpookilySharp.Redistributor.Rehash(System.Int32,System.Int32)">
+            <summary>Mixes the bits of a signed 32-bit integer.</summary>
+            <returns>An <see cref="T:System.Int32"/> that could serve as a hash for the input.</returns>
+            <param name="message">A <see cref="T:System.UInt64"/> to re-hash.</param>
+            <param name="seed">A 32-bit seed.</param>
+            <remarks>This cannot improve the overall collision-risk of a poor hash, but does improve poor hashes that
+            suffer particularly in the lower bits, which includes a great many that are to be found in .NET and
+            Mono.</remarks>
+        </member>
+        <member name="M:SpookilySharp.Redistributor.Rehash(System.Int32)">
+            <summary>Mixes the bits of a signed 32-bit integer.</summary>
+            <returns>An <see cref="T:System.Int32"/> that could serve as a hash for the input.</returns>
+            <param name="message">A <see cref="T:System.UInt64"/> to re-hash.</param>
+            <remarks>This cannot improve the overall collision-risk of a poor hash, but does improve poor hashes that
+            suffer particularly in the lower bits, which includes a great many that are to be found in .NET and
+            Mono.</remarks>
+        </member>
+        <member name="M:SpookilySharp.Redistributor.Rehash(System.UInt64,System.UInt64)">
+            <summary>Mixes the bits of an unsigned 64-bit integer.</summary>
+            <returns>A <see cref="T:System.UInt64"/> that could serve as a hash for the input.</returns>
+            <param name="message">A <see cref="T:System.UInt32"/> to re-hash.</param>
+            <param name="seed">A 64-bit seed.</param>
+            <remarks>This cannot improve the overall collision-risk of a poor hash, but does improve poor hashes that
+            suffer particularly in the lower bits, which includes a great many that are to be found in .NET and
+            Mono.</remarks>
+        </member>
+        <member name="M:SpookilySharp.Redistributor.Rehash(System.UInt64)">
+            <summary>Mixes the bits of an unsigned 64-bit integer.</summary>
+            <returns>A <see cref="T:System.UInt64"/> that could serve as a hash for the input.</returns>
+            <param name="message">A <see cref="T:System.UInt32"/> to re-hash.</param>
+            <remarks>This cannot improve the overall collision-risk of a poor hash, but does improve poor hashes that
+            suffer particularly in the lower bits, which includes a great many that are to be found in .NET and
+            Mono.</remarks>
+        </member>
+        <member name="M:SpookilySharp.Redistributor.Rehash(System.Int64,System.Int64)">
+            <summary>Mixes the bits of a signed 64-bit integer.</summary>
+            <returns>A <see cref="T:System.Int64"/> that could serve as a hash for the input.</returns>
+            <param name="message">A <see cref="T:System.UInt32"/> to re-hash.</param>
+            <param name="seed">A 64-bit seed.</param>
+            <remarks>This cannot improve the overall collision-risk of a poor hash, but does improve poor hashes that
+            suffer particularly in the lower bits, which includes a great many that are to be found in .NET and
+            Mono.</remarks>
+        </member>
+        <member name="M:SpookilySharp.Redistributor.Rehash(System.Int64)">
+            <summary>Mixes the bits of a signed 64-bit integer.</summary>
+            <returns>A <see cref="T:System.Int64"/> that could serve as a hash for the input.</returns>
+            <param name="message">A <see cref="T:System.UInt32"/> to re-hash.</param>
+            <remarks>This cannot improve the overall collision-risk of a poor hash, but does improve poor hashes that
+            suffer particularly in the lower bits, which includes a great many that are to be found in .NET and
+            Mono.</remarks>
+        </member>
+        <member name="T:SpookilySharp.SpookierEqualityComparers">
+            <summary>Improves the bit distribution of equality comparers.</summary>
+        </member>
+        <member name="M:SpookilySharp.SpookierEqualityComparers.WellDistributed``1(System.Collections.Generic.IEqualityComparer{``0})">
+            <summary>
+            Returns a version of <paramref name="comparer"/> that provides strong distribution of bits in its hash codes.
+            </summary>
+            <returns>An <see cref="T:System.Collections.Generic.IEqualityComparer`1"/> based on <paramref name="comparer"/>, or
+            <paramref name="comparer"/> if its implementation of <see cref="M:System.Collections.Generic.IEqualityComparer`1.GetHashCode(`0)"/> is
+            marked with <see cref="T:SpookilySharp.WellDistributedHashAttribute"/>, indicating it already provides a strong distribution.</returns>
+            <param name="comparer">The <see cref="T:System.Collections.Generic.IEqualityComparer`1"/> to improve.</param>
+            <typeparam name="T">The type of objects compared by <paramref name="comparer"/>.</typeparam>
+            <remarks>This cannot improve the overall risk of collision (indeed, will
+            make it slightly worse), it can help when uses of hash codes are particularly sensitive to collisions in the one
+            section of bits, e.g. with power-of-two hash tables.</remarks>
+        </member>
+        <member name="T:SpookilySharp.SpookyHash">
+            <summary>Provides an implementation of SpookyHash, either incrementally or (by static methods) in a single
+            operation.</summary>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash128(System.Void*,System.Int32,System.UInt64@,System.UInt64@)">
+            <summary>Calculates the 128-bit SpookyHash for a message.</summary>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="hash1">Takes as input a seed value, returns as first output half of the hash.</param>
+            <param name="hash2">Takes as input a seed value, returns as second output half of the hash.</param>
+            <remarks>This is not a CLS-compliant method, and is not accessible by some .NET languages.</remarks>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash64(System.Void*,System.Int32,System.UInt64)">
+            <summary>Calculates the 64-bit SpookyHash for a message.</summary>
+            <returns>The 64-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash32(System.Void*,System.Int32,System.UInt32)">
+            <summary>Calculates a 32-bit SpookyHash for a message.</summary>
+            <returns>The 32-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.#ctor">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.SpookyHash"/> class with a default seed
+            value.</summary>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.#ctor(System.UInt64,System.UInt64)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.SpookyHash"/> class.</summary>
+            <param name="seed1">First half of a 128-bit seed for the hash.</param>
+            <param name="seed2">Second half of a 128-bit seed for the hash.</param>
+            <remarks>This is not a CLS-compliant method, and is not accessible by some .NET languages.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.#ctor(System.Int64,System.Int64)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.SpookyHash"/> class.</summary>
+            <param name="seed1">First half of a 128-bit seed for the hash.</param>
+            <param name="seed2">Second half of a 128-bit seed for the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Init(System.UInt64,System.UInt64)">
+            <summary>Re-initialise the <see cref="T:SpookilySharp.SpookyHash"/> object with the specified seed.</summary>
+            <param name="seed1">First half of a 128-bit seed for the hash.</param>
+            <param name="seed2">Second half of a 128-bit seed for the hash.</param>
+            <remarks>This is not a CLS-compliant method, and is not accessible by some .NET languages.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Init(System.Int64,System.Int64)">
+            <summary>Re-initialise the <see cref="T:SpookilySharp.SpookyHash"/> object with the specified seed.</summary>
+            <param name="seed1">First half of a 128-bit seed for the hash.</param>
+            <param name="seed2">Second half of a 128-bit seed for the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.String,System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">String to hash.</param>
+            <param name="startIndex">Start index in the string, from which to hash.</param>
+            <param name="length">How many characters to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.String)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">String to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>Updates the in-progress hash generation with each <see cref="T:System.String"/> in an sequence of strings
+            </summary>
+            <param name="message">The sequence of <see cref="T:System.String"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <remarks>It is acceptable for strings within the sequence to be <see langword="null"/>. They will affect the
+            hash produced. i.e. the sequence <c>{"a", "b", "c"}</c> will produce a different hash than
+            <c>{"a", null, "b", "c"}</c>. This is often useful, but if this is undesirable in a given case (you want the
+            same hash as the concatenation), then filter out <see langword="null"/> <see cref="T:System.String"/>s first.
+            </remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Void*,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">Pointer to the data to hash.</param>
+            <param name="length">How many bytes to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was a null pointer.</exception>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Final(System.Int64@,System.Int64@)">
+            <summary>Produces the final hash of the message. It does not prevent further updates, and can be called
+            multiple times while the hash is added to.</summary>
+            <param name="hash1">The first half of the 128-bit hash.</param>
+            <param name="hash2">The second half of the 128-bit hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Final">
+            <summary>Produces the final hash of the message. It does not prevent further updates, and can be called
+            multiple times while the hash is added to.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> representing the 128-bit hash.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Final(System.UInt64@,System.UInt64@)">
+            <summary>Produces the final hash of the message. It does not prevent further updates, and can be called
+            multiple times while the hash is added to.</summary>
+            <param name="hash1">The first half of the 128-bit hash.</param>
+            <param name="hash2">The second half of the 128-bit hash.</param>
+            <remarks>This is not a CLS-compliant method, and is not accessible by some .NET languages.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.SByte)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.SByte"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.SByte[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.SByte"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.SByte"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.SByte[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.SByte"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.SByte})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt16)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.UInt16"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt16[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.UInt16"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.UInt16"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt16[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.UInt16"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.UInt16})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt32)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.UInt32"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt32[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.UInt32"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.UInt32"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt32[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.UInt32"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.UInt32})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt64)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.UInt64"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt64[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.UInt64"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.UInt64"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.UInt64[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.UInt64"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.UInt64})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Byte)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.Byte"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Byte[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Byte"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.Byte"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Byte[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Byte"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.Byte})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Char)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.Char"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Char[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Char"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.Char"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Char[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Char"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.Char})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int16)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.Int16"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int16[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Int16"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.Int16"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int16[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Int16"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.Int16})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int32)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.Int32"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int32[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Int32"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.Int32"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int32[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Int32"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.Int32})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int64)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.Int64"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int64[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Int64"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.Int64"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Int64[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Int64"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.Int64})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Single)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.Single"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Single[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Single"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.Single"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Single[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Single"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.Single})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Double)">
+            <summary>Updates the in-progress hash generation with a single <see cref="T:System.Double"/>.</summary>
+            <param name="message">The data to add to the hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Double[],System.Int32,System.Int32)">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Double"/>s to hash.</param>
+            <param name="startIndex">Start index in the array, from which to hash.</param>
+            <param name="length">How many <see cref="T:System.Double"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> is less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Double[])">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message"><see cref="T:System.Double"/>s to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Update(System.Collections.Generic.IEnumerable{System.Double})">
+            <summary>Updates the in-progress hash generation with more of the message.</summary>
+            <param name="message">An <see cref="T:System.Collections.Generic.IEnumerable`1"/> of items to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="message"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash128(System.UIntPtr,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Calculates the 128-bit SpookyHash for a message.</summary>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed1">First 64 bits of the seed.</param>
+            <param name="seed2">Second 64 bits of the seed.</param>
+            <returns><see cref="T:SpookilySharp.HashCode128"/> representing the 128-bit hash.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash64(System.UIntPtr,System.Int32,System.UInt64)">
+            <summary>Calculates the 64-bit SpookyHash for a message.</summary>
+            <returns>The 64-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash32(System.UIntPtr,System.Int32,System.UInt32)">
+            <summary>Calculates a 32-bit SpookyHash for a message.</summary>
+            <returns>The 32-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash128(System.UIntPtr,System.Int32,System.Int64,System.Int64)">
+            <summary>Calculates the 128-bit SpookyHash for a message.</summary>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed1">First 64 bits of the seed.</param>
+            <param name="seed2">Second 64 bits of the seed.</param>
+            <returns><see cref="T:SpookilySharp.HashCode128"/> representing the 128-bit hash.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash64(System.UIntPtr,System.Int32,System.Int64)">
+            <summary>Calculates the 64-bit SpookyHash for a message.</summary>
+            <returns>The 64-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash32(System.UIntPtr,System.Int32,System.Int32)">
+            <summary>Calculates a 32-bit SpookyHash for a message.</summary>
+            <returns>The 32-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash128(System.IntPtr,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Calculates the 128-bit SpookyHash for a message.</summary>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed1">First 64 bits of the seed.</param>
+            <param name="seed2">Second 64 bits of the seed.</param>
+            <returns><see cref="T:SpookilySharp.HashCode128"/> representing the 128-bit hash.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash64(System.IntPtr,System.Int32,System.UInt64)">
+            <summary>Calculates the 64-bit SpookyHash for a message.</summary>
+            <returns>The 64-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash32(System.IntPtr,System.Int32,System.UInt32)">
+            <summary>Calculates a 32-bit SpookyHash for a message.</summary>
+            <returns>The 32-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash128(System.IntPtr,System.Int32,System.Int64,System.Int64)">
+            <summary>Calculates the 128-bit SpookyHash for a message.</summary>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed1">First 64 bits of the seed.</param>
+            <param name="seed2">Second 64 bits of the seed.</param>
+            <returns><see cref="T:SpookilySharp.HashCode128"/> representing the 128-bit hash.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash64(System.IntPtr,System.Int32,System.Int64)">
+            <summary>Calculates the 64-bit SpookyHash for a message.</summary>
+            <returns>The 64-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHash.Hash32(System.IntPtr,System.Int32,System.Int32)">
+            <summary>Calculates a 32-bit SpookyHash for a message.</summary>
+            <returns>The 32-bit hash.</returns>
+            <param name="message">Pointer to the first element to hash.</param>
+            <param name="length">The size, in bytes, of the elements to hash.</param>
+            <param name="seed">A seed for the hash.</param>
+            <exception cref="T:System.AccessViolationException">This is an unsafe method. If you attempt to read past the buffer
+            that <paramref name="message"/> points too, you may raise an <see cref="T:System.AccessViolationException"/>, or you
+            may have incorrect results.</exception>
+        </member>
+        <member name="T:SpookilySharp.SpookyHasher">
+            <summary>Provides static extension methods for producing SpookyHashes of various types of object.</summary>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.String,System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of a <see cref="T:System.String"/>.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the 128-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null string, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the string.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the string.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.String,System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of a <see cref="T:System.String"/>.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the 128-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null string, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the string.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the string.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.String,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of a <see cref="T:System.String"/>.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the 128-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null string, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.String,System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of a <see cref="T:System.String"/>, using a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the 128-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <remarks>For a null string, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the string.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the string.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.String)">
+            <summary>Produces an 128-bit SpookyHash of a <see cref="T:System.String"/>, using a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <remarks>For a null string, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.String,System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of a <see cref="T:System.String"/>.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null string, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the string.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the string.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.String,System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of a <see cref="T:System.String"/>, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <remarks>For a null string, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the string.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the string.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.String,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of a <see cref="T:System.String"/>.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null string, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.String)">
+            <summary>Produces a 64-bit SpookyHash of a <see cref="T:System.String"/>, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The <see cref="T:System.String"/> to hash.</param>
+            <remarks>For a null string, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.String,System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of a <see cref="T:System.String"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The string to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of characters to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null string, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the string.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the string.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.String,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of a <see cref="T:System.String"/>, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The string to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of characters to hash.</param>
+            <remarks>For a null string, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the string.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the string.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.String,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of a <see cref="T:System.String"/>.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The string to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null string, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.String)">
+            <summary>Produces a 32-bit SpookyHash of a <see cref="T:System.String"/>, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The string to hash.</param>
+            <remarks>For a null string, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.IO.Stream,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of a stream.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.IO.Stream,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of a stream.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.IO.Stream)">
+            <summary>Produces an 128-bit SpookyHash of a stream, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.IO.Stream,System.UInt64)">
+            <summary>Produces a 64-bit SpookyHash of a stream.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.IO.Stream,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of a stream.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.IO.Stream)">
+            <summary>Produces a 64-bit SpookyHash of a stream, with a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.IO.Stream,System.UInt32)">
+            <summary>Produces a 32-bit SpookyHash of a stream.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the 32-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.IO.Stream,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of a stream.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the 32-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.IO.Stream)">
+            <summary>Produces a 32-bit SpookyHash of a stream.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the 32-bit hash.</returns>
+            <param name="stream">The stream to hash.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="stream"/> was null.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.SByte[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.SByte"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.SByte"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.SByte[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.SByte"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.SByte"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.SByte[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.SByte"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.SByte"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.SByte[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.SByte"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.SByte[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.SByte"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.SByte"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.SByte[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.SByte"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.SByte"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.SByte[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.SByte"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.SByte[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.SByte"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.SByte[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.SByte"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.SByte"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.SByte[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.SByte"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.SByte"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.SByte[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.SByte"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.SByte[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.SByte"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt16[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt16"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt16[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt16"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt16[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt16"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt16[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt16[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt16"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt16[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt16"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt16[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt16[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt16[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt16"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt16[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt16"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt16[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt16[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt16"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt32[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt32"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt32[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt32"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt32[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt32"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt32[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt32[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt32"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt32[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt32"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt32[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt32[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt32[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt32"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt32[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt32"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt32[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt32[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt32"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt64[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt64"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt64[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt64"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt64[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt64"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.UInt64[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt64[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt64"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt64[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt64"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt64[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.UInt64[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt64[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt64"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt64[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.UInt64"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt64[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.UInt64[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.UInt64"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Byte[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Byte"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Byte"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Byte[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Byte"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Byte"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Byte[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Byte"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Byte"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Byte[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Byte"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Byte[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Byte"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Byte"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Byte[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Byte"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Byte"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Byte[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Byte"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Byte[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Byte"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Byte[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Byte"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Byte"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Byte[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Byte"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Byte"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Byte[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Byte"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Byte[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Byte"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Char[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Char"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Char[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Char"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Char[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Char"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Char[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Char"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Char[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Char"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Char[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Char"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Char[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Char"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Char[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Char"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Char[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Char"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Char[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Char"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Char"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Char[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Char"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Char[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Char"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int16[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int16"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int16"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int16[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int16"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int16"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int16[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int16"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int16"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int16[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int16"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int16[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int16"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int16"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int16[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int16"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int16"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int16[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int16"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int16[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int16"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int16[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int16"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int16"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int16[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int16"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int16"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int16[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int16"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int16[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int16"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int32[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int32"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int32"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int32[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int32"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int32"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int32[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int32"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int32"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int32[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int32"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int32[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int32"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int32"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int32[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int32"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int32"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int32[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int32"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int32[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int32"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int32[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int32"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int32"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int32[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int32"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int32"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int32[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int32"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int32[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int32"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int64[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int64"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int64"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int64[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int64"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int64"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int64[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int64"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int64"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Int64[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Int64"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int64[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int64"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int64"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int64[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int64"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int64"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int64[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int64"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Int64[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Int64"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int64[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int64"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int64"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int64[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int64"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Int64"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int64[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int64"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Int64[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Int64"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Single[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Single"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Single"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Single[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Single"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Single"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Single[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Single"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Single"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Single[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Single"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Single[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Single"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Single"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Single[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Single"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Single"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Single[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Single"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Single[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Single"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Single[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Single"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Single"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Single[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Single"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Single"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Single[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Single"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Single[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Single"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Double[],System.Int32,System.Int32,System.Int64,System.Int64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Double"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Double"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Double[],System.Int32,System.Int32,System.UInt64,System.UInt64)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Double"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Double"/>s to hash.</param>
+            <param name="seed0">The first 64-bits of the seed value.</param>
+            <param name="seed1">The second 64-bits of the seed value.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Double[],System.Int32,System.Int32)">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Double"/>s, with a default seed.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Double"/>s to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash128(System.Double[])">
+            <summary>Produces an 128-bit SpookyHash of an array of <see cref="T:System.Double"/>s.</summary>
+            <returns>A <see cref="T:SpookilySharp.HashCode128"/> containing the two 64-bit halves of the 128-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be <see cref="F:SpookilySharp.HashCode128.Zero"/> .</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Double[],System.Int32,System.Int32,System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Double"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Double"/>s to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Double[],System.Int32,System.Int32)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Double"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Double"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Double[],System.Int64)">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Double"/>s.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 64-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash64(System.Double[])">
+            <summary>Produces a 64-bit SpookyHash of an array of <see cref="T:System.Double"/>s, using a default seed.</summary>
+            <returns>A <see cref="T:System.Int64"/> containing the 64-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Double[],System.Int32,System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Double"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Double"/>s to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Double[],System.Int32,System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Double"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="startIndex">The index from which to hash.</param>
+            <param name="length">The number of <see cref="T:System.Double"/>s to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="startIndex"/> was less than zero, or greater
+            than the length of the array.</exception>
+            <exception cref="T:System.ArgumentException"><paramref name="startIndex"/> plus <paramref name="length"/> is greater
+            than the length of the array.</exception>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Double[],System.Int32)">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Double"/>s.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <param name="seed">The 32-bit seed value.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyHasher.SpookyHash32(System.Double[])">
+            <summary>Produces a 32-bit SpookyHash of an array of <see cref="T:System.Double"/>s, using a default seed.</summary>
+            <returns>An <see cref="T:System.Int32"/> containing the two 32-bit hash.</returns>
+            <param name="message">The array to hash.</param>
+            <remarks>For a null array, the hash will be zero.</remarks>
+        </member>
+        <member name="T:SpookilySharp.SpookyStringEqualityComparer">
+            <summary>An equality comparer for <see cref="T:System.String"/>s and <see cref="T:System.Char"/> arrays that uses SpookyHash for
+            its hash codes.</summary>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.#ctor">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/> class, with a default
+            seed.</summary>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.#ctor(System.Int32)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/> class with a given
+            seed.</summary>
+            <param name="seed">The seed. Instances with the same seed will produce the same hash codes for the same
+            input, but different hash codes than other instances.</param>
+            <remarks>Instances with different seeds will produces different hash codes for the same item. This can be
+            useful in preventing Hash DoS attacks.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.#ctor(System.Boolean)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/> class with a default
+            or randomised seed.</summary>
+            <param name="randomizeSeed">If set to <see langword="true"/> the seed is taken from the number of milliseconds the
+            system has been up, otherwise the default seed is used.</param>
+            <remarks>This is useful in reducing Hash DoS attacks, though different instances of the comparer will not
+            operate together, as each will produce a different hash code.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.GetHashCode(System.Char[])">
+            <returns>The 32-bit signed SpookyHash hash code, or zero if the array is null.</returns>
+            <summary>Returns a 32-bit signed SpookyHash hash code for the specified array.</summary>
+            <param name="obj">The array of <see cref="T:System.Char"/> to hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.GetHashCode(System.String)">
+            <returns>The 32-bit signed SpookyHash hash code, or zero if the string is null.</returns>
+            <summary>Returns a 32-bit signed SpookyHash hash code for the specified string.</summary>
+            <param name="obj">The <see cref="T:System.String"/> to hash.</param>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.Equals(System.Char[],System.Char[])">
+            <summary>Returns true if the two arrays are identical.</summary>
+            <param name="x">The first array to compare.</param>
+            <param name="y">The second array to compare.</param>
+            <returns>True if the two arrays are identical, false otherwise.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.Equals(System.String,System.String)">
+            <summary>Returns true if the two <see cref="T:System.String"/>s are identical.</summary>
+            <param name="x">The first <see cref="T:System.String"/> to compare.</param>
+            <param name="y">The second <see cref="T:System.String"/> to compare.</param>
+            <returns>True if the two <see cref="T:System.String"/>s are identical, false otherwise.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.Equals(System.String,System.Char[])">
+            <summary>Returns true if the string and array of characters contain the same sequence of characters, or both
+            are null.</summary>
+            <param name="x">The string to compare.</param>
+            <param name="y">The array to compare.</param>
+            <returns>True if the two sequences of characters are identical, or both are null, false otherwise.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.Equals(System.Char[],System.String)">
+            <summary>Returns true if the string and array of characters contain the same sequence of characters, or both
+            are null.</summary>
+            <param name="x">The array to compare.</param>
+            <param name="y">The string to compare.</param>
+            <returns>True if the two sequences of characters are identical, or both are null, false otherwise.</returns>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.Equals(SpookilySharp.SpookyStringEqualityComparer)">
+            <summary>Determines whether the specified <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/> is equal to the current
+            <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/>.</summary>
+            <param name="other">The <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/> to compare with the current
+            <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/>.</param>
+            <returns><see langword="true"/> if the specified <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/> is equal to the current
+            <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/>; otherwise, <see langword="false"/>.</returns>
+            <remarks>Two instances of <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/> are considered equal if they have the
+            same seed, and as such can be depended upon to produce the same hash codes for the same input.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.Equals(System.Object)">
+            <inheritdoc/>
+            <remarks>Considers itself equal to an equal <see cref="T:SpookilySharp.SpookyStringEqualityComparer"/> instance, and to
+            nothing else.</remarks>
+        </member>
+        <member name="M:SpookilySharp.SpookyStringEqualityComparer.GetHashCode">
+            <inheritdoc/>
+        </member>
+        <member name="T:SpookilySharp.WellDistributedHashAttribute">
+            <summary>Marks an implementation of <see cref="M:System.Collections.Generic.IEqualityComparer`1.GetHashCode(`0)"/> or an override of
+            <see cref="M:System.Object.GetHashCode"/> as being known to distribute bits well in its implementation of hash
+            codes.</summary>
+            <remarks>When such a method is used by an <see cref="T:System.Collections.Generic.IEqualityComparer`1"/>, whether as the implementation of
+            that interface, of because it is used by <see cref="P:System.Collections.Generic.EqualityComparer`1.Default"/>, then passing it to
+            <see cref="M:SpookilySharp.SpookierEqualityComparers.WellDistributed``1(System.Collections.Generic.IEqualityComparer{``0})"/> will return it again, as it can
+            add nothing more in the way of distribution, and will just be wasteful and if anything cause more
+            collisions.</remarks>
+        </member>
+        <member name="M:SpookilySharp.WellDistributedHashAttribute.#ctor">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.WellDistributedHashAttribute"/> class.</summary>
+        </member>
+        <member name="T:SpookilySharp.HashedStream">
+            <summary>Wraps a stream, and maintains a hash of the bytes written to and from it.</summary>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.#ctor(System.IO.Stream,System.UInt64,System.UInt64,System.UInt64,System.UInt64)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.HashedStream"/> class.</summary>
+            <param name="stream">The stream to read.</param>
+            <param name="readSeed0">The first 64 bits of the seed for the hash of contents read.</param>
+            <param name="readSeed1">The second 64 bits of the seed for the hash of contents read.</param>
+            <param name="writeSeed0">The first 64 bits of the seed for the hash of contents written.</param>
+            <param name="writeSeed1">The second 64 bits of the seed for the hash of contents written.</param>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.#ctor(System.IO.Stream,System.Int64,System.Int64,System.Int64,System.Int64)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.HashedStream"/> class.</summary>
+            <param name="stream">The stream to read.</param>
+            <param name="readSeed0">The first 64 bits of the seed for the hash of contents read.</param>
+            <param name="readSeed1">The second 64 bits of the seed for the hash of contents read.</param>
+            <param name="writeSeed0">The first 64 bits of the seed for the hash of contents written.</param>
+            <param name="writeSeed1">The second 64 bits of the seed for the hash of contents written.</param>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.#ctor(System.IO.Stream,System.UInt64,System.UInt64)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.HashedStream"/> class.</summary>
+            <param name="stream">The stream to read.</param>
+            <param name="seed0">The first 64 bits of the seed for both the hash of contents read and the hash of the contents written.</param>
+            <param name="seed1">The second 64 bits of the seed for both the hash of contents read and the hash of the contents written.</param>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.#ctor(System.IO.Stream,System.Int64,System.Int64)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.HashedStream"/> class.</summary>
+            <param name="stream">The stream to read.</param>
+            <param name="seed0">The first 64 bits of the seed for both the hash of contents read and the hash of the contents written.</param>
+            <param name="seed1">The second 64 bits of the seed for both the hash of contents read and the hash of the contents written.</param>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.#ctor(System.IO.Stream)">
+            <summary>Initialises a new instance of the <see cref="T:SpookilySharp.HashedStream"/> class with a default seed.</summary>
+            <param name="stream">The stream to read.</param>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.Close">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.Dispose(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.Flush">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.Read(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.ReadByte">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.Seek(System.Int64,System.IO.SeekOrigin)">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.SetLength(System.Int64)">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.Write(System.Byte[],System.Int32,System.Int32)">
+            <inheritdoc/>
+        </member>
+        <member name="M:SpookilySharp.HashedStream.WriteByte(System.Byte)">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.CanRead">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.CanSeek">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.CanTimeout">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.CanWrite">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.Length">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.Position">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.ReadTimeout">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.WriteTimeout">
+            <inheritdoc/>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.WriteHash128">
+            <summary>Gets the current 128-bit hash of what has been written so far.</summary>
+            <value>The hash, so far.</value>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.WriteHash64">
+            <summary>Gets the current 64-bit hash of what has been written so far.</summary>
+            <value>The hash, so far.</value>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.WriteHash32">
+            <summary>Gets the current 32-bit hash of what has been written so far.</summary>
+            <value>The hash, so far.</value>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.ReadHash128">
+            <summary>Gets the current 128-bit hash of what has been read so far.</summary>
+            <value>The hash, so far.</value>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.ReadHash64">
+            <summary>Gets the current 64-bit hash of what has been read so far.</summary>
+            <value>The hash, so far.</value>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.ReadHash32">
+            <summary>Gets the current 32-bit hash of what has been read so far.</summary>
+            <value>The hash, so far.</value>
+        </member>
+        <member name="P:SpookilySharp.HashedStream.WasMoved">
+            <summary>Gets a value indicating whether there had been an operation that moved the point being read from or written to.</summary>
+            <value><see langword="true"/> if was moved; otherwise, <see langword="false"/>.</value>
+            <remarks>Operations such as <see cref="M:SpookilySharp.HashedStream.SetLength(System.Int64)"/> or setting properties such as <see cref="P:SpookilySharp.HashedStream.Position"/> will mean that while the hashes will remain correct hashes of the values written and read, they may not correspond with e.g. the hash obtained by hashing the contents of a file the stream is backed by, etc.</remarks>
+        </member>
+    </members>
+</doc>
