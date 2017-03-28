@@ -38,7 +38,7 @@ export var exc = (cmd)=>{
       env: null
     };
     if (process.platform === 'win32') {
-      opts.shell = 'cmd.exe'; 
+      opts.shell = 'cmd.exe';
     }
     exec(cmd, function (err, stdout, stderr) {
       if (err) {
@@ -66,13 +66,7 @@ export var store = {
 };
 
 export var formatID = (location)=>{
-  let id = [];
-  _.each(location, (item)=>{
-    id.push(item.toString())
-  });
-  id = id.join(':');
-  location = _.cloneDeep(location);
-  location.id = id;
+  location.id = `${location.VoxelX}:${location.VoxelY}:${location.VoxelZ}:${location.SolarSystemIndex}:${location.PlanetIndex}`
   return location;
 };
 
@@ -92,15 +86,28 @@ export var isNegativeInteger = (int)=>{
   return int.toString()[0] === '-';
 };
 
-export var convertInteger = (int, na)=>{
-  int = int >= 0 || na[0] > 256 ? int - 1 : int
+export var convertInteger = (int, axis)=>{
+  let isNegative = int < 0;
+  let offsets = {
+    x: isNegative ? [4096, 2048, 1024] : [3584, 1536, 4096],
+    z: [3584, 1536, 4096],
+    y: isNegative ? [128, 256] : [224, 96, 256],
+  };
+  let na = offsets[axis];
   int = Math.abs(int);
-  int = Math.abs(Math.abs(int - na[0]) - na[1])
-  return int;
+
+  if (isNegative) {
+    int = Math.abs(Math.abs(int - na[0]) - na[1]);
+  } else {
+    int = Math.abs(Math.abs(Math.abs(int - na[0]) - na[1]) - na[2]);
+  }
+
+  return int - 1;
 };
 
 export var convertIntegerZ = (int, na)=>{
   int = Math.abs(int);
+
   int = Math.abs(Math.abs(Math.abs(int - na[0]) - na[1]) - na[2])
   return int - 1;
 };
@@ -116,11 +123,12 @@ var setDefaultValueIfNull = (variable, defaultVal)=>{
 
 export var toHex = (str, totalChars)=>{
   totalChars = setDefaultValueIfNull(totalChars,2);
-  str = ('0'.repeat(totalChars)+Number(str).toString(16)).slice(-totalChars).toUpperCase(); 
+  str = ('0'.repeat(totalChars)+Number(str).toString(16)).slice(-totalChars).toUpperCase();
   return str;
 }
 
 export var ajax = axios.create({
+  //baseURL: 'http://192.168.1.148:8000/api/',
   baseURL: 'https://neuropuff.com/api/',
   timeout: 30000,
   xsrfCookieName: 'csrftoken'

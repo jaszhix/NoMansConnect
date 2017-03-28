@@ -1,3 +1,4 @@
+import './app.global.css';
 import {remote} from 'electron';
 import fs from 'fs';
 import path from 'path';
@@ -15,7 +16,19 @@ import openExternal from 'open-external';
 import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
 
 import * as utils from './utils';
-import './app.global.css';
+import knownGalaxies from './static/galaxies.json';
+// Temporary until all 256 galaxy names are known
+let galaxies = knownGalaxies.concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat([knownGalaxies[0]]);
+let galaxyIter = 0;
+let galaxyRepeat = 1
+_.each(galaxies, (g, k)=>{
+  ++galaxyIter;
+  if (galaxyIter === 51) {
+    galaxyIter = 0;
+    ++galaxyRepeat;
+  }
+  galaxies[k] = `${g} ${galaxyRepeat}`;
+});
 
 if (module.hot) {
   module.hot.accept();
@@ -34,7 +47,7 @@ var DropdownMenu = onClickOutside(React.createClass({
       type: 'info',
       buttons: [],
       title: 'No Man\'s Connect',
-      message: '0.0.1',
+      message: '0.0.3',
       detail: 'This version is alpha. Please back up your save files.'
     });
   },
@@ -198,6 +211,7 @@ var ThreeDimScatterChart = React.createClass({
   }
 });
 
+
 var Container = React.createClass({
   getInitialState(){
     return {
@@ -265,6 +279,7 @@ var Container = React.createClass({
   },
   render(){
     let p = this.props;
+    let locationItemStyle = {padding: '3px 3px', background: '#0B2B39'};
     return (
       <div className="ui grid row" style={{paddingTop: '51px', float: 'left', position: 'absolute', margin: '0px auto', left: '0px', right: '0px'}}>
         <div className="col-sm-8">
@@ -325,77 +340,82 @@ var Container = React.createClass({
                 borderTop: '2px solid #95220E',
                 textAlign: 'left',
                 marginTop: '26px',
-                minWidth: '371px'
+                minWidth: '371px',
               }}>
                 <h3 style={{textAlign: 'center'}}>Selected Location</h3>
                 {this.state.edit ?
-                  <div>
+                <div>
+                  <div
+                  className="ui segment"
+                  style={{
+                    padding: '3px 3px',
+                    cursor: 'pointer',
+                    background: this.state.storedLocationHover === 'cancel' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+                  }}>
+                    <div className="ui input" style={{width: '200px'}}>
+                      <div className="row">
+                        <textarea
+                        style={{width: '300px', position: 'relative', left: '28px', top: '3px', color: '#000'}}
+                        type="text"
+                        value={this.state.description}
+                        onChange={(e)=>this.setState({description: e.target.value})}
+                        placeholder="Description... (200 character limit)" />
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="ui segment"
+                    style={{
+                      padding: '3px 3px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      background: this.state.storedLocationHover === 'updateForm' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+                    }}
+                    onMouseEnter={()=>this.setState({storedLocationHover: 'updateForm'})}
+                    onMouseLeave={()=>this.setState({storedLocationHover: -1})}
+                    onClick={this.handleUpdate}>
+                      {this.state.updating ? 'Updating...' : this.state.limit ? `Limit Exceeded (${this.state.description.length} characters)` : 'Update Location'}
+                    </div>
                     <div
                     className="ui segment"
                     style={{
                       padding: '3px 3px',
+                      textAlign: 'center',
                       cursor: 'pointer',
                       background: this.state.storedLocationHover === 'cancel' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                    }}>
-                      <div className="ui input" style={{width: '200px'}}>
-                        <div className="row">
-                          <textarea
-                          style={{width: '300px', position: 'relative', left: '28px', top: '3px', color: '#000'}}
-                          type="text"
-                          value={this.state.description}
-                          onChange={(e)=>this.setState({description: e.target.value})}
-                          placeholder="Description... (200 character limit)" />
-                        </div>
-                      </div>
+                    }}
+                    onMouseEnter={()=>this.setState({storedLocationHover: 'cancel'})}
+                    onMouseLeave={()=>this.setState({storedLocationHover: -1})}
+                    onClick={()=>this.setState({edit: false, description: ''})}>
+                      Cancel
                     </div>
-                    <div
-                      className="ui segment"
-                      style={{
-                        padding: '3px 3px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        background: this.state.storedLocationHover === 'updateForm' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                      }}
-                      onMouseEnter={()=>this.setState({storedLocationHover: 'updateForm'})}
-                      onMouseLeave={()=>this.setState({storedLocationHover: -1})}
-                      onClick={this.handleUpdate}>
-                        {this.state.updating ? 'Updating...' : this.state.limit ? `Limit Exceeded (${this.state.description.length} characters)` : 'Update Location'}
-                      </div>
-                      <div
-                      className="ui segment"
-                      style={{
-                        padding: '3px 3px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        background: this.state.storedLocationHover === 'cancel' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                      }}
-                      onMouseEnter={()=>this.setState({storedLocationHover: 'cancel'})}
-                      onMouseLeave={()=>this.setState({storedLocationHover: -1})}
-                      onClick={()=>this.setState({edit: false, description: ''})}>
-                        Cancel
-                      </div>
-                    </div>
+                  </div>
                 :
                 <div>
-                  <div>
+                  <div style={{maxHeight: '184px', overflowY: 'auto'}}>
                     <div
                     className="ui segment"
-                    style={{padding: '3px 3px', background: '#0B2B39'}}>
+                    style={locationItemStyle}>
                       Galactic Address: {p.s.selectedLocation.translatedId}
                     </div>
                     <div
                     className="ui segment"
-                    style={{padding: '3px 3px', background: '#0B2B39'}}>
+                    style={locationItemStyle}>
                       Voxel Address: {p.s.selectedLocation.id}
                     </div>
                     <div
                     className="ui segment"
-                    style={{padding: '3px 3px', background: '#0B2B39'}}>
+                    style={locationItemStyle}>
+                      Galaxy: {galaxies[p.s.selectedLocation.galaxy]}
+                    </div>
+                    <div
+                    className="ui segment"
+                    style={locationItemStyle}>
                       Distance to Center: {p.s.selectedLocation.distanceToCenter.toFixed(3)} LY
                     </div>
                     <div
                     className="ui segment"
-                    style={{padding: '3px 3px', background: '#0B2B39'}}>
+                    style={locationItemStyle}>
                       Jumps: {p.s.selectedLocation.jumps}
                     </div>
                   </div>
@@ -456,33 +476,38 @@ var Container = React.createClass({
                         {location.description ?
                         <div
                         className="ui segment"
-                        style={{padding: '3px 3px', background: '#0B2B39'}}>
+                        style={locationItemStyle}>
                           Description: {location.description}
                         </div> : null}
                         <div
                         className="ui segment"
-                        style={{padding: '3px 3px', background: '#0B2B39'}}>
+                        style={locationItemStyle}>
                           Galactic Address: {location.data.translatedId}
                         </div>
                         <div
                         className="ui segment"
-                        style={{padding: '3px 3px', background: '#0B2B39'}}>
+                        style={locationItemStyle}>
                           Voxel Address: {location.data.id}
+                        </div>
+                        <div
+                        className="ui segment"
+                        style={locationItemStyle}>
+                          Galaxy: {galaxies[location.data.galaxy]}
                         </div>
                         {location.data.distanceToCenter ?
                         <div
                         className="ui segment"
-                        style={{padding: '3px 3px', background: '#0B2B39'}}>
+                        style={locationItemStyle}>
                           Distance to Center: {location.data.distanceToCenter.toFixed(3)} LY
                         </div> : null}
                         <div
                         className="ui segment"
-                        style={{padding: '3px 3px', background: '#0B2B39'}}>
+                        style={locationItemStyle}>
                           Jumps: {location.data.jumps}
                         </div>
                         <div
                         className="ui segment"
-                        style={{padding: '3px 3px', background: '#0B2B39'}}>
+                        style={locationItemStyle}>
                           Mode: {_.upperFirst(location.mode)}
                         </div>
                       </div>
@@ -496,7 +521,7 @@ var Container = React.createClass({
                       }}
                       onMouseEnter={()=>this.setState({storedLocationHover: `t${i}`})}
                       onMouseLeave={()=>this.setState({storedLocationHover: -1})}
-                      onClick={()=>p.onTeleport(location)}>
+                      onClick={()=>p.onTeleport(location, i)}>
                         {p.s.installing && p.s.installing === `t${i}` ? 'Working...' : 'Teleport Here'}
                       </div>
                     </div>
@@ -555,9 +580,11 @@ var App = React.createClass({
           results: []
         };
       }
+
       data.results = _.concat(this.state.remoteLocations.results, data.results)
       data.results = _.uniqBy(data.results, 'id');
       data.results = _.orderBy(data.results, 'created', 'desc');
+
       state.set({
         remoteLocations: data,
         page: page
@@ -567,9 +594,14 @@ var App = React.createClass({
     });
   },
   handleTeleport(location, i){
+    console.log(location, i);
     state.set({installing: `t${i}`}, ()=>{
       utils.exc(this.whichCmd).then((result)=>{
         let saveData = JSON.parse(fs.readFileSync(this.saveJSON));
+
+        if (location.data) {
+          location = location.data;
+        }
 
         _.assignIn(saveData.SpawnStateData, {
           PlayerPositionInSystem: location.playerPosition,
@@ -585,6 +617,8 @@ var App = React.createClass({
           VoxelY: location.VoxelY,
           VoxelZ: location.VoxelZ
         });
+
+        saveData.PlayerStateData.UniverseAddress.RealityIndex = location.galaxy;
 
         fs.writeFile(this.saveJSON, JSON.stringify(saveData), {flag : 'w'}, (err, data)=>{
           if (err) {
@@ -616,11 +650,31 @@ var App = React.createClass({
       this.state.mode = mode;
     }
 
+    // temporary local storage migration of correct coordinates
+    if (!utils.store.get('migrated')) {
+      _.each(this.state.storedLocations, (location, i)=>{
+        _.assignIn(this.state.storedLocations[i], {
+          galaxy: 0,
+          translatedX: utils.convertInteger(location.VoxelX, 'x'),
+          translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
+          translatedY: utils.convertInteger(location.VoxelY, 'y'),
+        });
+        this.state.storedLocations[i].translatedId = `${utils.toHex(this.state.storedLocations[i].translatedX, 4)}:${utils.toHex(this.state.storedLocations[i].translatedY, 4)}:${utils.toHex(this.state.storedLocations[i].translatedZ, 4)}:${utils.toHex(this.state.storedLocations[i].SolarSystemIndex, 4)}`;
+      });
+
+      let s = utils.store.get('storedLocations');
+      s.normal = this.state.storedLocations
+      utils.store.set('storedLocations', s);
+      utils.store.set('migrated', true);
+    }
+
     utils.exc(this.whichCmd).then((result)=>{
       let saveData = JSON.parse(fs.readFileSync(this.saveJSON));
       let location = utils.formatID(saveData.PlayerStateData.UniverseAddress.GalacticAddress);
       const refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
       let username = saveData.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+
+      console.log(saveData)
 
       _.assignIn(location, {
         username: _.isString(username) && username.length > 0 ? username : '',
@@ -628,10 +682,11 @@ var App = React.createClass({
         playerTransform: _.clone(saveData.SpawnStateData.PlayerTransformAt),
         shipPosition: _.clone(saveData.SpawnStateData.ShipPositionInSystem),
         shipTransform: _.clone(saveData.SpawnStateData.ShipTransformAt),
+        galaxy: _.clone(saveData.PlayerStateData.UniverseAddress.RealityIndex),
         distanceToCenter: Math.sqrt(Math.pow(location.VoxelX, 2) + Math.pow(location.VoxelY, 2) + Math.pow(location.VoxelZ, 2)) * 100,
-        translatedX: utils.convertInteger(location.VoxelX, [4096, 2048]),
-        translatedZ: utils.convertIntegerZ(location.VoxelZ, [3584, 1536, 4096]),
-        translatedY: utils.convertInteger(location.VoxelY, [256, 128]),
+        translatedX: utils.convertInteger(location.VoxelX, 'x'),
+        translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
+        translatedY: utils.convertInteger(location.VoxelY, 'y'),
         timeStamp: Date.now()
       });
 
@@ -644,7 +699,7 @@ var App = React.createClass({
           next();
         });
         return;
-      }
+      }// 0EB4:0080:0A14:0099
 
       this.state.storedLocations.push(location);
       this.state.storedLocations = _.orderBy(_.uniqBy(this.state.storedLocations, 'id'), 'timeStamp', 'desc');
@@ -667,7 +722,6 @@ var App = React.createClass({
           next();
         }
       });
-      console.log(saveData)
     }).catch((e)=>{
       console.log(e)
     });

@@ -7,7 +7,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.0.2',
+      version: '0.0.3',
       init: true,
       homedir: os.homedir(),
       width: window.innerWidth,
@@ -29,6 +29,9 @@ var state = Reflux.createStore({
       pageSize: 20,
       loading: false
     };
+    if (!store.get('migrated')) {
+      store.set('migrated', false)
+    }
     let mode = store.get('mode');
     if (mode) {
       this.state.mode = mode;
