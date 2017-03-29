@@ -14,6 +14,6 @@ This includes a binary of Matthew Humphrey's [nmssavetool](https://github.com/ma
 
  * Syncs coordinates while the game is running after each save
  * Upload coordinates and have them tagged with your Steam ID
- * Add descriptions to locations for other's to view
+ * Add descriptions to locations for others to view
  * Map all locations on a galaxy map
  * Ability to switch game modes

@@ -13,6 +13,7 @@ import ReactUtils from 'react-utils';
 import ReactMarkdown from 'react-markdown';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
+import moment from 'moment';
 import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
 
 import * as utils from './utils';
@@ -47,8 +48,8 @@ var DropdownMenu = onClickOutside(React.createClass({
       type: 'info',
       buttons: [],
       title: 'No Man\'s Connect',
-      message: '0.0.3',
-      detail: 'This version is alpha. Please back up your save files.'
+      message: '0.1.0',
+      detail: 'This version is beta. Please back up your save files.'
     });
   },
   /*handleOpenDir(){
@@ -133,19 +134,26 @@ var TooltipChild = React.createClass({
 });
 
 var ThreeDimScatterChart = React.createClass({
+  componentDidMount(){
+    let limit = 0;
+
+    _.defer(()=>{
+      $('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
+    });
+  },
   renderShape(symbol){
     symbol.fill = '#fbbd08';
     return symbol;
   },
   handleSelect(symbol){
-    _.each(this.props.storedLocations, (location)=>{
-      if (location.translatedX === symbol.x
-        && location.translatedY === symbol.z
-        && (0, 4096) - location.translatedZ === symbol.y) {
-        state.set({selectedLocation: location});
-        return;
-      }
-    })
+    let refStoredLocation = _.findIndex(this.props.storedLocations, {id: symbol.id});
+    if (refStoredLocation !== -1) {
+      state.set({selectedLocation: this.props.storedLocations[refStoredLocation]});
+    }
+    let refRemoteLocation = _.findIndex(this.props.remoteLocations.results, {id: symbol.id});
+    if (refRemoteLocation !== -1) {
+      state.set({selectedLocation: this.props.remoteLocations.results[refRemoteLocation].data});
+    }
   },
   render () {
     let currentLocation = [];
@@ -158,30 +166,49 @@ var ThreeDimScatterChart = React.createClass({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
           z: location.translatedY,
-          selected: true
+          selected: true,
+          id: location.id
         });
       } else if (_.isEqual(location, _.first(this.props.storedLocations))) {
         currentLocation.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
-          z: location.translatedY
+          z: location.translatedY,
+          id: location.id
         });
       } else {
         locations.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
           z: location.translatedY,
+          id: location.id
         });
       }
     });
     if (this.props.remoteLocations && this.props.remoteLocations.results) {
       _.each(this.props.remoteLocations.results, (location)=>{
-        if (location.username !== this.props.username) {
+        if (this.props.selectedLocation && location.data.id === this.props.selectedLocation.id) {
+          selectedLocation.push({
+            x: location.data.translatedX,
+            y: (0, 4096) - location.data.translatedZ,
+            z: location.data.translatedY,
+            selected: true,
+            id: location.data.id
+          });
+        } else if (_.isEqual(location.data, _.first(this.props.storedLocations))) {
+          currentLocation.push({
+            x: location.data.translatedX,
+            y: (0, 4096) - location.data.translatedZ,
+            z: location.data.translatedY,
+            id: location.id
+          });
+        } else if (location.username !== this.props.username) {
           remoteLocations.push({
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
             z: location.data.translatedY,
-            user: location.username
+            user: location.username,
+            id: location.id
           });
         }
       });
@@ -192,7 +219,7 @@ var ThreeDimScatterChart = React.createClass({
       y: 2047,
       z: 127
     }];
-    let size = this.props.width >= 1349 ? 512 : this.props.width <= 1180 ? 240 : this.props.width <= 1180 ? 360 : this.props.width <= 1240 ? 400 : this.props.width <= 1300 ? 440 : 480
+    let size = this.props.width >= 1349 ? 512 : this.props.width <= 1180 ? 240 : this.props.width <= 1180 ? 360 : this.props.width <= 1240 ? 400 : this.props.width <= 1300 ? 440 : 480;
     return (
       <ScatterChart width={size} height={size} margin={{top: 20, right: 20, bottom: 20}}>
         <XAxis tickLine={false} tickFormatter={(tick)=>''} ticks={[0, 512, 1024, 1536, 2048, 2560, 3072, 3584, 4096]} domain={[0, 4096]} type="number" dataKey="x" range={[0, 4096]} name="X" label="X"/>
@@ -200,12 +227,12 @@ var ThreeDimScatterChart = React.createClass({
         <ZAxis dataKey="z" range={[60, 200]} name="Y" />
         <CartesianGrid />
         <Tooltip cursor={{strokeDasharray: '3 3'}} content={<TooltipChild />}/>
-        <Legend align="right"/>
+        <Legend align="right" wrapperStyle={{fontFamily: 'geosanslight-nmsregular', fontSize: '16px', right: '0px'}} iconSize={12}/>
+        <Scatter name="Explored Location" data={locations} fill="#82ca9d" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
+        <Scatter name="Shared Location" data={remoteLocations} fill="#2780a7" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
+        <Scatter name="Center" data={center} fill='#DA2600' shape="circle" isAnimationActive={false}/>
         <Scatter name="Selected Location" data={selectedLocation} fill="#fbbd08" shape="circle" isAnimationActive={false}/>
         <Scatter name="Current Location" data={currentLocation} fill="#FFF" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
-        <Scatter name="Explored Location" data={locations} fill="#82ca9d" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
-        <Scatter name="Shared Location" data={remoteLocations} fill="#2780a7" shape="circle" isAnimationActive={false}/>
-        <Scatter name="Center" data={center} fill='#DA2600' shape="circle" isAnimationActive={false}/>
       </ScatterChart>
     );
   }
@@ -279,10 +306,11 @@ var Container = React.createClass({
   },
   render(){
     let p = this.props;
-    let locationItemStyle = {padding: '3px 3px', background: '#0B2B39'};
+    let locationItemStyle = {padding: '0px 3px', background: '#0B2B39', fontFamily: 'geosanslight-nmsregular', fontSize: '16px'};
+    let isOwnLocation = _.findIndex(p.s.storedLocations, {id: p.s.selectedLocation ? p.s.selectedLocation.id : null}) !== -1;
     return (
       <div className="ui grid row" style={{paddingTop: '51px', float: 'left', position: 'absolute', margin: '0px auto', left: '0px', right: '0px'}}>
-        <div className="col-sm-8">
+        <div className="columns">
           <div className="ui segments stackable grid container" style={{maxWidth: '800px !important'}}>
             <div
             className="ui segment"
@@ -295,7 +323,7 @@ var Container = React.createClass({
                 width: '245px',
                 textAlign: 'center'
               }}>
-                <h3>Explored Locations</h3>
+                <h3>Stored Locations</h3>
                 <div className="ui segments" style={{maxHeight: `${p.s.height - 125}px`}}>
                   {p.s.storedLocations.map((location, i)=>{
                     return (
@@ -303,12 +331,14 @@ var Container = React.createClass({
                       key={location.id}
                       className="ui segment"
                       style={{
+                        fontFamily: 'geosanslight-nmsregular',
+                        fontSize: '16px',
                         cursor: 'pointer',
                         padding: '3px 3px',
                         background: this.state.storedLocationHover === i || p.s.selectedLocation && p.s.selectedLocation.id === location.id ? 'rgba(23, 26, 22, 0.34)' : '#0B2B39',
                       }}
                       onMouseEnter={()=>this.setState({storedLocationHover: i})}
-                      onClick={()=>state.set({selectedLocation: location})}>
+                      onClick={()=>state.set({selectedLocation: p.s.selectedLocation && p.s.selectedLocation.id === location.id ? null : location})}>
                         <p>{this.state.storedLocationHover === i || p.s.selectedLocation && p.s.selectedLocation.id === location.id ? location.translatedId : location.id}</p>
                       </div>
                     );
@@ -340,7 +370,8 @@ var Container = React.createClass({
                 borderTop: '2px solid #95220E',
                 textAlign: 'left',
                 marginTop: '26px',
-                minWidth: '371px',
+                minWidth: '376px',
+                maxWidth: '376px',
               }}>
                 <h3 style={{textAlign: 'center'}}>Selected Location</h3>
                 {this.state.edit ?
@@ -366,6 +397,9 @@ var Container = React.createClass({
                   <div
                     className="ui segment"
                     style={{
+                      letterSpacing: '3px',
+                      fontFamily: 'geosanslight-nmsregular',
+                      fontSize: '16px',
                       padding: '3px 3px',
                       textAlign: 'center',
                       cursor: 'pointer',
@@ -374,11 +408,14 @@ var Container = React.createClass({
                     onMouseEnter={()=>this.setState({storedLocationHover: 'updateForm'})}
                     onMouseLeave={()=>this.setState({storedLocationHover: -1})}
                     onClick={this.handleUpdate}>
-                      {this.state.updating ? 'Updating...' : this.state.limit ? `Limit Exceeded (${this.state.description.length} characters)` : 'Update Location'}
+                      {this.state.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
                     </div>
                     <div
                     className="ui segment"
                     style={{
+                      letterSpacing: '3px',
+                      fontFamily: 'geosanslight-nmsregular',
+                      fontSize: '16px',
                       padding: '3px 3px',
                       textAlign: 'center',
                       cursor: 'pointer',
@@ -403,11 +440,12 @@ var Container = React.createClass({
                     style={locationItemStyle}>
                       Voxel Address: {p.s.selectedLocation.id}
                     </div>
+                    {p.s.selectedLocation.galaxy !== undefined ?
                     <div
                     className="ui segment"
                     style={locationItemStyle}>
                       Galaxy: {galaxies[p.s.selectedLocation.galaxy]}
-                    </div>
+                    </div> : null}
                     <div
                     className="ui segment"
                     style={locationItemStyle}>
@@ -418,10 +456,30 @@ var Container = React.createClass({
                     style={locationItemStyle}>
                       Jumps: {p.s.selectedLocation.jumps}
                     </div>
+                    {location.mode ?
+                    <div
+                    className="ui segment"
+                    style={locationItemStyle}>
+                      Mode: {_.upperFirst(location.mode)}
+                    </div> : null}
+                    {location.teleports ?
+                    <div
+                    className="ui segment"
+                    style={locationItemStyle}>
+                      Teleports: {location.teleports}
+                    </div> : null}
+                    <div
+                    className="ui segment"
+                    style={locationItemStyle}>
+                      Created: {moment(location.timeStamp).format('MMMM D, Y')}
+                    </div>
                   </div>
                   <div
                   className="ui segment"
                   style={{
+                    letterSpacing: '3px',
+                    fontFamily: 'geosanslight-nmsregular',
+                    fontSize: '16px',
                     padding: '3px 3px',
                     textAlign: 'center',
                     cursor: 'pointer',
@@ -432,9 +490,13 @@ var Container = React.createClass({
                   onClick={()=>p.onTeleport(location, 'selected')}>
                     {p.s.installing && p.s.installing === `tselected` ? 'Working...' : 'Teleport Here'}
                   </div>
+                  {isOwnLocation ?
                   <div
                   className="ui segment"
                   style={{
+                    letterSpacing: '3px',
+                    fontFamily: 'geosanslight-nmsregular',
+                    fontSize: '16px',
                     padding: '3px 3px',
                     textAlign: 'center',
                     cursor: 'pointer',
@@ -444,32 +506,36 @@ var Container = React.createClass({
                   onMouseLeave={()=>this.setState({storedLocationHover: -1})}
                   onClick={()=>this.setState({edit: true})}>
                     Add Details
-                  </div>
+                  </div> : null}
                 </div>}
               </div> : null}
             </div>
           </div>
         </div>
         {p.s.remoteLocations && p.s.remoteLocations.results ?
-        <div className="col-sm-4">
-          <div className="ui segments" style={{display: 'inline-flex', paddingTop: '13px'}}>
+        <div className="columns" style={{position: 'absolute', right: '0px'}}>
+          <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px'}}>
             <div className="ui segment" style={{
               background: '#42201E',
               display: 'inline-table',
               borderTop: '2px solid #95220E',
               textAlign: 'center'
             }}>
-              <h3>Recent Explorations</h3>
+              <h3>{p.s.mode === '-created' ? 'Recent' : 'Popular'} Explorations</h3>
               <div style={{maxHeight: `${p.s.height - 125}px`, overflowY: 'auto'}} ref="recentExplorations">
                 {p.s.remoteLocations.results.map((location, i)=>{
                   return (
-                    <div key={i} className="ui segment" style={{
+                    <div
+                    ref={location.id}
+                    key={i}
+                    className="ui segment"
+                    style={{
                       background: '#0B2B39',
                       display: 'block',
                       borderTop: '2px solid #95220E',
                       textAlign: 'left',
                       marginTop: `${i === 0 ? 0 : 26}px`,
-                      maxWidth: '371px'
+                      maxWidth: '376px'
                     }}>
                       <h3 style={{textAlign: 'center'}}>{location.username} explored</h3>
                       <div style={{maxHeight: '184px', overflowY: 'auto'}}>
@@ -489,11 +555,12 @@ var Container = React.createClass({
                         style={locationItemStyle}>
                           Voxel Address: {location.data.id}
                         </div>
+                        {location.data.galaxy !== undefined ?
                         <div
                         className="ui segment"
                         style={locationItemStyle}>
                           Galaxy: {galaxies[location.data.galaxy]}
-                        </div>
+                        </div> : null}
                         {location.data.distanceToCenter ?
                         <div
                         className="ui segment"
@@ -510,10 +577,23 @@ var Container = React.createClass({
                         style={locationItemStyle}>
                           Mode: {_.upperFirst(location.mode)}
                         </div>
+                        <div
+                        className="ui segment"
+                        style={locationItemStyle}>
+                          Teleports: {location.teleports}
+                        </div>
+                        <div
+                        className="ui segment"
+                        style={locationItemStyle}>
+                          Created: {moment(location.data.timeStamp).format('MMMM D, Y')}
+                        </div>
                       </div>
                       <div
                       className="ui segment"
                       style={{
+                        letterSpacing: '3px',
+                        fontFamily: 'geosanslight-nmsregular',
+                        fontSize: '16px',
                         padding: '3px 3px',
                         textAlign: 'center',
                         cursor: 'pointer',
@@ -568,10 +648,14 @@ var App = React.createClass({
       this.pollSaveData();
     });
   },
-  fetchRemoteLocations(page=1){
-    utils.ajax.get('/nmslocation', {
+  fetchRemoteLocations(page=1, sort=this.state.sort){
+    let q = this.state.search.length > 0 ? this.state.search : null;
+    let path = q ? '/nmslocationsearch' : '/nmslocation';
+    utils.ajax.get(path, {
       params: {
-        page: page
+        page: page,
+        sort: sort,
+        q: q
       }
     }).then((res)=>{
       let data = res.data;
@@ -581,9 +665,11 @@ var App = React.createClass({
         };
       }
 
-      data.results = _.concat(this.state.remoteLocations.results, data.results)
-      data.results = _.uniqBy(data.results, 'id');
-      data.results = _.orderBy(data.results, 'created', 'desc');
+      if (!q && page > 1 && sort === this.state.sort) {
+        data.results = _.concat(this.state.remoteLocations.results, data.results);
+        data.results = _.uniqBy(data.results, 'id');
+        data.results = _.orderBy(data.results, 'created', 'desc');
+      }
 
       state.set({
         remoteLocations: data,
@@ -629,7 +715,28 @@ var App = React.createClass({
           }).catch((e)=>{
             console.log(e);
           });
-          state.set({installing: false});
+          let refStoredLocation = _.findIndex(this.state.storedLocations, {id: location.id});
+          if (refStoredLocation !== -1) {
+            state.set({installing: false});
+            return;
+          }
+          utils.ajax.post('/nmslocation/', {
+            teleports: true,
+            id: location.id
+          }).then((res)=>{
+            let refRemoteLocation = _.findIndex(this.state.remoteLocations.results, (remoteLocation)=>{
+              return remoteLocation.data.id === location.id;
+            });
+            if (refRemoteLocation !== -1) {
+              this.state.remoteLocations.results[refRemoteLocation] = res.data;
+            }
+            state.set({
+              installing: false,
+              remoteLocations: this.state.remoteLocations
+            });
+          }).catch((err)=>{
+            state.set({installing: false});
+          });
         });
       }).catch((e)=>{
         console.log(e);
@@ -639,6 +746,11 @@ var App = React.createClass({
   pollSaveData(mode){
     if (this.timeout) {
       clearTimeout(this.timeout);
+    }
+
+    if (this.state.search.length > 0) {
+      this.timeout = setTimeout(()=>this.pollSaveData(), 30000);
+      return;
     }
 
     let next = ()=>{
@@ -654,7 +766,6 @@ var App = React.createClass({
     if (!utils.store.get('migrated')) {
       _.each(this.state.storedLocations, (location, i)=>{
         _.assignIn(this.state.storedLocations[i], {
-          galaxy: 0,
           translatedX: utils.convertInteger(location.VoxelX, 'x'),
           translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
           translatedY: utils.convertInteger(location.VoxelY, 'y'),
@@ -723,6 +834,7 @@ var App = React.createClass({
         }
       });
     }).catch((e)=>{
+      next();
       console.log(e)
     });
   },
@@ -753,6 +865,16 @@ var App = React.createClass({
       });
     });
   },
+  handleEnter(e, id){
+    if (e.keyCode === 13) {
+      this.fetchRemoteLocations(1)
+    }
+  },
+  handleSort(sort){
+    state.set({sort: sort}, ()=>{
+      this.fetchRemoteLocations(1, sort);
+    });
+  },
   render(){
     var s = this.state;
     return (
@@ -771,12 +893,29 @@ var App = React.createClass({
             WebkitTransition: 'left 0.1s'
           }}>{s.title}</h2>
           <div className="right menu">
-            {/*<div className="item">
-              <div className="ui transparent icon input">
-                <input type="text" placeholder="Search..." value={s.search} onChange={(e)=>state.set({search: e.target.value})} onKeyDown={this.handleEnter}/>
-                <i className={s.searchLoading ? 'ui basic loading button' : 'search link icon'} style={{cursor: 'default', padding: '0px'}} onClick={this.triggerSearch}/>
-              </div>
+            <div
+            className={`ui dropdown icon item${s.sort === '-created' ? ' selected' : ''}`}
+            onClick={()=>this.handleSort('-created')}>
+              Recent
+            </div>
+            <div
+            className={`ui dropdown icon item${s.sort === '-teleports' ? ' selected' : ''}`}
+            onClick={()=>this.handleSort('-teleports')}>
+              Popular
+            </div>
+            {/*<div
+            className={`ui dropdown icon item${s.sort === 'distanceToCenter' ? ' selected' : ''}`}
+            onClick={()=>this.handleSort('distanceToCenter')} >
+              Distance
             </div>*/}
+            <div className="item">
+              <div
+              className="ui transparent icon input"
+              style={{width: '400px'}}>
+                <input type="text" placeholder="Search..." value={s.search} onChange={(e)=>state.set({search: e.target.value})} onKeyDown={this.handleEnter}/>
+                <i className={s.searchLoading ? 'ui basic loading button' : 'search link icon'} style={{cursor: 'default', padding: '0px'}} onClick={()=>this.fetchRemoteLocations(1)}/>
+              </div>
+            </div>
             <DropdownMenu
             s={s}
             onModeSwitch={(mode)=>this.pollSaveData(mode)}  />

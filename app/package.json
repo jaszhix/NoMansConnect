@@ -1,8 +1,8 @@
 {
-  "name": "electron-react-boilerplate",
-  "productName": "electron-react-boilerplate",
-  "version": "1.0.0",
-  "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
+  "name": "NoMansConnect",
+  "productName": "NoMansConnect",
+  "version": "0.1.0",
+  "description": "An online location manager for No Man's Sky.",
   "main": "./main.js",
   "author": {
     "name": "Jason Hicks",

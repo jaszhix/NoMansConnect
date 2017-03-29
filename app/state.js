@@ -7,7 +7,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.0.3',
+      version: '0.1.0',
       init: true,
       homedir: os.homedir(),
       width: window.innerWidth,
@@ -22,6 +22,7 @@ var state = Reflux.createStore({
       // UI
       settingsOpen: false,
       view: 'index',
+      sort: '-created',
       search: '',
       lastSearch: '',
       searchQuery: [],
