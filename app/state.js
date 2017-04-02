@@ -7,7 +7,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.1.0',
+      version: '0.2.0',
       init: true,
       homedir: os.homedir(),
       width: window.innerWidth,
@@ -19,6 +19,9 @@ var state = Reflux.createStore({
       remoteLocations: [],
       selectedLocation: null,
       username: '',
+      favorites: [],
+      mods: [],
+      selectedImage: null,
       // UI
       settingsOpen: false,
       view: 'index',
@@ -28,7 +31,8 @@ var state = Reflux.createStore({
       searchQuery: [],
       page: 1,
       pageSize: 20,
-      loading: false
+      loading: false,
+      maximized: false
     };
     if (!store.get('migrated')) {
       store.set('migrated', false)
@@ -58,6 +62,12 @@ var state = Reflux.createStore({
         permadeath: []
       });
     }
+    let favorites = store.get('favorites');
+    if (favorites) {
+      this.state.favorites = favorites;
+    } else {
+      store.set('favorites', []);
+    }
     this.index = 0;
     this.history = [];
   },
@@ -72,9 +82,20 @@ var state = Reflux.createStore({
     }
     this.trigger(this.state);
     if (obj.storedLocations) {
+      _.each(_.clone(obj).storedLocations, (location, key)=>{
+        if (location.image && location.image.length > 0) {
+          delete obj.storedLocations[key].image;
+        }
+      });
       let storedLocations = store.get('storedLocations');
       storedLocations[this.state.mode] = obj.storedLocations;
       store.set('storedLocations', storedLocations);
+    }
+
+    if (obj.favorites) {
+      let favorites = store.get('favorites');
+      favorites = obj.favorites;
+      store.set('favorites', favorites);
     }
 
     if (cb) {

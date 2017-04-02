@@ -1,3 +1,16 @@
+# 0.2.0
+
+  * Switched to more efficient method of watching save file changes
+  * Added naming of locations
+  * Added transparency overlay. Trigger with the Insert key.
+  * Added screenshots
+  * Added favorites
+  * Added naming
+  * Style changes
+  * Fixed the stored locations list not scrolling
+  * Installed mods are now listed with uploaded locations
+  * Expanded the remote locations list to multiple columns for higher resolutions.
+
 # 0.1.0
 
   * Updated fonts on text boxes

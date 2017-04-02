@@ -1,8 +1,10 @@
 import './app.global.css';
 import {remote} from 'electron';
+const win = remote.getCurrentWindow();
 import fs from 'fs';
 import path from 'path';
-
+import watch from 'watch';
+import {usedLetters} from 'windows-drive-letters';
 import state from './state';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -15,7 +17,8 @@ import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
 import moment from 'moment';
 import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
-
+import Loader from './loader';
+const screenshot = require('./capture');
 import * as utils from './utils';
 import knownGalaxies from './static/galaxies.json';
 // Temporary until all 256 galaxy names are known
@@ -24,7 +27,7 @@ let galaxyIter = 0;
 let galaxyRepeat = 1
 _.each(galaxies, (g, k)=>{
   ++galaxyIter;
-  if (galaxyIter === 51) {
+  if (galaxyIter === 61) {
     galaxyIter = 0;
     ++galaxyRepeat;
   }
@@ -48,20 +51,10 @@ var DropdownMenu = onClickOutside(React.createClass({
       type: 'info',
       buttons: [],
       title: 'No Man\'s Connect',
-      message: '0.1.0',
+      message: '0.2.0',
       detail: 'This version is beta. Please back up your save files.'
     });
   },
-  /*handleOpenDir(){
-    dialog.showOpenDialog({properties: ['openDirectory']}, (cb)=>{
-      if (fs.existsSync(`${cb[0]}/package.json`) && fs.existsSync(`${cb[0]}/node_modules`)) {
-        state.set({nmDir: `${cb[0]}/node_modules/`, global: false});
-        this.props.onDirOpen();
-      } else {
-        dialog.showErrorBox('Node Modules Not Found', 'The directory you selected does not contain a package.json file, or a node_modules directory.');
-      }
-    });
-  },*/
   handleOpenGlobal(){
     state.set({global: true, nmDir: ''}, ()=>this.props.onDirOpen());
   },
@@ -69,13 +62,12 @@ var DropdownMenu = onClickOutside(React.createClass({
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
     return (
-      <div className={`ui dropdown icon item${p.s.settingsOpen ? ' visible' : ''}`} onClick={()=>state.set({settingsOpen: !p.s.settingsOpen})}>
+      <div
+      style={{WebkitAppRegion: 'no-drag'}}
+      className={`ui dropdown icon item${p.s.settingsOpen ? ' visible' : ''}`}
+      onClick={()=>state.set({settingsOpen: !p.s.settingsOpen})}>
         <i className="wrench icon"></i>
         <div className={`menu transition ${p.s.settingsOpen ? 'visible' : 'hidden'}`}>
-          {/*<div className="item" onClick={this.handleOpenDir}>
-            Open Directory
-          </div>
-          <div className="divider"></div>*/}
           {modes.map((mode, i)=>{
             return (
               <div
@@ -108,7 +100,7 @@ var TooltipChild = React.createClass({
           background: '#0B2B39',
           display: 'inline-table',
           borderTop: '2px solid #95220E',
-          textAlign: 'left'
+          textAlign: 'left',
         }}>
           {this.props.payload[0].payload.user ?
           <div
@@ -156,12 +148,22 @@ var ThreeDimScatterChart = React.createClass({
     }
   },
   render () {
+    let p = this.props;
     let currentLocation = [];
     let locations = [];
     let remoteLocations = [];
     let selectedLocation = [];
-    _.each(this.props.storedLocations, (location)=>{
-      if (this.props.selectedLocation && location.id === this.props.selectedLocation.id) {
+    let favLocations = [];
+    _.each(p.storedLocations, (location)=>{
+      if (location.upvote) {
+        favLocations.push({
+          x: location.translatedX,
+          y: (0, 4096) - location.translatedZ,
+          z: location.translatedY,
+          selected: true,
+          id: location.id
+        });
+      } else if (p.selectedLocation && location.id === p.selectedLocation.id) {
         selectedLocation.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
@@ -169,7 +171,7 @@ var ThreeDimScatterChart = React.createClass({
           selected: true,
           id: location.id
         });
-      } else if (_.isEqual(location, _.first(this.props.storedLocations))) {
+      } else if (_.isEqual(location, _.first(p.storedLocations))) {
         currentLocation.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
@@ -185,9 +187,9 @@ var ThreeDimScatterChart = React.createClass({
         });
       }
     });
-    if (this.props.remoteLocations && this.props.remoteLocations.results) {
-      _.each(this.props.remoteLocations.results, (location)=>{
-        if (this.props.selectedLocation && location.data.id === this.props.selectedLocation.id) {
+    if (p.remoteLocations && p.remoteLocations.results) {
+      _.each(p.remoteLocations.results, (location)=>{
+        if (p.selectedLocation && location.data.id === p.selectedLocation.id) {
           selectedLocation.push({
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
@@ -195,14 +197,14 @@ var ThreeDimScatterChart = React.createClass({
             selected: true,
             id: location.data.id
           });
-        } else if (_.isEqual(location.data, _.first(this.props.storedLocations))) {
+        } else if (_.isEqual(location.data, _.first(p.storedLocations))) {
           currentLocation.push({
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
             z: location.data.translatedY,
             id: location.id
           });
-        } else if (location.username !== this.props.username) {
+        } else if (location.username !== p.username) {
           remoteLocations.push({
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
@@ -219,7 +221,8 @@ var ThreeDimScatterChart = React.createClass({
       y: 2047,
       z: 127
     }];
-    let size = this.props.width >= 1349 ? 512 : this.props.width <= 1180 ? 240 : this.props.width <= 1180 ? 360 : this.props.width <= 1240 ? 400 : this.props.width <= 1300 ? 440 : 480;
+
+    let size = p.width >= 1349 ? 512 : p.width <= 1180 ? 240 : p.width <= 1180 ? 360 : p.width <= 1240 ? 400 : p.width <= 1300 ? 440 : 480;
     return (
       <ScatterChart width={size} height={size} margin={{top: 20, right: 20, bottom: 20}}>
         <XAxis tickLine={false} tickFormatter={(tick)=>''} ticks={[0, 512, 1024, 1536, 2048, 2560, 3072, 3584, 4096]} domain={[0, 4096]} type="number" dataKey="x" range={[0, 4096]} name="X" label="X"/>
@@ -228,25 +231,294 @@ var ThreeDimScatterChart = React.createClass({
         <CartesianGrid />
         <Tooltip cursor={{strokeDasharray: '3 3'}} content={<TooltipChild />}/>
         <Legend align="right" wrapperStyle={{fontFamily: 'geosanslight-nmsregular', fontSize: '16px', right: '0px'}} iconSize={12}/>
-        <Scatter name="Explored Location" data={locations} fill="#82ca9d" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
-        <Scatter name="Shared Location" data={remoteLocations} fill="#2780a7" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
-        <Scatter name="Center" data={center} fill='#DA2600' shape="circle" isAnimationActive={false}/>
-        <Scatter name="Selected Location" data={selectedLocation} fill="#fbbd08" shape="circle" isAnimationActive={false}/>
+        <Scatter name="Explored Location" data={locations} fill="#5fcc93" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
+        <Scatter name="Shared Location" data={remoteLocations} fill="#0080db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
+        <Scatter name="Center" data={center} fill="#ba3935" shape="circle" isAnimationActive={false}/>
+        <Scatter name="Favorite Location" data={favLocations} fill="#9c317c" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
         <Scatter name="Current Location" data={currentLocation} fill="#FFF" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
+        <Scatter name="Selected Location" data={selectedLocation} fill="#ffc356" shape="circle" isAnimationActive={false}/>
       </ScatterChart>
     );
   }
 });
 
+var ImageModal = onClickOutside(React.createClass({
+  handleClickOutside(){
+    state.set({selectedImage: null});
+  },
+  render(){
+    return (
+      <div className="ui modal active" style={{
+        background: 'rgb(23, 26, 22)',
+        borderTop: '2px solid #95220E',
+        position: 'fixed',
+        left: '50%',
+        top: '30%',
+        zIndex: '1001',
+        WebkitTransformOrigin: '50% 25%',
+        boxShadow: 'none'
+      }}>
+        <span className="close"/>
+        <img className="image content" src={this.props.image} />
+      </div>
+    );
+  }
+}));
+
+const locationItemStyle = {padding: '0px 2px', margin: '0px 3px', background: '#0B2B39', fontFamily: 'geosanslight-nmsregular', fontSize: '16px'};
+
+var Item = React.createClass({
+  render(){
+    return (
+      <div
+      className="ui segment"
+      style={locationItemStyle}>
+        <span style={{fontWeight: '600'}}>{this.props.label}</span>: <span style={{float: 'right'}}>{this.props.value}</span>
+      </div>
+    );
+  }
+});
+
+var LocationBox = React.createClass({
+  getDefaultProps() {
+    return {
+      selectType: false,
+      name: '',
+      description: ''
+    };
+  },
+  getInitialState(){
+    return {
+      hover: '',
+      limit: false,
+      name: this.props.name,
+      description: this.props.description
+    };
+  },
+  handleCancel(){
+
+    this.props.onEdit();
+
+  },
+  render(){
+    let p = this.props;
+    let refFav = _.findIndex(p.favorites, (fav)=>{
+      return fav === p.location.id;
+    });
+    let upvote = refFav !== -1;
+    return (
+      <div
+      className="ui segment"
+      style={{
+        background: '#0B2B39',
+        display: 'inline-table',
+        borderTop: '2px solid #95220E',
+        textAlign: 'left',
+        marginTop: p.selectType ? '26px' : 'initial',
+        marginBottom: '26px',
+        marginRight: !p.selectType && p.i % 1 === 0 ? '26px' : 'initial',
+        minWidth: '386px',
+        maxWidth: '386px',
+      }}>
+        <h3 style={{textAlign: 'center'}}>{p.location.username ? this.state.name.length > 0 ? this.state.name : `${p.location.username} explored` : 'Selected Location'}</h3>
+        <i
+        style={{
+          position: 'absolute',
+          top: '15px',
+          right: '10px',
+          cursor: 'pointer'
+        }}
+        className={`${upvote ? '' : 'empty '}star icon`}
+        onClick={()=>p.onFav(p.location)} />
+        {p.edit ?
+        <div>
+          <div
+          className="ui segment"
+          style={{
+            padding: '3px 3px',
+            cursor: 'pointer',
+            background: '#171A16'
+          }}>
+            <div className="ui input" style={{width: '200px'}}>
+              <div className="row">
+                <input
+                style={{
+                  width: '300px',
+                  position: 'relative',
+                  left: '28px',
+                  top: '3px',
+                  color: '#FFF',
+                  background: 'rgb(23, 26, 22)',
+                  padding: '0.67861429em 0em',
+                  borderRadius: '0px',
+                  border: '0px',
+                  fontSize: '15px',
+                  letterSpacing: '2px'
+                }}
+                type="text"
+                value={this.state.name}
+                onChange={(e)=>this.setState({name: e.target.value})}
+                placeholder="Name" />
+              </div>
+            </div>
+            <div className="ui input" style={{width: '200px'}}>
+              <div className="row">
+                <textarea
+                style={{
+                  width: '300px',
+                  position: 'relative',
+                  left: '28px',
+                  top: '3px',
+                  color: '#FFF',
+                  background: 'rgb(23, 26, 22)',
+                  padding: '0.67861429em 0em',
+                  border: '0px',
+                  fontFamily: 'geosanslight-nmsregular',
+                  fontSize: '15px',
+                  letterSpacing: '2px',
+                  outlineColor: 'none'
+                }}
+                type="text"
+                value={this.state.description}
+                onChange={(e)=>this.setState({description: e.target.value})}
+                placeholder="Description... (200 character limit)" />
+              </div>
+            </div>
+          </div>
+          <div
+            className="ui segment"
+            style={{
+              letterSpacing: '3px',
+              fontFamily: 'geosanslight-nmsregular',
+              fontSize: '16px',
+              padding: '3px 3px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              background: this.state.hover === 'updateForm' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+            }}
+            onMouseEnter={()=>this.setState({hover: 'updateForm'})}
+            onMouseLeave={()=>this.setState({hover: -1})}
+            onClick={()=>p.onSubmit(this.state.name, this.state.description)}>
+              {p.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
+            </div>
+            <div
+            className="ui segment"
+            style={{
+              letterSpacing: '3px',
+              fontFamily: 'geosanslight-nmsregular',
+              fontSize: '16px',
+              padding: '3px 3px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              background: this.state.hover === 'cancel' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+            }}
+            onMouseEnter={()=>this.setState({hover: 'cancel'})}
+            onMouseLeave={()=>this.setState({hover: -1})}
+            onClick={this.handleCancel}>
+              Cancel
+            </div>
+            {p.isOwnLocation && p.selectType && p.location.username === p.username && p.location.image && p.location.image.length > 0 ?
+            <div
+            className="ui segment"
+            style={{
+              letterSpacing: '3px',
+              fontFamily: 'geosanslight-nmsregular',
+              fontSize: '16px',
+              padding: '3px 3px',
+              textAlign: 'center',
+              cursor: 'pointer',
+              background: this.state.hover === 'deleteScreen' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+            }}
+            onMouseEnter={()=>this.setState({hover: 'deleteScreen'})}
+            onMouseLeave={()=>this.setState({hover: -1})}
+            onClick={p.onDeleteScreen}>
+              Delete Screenshot
+            </div> : null}
+          </div>
+        :
+        <div>
+          <div style={{maxHeight: '177px', overflowY: 'auto'}}>
+            {p.image && p.image.length > 0 ?
+            <img
+            style={{
+              cursor: 'pointer',
+              maxHeight: '144.5px',
+              width: '99%'
+            }}
+            src={p.image}
+            onClick={()=>state.set({selectedImage: p.image})} /> : null}
+            {p.location.description ? <Item label="Description" value={p.location.description} /> : null }
+            <Item label="Galactic Address" value={p.location.translatedId} />
+            <Item label="Voxel Address" value={p.location.id} />
+            {p.location.galaxy !== undefined ? <Item label="Galaxy" value={galaxies[p.location.galaxy]} /> : null}
+            <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(3)} LY`} />
+            <Item label="Jumps" value={p.location.jumps} />
+            {p.location.mode ? <Item label="Mode" value={_.upperFirst(p.location.mode)} /> : null}
+            {p.location.teleports ? <Item label="Teleports" value={p.location.teleports} /> : null}
+            {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
+            {this.state.name.length > 0 ? <Item label="Explored by" value={p.location.username} /> : null}
+            <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
+            {p.location.mods && p.location.mods.length > 0 ?
+            <div
+            className="ui segment"
+            style={locationItemStyle}>
+              <span style={{fontWeight: '600'}}>Mods Used ({p.location.mods.length})</span>:
+              {p.location.mods.map((mod, i)=>{
+                return (
+                  <div
+                  key={i}
+                  className="ui segment"
+                  style={utils.css(locationItemStyle, {marginTop: i === 0 ? '14px' : '0px', marginBottom: '0px'})}>
+                    {mod}
+                  </div>
+                );
+              })}
+            </div>: null}
+          </div>
+          <div
+          className="ui segment"
+          style={{
+            letterSpacing: '3px',
+            fontFamily: 'geosanslight-nmsregular',
+            fontSize: '16px',
+            padding: '3px 3px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            background: this.state.hover === 'teleport' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+          }}
+          onMouseEnter={()=>this.setState({hover: 'teleport'})}
+          onMouseLeave={()=>this.setState({hover: -1})}
+          onClick={()=>p.onTeleport(p.location, p.selectType ? 'selected' : p.i)}>
+            {p.selectType && p.installing && p.installing === `tselected` || p.i && p.installing === `t${p.i}` ? 'Working...' : 'Teleport Here'}
+          </div>
+          {p.isOwnLocation && p.selectType && p.location.username === p.username ?
+          <div
+          className="ui segment"
+          style={{
+            letterSpacing: '3px',
+            fontFamily: 'geosanslight-nmsregular',
+            fontSize: '16px',
+            padding: '3px 3px',
+            textAlign: 'center',
+            cursor: 'pointer',
+            background: this.state.hover === 'update' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+          }}
+          onMouseEnter={()=>this.setState({hover: 'update'})}
+          onMouseLeave={()=>this.setState({hover: -1})}
+          onClick={p.onEdit}>
+            Edit Details
+          </div> : null}
+        </div>}
+      </div>
+    );
+  }
+});
 
 var Container = React.createClass({
   getInitialState(){
     return {
-      storedLocationHover: -1,
-      edit: false,
       updating: false,
-      limit: false,
-      description: ''
+      edit: false
     };
   },
   componentDidMount(){
@@ -271,30 +543,73 @@ var Container = React.createClass({
       this.props.onPagination(this.props.s.page);
     }
   },
-  handleUpdate(){
-    if (this.state.description.length > 200) {
-      this.setState({limit: true});
-      return;
-    }
+  handleFavorite(location){
+    let refFav = _.findIndex(this.props.s.favorites, (fav)=>{
+      return fav === location.id;
+    });
+    let upvote = refFav === -1;
+
+    utils.ajax.post('/nmslocation/',{
+      username: this.props.s.username,
+      score: location.score,
+      upvote: upvote,
+      id: location.id
+    }).then((res)=>{
+      let refLocation = _.findIndex(this.props.s.storedLocations, {id: location.id});
+      if (refLocation !== -1) {
+        this.props.s.storedLocations[refLocation].score = res.data.score;
+        this.props.s.storedLocations[refLocation].upvote = upvote;
+      }
+      let refRemoteLocation = _.findIndex(this.props.s.remoteLocations.results, (location)=>{
+        return location.data.id === location.id;
+      });
+      if (refRemoteLocation !== -1) {
+        this.props.s.remoteLocations.results[refRemoteLocation].score = res.data.score;
+        this.props.s.remoteLocations.results[refRemoteLocation].data.score = res.data.score;
+        this.props.s.remoteLocations.results[refRemoteLocation].data.upvote = upvote;
+      }
+      if (upvote) {
+        this.props.s.favorites.push(location.id);
+      } else {
+        _.pullAt(this.props.s.favorites, refFav);
+      }
+      state.set({
+        storedLocations: this.props.s.storedLocations,
+        remoteLocations: this.props.s.remoteLocations,
+        favorites: _.uniq(this.props.s.favorites)
+      });
+    });
+  },
+  handleUpdate(name, description){
     this.setState({updating: true}, ()=>{
+      if (description.length > 200) {
+        this.setState({limit: true});
+        return;
+      }
       utils.ajax.post('/nmslocation/', {
         username: this.props.s.username,
-        description: this.state.description,
+        name: name,
+        description: description,
         id: this.props.s.selectedLocation.id
       }).then((res)=>{
         let refLocation = _.findIndex(this.props.s.storedLocations, {id: this.props.s.selectedLocation.id});
         if (refLocation !== -1) {
-          this.props.s.storedLocations[refLocation].description = this.state.description;
+          this.props.s.storedLocations[refLocation].name = name;
+          this.props.s.storedLocations[refLocation].description = description;
         }
         let refRemoteLocation = _.findIndex(this.props.s.remoteLocations.results, (location)=>{
           return location.data.id === this.props.s.selectedLocation.id;
         });
         if (refRemoteLocation !== -1) {
-          this.props.s.remoteLocations.results[refRemoteLocation].data.description = this.state.description;
+          this.props.s.remoteLocations.results[refRemoteLocation].data.name = name;
+          this.props.s.remoteLocations.results[refRemoteLocation].data.description = description;
         }
+        this.props.s.selectedLocation.name = name;
+        this.props.s.selectedLocation.description = description;
         state.set({
           storedLocations: this.props.s.storedLocations,
-          remoteLocations: this.props.s.remoteLocations
+          remoteLocations: this.props.s.remoteLocations,
+          selectedLocation: this.props.s.selectedLocation
         }, ()=>{
           this.setState({
             updating: false,
@@ -304,17 +619,50 @@ var Container = React.createClass({
       });
     });
   },
+  handleDeleteScreen(){
+    utils.ajax.post('/nmslocation/', {
+      username: this.props.s.username,
+      imageD: true,
+      id: this.props.s.selectedLocation.id
+    }).then((res)=>{
+      let refLocation = _.findIndex(this.props.s.storedLocations, {id: this.props.s.selectedLocation.id});
+      if (refLocation !== -1) {
+        this.props.s.storedLocations[refLocation].image = '';
+      }
+      let refRemoteLocation = _.findIndex(this.props.s.remoteLocations.results, (location)=>{
+        return location.data.id === this.props.s.selectedLocation.id;
+      });
+      if (refRemoteLocation !== -1) {
+        this.props.s.remoteLocations.results[refRemoteLocation].data.image = '';
+      }
+      this.props.s.selectedLocation.image = '';
+      state.set({
+        storedLocations: this.props.s.storedLocations,
+        remoteLocations: this.props.s.remoteLocations,
+        selectedLocation: this.props.s.selectedLocation
+      }, ()=>{
+        this.setState({
+          updating: false,
+          edit: false
+        });
+      });
+    });
+  },
   render(){
     let p = this.props;
     let locationItemStyle = {padding: '0px 3px', background: '#0B2B39', fontFamily: 'geosanslight-nmsregular', fontSize: '16px'};
     let isOwnLocation = _.findIndex(p.s.storedLocations, {id: p.s.selectedLocation ? p.s.selectedLocation.id : null}) !== -1;
+    let storedLocations = _.orderBy(p.s.storedLocations, (location)=>{
+      return location.upvote !== undefined && location.upvote;
+    }, 'desc')
+
     return (
       <div className="ui grid row" style={{paddingTop: '51px', float: 'left', position: 'absolute', margin: '0px auto', left: '0px', right: '0px'}}>
         <div className="columns">
           <div className="ui segments stackable grid container" style={{maxWidth: '800px !important'}}>
             <div
             className="ui segment"
-            style={{display: 'inline-flex', paddingLeft: '26px', background: '#171A16'}}
+            style={{display: 'inline-flex', background: 'transparent'}}
             onMouseLeave={()=>this.setState({storedLocationHover: -1})}>
               <div className="ui segment" style={{
                 background: '#0B2B39',
@@ -324,8 +672,8 @@ var Container = React.createClass({
                 textAlign: 'center'
               }}>
                 <h3>Stored Locations</h3>
-                <div className="ui segments" style={{maxHeight: `${p.s.height - 125}px`}}>
-                  {p.s.storedLocations.map((location, i)=>{
+                <div className="ui segments" style={{maxHeight: `${p.s.height - 125}px`, overflowY: 'auto'}}>
+                  {storedLocations.map((location, i)=>{
                     return (
                       <div
                       key={location.id}
@@ -333,22 +681,23 @@ var Container = React.createClass({
                       style={{
                         fontFamily: 'geosanslight-nmsregular',
                         fontSize: '16px',
+                        fontWeight: location.upvote ? '600' : '400',
                         cursor: 'pointer',
                         padding: '3px 3px',
                         background: this.state.storedLocationHover === i || p.s.selectedLocation && p.s.selectedLocation.id === location.id ? 'rgba(23, 26, 22, 0.34)' : '#0B2B39',
                       }}
                       onMouseEnter={()=>this.setState({storedLocationHover: i})}
                       onClick={()=>state.set({selectedLocation: p.s.selectedLocation && p.s.selectedLocation.id === location.id ? null : location})}>
-                        <p>{this.state.storedLocationHover === i || p.s.selectedLocation && p.s.selectedLocation.id === location.id ? location.translatedId : location.id}</p>
+                        <p>{location.name && location.name.length > 0 ? location.name : location.id}</p>
                       </div>
                     );
                   })}
                 </div>
               </div>
             </div>
-            <div className="ui segments" style={{display: 'inline-flex', paddingTop: '13px', marginLeft: '0px'}}>
+            <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
               <div className="ui segment" style={{
-                background: '#42201E',
+                background: 'rgb(23, 26, 22)',
                 display: 'inline-table',
                 borderTop: '2px solid #95220E',
                 textAlign: 'center'
@@ -364,156 +713,33 @@ var Container = React.createClass({
                 </div>
               </div>
               {p.s.selectedLocation ?
-              <div className="ui segment" style={{
-                background: '#0B2B39',
-                display: 'inline-table',
-                borderTop: '2px solid #95220E',
-                textAlign: 'left',
-                marginTop: '26px',
-                minWidth: '376px',
-                maxWidth: '376px',
-              }}>
-                <h3 style={{textAlign: 'center'}}>Selected Location</h3>
-                {this.state.edit ?
-                <div>
-                  <div
-                  className="ui segment"
-                  style={{
-                    padding: '3px 3px',
-                    cursor: 'pointer',
-                    background: this.state.storedLocationHover === 'cancel' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                  }}>
-                    <div className="ui input" style={{width: '200px'}}>
-                      <div className="row">
-                        <textarea
-                        style={{width: '300px', position: 'relative', left: '28px', top: '3px', color: '#000'}}
-                        type="text"
-                        value={this.state.description}
-                        onChange={(e)=>this.setState({description: e.target.value})}
-                        placeholder="Description... (200 character limit)" />
-                      </div>
-                    </div>
-                  </div>
-                  <div
-                    className="ui segment"
-                    style={{
-                      letterSpacing: '3px',
-                      fontFamily: 'geosanslight-nmsregular',
-                      fontSize: '16px',
-                      padding: '3px 3px',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      background: this.state.storedLocationHover === 'updateForm' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                    }}
-                    onMouseEnter={()=>this.setState({storedLocationHover: 'updateForm'})}
-                    onMouseLeave={()=>this.setState({storedLocationHover: -1})}
-                    onClick={this.handleUpdate}>
-                      {this.state.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
-                    </div>
-                    <div
-                    className="ui segment"
-                    style={{
-                      letterSpacing: '3px',
-                      fontFamily: 'geosanslight-nmsregular',
-                      fontSize: '16px',
-                      padding: '3px 3px',
-                      textAlign: 'center',
-                      cursor: 'pointer',
-                      background: this.state.storedLocationHover === 'cancel' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                    }}
-                    onMouseEnter={()=>this.setState({storedLocationHover: 'cancel'})}
-                    onMouseLeave={()=>this.setState({storedLocationHover: -1})}
-                    onClick={()=>this.setState({edit: false, description: ''})}>
-                      Cancel
-                    </div>
-                  </div>
-                :
-                <div>
-                  <div style={{maxHeight: '184px', overflowY: 'auto'}}>
-                    <div
-                    className="ui segment"
-                    style={locationItemStyle}>
-                      Galactic Address: {p.s.selectedLocation.translatedId}
-                    </div>
-                    <div
-                    className="ui segment"
-                    style={locationItemStyle}>
-                      Voxel Address: {p.s.selectedLocation.id}
-                    </div>
-                    {p.s.selectedLocation.galaxy !== undefined ?
-                    <div
-                    className="ui segment"
-                    style={locationItemStyle}>
-                      Galaxy: {galaxies[p.s.selectedLocation.galaxy]}
-                    </div> : null}
-                    <div
-                    className="ui segment"
-                    style={locationItemStyle}>
-                      Distance to Center: {p.s.selectedLocation.distanceToCenter.toFixed(3)} LY
-                    </div>
-                    <div
-                    className="ui segment"
-                    style={locationItemStyle}>
-                      Jumps: {p.s.selectedLocation.jumps}
-                    </div>
-                    {location.mode ?
-                    <div
-                    className="ui segment"
-                    style={locationItemStyle}>
-                      Mode: {_.upperFirst(location.mode)}
-                    </div> : null}
-                    {location.teleports ?
-                    <div
-                    className="ui segment"
-                    style={locationItemStyle}>
-                      Teleports: {location.teleports}
-                    </div> : null}
-                    <div
-                    className="ui segment"
-                    style={locationItemStyle}>
-                      Created: {moment(location.timeStamp).format('MMMM D, Y')}
-                    </div>
-                  </div>
-                  <div
-                  className="ui segment"
-                  style={{
-                    letterSpacing: '3px',
-                    fontFamily: 'geosanslight-nmsregular',
-                    fontSize: '16px',
-                    padding: '3px 3px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    background: this.state.storedLocationHover === 'teleport' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                  }}
-                  onMouseEnter={()=>this.setState({storedLocationHover: 'teleport'})}
-                  onMouseLeave={()=>this.setState({storedLocationHover: -1})}
-                  onClick={()=>p.onTeleport(location, 'selected')}>
-                    {p.s.installing && p.s.installing === `tselected` ? 'Working...' : 'Teleport Here'}
-                  </div>
-                  {isOwnLocation ?
-                  <div
-                  className="ui segment"
-                  style={{
-                    letterSpacing: '3px',
-                    fontFamily: 'geosanslight-nmsregular',
-                    fontSize: '16px',
-                    padding: '3px 3px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    background: this.state.storedLocationHover === 'update' ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                  }}
-                  onMouseEnter={()=>this.setState({storedLocationHover: 'update'})}
-                  onMouseLeave={()=>this.setState({storedLocationHover: -1})}
-                  onClick={()=>this.setState({edit: true})}>
-                    Add Details
-                  </div> : null}
-                </div>}
-              </div> : null}
+              <LocationBox
+              name={p.s.selectedLocation.name}
+              description={p.s.selectedLocation.description}
+              username={p.s.username}
+              selectType={true}
+              isOwnLocation={isOwnLocation}
+              location={p.s.selectedLocation}
+              installing={p.s.installing}
+              updating={this.state.updating}
+              edit={this.state.edit}
+              favorites={p.s.favorites}
+              image={p.s.selectedLocation.image}
+              onDeleteScreen={this.handleDeleteScreen}
+              onFav={this.handleFavorite}
+              onEdit={()=>this.setState({edit: !this.state.edit})}
+              onTeleport={(location, type)=>p.onTeleport(location, type)}
+              onSubmit={(name, description)=>this.handleUpdate(name, description)}
+               /> : null}
             </div>
           </div>
         </div>
         {p.s.remoteLocations && p.s.remoteLocations.results ?
-        <div className="columns" style={{position: 'absolute', right: '0px'}}>
+        <div className="columns" style={{
+          position: 'absolute',
+          right: '68px',
+          maxWidth: `${p.s.width <= 1747 ? 497 : p.s.width <= 2164 ? 932 : 1300}px`,
+        }}>
           <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px'}}>
             <div className="ui segment" style={{
               background: '#42201E',
@@ -521,90 +747,34 @@ var Container = React.createClass({
               borderTop: '2px solid #95220E',
               textAlign: 'center'
             }}>
-              <h3>{p.s.mode === '-created' ? 'Recent' : 'Popular'} Explorations</h3>
-              <div style={{maxHeight: `${p.s.height - 125}px`, overflowY: 'auto'}} ref="recentExplorations">
+              <h3>{p.s.sort === '-created' ? 'Recent' : 'Popular'} Explorations</h3>
+              <div
+              style={{
+                maxHeight: `${p.s.height - 125}px`,
+                width: `${p.s.width <= 1747 ? 497 : p.s.width <= 2164 ? 932 : 1300}px`,
+                overflowY: 'auto',
+                overflowX: 'hidden'
+              }}
+              ref="recentExplorations">
                 {p.s.remoteLocations.results.map((location, i)=>{
+                  location.data.teleports = location.teleports;
+                  location.upvote = location.data.upvote;
                   return (
-                    <div
-                    ref={location.id}
+                    <LocationBox
                     key={i}
-                    className="ui segment"
-                    style={{
-                      background: '#0B2B39',
-                      display: 'block',
-                      borderTop: '2px solid #95220E',
-                      textAlign: 'left',
-                      marginTop: `${i === 0 ? 0 : 26}px`,
-                      maxWidth: '376px'
-                    }}>
-                      <h3 style={{textAlign: 'center'}}>{location.username} explored</h3>
-                      <div style={{maxHeight: '184px', overflowY: 'auto'}}>
-                        {location.description ?
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Description: {location.description}
-                        </div> : null}
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Galactic Address: {location.data.translatedId}
-                        </div>
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Voxel Address: {location.data.id}
-                        </div>
-                        {location.data.galaxy !== undefined ?
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Galaxy: {galaxies[location.data.galaxy]}
-                        </div> : null}
-                        {location.data.distanceToCenter ?
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Distance to Center: {location.data.distanceToCenter.toFixed(3)} LY
-                        </div> : null}
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Jumps: {location.data.jumps}
-                        </div>
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Mode: {_.upperFirst(location.mode)}
-                        </div>
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Teleports: {location.teleports}
-                        </div>
-                        <div
-                        className="ui segment"
-                        style={locationItemStyle}>
-                          Created: {moment(location.data.timeStamp).format('MMMM D, Y')}
-                        </div>
-                      </div>
-                      <div
-                      className="ui segment"
-                      style={{
-                        letterSpacing: '3px',
-                        fontFamily: 'geosanslight-nmsregular',
-                        fontSize: '16px',
-                        padding: '3px 3px',
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        background: this.state.storedLocationHover === `t${i}` ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-                      }}
-                      onMouseEnter={()=>this.setState({storedLocationHover: `t${i}`})}
-                      onMouseLeave={()=>this.setState({storedLocationHover: -1})}
-                      onClick={()=>p.onTeleport(location, i)}>
-                        {p.s.installing && p.s.installing === `t${i}` ? 'Working...' : 'Teleport Here'}
-                      </div>
-                    </div>
+                    i={i}
+                    name={location.name}
+                    description={location.description}
+                    username={p.s.username}
+                    isOwnLocation={isOwnLocation}
+                    location={location.data}
+                    installing={p.s.installing}
+                    updating={this.state.updating}
+                    favorites={p.s.favorites}
+                    image={location.image}
+                    onFav={(location, upvote)=>this.handleFavorite(location, upvote)}
+                    onTeleport={(_location, type)=>p.onTeleport(location, type)}
+                    />
                   );
                 })}
               </div>
@@ -626,26 +796,54 @@ var App = React.createClass({
   },
   componentDidMount(){
     this.listenTo(state, this.stateChange);
-    this.setState({init: false});
-    $('#splash').remove();
     this.saveJSON = path.join(__dirname, 'saveCache.json');
     this.saveJSON = path.resolve(__dirname, this.saveJSON);
     this.saveTool = process.env.NODE_ENV === 'production' ? '\\nmssavetool\\nmssavetool.exe' : '\\app\\nmssavetool\\nmssavetool.exe';
     this.whichCmd = `.${this.saveTool} decrypt -g ${this.state.mode} -o ${this.saveJSON}`;
 
-    utils.ajax.get('/nmslocation', {
-      params: {
-        version: true
-      }
-    }).then((res)=>{
-      if (res.data.version !== this.state.version) {
-        this.pollSaveData();
-        this.handleUpgrade();
-      } else {
-        this.pollSaveData();
-      }
-    }).catch(()=>{
-      this.pollSaveData();
+    let initialize = ()=>{
+      utils.ajax.get('/nmslocation', {
+        params: {
+          version: true
+        }
+      }).then((res)=>{
+        if (res.data.version !== this.state.version) {
+          this.pollSaveData(this.state.mode, true);
+          this.handleUpgrade();
+        } else {
+          this.pollSaveData(this.state.mode, true);
+        }
+      }).catch(()=>{
+        this.pollSaveData(this.state.mode, true);
+      });
+    };
+
+    usedLetters().then((letters) => {
+      let indexModsInUse = (path)=>{
+        fs.readdir(path, (err, list)=>{
+          if (err) {
+            initialize();
+            return;
+          }
+          state.set({mods: list}, ()=>{
+            initialize();
+          });
+        });
+      };
+
+      _.each(letters, (drive, key)=>{
+        let steamPath = `${drive}:/Program Files (x86)/Steam/steamapps/common/No Man's Sky/GAMEDATA/PCBANKS/MODS`;
+        let gogPath = `${drive}:/Program Files/No Man's Sky/GAMEDATA/PCBANKS/MODS`
+        if (fs.existsSync(steamPath)) {
+          indexModsInUse(steamPath);
+          return;
+        } else if (fs.existsSync(gogPath)) {
+          indexModsInUse(gogPath);
+          return;
+        }
+      })
+    }).catch((err) => {
+      initialize();
     });
   },
   fetchRemoteLocations(page=1, sort=this.state.sort){
@@ -671,11 +869,46 @@ var App = React.createClass({
         data.results = _.orderBy(data.results, 'created', 'desc');
       }
 
+      _.each(data.results, (remoteLocation, key)=>{
+        let refFav = _.findIndex(this.state.favorites, (fav)=>{
+          return fav === remoteLocation.data.id;
+        });
+        let upvote = refFav !== -1;
+
+        data.results[key].data.name = remoteLocation.name;
+        data.results[key].data.description = remoteLocation.description;
+        data.results[key].data.score = remoteLocation.score;
+        data.results[key].data.upvote = upvote;
+        try {
+          data.results[key].data.image = remoteLocation.image
+        } catch (e) {
+          data.results[key].data.image = '';
+        }
+        if (this.state.selectedLocation) {
+          this.state.selectedLocation.image = remoteLocation.data.image;
+        }
+        _.each(this.state.storedLocations, (storedLocation, key)=>{
+          if (remoteLocation.data.id === storedLocation.id) {
+            this.state.storedLocations[key].username = remoteLocation.data.username;
+            this.state.storedLocations[key].name = remoteLocation.name;
+            this.state.storedLocations[key].description = remoteLocation.description;
+            this.state.storedLocations[key].score = remoteLocation.score;
+            if (!storedLocation.image) {
+              this.state.storedLocations[key].image = remoteLocation.data.image;
+            }
+          }
+        });
+      });
+
       state.set({
+        selectedLocation: this.state.selectedLocation,
+        storedLocations: this.state.storedLocations,
         remoteLocations: data,
-        page: page
+        page: page,
+        init: false
       });
     }).catch((err)=>{
+      state.set({init: false});
       console.log(err)
     });
   },
@@ -743,19 +976,24 @@ var App = React.createClass({
       });
     });
   },
-  pollSaveData(mode){
-    if (this.timeout) {
-      clearTimeout(this.timeout);
-    }
-
-    if (this.state.search.length > 0) {
-      this.timeout = setTimeout(()=>this.pollSaveData(), 30000);
-      return;
-    }
-
+  pollSaveData(mode, init=false){
     let next = ()=>{
       this.fetchRemoteLocations();
-      this.timeout = setTimeout(()=>this.pollSaveData(), 30000);
+      if (init) {
+        watch.createMonitor(path.join(state.get().homedir, 'AppData', 'Roaming', 'HelloGames', 'NMS'), {
+          ignoreDotFiles: true,
+          ignoreNotPermitted: true,
+
+        }, (monitor)=>{
+          monitor.on('changed', (f, curr, prev)=>{
+            this.pollSaveData();
+            //let pollSaveData = _.once(this.pollSaveData);
+            //setTimeout(()=>pollSaveData(), 5000);
+            console.log('changed')
+          });
+          //monitor.stop();
+        });
+      }
     };
 
     if (mode && mode !== this.state.mode) {
@@ -770,7 +1008,6 @@ var App = React.createClass({
           translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
           translatedY: utils.convertInteger(location.VoxelY, 'y'),
         });
-        this.state.storedLocations[i].translatedId = `${utils.toHex(this.state.storedLocations[i].translatedX, 4)}:${utils.toHex(this.state.storedLocations[i].translatedY, 4)}:${utils.toHex(this.state.storedLocations[i].translatedZ, 4)}:${utils.toHex(this.state.storedLocations[i].SolarSystemIndex, 4)}`;
       });
 
       let s = utils.store.get('storedLocations');
@@ -787,51 +1024,62 @@ var App = React.createClass({
 
       console.log(saveData)
 
-      _.assignIn(location, {
-        username: _.isString(username) && username.length > 0 ? username : '',
-        playerPosition: _.clone(saveData.SpawnStateData.PlayerPositionInSystem),
-        playerTransform: _.clone(saveData.SpawnStateData.PlayerTransformAt),
-        shipPosition: _.clone(saveData.SpawnStateData.ShipPositionInSystem),
-        shipTransform: _.clone(saveData.SpawnStateData.ShipTransformAt),
-        galaxy: _.clone(saveData.PlayerStateData.UniverseAddress.RealityIndex),
-        distanceToCenter: Math.sqrt(Math.pow(location.VoxelX, 2) + Math.pow(location.VoxelY, 2) + Math.pow(location.VoxelZ, 2)) * 100,
-        translatedX: utils.convertInteger(location.VoxelX, 'x'),
-        translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
-        translatedY: utils.convertInteger(location.VoxelY, 'y'),
-        timeStamp: Date.now()
+      let refFav = _.findIndex(this.state.favorites, (fav)=>{
+        return fav === location.id;
       });
+      let upvote = refFav !== -1;
 
-      location.jumps = Math.ceil(location.distanceToCenter / 400);
-
-      location.translatedId = `${utils.toHex(location.translatedX, 4)}:${utils.toHex(location.translatedY, 4)}:${utils.toHex(location.translatedZ, 4)}:${utils.toHex(location.SolarSystemIndex, 4)}`;
-
-      if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
-        state.set({username: location.username}, ()=>{
-          next();
+      screenshot(init, (image)=>{
+        console.log(image)
+        _.assignIn(location, {
+          username: _.isString(username) && username.length > 0 ? username : '',
+          playerPosition: _.clone(saveData.SpawnStateData.PlayerPositionInSystem),
+          playerTransform: _.clone(saveData.SpawnStateData.PlayerTransformAt),
+          shipPosition: _.clone(saveData.SpawnStateData.ShipPositionInSystem),
+          shipTransform: _.clone(saveData.SpawnStateData.ShipTransformAt),
+          galaxy: _.clone(saveData.PlayerStateData.UniverseAddress.RealityIndex),
+          distanceToCenter: Math.sqrt(Math.pow(location.VoxelX, 2) + Math.pow(location.VoxelY, 2) + Math.pow(location.VoxelZ, 2)) * 100,
+          translatedX: utils.convertInteger(location.VoxelX, 'x'),
+          translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
+          translatedY: utils.convertInteger(location.VoxelY, 'y'),
+          upvote: upvote,
+          image: image,
+          mods: this.state.mods,
+          timeStamp: Date.now(),
         });
-        return;
-      }// 0EB4:0080:0A14:0099
 
-      this.state.storedLocations.push(location);
-      this.state.storedLocations = _.orderBy(_.uniqBy(this.state.storedLocations, 'id'), 'timeStamp', 'desc');
+        location.jumps = Math.ceil(location.distanceToCenter / 400);
 
-      state.set({
-        storedLocations: this.state.storedLocations,
-        username: location.username
-      }, ()=>{
-        if (refLocation === -1) {
-          utils.ajax.post('/nmslocation/', {
-            username: location.username,
-            mode: this.state.mode,
-            data: location
-          }).then((res)=>{
+        location.translatedId = `${utils.toHex(location.translatedX, 4)}:${utils.toHex(location.translatedY, 4)}:${utils.toHex(location.translatedZ, 4)}:${utils.toHex(location.SolarSystemIndex, 4)}`;
+
+        if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
+          state.set({username: location.username}, ()=>{
             next();
-          }).catch((err)=>{
-            console.log(err)
           });
-        } else {
-          next();
+          return;
         }
+
+        this.state.storedLocations.push(location);
+        this.state.storedLocations = _.orderBy(_.uniqBy(this.state.storedLocations, 'id'), 'timeStamp', 'desc');
+        state.set({
+          storedLocations: this.state.storedLocations,
+          username: location.username
+        }, ()=>{
+          if (refLocation === -1) {
+            utils.ajax.post('/nmslocation/', {
+              username: location.username,
+              mode: this.state.mode,
+              image: image,
+              data: location
+            }).then((res)=>{
+              next();
+            }).catch((err)=>{
+              next();
+            });
+          } else {
+            next();
+          }
+        });
       });
     }).catch((e)=>{
       next();
@@ -875,15 +1123,35 @@ var App = React.createClass({
       this.fetchRemoteLocations(1, sort);
     });
   },
+  handleMaximize(){
+    state.set({maximized: !this.state.maximized}, ()=>{
+      if (this.state.maximized) {
+        win.maximize();
+      } else {
+        let bounds = {
+          height: 1040,
+          width: 1351,
+          x: 600,
+          y: 5
+        };
+        win.setBounds(bounds);
+        win.setContentBounds(bounds);
+      }
+    });
+  },
   render(){
     var s = this.state;
+    if (s.init) {
+      return <Loader />
+    }
     return (
       <div>
         <div className="ui top attached menu" style={{
           position: 'absolute',
           maxHeight: '42px',
           zIndex: '99',
-          WebkitUserSelect: 'none'
+          WebkitUserSelect: 'none',
+          WebkitAppRegion: 'drag'
         }}>
           <h2 style={{
             position: 'absolute',
@@ -894,14 +1162,22 @@ var App = React.createClass({
           }}>{s.title}</h2>
           <div className="right menu">
             <div
+            style={{WebkitAppRegion: 'no-drag'}}
             className={`ui dropdown icon item${s.sort === '-created' ? ' selected' : ''}`}
             onClick={()=>this.handleSort('-created')}>
               Recent
             </div>
             <div
+            style={{WebkitAppRegion: 'no-drag'}}
             className={`ui dropdown icon item${s.sort === '-teleports' ? ' selected' : ''}`}
             onClick={()=>this.handleSort('-teleports')}>
               Popular
+            </div>
+            <div
+            style={{WebkitAppRegion: 'no-drag'}}
+            className={`ui dropdown icon item${s.sort === '-score' ? ' selected' : ''}`}
+            onClick={()=>this.handleSort('-score')}>
+              Favorites
             </div>
             {/*<div
             className={`ui dropdown icon item${s.sort === 'distanceToCenter' ? ' selected' : ''}`}
@@ -911,8 +1187,8 @@ var App = React.createClass({
             <div className="item">
               <div
               className="ui transparent icon input"
-              style={{width: '400px'}}>
-                <input type="text" placeholder="Search..." value={s.search} onChange={(e)=>state.set({search: e.target.value})} onKeyDown={this.handleEnter}/>
+              style={{width: '250px', WebkitUserSelect: 'initial', WebkitAppRegion: 'no-drag', fontSize: '15px'}}>
+                <input type="text" style={{letterSpacing: '2px'}} placeholder="Search..." value={s.search} onChange={(e)=>state.set({search: e.target.value})} onKeyDown={this.handleEnter}/>
                 <i className={s.searchLoading ? 'ui basic loading button' : 'search link icon'} style={{cursor: 'default', padding: '0px'}} onClick={()=>this.fetchRemoteLocations(1)}/>
               </div>
             </div>
@@ -920,7 +1196,39 @@ var App = React.createClass({
             s={s}
             onModeSwitch={(mode)=>this.pollSaveData(mode)}  />
           </div>
+          <div
+          style={{WebkitAppRegion: 'no-drag'}}
+          className={`ui dropdown icon item`}
+          onClick={()=>this.handleSort('-created')}>
+            <div className="titlebar-controls">
+              <div className="titlebar-minimize" onClick={()=>win.minimize()}>
+                <svg x="0px" y="0px" viewBox="0 0 10 1">
+                  <rect fill="#FFFFFF" width="10" height="1"></rect>
+                </svg>
+              </div>
+              <div className="titlebar-resize" onClick={this.handleMaximize}>
+                {s.maximized ?
+                <svg className="maximize-svg" x="0px" y="0px" viewBox="0 0 10 10">
+                  <mask id="Mask">
+                    <path fill="#FFFFFF" d="M 3 1 L 9 1 L 9 7 L 8 7 L 8 2 L 3 2 L 3 1 z"/>
+                    <path fill="#FFFFFF" d="M 1 3 L 7 3 L 7 9 L 1 9 L 1 3 z"/>
+                  </mask>
+                  <path fill="#FFFFFF" d="M 2 0 L 10 0 L 10 8 L 8 8 L 8 10 L 0 10 L 0 2 L 2 2 L 2 0 z" mask="url(#Mask)"/>
+                </svg>
+                :
+                <svg className="fullscreen-svg" x="0px" y="0px" viewBox="0 0 10 10">
+                  <path fill="#FFFFFF" d="M 0 0 L 0 10 L 10 10 L 10 0 L 0 0 z M 1 1 L 9 1 L 9 9 L 1 9 L 1 1 z "/>
+                </svg>}
+              </div>
+              <div className="titlebar-close" onClick={()=>win.close()}>
+                <svg x="0px" y="0px" viewBox="0 0 10 10">
+                  <polygon fill="#FFFFFF" points="10,1 9,0 5,4 1,0 0,1 4,5 0,9 1,10 5,6 9,10 10,9 6,5"></polygon>
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
+        {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} /> : null}
         <Container
         s={s}
         onTeleport={(location, i)=>this.handleTeleport(location, i)}
@@ -929,7 +1237,6 @@ var App = React.createClass({
     );
   }
 });
-
 // Render to the #app element
 ReactDOM.render(
   <App />,

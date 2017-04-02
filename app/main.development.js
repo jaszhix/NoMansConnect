@@ -1,7 +1,7 @@
 // @flow
-import { app, BrowserWindow, Menu } from 'electron';
-//import MenuBuilder from './menu';
-
+import { app, BrowserWindow, Menu, globalShortcut } from 'electron';
+import fs from 'fs';
+import os from 'os';
 let mainWindow = null;
 
 if (process.env.NODE_ENV === 'production') {
@@ -15,6 +15,8 @@ if (process.env.NODE_ENV === 'development') {
   const p = path.join(__dirname, '..', 'app', 'node_modules'); // eslint-disable-line
   require('module').globalPaths.push(p); // eslint-disable-line
 }
+
+app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
@@ -46,8 +48,10 @@ app.on('ready', async () => {
 
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1360,
-    height: 1040
+    width: 1421,
+    height: 1040,
+    frame: false,
+    transparent: true
   });
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);
@@ -58,7 +62,9 @@ app.on('ready', async () => {
     }
     mainWindow.show();
     mainWindow.focus();
-    //mainWindow.webContents.toggleDevTools();
+    if (process.env.NODE_ENV === 'development') {
+      mainWindow.webContents.openDevTools();
+    }
   });
 
   mainWindow.on('closed', () => {
@@ -66,4 +72,14 @@ app.on('ready', async () => {
   });
 
   Menu.setApplicationMenu(null);
+  globalShortcut.register('Insert', ()=>{
+    if (mainWindow.isFocused()) {
+      mainWindow.minimize();
+      mainWindow.webContents.executeJavaScript(`document.body.style.background = '#171A16';`)
+    } else {
+      mainWindow.maximize();
+      mainWindow.webContents.executeJavaScript(`document.body.style.background = 'transparent';`)
+      mainWindow.focus();
+    }
+  })
 });

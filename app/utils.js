@@ -127,6 +127,10 @@ export var toHex = (str, totalChars)=>{
   return str;
 }
 
+export var css = (styleObject, newObject)=>{
+  return _.assignIn(_.clone(styleObject), _.clone(newObject));
+};
+
 export var ajax = axios.create({
   //baseURL: 'http://192.168.1.148:8000/api/',
   baseURL: 'https://neuropuff.com/api/',
