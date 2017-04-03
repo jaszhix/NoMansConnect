@@ -1,7 +1,7 @@
 {
   "name": "no-mans-connect",
   "productName": "No Man's Connect",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
   "scripts": {
@@ -24,6 +24,7 @@
   "browserslist": "electron 1.4",
   "build": {
     "productName": "No Man's Connect",
+    "publisherName": "jaszhix",
     "appId": "org.jaszhix.nmsc",
     "category": "public.app-category.tools",
     "files": [

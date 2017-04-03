@@ -59,6 +59,7 @@ export var store = {
   get: (key, cb=()=>{})=>{
     storage.get(key, (err, data)=>{
       if (err || _.isEqual(data, {})) {
+        console.log(err, data);
         cb(null);
         return;
       }

@@ -50,7 +50,7 @@ var DropdownMenu = onClickOutside(React.createClass({
       type: 'info',
       buttons: [],
       title: 'No Man\'s Connect',
-      message: '0.3.0',
+      message: '0.3.1',
       detail: 'This version is beta. Please back up your save files.'
     });
   },
@@ -1124,7 +1124,7 @@ var App = React.createClass({
             return remoteOwnedLocation.username === this.state.username && refStoredLocation === -1;
           });
           if (remoteOwnedLocations.length > 0) {
-            this.state.storedLocations = _.concat(this.state.storedLocations, _.map(remoteOwnedLocations, 'data'));
+            this.state.storedLocations = _.orderBy(_.concat(this.state.storedLocations, _.map(remoteOwnedLocations, 'data')), 'timeStamp', 'desc');
           }
         }
       });
@@ -1248,7 +1248,7 @@ var App = React.createClass({
         });
         let upvote = refFav !== -1;
 
-        screenshot(init || !NMSRunning, (image)=>{
+        screenshot(init || !NMSRunning || !this.state.autoCapture, (image)=>{
           _.assignIn(location, {
             username: _.isString(username) && username.length > 0 ? username : '',
             playerPosition: _.clone(saveData.SpawnStateData.PlayerPositionInSystem),

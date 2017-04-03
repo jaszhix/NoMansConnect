@@ -1,10 +1,13 @@
+# 0.3.1
+
+  * Fixed a bug preventing locations from uploading
+
 # 0.3.0
 
   * Added ability to disable automatic screenshots in the main menu, and upload screenshots
   * Each galaxy now has its own map
   * Improved NMS install detection for the mod listing feature
   * Made it easier to reset search queries
-  * Images are now cached locally and available offline
   * Remote locations are now synced if they are missing from the locally stored locations cache
   * Screenshots are now only taken automatically if the game is running
   * Style fixes

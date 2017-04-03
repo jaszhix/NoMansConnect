@@ -7,7 +7,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.3.0',
+      version: '0.3.1',
       init: true,
       homedir: os.homedir(),
       width: window.innerWidth,
@@ -86,8 +86,14 @@ var state = Reflux.createStore({
     }
     this.trigger(this.state);
     if (obj.storedLocations) {
+      let storedLocations = _.clone(obj).storedLocations;
+      _.each(storedLocations, (location, key)=>{
+        if (location.image && location.image.length > 0) {
+          delete storedLocations[key].image;
+        }
+      });
       store.get('storedLocations', (data)=>{
-        data[this.state.mode] = obj.storedLocations;
+        data[this.state.mode] = storedLocations;
         store.set('storedLocations', data);
       });
     }
@@ -100,7 +106,7 @@ var state = Reflux.createStore({
       store.set('autoCapture', obj.autoCapture);
     }
 
-    if (cb) {
+    if (_.isFunction(cb)) {
       _.defer(()=>cb());
     }
   },
