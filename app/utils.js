@@ -1,5 +1,7 @@
 import axios from 'axios';
 import _ from 'lodash';
+import storage from 'electron-json-storage';
+import state from './state';
 
 var exec = require('child_process').exec;
 export var formatBytes = (bytes, decimals)=>{
@@ -51,18 +53,55 @@ export var exc = (cmd)=>{
 };
 
 export var store = {
-  set: (key, obj)=>{
-    window.localStorage.setItem(key, JSON.stringify(obj));
+  set: (key, obj, cb=()=>{})=>{
+    storage.set(key, obj, cb);
   },
-  get: (key)=>{
-    return JSON.parse(window.localStorage.getItem(key));
+  get: (key, cb=()=>{})=>{
+    storage.get(key, (err, data)=>{
+      if (err || _.isEqual(data, {})) {
+        cb(null);
+        return;
+      }
+      cb(data);
+    });
   },
-  remove: (key)=>{
-    window.localStorage.removeItem(key);
+  remove: (key, cb=()=>{})=>{
+    storage.remove(key, cb);
   },
   clear: ()=>{
-    window.localStorage.clear();
+    storage.clear();
   }
+};
+
+export var migrateStorage = (cb)=>{
+  let storedLocations = window.localStorage.getItem('storedLocations');
+  let mode = window.localStorage.getItem('mode');
+  let favorites = window.localStorage.getItem('favorites');
+  if (!storedLocations) {
+    cb();
+    return;
+  }
+  storage.set('mode', JSON.parse(mode), ()=>{
+    if (!favorites) {
+      cb();
+      return;
+    }
+    storage.set('favorites', JSON.parse(favorites), ()=>{
+      if (!mode) {
+        cb();
+        return;
+      }
+      storage.set('storedLocations', JSON.parse(storedLocations), ()=>{
+        state.set({
+          mode: JSON.parse(mode),
+          favorites: JSON.parse(favorites),
+          storedLocations: JSON.parse(storedLocations)[JSON.parse(mode)]
+        }, ()=>{
+          storage.set('migrated', true, cb);
+        });
+      });
+    });
+  });
 };
 
 export var formatID = (location)=>{

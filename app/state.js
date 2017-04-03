@@ -7,7 +7,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.2.0',
+      version: '0.3.0',
       init: true,
       homedir: os.homedir(),
       width: window.innerWidth,
@@ -22,13 +22,16 @@ var state = Reflux.createStore({
       favorites: [],
       mods: [],
       selectedImage: null,
+      autoCapture: false,
+      selectedGalaxy: 0,
+      galaxyOptions: [],
+      remoteLocationsCache: null,
       // UI
       settingsOpen: false,
       view: 'index',
       sort: '-created',
       search: '',
-      lastSearch: '',
-      searchQuery: [],
+      searchInProgress: false,
       page: 1,
       pageSize: 20,
       loading: false,
@@ -37,65 +40,64 @@ var state = Reflux.createStore({
     if (!store.get('migrated')) {
       store.set('migrated', false)
     }
-    let mode = store.get('mode');
-    if (mode) {
-      this.state.mode = mode;
-    }
-    let storedLocations = store.get('storedLocations');
-    // temporary
-    if (_.isArray(storedLocations)) {
-      storedLocations = {
-        normal: storedLocations,
-        creative: [],
-        survival: [],
-        permadeath: []
+    store.get('mode', (data)=>{
+      if (data) {
+        this.state.mode = data;
       }
-      store.set('storedLocations', storedLocations)
-    }
-    if (storedLocations) {
-      this.state.storedLocations = storedLocations[this.state.mode];
-    } else {
-      store.set('storedLocations', {
-        normal: [],
-        creative: [],
-        survival: [],
-        permadeath: []
-      });
-    }
-    let favorites = store.get('favorites');
-    if (favorites) {
-      this.state.favorites = favorites;
-    } else {
-      store.set('favorites', []);
-    }
-    this.index = 0;
-    this.history = [];
+    });
+    store.get('storedLocations', (data)=>{
+      if (data) {
+        this.state.storedLocations = data[this.state.mode];
+      } else {
+        store.set('storedLocations', {
+          normal: [],
+          creative: [],
+          survival: [],
+          permadeath: []
+        });
+      }
+    });
+
+    store.get('favorites', (data)=>{
+      if (data) {
+        this.state.favorites = data;
+      } else {
+        store.set('favorites', []);
+      }
+    });
+
+    store.get('autoCapture', (data)=>{
+      if (data !== null) {
+        this.state.autoCapture = data;
+      } else {
+        store.set('autoCapture', false);
+      }
+    });
   },
   set(obj, cb=null){
     console.log('STATE INPUT: ', obj);
     _.assignIn(this.state, _.cloneDeep(obj));
     console.log('STATE: ', this.state);
     if (obj.mode) {
-      let storedLocations = store.get('storedLocations');
-      store.set('mode', obj.mode);
-      this.state.storedLocations = storedLocations[obj.mode];
+      store.get('storedLocations', (data)=>{
+        store.set('mode', obj.mode);
+        this.state.storedLocations = data[obj.mode];
+      });
     }
     this.trigger(this.state);
     if (obj.storedLocations) {
-      _.each(_.clone(obj).storedLocations, (location, key)=>{
-        if (location.image && location.image.length > 0) {
-          delete obj.storedLocations[key].image;
-        }
+      store.get('storedLocations', (data)=>{
+        data[this.state.mode] = obj.storedLocations;
+        store.set('storedLocations', data);
       });
-      let storedLocations = store.get('storedLocations');
-      storedLocations[this.state.mode] = obj.storedLocations;
-      store.set('storedLocations', storedLocations);
     }
 
     if (obj.favorites) {
-      let favorites = store.get('favorites');
-      favorites = obj.favorites;
-      store.set('favorites', favorites);
+      store.set('favorites', obj.favorites);
+    }
+
+    if (obj.autoCapture) {
+      store.set('autoCapture', obj.autoCapture);
     }
 
     if (cb) {
@@ -107,5 +109,5 @@ var state = Reflux.createStore({
   }
 });
 
-window.state = state;
+//window.state = state;
 export default state;

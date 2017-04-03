@@ -17,3 +17,8 @@ This includes a binary of Matthew Humphrey's [nmssavetool](https://github.com/ma
  * Add descriptions to locations for others to view
  * Map all locations on a galaxy map
  * Ability to switch game modes
+ * Write name and descriptions
+ * Favorite locations
+ * Detect mods and list them with locations
+ * Use the Insert key to trigger in-game overlay in borderless mode
+ * Upload screenshots, and optionally have them taken automically upon save
