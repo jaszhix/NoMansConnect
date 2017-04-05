@@ -1,3 +1,17 @@
+# 0.4.0
+
+  * Added an enlarged map layout
+  * Added an option to show coordinate paths
+  * Added ability to toggle types of coordinates by clicking their icon on the legend
+  * Added missing galaxy names 63-65
+  * Added error logging
+  * Fixed a bug causing the selected location name and screenshot states to not update
+  * Fixed stored location screenshot, name, and description fields not syncing with its related remote location on update
+  * Fixed a regression causing the remote location list to not update
+  * Fixed the selected location box clipping on lower resolutions
+  * Experimental fix in place for users not getting past the loading screen
+  * Reformatted the Voxel ID to include the RealityIndex and migrated old data
+
 # 0.3.1
 
   * Fixed a bug preventing locations from uploading

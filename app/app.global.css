@@ -37416,14 +37416,14 @@ html.ios body {
   }
 }
 
-#appContainer > div > div > div.ten.wide.column > p > a > img, 
+#appContainer > div > div > div.ten.wide.column > p > a > img,
 #appContainer > table > tbody > tr > td.middle.aligned > div > p > a > img,
 #appContainer > div > div > div > div > div > div.thirteen.wide.column > div > div > p > a > img {
   max-width: 80px;
   float: left;
 }
-#app > div > div.ui.top.attached.menu > div.right.menu > div, 
-#app > div > div.ui.top.attached.menu > div.right.menu > div > div > div, 
+#app > div > div.ui.top.attached.menu > div.right.menu > div,
+#app > div > div.ui.top.attached.menu > div.right.menu > div > div > div,
 #app > div > div.ui.top.attached.menu > div.ui.dropdown.icon.item, th {
   cursor: default !important;
 }

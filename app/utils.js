@@ -1,6 +1,5 @@
 import axios from 'axios';
 import _ from 'lodash';
-import storage from 'electron-json-storage';
 import state from './state';
 
 var exec = require('child_process').exec;
@@ -53,61 +52,23 @@ export var exc = (cmd)=>{
 };
 
 export var store = {
-  set: (key, obj, cb=()=>{})=>{
-    storage.set(key, obj, cb);
+  set: (key, obj)=>{
+    window.localStorage.setItem(key, JSON.stringify(obj));
   },
-  get: (key, cb=()=>{})=>{
-    storage.get(key, (err, data)=>{
-      if (err || _.isEqual(data, {})) {
-        console.log(err, data);
-        cb(null);
-        return;
-      }
-      cb(data);
-    });
+  get: (key)=>{
+    return JSON.parse(window.localStorage.getItem(key));
   },
-  remove: (key, cb=()=>{})=>{
-    storage.remove(key, cb);
+  remove: (key)=>{
+    window.localStorage.removeItem(key);
   },
   clear: ()=>{
-    storage.clear();
+    window.localStorage.clear();
   }
-};
-
-export var migrateStorage = (cb)=>{
-  let storedLocations = window.localStorage.getItem('storedLocations');
-  let mode = window.localStorage.getItem('mode');
-  let favorites = window.localStorage.getItem('favorites');
-  if (!storedLocations) {
-    cb();
-    return;
-  }
-  storage.set('mode', JSON.parse(mode), ()=>{
-    if (!favorites) {
-      cb();
-      return;
-    }
-    storage.set('favorites', JSON.parse(favorites), ()=>{
-      if (!mode) {
-        cb();
-        return;
-      }
-      storage.set('storedLocations', JSON.parse(storedLocations), ()=>{
-        state.set({
-          mode: JSON.parse(mode),
-          favorites: JSON.parse(favorites),
-          storedLocations: JSON.parse(storedLocations)[JSON.parse(mode)]
-        }, ()=>{
-          storage.set('migrated', true, cb);
-        });
-      });
-    });
-  });
 };
 
 export var formatID = (location)=>{
-  location.id = `${location.VoxelX}:${location.VoxelY}:${location.VoxelZ}:${location.SolarSystemIndex}:${location.PlanetIndex}`
-  return location;
+  location.GalacticAddress.id = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
+  return _.cloneDeep(location.GalacticAddress);
 };
 
 export var parseID = (id)=>{

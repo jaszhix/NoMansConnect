@@ -1,3 +1,5 @@
+import log from 'electron-log';
+
 function screenshot(init, callback) {
   if (init) {
     callback('');
@@ -22,8 +24,6 @@ function screenshot(init, callback) {
   let canvas = document.createElement('canvas');
   let video = document.createElement('video');
 
-  /*document.body.appendChild(canvas);
-  document.body.appendChild(video);*/
   let width = screen.width;
   let height = 0;
 
@@ -52,11 +52,11 @@ function screenshot(init, callback) {
   }, false);
 
   navigator['webkitGetUserMedia'](session, function(stream) {
-    video.src = window.webkitURL.createObjectURL(stream);
+    video.src = window.URL.createObjectURL(stream);
     video.play();
   }, function() {
     callback('');
-    console.error('Can\'t take a screenshot');
+    log.error(`Failed to take screenshot in capture.js.`);
   });
 }
 

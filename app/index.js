@@ -3,6 +3,7 @@ import {remote} from 'electron';
 const win = remote.getCurrentWindow();
 import fs from 'fs';
 import path from 'path';
+import log from 'electron-log';
 import watch from 'watch';
 import {usedLetters} from 'windows-drive-letters';
 const ps = require('win-ps');
@@ -24,11 +25,10 @@ import * as utils from './utils';
 import knownGalaxies from './static/galaxies.json';
 // Temporary until all 256 galaxy names are known
 let galaxies = knownGalaxies.concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat([knownGalaxies[0]]);
-let galaxyIter = 0;
-let galaxyRepeat = 1
+let galaxyIter = 1;
 _.each(galaxies, (g, k)=>{
   ++galaxyIter;
-  if (galaxyIter > 61) {
+  if (galaxyIter > knownGalaxies.length) {
     galaxies[k] = `Galaxy ${galaxyIter}`;
   }
 });
@@ -50,12 +50,12 @@ var DropdownMenu = onClickOutside(React.createClass({
       type: 'info',
       buttons: [],
       title: 'No Man\'s Connect',
-      message: '0.3.1',
+      message: '0.4.0',
       detail: 'This version is beta. Please back up your save files.'
     });
   },
-  handleOpenGlobal(){
-    state.set({global: true, nmDir: ''}, ()=>this.props.onDirOpen());
+  handleSync(){
+    this.props.onSync();
   },
   handleAutoCapture(e){
     e.stopPropagation();
@@ -88,8 +88,15 @@ var DropdownMenu = onClickOutside(React.createClass({
             Screenshots: {p.s.autoCapture ? 'Auto' : 'Manual'}
           </div>
           <div className="divider"></div>
+          <div className="item" onClick={this.handleSync}>
+            Sync Locations
+          </div>
+          <div className="divider"></div>
           <div className="item" onClick={this.handleAbout}>
             About
+          </div>
+          <div className="item" onClick={()=>openExternal('https://neuropuff.com/static/donate.html')}>
+            Support NMC
           </div>
           <div className="divider"></div>
           <div className="item" onClick={()=>window.close()}>
@@ -105,7 +112,10 @@ var BasicDropdown = onClickOutside(React.createClass({
   getDefaultProps(){
     return {
       options: [],
-      selectedGalaxy: 0
+      selectedGalaxy: 0,
+      icon: 'dropdown',
+      showValue: true,
+      persist: false
     };
   },
   getInitialState(){
@@ -113,9 +123,12 @@ var BasicDropdown = onClickOutside(React.createClass({
       open: false
     };
   },
-  handleOptionClick(option){
+  handleOptionClick(e, option){
+    if (this.props.persist) {
+      e.stopPropagation();
+    }
     option.onClick(option.id);
-    this.setState({open: false});
+    this.setState({open: this.props.persist});
   },
   handleClickOutside(){
     if (this.state.open) {
@@ -132,8 +145,8 @@ var BasicDropdown = onClickOutside(React.createClass({
       }}
       className={`ui dropdown${this.state.open ? ' active visible' : ''}`}
       onClick={()=>this.setState({open: !this.state.open})}>
-        <div className="text">{galaxies[p.selectedGalaxy]}</div>
-        <i className="dropdown icon" />
+        {p.showValue ? <div className="text">{galaxies[p.selectedGalaxy]}</div> : null}
+        <i className={`${p.icon} icon`} />
         <div
         style={{
           display: this.state.open ? 'block !important' : 'none',
@@ -143,7 +156,7 @@ var BasicDropdown = onClickOutside(React.createClass({
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
           {this.props.options.length > 0 ? this.props.options.map((option, i)=>{
             return (
-              <div key={i} className="item" onClick={()=>this.handleOptionClick(option)}>{option.label}</div>
+              <div key={i} className="item" onClick={(e)=>this.handleOptionClick(e, option)}>{option.label}</div>
             );
           }) : null}
         </div>
@@ -157,15 +170,15 @@ var TooltipChild = React.createClass({
     if (this.props.active) {
       return (
         <div className="ui segments" style={{
-          background: '#0B2B39',
           display: 'inline-table',
-          borderTop: '2px solid #95220E',
           textAlign: 'left',
+          fontFamily: 'geosanslight-nmsregular',
+          fontSize: '16px'
         }}>
           {this.props.payload[0].payload.user ?
           <div
           className="ui segment"
-          style={{padding: '3px 5px'}}>
+          style={{padding: '3px 5px', fontWeight: '600'}}>
             {`${this.props.payload[0].payload.user}`}
           </div> : null}
           {this.props.payload.map((item, i)=>{
@@ -173,7 +186,7 @@ var TooltipChild = React.createClass({
               <div
               key={i}
               className="ui segment"
-              style={{padding: '3px 5px'}}>
+              style={{padding: '0px 5px'}}>
                 {`${item.name}: ${item.name === 'Z' ? (0, 4096) - item.value : item.value}`}
               </div>
             );
@@ -186,11 +199,29 @@ var TooltipChild = React.createClass({
 });
 
 var ThreeDimScatterChart = React.createClass({
+  getInitialState(){
+    return {
+      show: {
+        'Shared': true,
+        'Explored': true,
+        'Center': true,
+        'Favorite': true,
+        'Current': true,
+        'Selected': true,
+        'Base': true
+      },
+    };
+  },
   componentDidMount(){
-    let limit = 0;
-
     _.defer(()=>{
       $('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
+      _.each(this.state.show, (type, key)=>{
+        $('.recharts-legend-item').each(function(){
+          if ($(this).text() === key) {
+            $(this).addClass(key.split(' ').join('_'));
+          }
+        });
+      });
     });
   },
   renderShape(symbol){
@@ -207,6 +238,14 @@ var ThreeDimScatterChart = React.createClass({
       state.set({selectedLocation: this.props.remoteLocations.results[refRemoteLocation].data});
     }
   },
+  handleLegendClick(e){
+    this.state.show[e.payload.name] = !this.state.show[e.payload.name];
+    this.setState({show: this.state.show}, ()=>{
+      $(`.${e.payload.name.split(' ').join('_')}`).css({
+        opacity: this.state.show[e.payload.name] ? '1' : '0.5'
+      });
+    });
+  },
   render () {
     let p = this.props;
     let currentLocation = [];
@@ -214,19 +253,32 @@ var ThreeDimScatterChart = React.createClass({
     let remoteLocations = [];
     let selectedLocation = [];
     let favLocations = [];
+    let baseLocations = [];
+
+    let zRange = p.mapZoom ? [14, 64] : [22, 64];
+    let ticks = p.mapZoom ? [0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096] : [0, 512, 1024, 1536, 2048, 2560, 3072, 3584, 4096];
+    let range = [0, 4096];
+
     _.each(p.storedLocations, (location)=>{
       if (location.galaxy !== p.selectedGalaxy) {
         return;
       }
-      if (location.upvote) {
+
+      if (location.base && this.state.show['Base']) {
+        baseLocations.push({
+          x: location.translatedX,
+          y: (0, 4096) - location.translatedZ,
+          z: location.translatedY,
+          id: location.id
+        });
+      } else if (location.upvote && this.state.show['Favorite']) {
         favLocations.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
           z: location.translatedY,
-          selected: true,
           id: location.id
         });
-      } else if (p.selectedLocation && location.id === p.selectedLocation.id) {
+      } else if (p.selectedLocation && location.id === p.selectedLocation.id && this.state.show['Selected']) {
         selectedLocation.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
@@ -234,14 +286,15 @@ var ThreeDimScatterChart = React.createClass({
           selected: true,
           id: location.id
         });
-      } else if (_.isEqual(location, _.first(p.storedLocations))) {
+      } else if (_.isEqual(location, _.first(p.storedLocations)) && this.state.show['Current']) {
         currentLocation.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
           z: location.translatedY,
           id: location.id
         });
-      } else {
+      }
+      if (this.state.show['Explored']) {
         locations.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
@@ -255,7 +308,21 @@ var ThreeDimScatterChart = React.createClass({
         if (location.data.galaxy !== p.selectedGalaxy) {
           return;
         }
-        if (p.selectedLocation && location.data.id === p.selectedLocation.id) {
+        if (location.data.base && this.state.show['Base']) {
+          baseLocations.push({
+            x: location.data.translatedX,
+            y: (0, 4096) - location.data.translatedZ,
+            z: location.data.translatedY,
+            id: location.id
+          });
+        } else if (location.data.upvote && this.state.show['Favorite']) {
+          favLocations.push({
+            x: location.data.translatedX,
+            y: (0, 4096) - location.data.translatedZ,
+            z: location.data.translatedY,
+            id: location.data.id
+          });
+        } else if (p.selectedLocation && location.data.id === p.selectedLocation.id && this.state.show['Selected']) {
           selectedLocation.push({
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
@@ -263,14 +330,14 @@ var ThreeDimScatterChart = React.createClass({
             selected: true,
             id: location.data.id
           });
-        } else if (_.isEqual(location.data, _.first(p.storedLocations))) {
+        } else if (_.isEqual(location.data, _.first(p.storedLocations)) && this.state.show['Current']) {
           currentLocation.push({
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
             z: location.data.translatedY,
             id: location.id
           });
-        } else if (location.username !== p.username) {
+        } else if (location.username !== p.username && this.state.show['Shared']) {
           remoteLocations.push({
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
@@ -282,27 +349,45 @@ var ThreeDimScatterChart = React.createClass({
       });
     }
 
-    let center = [{
+    let center =  this.state.show['Center'] ? [{
       x: 2047,
       y: 2047,
       z: 127
-    }];
+    }] : [];
 
-    let size = p.width >= 1349 ? 512 : p.width <= 1180 ? 240 : p.width <= 1180 ? 360 : p.width <= 1240 ? 400 : p.width <= 1300 ? 440 : 480;
+    let size = 480;
+
+    if (p.width >= 1349 && p.height >= 1004) {
+      size = 512;
+    } else if (p.width <= 1152 || p.height <= 790) {
+      size = 260;
+    } else if (p.width <= 1212 || p.height <= 850) {
+      size = 300;
+    } else if (p.width <= 1254 || p.height <= 890) {
+      size = 360;
+    } else if (p.width <= 1290 || p.height <= 930) {
+      size = 400;
+    } else if (p.width <= 1328 || p.height <= 970) {
+      size = 440;
+    }
+
+    size = p.mapZoom ? p.height - 105 : size;
+
     return (
       <ScatterChart width={size} height={size} margin={{top: 20, right: 20, bottom: 20}}>
-        <XAxis tickLine={false} tickFormatter={(tick)=>''} ticks={[0, 512, 1024, 1536, 2048, 2560, 3072, 3584, 4096]} domain={[0, 4096]} type="number" dataKey="x" range={[0, 4096]} name="X" label="X"/>
-        <YAxis tickLine={false} tickFormatter={(tick)=>''} ticks={[0, 512, 1024, 1536, 2048, 2560, 3072, 3584, 4096]} domain={[0, 4096]} type="number" dataKey="y" range={[0, 4096]} name="Z" label="Z"/>
-        <ZAxis dataKey="z" range={[60, 200]} name="Y" />
+        <XAxis tickLine={false} tickFormatter={(tick)=>''} ticks={ticks} domain={[0, 4096]} type="number" dataKey="x" range={range} name="X" label="X"/>
+        <YAxis tickLine={false} tickFormatter={(tick)=>''} ticks={ticks} domain={[0, 4096]} type="number" dataKey="y" range={range} name="Z" label="Z"/>
+        <ZAxis dataKey="z" range={zRange} name="Y" />
         <CartesianGrid />
         <Tooltip cursor={{strokeDasharray: '3 3'}} content={<TooltipChild />}/>
-        <Legend align="right" wrapperStyle={{fontFamily: 'geosanslight-nmsregular', fontSize: '16px', right: '0px'}} iconSize={12}/>
-        <Scatter name="Explored Location" data={locations} fill="#5fcc93" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
-        <Scatter name="Shared Location" data={remoteLocations} fill="#0080db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
+        <Legend align="right" wrapperStyle={{fontFamily: 'geosanslight-nmsregular', fontSize: '16px', right: '0px'}} iconSize={12} onClick={this.handleLegendClick}/>
+        <Scatter name="Shared" data={remoteLocations} fill="#0080db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
+        <Scatter name="Explored" data={locations} fill="#5fcc93" shape="circle" line={p.mapLines} isAnimationActive={false} onClick={this.handleSelect}/>
         <Scatter name="Center" data={center} fill="#ba3935" shape="circle" isAnimationActive={false}/>
-        <Scatter name="Favorite Location" data={favLocations} fill="#9c317c" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
-        <Scatter name="Current Location" data={currentLocation} fill="#FFF" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
-        <Scatter name="Selected Location" data={selectedLocation} fill="#ffc356" shape="circle" isAnimationActive={false}/>
+        <Scatter name="Base" data={baseLocations} fill="#9A9D99" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
+        <Scatter name="Favorite" data={favLocations} fill="#9c317c" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
+        <Scatter name="Current" data={currentLocation} fill="#FFF" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
+        <Scatter name="Selected" data={selectedLocation} fill="#ffc356" shape="circle" isAnimationActive={false}/>
       </ScatterChart>
     );
   }
@@ -339,7 +424,7 @@ var Item = React.createClass({
       <div
       className="ui segment"
       style={utils.css(locationItemStyle, {position: 'initial', borderBottom: '1px solid #113d50'})}>
-        <span style={{fontWeight: '600'}}>{`${this.props.label}`}</span> <span style={{float: 'right', position: 'relative', top: '1px'}}>{this.props.value}</span>
+        <span style={{fontWeight: '600'}}>{`${this.props.label}`}</span> <span style={{float: 'right', position: 'relative', top: '1px', WebkitUserSelect: 'initial'}}>{this.props.value}</span>
       </div>
     );
   }
@@ -402,23 +487,29 @@ var LocationBox = React.createClass({
     let upvote = refFav !== -1;
     let isOwnLocation = p.isOwnLocation && p.selectType && p.location.username === p.username;
     let deleteArg = p.location.image && p.location.image.length > 0;
+    let compact = p.width && p.width <= 1212;
+    let title = 'Selected';
     return (
       <div
       className="ui segment"
       style={{
         background: '#0B2B39',
         display: 'inline-table',
-        //float: 'left',
         borderTop: '2px solid #95220E',
         textAlign: 'left',
         marginTop: p.selectType ? '26px' : 'initial',
         marginBottom: '26px',
         marginRight: !p.selectType && p.i % 1 === 0 ? '26px' : 'initial',
-        minWidth: '386px',
+        minWidth: `${compact ? 358 : 386}px`,
         maxWidth: '386px',
-        maxHeight: '289px'
+        maxHeight: '289px',
+        zIndex: p.mapZoom ? '91' : 'inherit',
+        position: p.mapZoom ? 'fixed' : '',
+        left: p.mapZoom ? '28px' : 'inherit',
+        top: p.mapZoom ? `${p.height - 365}px` : 'inherit',
+        WebkitUserSelect: 'none'
       }}>
-        <h3 style={{textAlign: 'center', maxHeight: '23px'}}>{p.location.username ? this.state.name.length > 0 ? this.state.name : `${p.location.username} explored` : 'Selected Location'}</h3>
+        <h3 style={{textAlign: 'center', maxHeight: '23px'}}>{p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected'}</h3>
         <i
         style={{
           position: 'absolute',
@@ -620,29 +711,64 @@ var GalacticMap = React.createClass({
   },
   render(){
     let p = this.props;
+    let compact = p.width <= 1212 || p.height <= 850;
+    let leftOptions = [
+      {
+        id: 'mapLines',
+        label: `Show Path: ${p.mapLines ? 'On' : 'Off'}`,
+        onClick: ()=>state.set({mapLines: !p.mapLines})
+      },
+      {
+        id: 'mapZoom',
+        label: `Enlarge Map: ${p.mapZoom ? 'On' : 'Off'}`,
+        onClick: ()=>state.set({mapZoom: !p.mapZoom})
+      }
+    ];
+    let mapZoomOpacity = p.transparent ? '0.85' : '0';
     return (
       <div className="ui segment" style={{
-        background: 'rgb(23, 26, 22)',
+        background: p.mapZoom && (p.width > 1804 && p.selectedLocation || p.width > 1698 && !p.selectedLocation) ? `rgba(23, 26, 22, ${mapZoomOpacity})` : 'rgb(23, 26, 22)',
         display: 'inline-table',
         borderTop: '2px solid #95220E',
-        textAlign: 'center'
+        textAlign: 'center',
+        position: p.mapZoom ? 'absolute' : 'inherit',
+        top: p.mapZoom ? '-11px' : 'inherit',
+        left: p.mapZoom ? p.selectedLocation ? '157px' : '15px' : 'inherit',
+        WebkitTransition: 'left 0.1s, background 0.1s',
+        zIndex: p.mapZoom ? '90' : 'inherit',
+        WebkitUserSelect: 'none'
       }}>
-        <h3>Galactic Map</h3>
+        <h3 style={{textAlign: compact ? 'left' : 'inherit'}}>Galactic Map</h3>
         {p.galaxyOptions.length > 0 ?
         <div style={{
           position: 'absolute',
-          right: '48px',
+          right: '54px',
           top: '16px'
         }}>
           <BasicDropdown
           options={p.galaxyOptions}
           selectedGalaxy={p.selectedGalaxy} />
         </div> : null}
+        <div style={{
+          position: 'absolute',
+          left: compact ? 'initial' : '48px',
+          right: compact ? '143px' : 'initial',
+          top: '16px'
+        }}>
+          <BasicDropdown
+          icon="ellipsis horizontal"
+          showValue={null}
+          persist={true}
+          options={leftOptions} />
+        </div>
         <div style={{position: 'relative', left: '-18px'}}>
           <ThreeDimScatterChart
+          mapZoom={p.mapZoom}
+          mapLines={p.mapLines}
           selectedGalaxy={p.selectedGalaxy}
           storedLocations={p.storedLocations}
           width={p.width}
+          height={p.height}
           remoteLocations={p.remoteLocations}
           selectedLocation={p.selectedLocation}
           username={p.username} />
@@ -669,6 +795,11 @@ var Container = React.createClass({
     };
     checkRemote();
   },
+  componentWillReceiveProps(nextProps) {
+    if (!_.isEqual(nextProps.s.selectedLocation, this.props.s.selectedLocation)) {
+      this.setState({edit: false});
+    }
+  },
   componentWillUnmount(){
     if (this.refs.recentExplorations) {
       this.refs.recentExplorations.removeEventListener('scroll', this.scrollListener);
@@ -676,7 +807,7 @@ var Container = React.createClass({
   },
   scrollListener(){
     let node = this.refs.recentExplorations;
-    if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 200
+    if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 180
       && this.props.s.remoteLocations.next) {
       this.props.onPagination(this.props.s.page);
     }
@@ -716,6 +847,8 @@ var Container = React.createClass({
         remoteLocations: this.props.s.remoteLocations,
         favorites: _.uniq(this.props.s.favorites)
       });
+    }).catch((err)=>{
+      log.error(`Failed to favorite remote location: ${err}`);
     });
   },
   handleUpdate(name, description){
@@ -739,8 +872,9 @@ var Container = React.createClass({
           return location.data.id === this.props.s.selectedLocation.id;
         });
         if (refRemoteLocation !== -1) {
-          this.props.s.remoteLocations.results[refRemoteLocation].data.name = name;
+          this.props.s.remoteLocations.results[refRemoteLocation].name = name;
           this.props.s.remoteLocations.results[refRemoteLocation].data.description = description;
+          this.props.s.remoteLocations.results[refRemoteLocation].description = description;
         }
         this.props.s.selectedLocation.name = name;
         this.props.s.selectedLocation.description = description;
@@ -754,6 +888,8 @@ var Container = React.createClass({
             edit: false
           });
         });
+      }).catch((err)=>{
+        log.error(`Failed to update remote location: ${err}`);
       });
     });
   },
@@ -779,15 +915,16 @@ var Container = React.createClass({
             }).then((res)=>{
               let refLocation = _.findIndex(this.props.s.storedLocations, {id: this.props.s.selectedLocation.id});
               if (refLocation !== -1) {
-                this.props.s.storedLocations[refLocation].image = newDataUri;
+                this.props.s.storedLocations[refLocation].image = res.data.image;
               }
               let refRemoteLocation = _.findIndex(this.props.s.remoteLocations.results, (location)=>{
                 return location.data.id === this.props.s.selectedLocation.id;
               });
               if (refRemoteLocation !== -1) {
-                this.props.s.remoteLocations.results[refRemoteLocation].data.image = newDataUri;
+                this.props.s.remoteLocations.results[refRemoteLocation].image = res.data.image;
               }
-              this.props.s.selectedLocation.image = newDataUri;
+              console.log(refRemoteLocation)
+              this.props.s.selectedLocation.image = res.data.image;
               state.set({
                 storedLocations: this.props.s.storedLocations,
                 remoteLocations: this.props.s.remoteLocations,
@@ -798,6 +935,8 @@ var Container = React.createClass({
                   edit: false
                 });
               });
+            }).catch((err)=>{
+              log.error(`Failed to upload screenshot: ${err}`);
             });
           }
         };
@@ -815,13 +954,13 @@ var Container = React.createClass({
     }).then((res)=>{
       let refLocation = _.findIndex(this.props.s.storedLocations, {id: this.props.s.selectedLocation.id});
       if (refLocation !== -1) {
-        this.props.s.storedLocations[refLocation].image = '';
+        this.props.s.storedLocations[refLocation].image = res.data.image;
       }
       let refRemoteLocation = _.findIndex(this.props.s.remoteLocations.results, (location)=>{
         return location.data.id === this.props.s.selectedLocation.id;
       });
       if (refRemoteLocation !== -1) {
-        this.props.s.remoteLocations.results[refRemoteLocation].data.image = '';
+        this.props.s.remoteLocations.results[refRemoteLocation].image = res.data.image;
       }
       this.props.s.selectedLocation.image = '';
       state.set({
@@ -837,10 +976,21 @@ var Container = React.createClass({
     });
   },
   handleSelectLocation(location){
+    let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id;
+    if (!deselected) {
+      let refRemoteLocation = _.find(this.props.s.remoteLocations.results, (remoteLocation)=>{
+        return remoteLocation.data.id === location.id;
+      });
+
+      if (refRemoteLocation !== undefined && refRemoteLocation) {
+        refRemoteLocation.data.image = refRemoteLocation.image;
+        location = refRemoteLocation.data;
+      }
+    }
     state.set({
-      selectedLocation: this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id ? null : location,
-      selectedGalaxy: location.galaxy
-    })
+      selectedLocation: deselected ? null : location,
+      selectedGalaxy: deselected ? 0 : location.galaxy
+    });
   },
   render(){
     let p = this.props;
@@ -857,7 +1007,7 @@ var Container = React.createClass({
           <div className="ui segments stackable grid container" style={{maxWidth: '800px !important'}}>
             <div
             className="ui segment"
-            style={{display: 'inline-flex', background: 'transparent'}}
+            style={{display: 'inline-flex', background: 'transparent', WebkitUserSelect: 'none'}}
             onMouseLeave={()=>this.setState({storedLocationHover: -1})}>
               <div className="ui segment" style={{
                 background: '#0B2B39',
@@ -867,7 +1017,7 @@ var Container = React.createClass({
                 textAlign: 'center'
               }}>
                 <h3>Stored Locations</h3>
-                <div className="ui segments" style={{maxHeight: `${p.s.height - 125}px`, overflowY: 'auto'}}>
+                <div className="ui segments" style={{maxHeight: `${p.s.height - (p.s.mapZoom ? 498 : 125)}px`, overflowY: 'auto'}}>
                   {storedLocations.map((location, i)=>{
                     return (
                       <div
@@ -883,7 +1033,7 @@ var Container = React.createClass({
                       }}
                       onMouseEnter={()=>this.setState({storedLocationHover: i})}
                       onClick={()=>this.handleSelectLocation(location)}>
-                        <p>{location.name && location.name.length > 0 ? location.name : location.id}</p>
+                        <p>{`${location.name && location.name.length > 0 ? location.name : location.id}${location.base ? ' (B)' : ''}`}</p>
                       </div>
                     );
                   })}
@@ -892,10 +1042,14 @@ var Container = React.createClass({
             </div>
             <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
               <GalacticMap
+              transparent={p.s.transparent}
+              mapZoom={p.s.mapZoom}
+              mapLines={p.s.mapLines}
               galaxyOptions={p.s.galaxyOptions}
               selectedGalaxy={p.s.selectedGalaxy}
               storedLocations={p.s.storedLocations}
               width={p.s.width}
+              height={p.s.height}
               remoteLocations={p.s.remoteLocations}
               selectedLocation={p.s.selectedLocation}
               username={p.s.username} />
@@ -912,6 +1066,9 @@ var Container = React.createClass({
               edit={this.state.edit}
               favorites={p.s.favorites}
               image={p.s.selectedLocation.image}
+              width={p.s.width}
+              height={p.s.height}
+              mapZoom={p.s.mapZoom}
               onUploadScreen={()=>this.refs.uploadScreenshot.click()}
               onDeleteScreen={this.handleDeleteScreen}
               onFav={this.handleFavorite}
@@ -925,23 +1082,29 @@ var Container = React.createClass({
         {p.s.remoteLocations && p.s.remoteLocations.results ?
         <div className="columns" style={{
           position: 'absolute',
-          right: '68px',
+          right: p.s.mapZoom ? '0px' : '68px',
+          zIndex: p.s.mapZoom && p.s.width >= 1854 ? '91' : 'inherit',
           maxWidth: remoteLocationsWidth,
+          opacity: p.s.mapZoom && (p.s.width < 1804 && p.s.selectedLocation || p.s.width < 1694) ? '0.5' : '1',
+          WebkitTransition: '0.1s opacity'
         }}>
-          <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px'}}>
+          <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', width: p.s.mapZoom ? '400px !important' : 'inherit'}}>
             <div className="ui segment" style={{
               background: '#42201E',
               display: 'inline-table',
               borderTop: '2px solid #95220E',
-              textAlign: 'center'
+              textAlign: 'center',
+              WebkitUserSelect: 'none'
             }}>
               <h3>{p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular'} Explorations</h3>
               <div
               style={{
                 maxHeight: `${p.s.height - 125}px`,
-                width: remoteLocationsWidth,
+                width: p.s.mapZoom ? '400px' : remoteLocationsWidth,
+                minWidth: '400px',
+                maxWidth: p.s.mapZoom ? `${Math.abs(p.s.width - 1482)}px !important` : remoteLocationsWidth,
                 overflowY: 'auto',
-                overflowX: 'hidden'
+                overflowX: 'hidden',
               }}
               ref="recentExplorations">
                 {p.s.remoteLocations.results.map((location, i)=>{
@@ -1011,6 +1174,7 @@ var App = React.createClass({
         let indexModsInUse = (path)=>{
           fs.readdir(path, (err, list)=>{
             if (err) {
+              log.error(`Failed to read mods directory: ${err}`);
               initialize();
               return;
             }
@@ -1046,18 +1210,11 @@ var App = React.createClass({
           initialize();
         }
       }).catch((err) => {
+        log.error(`Failed to locate NMS install: ${err}`);
         initialize();
       });
     };
-    utils.store.get('migrated', (migrated)=>{
-      if (!migrated) {
-        utils.migrateStorage(()=>{
-          indexMods();
-        });
-      } else {
-        indexMods();
-      }
-    });
+    indexMods();
   },
   componentDidUpdate(pP, pS){
     if (pS.search.length > 0 && this.state.search.length === 0 && this.state.searchInProgress) {
@@ -1065,6 +1222,131 @@ var App = React.createClass({
         this.handleClearSearch();
       });
     }
+  },
+  handleSync(){
+    this.syncRemoteOwned(()=>{
+      let locations = [];
+      _.each(this.state.storedLocations, (location)=>{
+        location = _.cloneDeep(location);
+        location.timeStamp = new Date(location.timeStamp);
+        locations.push(location);
+      });
+      utils.ajax.post('/nmslocationremotesync/', {
+        locations: locations,
+        mode: this.state.mode,
+        username: this.state.username
+      }).then((res)=>{
+        this.fetchRemoteLocations();
+      }).catch((err)=>{
+        log.error(`Failed to sync local locations to remote locations: ${err}`);
+      });
+    });
+  },
+  formatRemoteLocations(res, page, sort, init, partial, cb){
+    if (this.state.remoteLocations.length === 0) {
+      this.state.remoteLocations = {
+        results: []
+      };
+    }
+
+    if (this.state.search.length === 0 && page > 1 && sort === this.state.sort || partial) {
+      res.data.results = _.chain(this.state.remoteLocations.results).concat(res.data.results).uniqBy('id').orderBy('created', 'desc').value();
+    }
+    _.each(res.data.results, (remoteLocation, key)=>{
+      let refFav = _.findIndex(this.state.favorites, (fav)=>{
+        return fav === remoteLocation.data.id;
+      });
+      let upvote = refFav !== -1;
+
+      res.data.results[key].data.name = remoteLocation.name;
+      res.data.results[key].data.description = remoteLocation.description;
+      res.data.results[key].data.score = remoteLocation.score;
+      res.data.results[key].data.upvote = upvote;
+      // tbd
+      try {
+        res.data.results[key].data.image = remoteLocation.image
+      } catch (e) {
+        res.data.results[key].data.image = '';
+      }
+      if (this.state.selectedLocation) {
+        this.state.selectedLocation.image = remoteLocation.data.image;
+      }
+      _.each(this.state.storedLocations, (storedLocation, key)=>{
+        if (remoteLocation.data.id === storedLocation.id) {
+          this.state.storedLocations[key].username = remoteLocation.data.username;
+          this.state.storedLocations[key].name = remoteLocation.name;
+          this.state.storedLocations[key].description = remoteLocation.description;
+          this.state.storedLocations[key].score = remoteLocation.score;
+          // tbd
+          this.state.storedLocations[key].image = remoteLocation.image;
+        }
+      });
+
+      // Sync remote locations to stored
+
+      if (!init) {
+        let remoteOwnedLocations = _.filter(res.data.results, (remoteOwnedLocation)=>{
+          let refStoredLocation = _.findIndex(this.state.storedLocations, {id: remoteOwnedLocation.data.id});
+          return remoteOwnedLocation.username === this.state.username && refStoredLocation === -1;
+        });
+        if (remoteOwnedLocations.length > 0) {
+          this.state.storedLocations = _.chain(this.state.storedLocations).concat(_.map(remoteOwnedLocations, 'data')).uniqBy('id').orderBy('timeStamp', 'desc').value()
+        }
+      }
+    });
+
+    // Preserve pagination data from being overwritten on partials
+    if (partial) {
+      res.data.count = this.state.remoteLocations.count;
+      res.data.next = this.state.remoteLocations.next;
+    }
+    state.set({
+      selectedLocation: this.state.selectedLocation,
+      storedLocations: this.state.storedLocations,
+      remoteLocations: res.data,
+      searchInProgress: this.state.search.length > 0,
+      page: page,
+      init: false
+    }, cb);
+  },
+  syncRemoteOwned(cb){
+    utils.ajax.get('/nmslocationsync', {
+      params: {
+        username: this.state.username
+      }
+    }).then((res)=>{
+      this.formatRemoteLocations(res, 1, this.state.sort, false, true, cb);
+    }).catch((err)=>{
+      log.error('Failed to sync to remote locations.');
+    });
+  },
+  pollRemoteLocations(){
+    if (this.timeout)  {
+      clearTimeout(this.timeout);
+    }
+
+    let lastRemoteLocation = _.chain(this.state.remoteLocations.results).orderBy('created', 'desc').first().value();
+
+    let start = new Date(lastRemoteLocation.created);
+    let end = new Date();
+
+    utils.ajax.get('/nmslocationpoll', {
+      params: {
+        start: start,
+        end: end,
+        id: lastRemoteLocation.data.id
+      }
+    }).then((res)=>{
+      if (res.data.results.length > 0) {
+        this.formatRemoteLocations(res, this.state.page, this.state.sort, false, true, ()=>{
+          this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
+        });
+      } else {
+        this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
+      }
+    }).catch((err)=>{
+      console.log(err);
+    });
   },
   fetchRemoteLocations(page=1, sort=this.state.sort, init=false){
     let q = this.state.search.length > 0 ? this.state.search : null;
@@ -1076,70 +1358,15 @@ var App = React.createClass({
         q: q
       }
     }).then((res)=>{
-      let data = res.data;
-      if (this.state.remoteLocations.length === 0) {
-        this.state.remoteLocations = {
-          results: []
-        };
-      }
-
-      if (!q && page > 1 && sort === this.state.sort) {
-        data.results = _.concat(this.state.remoteLocations.results, data.results);
-        data.results = _.uniqBy(data.results, 'id');
-        data.results = _.orderBy(data.results, 'created', 'desc');
-      }
-
-      _.each(data.results, (remoteLocation, key)=>{
-        let refFav = _.findIndex(this.state.favorites, (fav)=>{
-          return fav === remoteLocation.data.id;
-        });
-        let upvote = refFav !== -1;
-
-        data.results[key].data.name = remoteLocation.name;
-        data.results[key].data.description = remoteLocation.description;
-        data.results[key].data.score = remoteLocation.score;
-        data.results[key].data.upvote = upvote;
-        try {
-          data.results[key].data.image = remoteLocation.image
-        } catch (e) {
-          data.results[key].data.image = '';
+      this.formatRemoteLocations(res, page, sort, init, false, ()=>{
+        if (init) {
+          this.pollRemoteLocations();
         }
-        if (this.state.selectedLocation) {
-          this.state.selectedLocation.image = remoteLocation.data.image;
-        }
-        _.each(this.state.storedLocations, (storedLocation, key)=>{
-          if (remoteLocation.data.id === storedLocation.id) {
-            this.state.storedLocations[key].username = remoteLocation.data.username;
-            this.state.storedLocations[key].name = remoteLocation.name;
-            this.state.storedLocations[key].description = remoteLocation.description;
-            this.state.storedLocations[key].score = remoteLocation.score;
-            if (!storedLocation.image) {
-              this.state.storedLocations[key].image = remoteLocation.data.image;
-            }
-          }
-        });
-        if (!init) {
-          let remoteOwnedLocations = _.filter(data.results, (remoteOwnedLocation)=>{
-            let refStoredLocation = _.findIndex(this.state.storedLocations, {id: remoteOwnedLocation.data.id});
-            return remoteOwnedLocation.username === this.state.username && refStoredLocation === -1;
-          });
-          if (remoteOwnedLocations.length > 0) {
-            this.state.storedLocations = _.orderBy(_.concat(this.state.storedLocations, _.map(remoteOwnedLocations, 'data')), 'timeStamp', 'desc');
-          }
-        }
-      });
-
-      state.set({
-        selectedLocation: this.state.selectedLocation,
-        storedLocations: this.state.storedLocations,
-        remoteLocations: data,
-        searchInProgress: this.state.search.length > 0,
-        page: page,
-        init: false
       });
     }).catch((err)=>{
       state.set({init: false});
-      console.log(err)
+      console.log(err);
+      log.error(`Failed to fetch remote locations: ${err}`);
     });
   },
   handleTeleport(location, i){
@@ -1193,11 +1420,13 @@ var App = React.createClass({
             if (refRemoteLocation !== -1) {
               this.state.remoteLocations.results[refRemoteLocation] = res.data;
             }
+
             state.set({
               installing: false,
               remoteLocations: this.state.remoteLocations
             });
           }).catch((err)=>{
+            log.error(err);
             state.set({installing: false});
           });
         });
@@ -1209,10 +1438,6 @@ var App = React.createClass({
   pollSaveData(mode, init=false){
     ps.snapshot(['ProcessName']).then((list) => {
       let NMSRunning = _.findIndex(list, {ProcessName: 'NMS.exe'}) !== -1;
-
-      if (this.timeout)  {
-        clearTimeout(this.timeout);
-      }
 
       let next = ()=>{
         this.fetchRemoteLocations(1, this.state.sort, init);
@@ -1227,7 +1452,9 @@ var App = React.createClass({
               console.log('changed')
             });
           });
-          this.timeout = setTimeout(()=>this.pollSaveData(), 300000);
+          if (this.state.storedLocations.length <= 2) {
+            this.syncRemoteOwned();
+          }
         }
       };
 
@@ -1237,7 +1464,7 @@ var App = React.createClass({
 
       utils.exc(this.whichCmd).then((result)=>{
         let saveData = JSON.parse(fs.readFileSync(this.saveJSON));
-        let location = utils.formatID(saveData.PlayerStateData.UniverseAddress.GalacticAddress);
+        let location = utils.formatID(saveData.PlayerStateData.UniverseAddress);
         const refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
         let username = saveData.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
 
@@ -1271,6 +1498,7 @@ var App = React.createClass({
           location.translatedId = `${utils.toHex(location.translatedX, 4)}:${utils.toHex(location.translatedY, 4)}:${utils.toHex(location.translatedZ, 4)}:${utils.toHex(location.SolarSystemIndex, 4)}`;
 
           if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
+            console.error(`translatedId formatting is NaN: ${location}`);
             state.set({username: location.username}, ()=>{
               next();
             });
@@ -1279,6 +1507,25 @@ var App = React.createClass({
 
           this.state.storedLocations.push(location);
           this.state.storedLocations = _.orderBy(_.uniqBy(this.state.storedLocations, 'id'), 'timeStamp', 'desc');
+
+          // Detect player base
+
+          let base = null;
+          let refBase = _.find(saveData.PlayerStateData.TeleportEndpoints, {TeleporterType: 'Base'});
+
+          if (refBase !== undefined && refBase) {
+            base = utils.formatID(refBase.UniverseAddress);
+            _.each(this.state.storedLocations, (storedLocation, i)=>{
+              let hasBase = (base.VoxelX === storedLocation.VoxelX
+                && base.VoxelY === storedLocation.VoxelY
+                && base.VoxelZ === storedLocation.VoxelZ
+                && base.SolarSystemIndex === storedLocation.SolarSystemIndex
+                && base.PlanetIndex === storedLocation.PlanetIndex
+                && refBase.UniverseAddress.RealityIndex === storedLocation.galaxy);
+              this.state.storedLocations[i].base = hasBase;
+            });
+          }
+
           state.set({
             storedLocations: this.state.storedLocations,
             username: location.username
@@ -1299,9 +1546,9 @@ var App = React.createClass({
             }
           });
         });
-      }).catch((e)=>{
+      }).catch((err)=>{
+        log.error(`Failed to fetch save data: ${err}`);
         next();
-        console.log(e)
       });
     });
   },
@@ -1388,7 +1635,7 @@ var App = React.createClass({
         }}>
           <h2 style={{
             position: 'absolute',
-            left: '32px',
+            left: '16px',
             top: '5px',
             margin: 'initial',
             WebkitTransition: 'left 0.1s'
@@ -1422,15 +1669,16 @@ var App = React.createClass({
               className="ui transparent icon input"
               style={{width: '250px', WebkitUserSelect: 'initial', WebkitAppRegion: 'no-drag', fontSize: '15px'}}>
                 <input type="text" style={{letterSpacing: '2px'}} placeholder="Search..." value={s.search} onChange={(e)=>state.set({search: e.target.value})} onKeyDown={this.handleEnter}/>
-                <i className={s.searchInProgress ? 'remove link icon' : 'search link icon'} style={{cursor: 'default', padding: '0px'}} onClick={()=>s.searchInProgress ? ()=>this.handleClearSearch() : ()=>this.handleSearch()}/>
+                <i className={s.searchInProgress ? 'remove link icon' : 'search link icon'} style={{cursor: 'default', padding: '0px'}} onClick={s.searchInProgress ? ()=>this.handleClearSearch() : ()=>this.handleSearch()}/>
               </div>
             </div>
             <DropdownMenu
             s={s}
+            onSync={this.handleSync}
             onModeSwitch={(mode)=>this.pollSaveData(mode)}  />
           </div>
           <div
-          style={{WebkitAppRegion: 'no-drag'}}
+          style={{WebkitAppRegion: 'no-drag', paddingRight: '0px'}}
           className={`ui dropdown icon item`}
           onClick={()=>this.handleSort('-created')}>
             <div className="titlebar-controls">
@@ -1465,7 +1713,10 @@ var App = React.createClass({
         <Container
         s={s}
         onTeleport={(location, i)=>this.handleTeleport(location, i)}
-        onPagination={(page)=>this.fetchRemoteLocations(++page)} />
+        onPagination={(page)=>{
+          console.log(page)
+          this.fetchRemoteLocations(++page)
+        }} />
       </div>
     );
   }

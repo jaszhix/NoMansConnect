@@ -75,10 +75,16 @@ app.on('ready', async () => {
   globalShortcut.register('Insert', ()=>{
     if (mainWindow.isFocused()) {
       mainWindow.minimize();
-      mainWindow.webContents.executeJavaScript(`document.body.style.background = '#171A16';`)
+      mainWindow.webContents.executeJavaScript(`
+        document.body.style.background = '#171A16';
+        state.set({transparent: false});
+        `)
     } else {
       mainWindow.maximize();
-      mainWindow.webContents.executeJavaScript(`document.body.style.background = 'transparent';`)
+      mainWindow.webContents.executeJavaScript(`
+        document.body.style.background = 'transparent';
+        state.set({transparent: true});
+      `)
       mainWindow.focus();
     }
   })

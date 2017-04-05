@@ -7,7 +7,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.3.1',
+      version: '0.4.0',
       init: true,
       homedir: os.homedir(),
       width: window.innerWidth,
@@ -35,67 +35,83 @@ var state = Reflux.createStore({
       page: 1,
       pageSize: 20,
       loading: false,
-      maximized: false
+      maximized: false,
+      mapLines: false,
+      mapZoom: false,
+      transparent: false
     };
-    if (!store.get('migrated')) {
-      store.set('migrated', false)
+    let mapLines = store.get('mapLines');
+    if (mapLines) {
+      this.state.mapLines = mapLines;
     }
-    store.get('mode', (data)=>{
-      if (data) {
-        this.state.mode = data;
+    let mapZoom = store.get('mapZoom');
+    if (mapZoom) {
+      this.state.mapZoom = mapZoom;
+    }
+    let mode = store.get('mode');
+    if (mode) {
+      this.state.mode = mode;
+    }
+    let storedLocations = store.get('storedLocations');
+    // temporary
+    if (_.isArray(storedLocations)) {
+      storedLocations = {
+        normal: storedLocations,
+        creative: [],
+        survival: [],
+        permadeath: []
       }
-    });
-    store.get('storedLocations', (data)=>{
-      if (data) {
-        this.state.storedLocations = data[this.state.mode];
-      } else {
-        store.set('storedLocations', {
-          normal: [],
-          creative: [],
-          survival: [],
-          permadeath: []
-        });
-      }
-    });
-
-    store.get('favorites', (data)=>{
-      if (data) {
-        this.state.favorites = data;
-      } else {
-        store.set('favorites', []);
-      }
-    });
-
-    store.get('autoCapture', (data)=>{
-      if (data !== null) {
-        this.state.autoCapture = data;
-      } else {
-        store.set('autoCapture', false);
-      }
-    });
+      store.set('storedLocations', storedLocations)
+    }
+    if (storedLocations) {
+      this.state.storedLocations = storedLocations[this.state.mode];
+    } else {
+      store.set('storedLocations', {
+        normal: [],
+        creative: [],
+        survival: [],
+        permadeath: []
+      });
+    }
+    let favorites = store.get('favorites');
+    if (favorites) {
+      this.state.favorites = favorites;
+    } else {
+      store.set('favorites', []);
+    }
+    let autoCapture = store.get('autoCapture');
+    if (autoCapture !== null) {
+      this.state.autoCapture = autoCapture;
+    } else {
+      store.set('autoCapture', false);
+    }
+    this.index = 0;
+    this.history = [];
   },
   set(obj, cb=null){
+    obj = _.cloneDeep(obj);
     console.log('STATE INPUT: ', obj);
-    _.assignIn(this.state, _.cloneDeep(obj));
+    if (obj.selectedLocation) {
+      this.state.selectedLocation = null;
+    }
+    _.assignIn(this.state, obj);
     console.log('STATE: ', this.state);
     if (obj.mode) {
-      store.get('storedLocations', (data)=>{
-        store.set('mode', obj.mode);
-        this.state.storedLocations = data[obj.mode];
-      });
+      let storedLocations = store.get('storedLocations');
+      store.set('mode', obj.mode);
+      this.state.storedLocations = storedLocations[obj.mode];
     }
     this.trigger(this.state);
     if (obj.storedLocations) {
-      let storedLocations = _.clone(obj).storedLocations;
-      _.each(storedLocations, (location, key)=>{
+      _.each(_.cloneDeep(obj.storedLocations), (location, key)=>{
         if (location.image && location.image.length > 0) {
-          delete storedLocations[key].image;
+          delete obj.storedLocations[key].image;
         }
       });
-      store.get('storedLocations', (data)=>{
-        data[this.state.mode] = storedLocations;
-        store.set('storedLocations', data);
-      });
+      let storedLocations = store.get('storedLocations');
+      console.log('STORED: ', storedLocations);
+      storedLocations[this.state.mode] = obj.storedLocations;
+      store.set('storedLocations', storedLocations);
     }
 
     if (obj.favorites) {
@@ -106,7 +122,15 @@ var state = Reflux.createStore({
       store.set('autoCapture', obj.autoCapture);
     }
 
-    if (_.isFunction(cb)) {
+    if (obj.mapLines) {
+      store.set('mapLines', obj.mapLines);
+    }
+
+    if (obj.mapZoom) {
+      store.set('mapZoom', obj.mapZoom);
+    }
+
+    if (cb) {
       _.defer(()=>cb());
     }
   },
@@ -114,6 +138,5 @@ var state = Reflux.createStore({
     return this.state;
   }
 });
-
-//window.state = state;
+window.state = state;
 export default state;
