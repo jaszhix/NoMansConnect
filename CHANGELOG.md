@@ -1,3 +1,9 @@
+# 0.4.1
+
+  * Fixed the screenshot in the selected location changing when switching sort options
+  * Optimized how images are loaded
+  * Increased the image quality of automatic screenshots
+
 # 0.4.0
 
   * Added an enlarged map layout

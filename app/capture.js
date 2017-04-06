@@ -43,9 +43,9 @@ function screenshot(init, callback) {
 
       let context = canvas.getContext('2d');
       if (width && height) {
-        canvas.width = width / 4;
-        canvas.height = height / 4;
-        context.drawImage(video, 0, 0, width / 4, height / 4);
+        canvas.width = width;
+        canvas.height = height;
+        context.drawImage(video, 0, 0, width, height);
         callback(canvas.toDataURL('image/jpeg', 0.75));
       }
     }

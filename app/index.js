@@ -39,6 +39,8 @@ if (module.hot) {
 
 const {Menu, MenuItem, dialog} = remote;
 
+const IMAGE_DOMAIN = process.env.NODE_ENV === 'development' ? 'http://192.168.1.148:8000' : 'https://neuropuff.com'
+
 var DropdownMenu = onClickOutside(React.createClass({
   handleClickOutside(){
     if (this.props.s.settingsOpen) {
@@ -50,7 +52,7 @@ var DropdownMenu = onClickOutside(React.createClass({
       type: 'info',
       buttons: [],
       title: 'No Man\'s Connect',
-      message: '0.4.0',
+      message: '0.4.1',
       detail: 'This version is beta. Please back up your save files.'
     });
   },
@@ -399,18 +401,18 @@ var ImageModal = onClickOutside(React.createClass({
   },
   render(){
     return (
-      <div className="ui modal active" style={{
+      <div className="ui fullscreen modal active" style={{
         background: 'rgb(23, 26, 22)',
         borderTop: '2px solid #95220E',
         position: 'fixed',
         left: '50%',
-        top: '30%',
+        top: '12%',
         zIndex: '1001',
         WebkitTransformOrigin: '50% 25%',
         boxShadow: 'none'
       }}>
         <span className="close"/>
-        <img className="image content" src={this.props.image} />
+        <img className="image content" src={`${IMAGE_DOMAIN}${this.props.image}`} />
       </div>
     );
   }
@@ -610,7 +612,7 @@ var LocationBox = React.createClass({
                 maxWidth: '386px',
                 width: '99%'
               }}
-              src={p.image}
+              src={`${IMAGE_DOMAIN}${p.image}`}
               onClick={()=>state.set({selectedImage: p.image})} />
             </div> : null}
             {p.location.description ? <Item label="Description" value={p.location.description} /> : null }
@@ -976,6 +978,7 @@ var Container = React.createClass({
     });
   },
   handleSelectLocation(location){
+    location = _.cloneDeep(location);
     let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id;
     if (!deselected) {
       let refRemoteLocation = _.find(this.props.s.remoteLocations.results, (remoteLocation)=>{
@@ -984,7 +987,7 @@ var Container = React.createClass({
 
       if (refRemoteLocation !== undefined && refRemoteLocation) {
         refRemoteLocation.data.image = refRemoteLocation.image;
-        location = refRemoteLocation.data;
+        _.assignIn(location, refRemoteLocation.data);
       }
     }
     state.set({
@@ -1223,7 +1226,7 @@ var App = React.createClass({
       });
     }
   },
-  handleSync(){
+  handleSync(page=1, sort=this.state.sort, init=false){
     this.syncRemoteOwned(()=>{
       let locations = [];
       _.each(this.state.storedLocations, (location)=>{
@@ -1236,7 +1239,7 @@ var App = React.createClass({
         mode: this.state.mode,
         username: this.state.username
       }).then((res)=>{
-        this.fetchRemoteLocations();
+        this.fetchRemoteLocations(page, sort, init);
       }).catch((err)=>{
         log.error(`Failed to sync local locations to remote locations: ${err}`);
       });
@@ -1268,9 +1271,7 @@ var App = React.createClass({
       } catch (e) {
         res.data.results[key].data.image = '';
       }
-      if (this.state.selectedLocation) {
-        this.state.selectedLocation.image = remoteLocation.data.image;
-      }
+
       _.each(this.state.storedLocations, (storedLocation, key)=>{
         if (remoteLocation.data.id === storedLocation.id) {
           this.state.storedLocations[key].username = remoteLocation.data.username;
@@ -1301,7 +1302,6 @@ var App = React.createClass({
       res.data.next = this.state.remoteLocations.next;
     }
     state.set({
-      selectedLocation: this.state.selectedLocation,
       storedLocations: this.state.storedLocations,
       remoteLocations: res.data,
       searchInProgress: this.state.search.length > 0,
@@ -1440,7 +1440,11 @@ var App = React.createClass({
       let NMSRunning = _.findIndex(list, {ProcessName: 'NMS.exe'}) !== -1;
 
       let next = ()=>{
-        this.fetchRemoteLocations(1, this.state.sort, init);
+        if (init) {
+          this.handleSync(1, this.state.sort, init);
+        } else {
+          this.fetchRemoteLocations(1, this.state.sort, init);
+        }
         if (init) {
           watch.createMonitor(path.join(state.get().homedir, 'AppData', 'Roaming', 'HelloGames', 'NMS'), {
             ignoreDotFiles: true,
@@ -1452,9 +1456,6 @@ var App = React.createClass({
               console.log('changed')
             });
           });
-          if (this.state.storedLocations.length <= 2) {
-            this.syncRemoteOwned();
-          }
         }
       };
 
@@ -1713,10 +1714,7 @@ var App = React.createClass({
         <Container
         s={s}
         onTeleport={(location, i)=>this.handleTeleport(location, i)}
-        onPagination={(page)=>{
-          console.log(page)
-          this.fetchRemoteLocations(++page)
-        }} />
+        onPagination={(page)=>this.fetchRemoteLocations(++page)} />
       </div>
     );
   }
