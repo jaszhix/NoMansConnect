@@ -1,8 +1,7 @@
-
 {
   "name": "NoMansConnect",
   "productName": "NoMansConnect",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "description": "An online location manager for No Man's Sky.",
   "main": "./main.js",
   "author": {
@@ -11,6 +10,9 @@
     "url": "https://github.com/jaszhix"
   },
   "license": "MIT",
-  "dependencies": {
+  "dependencies": {},
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "eslint-plugin-react": "^6.10.3"
   }
 }

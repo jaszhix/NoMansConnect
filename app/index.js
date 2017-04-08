@@ -10,6 +10,8 @@ const ps = require('win-ps');
 import state from './state';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import autoBind from 'react-autobind';
+import reactMixin from 'react-mixin';
 import Reflux from 'reflux';
 import _ from 'lodash';
 import $ from 'jquery';
@@ -26,7 +28,7 @@ import knownGalaxies from './static/galaxies.json';
 // Temporary until all 256 galaxy names are known
 let galaxies = knownGalaxies.concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat([knownGalaxies[0]]);
 let galaxyIter = 1;
-_.each(galaxies, (g, k)=>{
+utils.each(galaxies, (g, k)=>{
   ++galaxyIter;
   if (galaxyIter > knownGalaxies.length) {
     galaxies[k] = `Galaxy ${galaxyIter}`;
@@ -41,28 +43,32 @@ const {Menu, MenuItem, dialog} = remote;
 
 const IMAGE_DOMAIN = process.env.NODE_ENV === 'development' ? 'http://192.168.1.148:8000' : 'https://neuropuff.com'
 
-var DropdownMenu = onClickOutside(React.createClass({
+class DropdownMenu extends React.Component {
+  constructor(props) {
+    super(props);
+    autoBind(this);
+  }
   handleClickOutside(){
     if (this.props.s.settingsOpen) {
       state.set({settingsOpen: false});
     }
-  },
+  }
   handleAbout(){
     dialog.showMessageBox({
       type: 'info',
       buttons: [],
       title: 'No Man\'s Connect',
-      message: '0.4.2',
+      message: this.props.s.version,
       detail: 'This version is beta. Please back up your save files.'
     });
-  },
+  }
   handleSync(){
     this.props.onSync();
-  },
+  }
   handleAutoCapture(e){
     e.stopPropagation();
     state.set({autoCapture: !this.props.s.autoCapture});
-  },
+  }
   render(){
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
@@ -73,9 +79,14 @@ var DropdownMenu = onClickOutside(React.createClass({
       onClick={()=>state.set({settingsOpen: !p.s.settingsOpen})}>
         <i className="wrench icon" />
         <div
-        style={{minWidth: '183px'}}
+        style={{
+          minWidth: '183px',
+          borderBottomLeftRadius: '0px',
+          borderBottomRightRadius: '0px',
+          borderTop: '1px solid rgb(149, 34, 14)'
+        }}
         className={`menu transition ${p.s.settingsOpen ? 'visible' : 'hidden'}`}>
-          {modes.map((mode, i)=>{
+          {_.map(modes, (mode, i)=>{
             return (
               <div
               key={i}
@@ -90,6 +101,12 @@ var DropdownMenu = onClickOutside(React.createClass({
             Screenshots: {p.s.autoCapture ? 'Auto' : 'Manual'}
           </div>
           <div className="divider"></div>
+          <div className="item" onClick={this.props.onSelectInstallDirectory}>
+            Select NMS Install Directory
+          </div>
+          <div className="item" onClick={this.props.onSelectSaveDirectory}>
+            Select NMS Save Directory
+          </div>
           <div className="item" onClick={this.handleSync}>
             Sync Locations
           </div>
@@ -108,37 +125,33 @@ var DropdownMenu = onClickOutside(React.createClass({
       </div>
     );
   }
-}));
+};
 
-var BasicDropdown = onClickOutside(React.createClass({
-  getDefaultProps(){
-    return {
-      options: [],
-      selectedGalaxy: 0,
-      icon: 'dropdown',
-      showValue: true,
-      persist: false
-    };
-  },
-  getInitialState(){
-    return {
+DropdownMenu = onClickOutside(DropdownMenu);
+
+class BasicDropdown extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
       open: false
     };
-  },
+    autoBind(this);
+  }
   handleOptionClick(e, option){
     if (this.props.persist) {
       e.stopPropagation();
     }
     option.onClick(option.id);
     this.setState({open: this.props.persist});
-  },
+  }
   handleClickOutside(){
     if (this.state.open) {
       this.setState({open: false});
     }
-  },
+  }
   render(){
     let p = this.props;
+    let height = p.height ? p.height : window.innerHeight;
     return (
       <div
       style={{
@@ -153,10 +166,12 @@ var BasicDropdown = onClickOutside(React.createClass({
         style={{
           display: this.state.open ? 'block !important' : 'none',
           borderRadius: '0px',
-          background: 'rgb(23, 26, 22)'
+          background: 'rgb(23, 26, 22)',
+          maxHeight: `${height / 2}px`,
+          overflowY: 'auto'
         }}
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
-          {this.props.options.length > 0 ? this.props.options.map((option, i)=>{
+          {this.props.options.length > 0 ? _.map(this.props.options, (option, i)=>{
             return (
               <div key={i} className="item" onClick={(e)=>this.handleOptionClick(e, option)}>{option.label}</div>
             );
@@ -165,9 +180,21 @@ var BasicDropdown = onClickOutside(React.createClass({
       </div>
     );
   }
-}));
+};
 
-var TooltipChild = React.createClass({
+BasicDropdown.defaultProps = {
+  options: [],
+  selectedGalaxy: 0,
+  icon: 'dropdown',
+  showValue: true,
+  persist: false
+};
+BasicDropdown = onClickOutside(BasicDropdown);
+
+class TooltipChild extends React.Component {
+  constructor(props) {
+    super(props);
+  }
   render(){
     if (this.props.active) {
       return (
@@ -183,7 +210,7 @@ var TooltipChild = React.createClass({
           style={{padding: '3px 5px', fontWeight: '600'}}>
             {`${this.props.payload[0].payload.user}`}
           </div> : null}
-          {this.props.payload.map((item, i)=>{
+          {_.map(this.props.payload, (item, i)=>{
             return (
               <div
               key={i}
@@ -198,11 +225,12 @@ var TooltipChild = React.createClass({
     }
     return null;
   }
-});
+};
 
-var ThreeDimScatterChart = React.createClass({
-  getInitialState(){
-    return {
+class ThreeDimScatterChart extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
       show: {
         'Shared': true,
         'Explored': true,
@@ -211,13 +239,14 @@ var ThreeDimScatterChart = React.createClass({
         'Current': true,
         'Selected': true,
         'Base': true
-      },
+      }
     };
-  },
+    autoBind(this);
+  }
   componentDidMount(){
     _.defer(()=>{
       $('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
-      _.each(this.state.show, (type, key)=>{
+      utils.each(this.state.show, (type, key)=>{
         $('.recharts-legend-item').each(function(){
           if ($(this).text() === key) {
             $(this).addClass(key.split(' ').join('_'));
@@ -225,11 +254,11 @@ var ThreeDimScatterChart = React.createClass({
         });
       });
     });
-  },
+  }
   renderShape(symbol){
     symbol.fill = '#fbbd08';
     return symbol;
-  },
+  }
   handleSelect(symbol){
     let refStoredLocation = _.findIndex(this.props.storedLocations, {id: symbol.id});
     if (refStoredLocation !== -1) {
@@ -239,7 +268,7 @@ var ThreeDimScatterChart = React.createClass({
     if (refRemoteLocation !== -1) {
       state.set({selectedLocation: this.props.remoteLocations.results[refRemoteLocation].data});
     }
-  },
+  }
   handleLegendClick(e){
     this.state.show[e.payload.name] = !this.state.show[e.payload.name];
     this.setState({show: this.state.show}, ()=>{
@@ -247,7 +276,7 @@ var ThreeDimScatterChart = React.createClass({
         opacity: this.state.show[e.payload.name] ? '1' : '0.5'
       });
     });
-  },
+  }
   render () {
     let p = this.props;
     let currentLocation = [];
@@ -261,7 +290,7 @@ var ThreeDimScatterChart = React.createClass({
     let ticks = p.mapZoom ? [0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096] : [0, 512, 1024, 1536, 2048, 2560, 3072, 3584, 4096];
     let range = [0, 4096];
 
-    _.each(p.storedLocations, (location)=>{
+    utils.each(p.storedLocations, (location)=>{
       if (location.galaxy !== p.selectedGalaxy) {
         return;
       }
@@ -288,7 +317,7 @@ var ThreeDimScatterChart = React.createClass({
           selected: true,
           id: location.id
         });
-      } else if (_.isEqual(location, _.first(p.storedLocations)) && this.state.show['Current']) {
+      } else if (location.id === p.currentLocation && this.state.show['Current']) {
         currentLocation.push({
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
@@ -306,7 +335,7 @@ var ThreeDimScatterChart = React.createClass({
       }
     });
     if (p.remoteLocations && p.remoteLocations.results) {
-      _.each(p.remoteLocations.results, (location)=>{
+      utils.each(p.remoteLocations.results, (location)=>{
         if (location.data.galaxy !== p.selectedGalaxy) {
           return;
         }
@@ -332,7 +361,7 @@ var ThreeDimScatterChart = React.createClass({
             selected: true,
             id: location.data.id
           });
-        } else if (_.isEqual(location.data, _.first(p.storedLocations)) && this.state.show['Current']) {
+        } else if (location.data.id === p.currentLocation && this.state.show['Current']) {
           currentLocation.push({
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
@@ -393,12 +422,15 @@ var ThreeDimScatterChart = React.createClass({
       </ScatterChart>
     );
   }
-});
+};
 
-var ImageModal = onClickOutside(React.createClass({
+class ImageModal extends React.Component {
+  constructor(props) {
+    super(props);
+  }
   handleClickOutside(){
     state.set({selectedImage: null});
-  },
+  }
   render(){
     return (
       <div className="ui fullscreen modal active" style={{
@@ -416,11 +448,16 @@ var ImageModal = onClickOutside(React.createClass({
       </div>
     );
   }
-}));
+};
+
+ImageModal = onClickOutside(ImageModal);
 
 const locationItemStyle = {padding: '0px 2px', margin: '0px 3px', background: '#0B2B39', fontFamily: 'geosanslight-nmsregular', fontSize: '16px'};
 
-var Item = React.createClass({
+class Item extends React.Component {
+  constructor(props) {
+    super(props);
+  }
   render(){
     return (
       <div
@@ -430,14 +467,16 @@ var Item = React.createClass({
       </div>
     );
   }
-});
+};
 
-var Button = React.createClass({
-  getInitialState(){
-    return {
-      hover: false
+class Button extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hover: false,
     };
-  },
+    autoBind(this);
+  }
   render(){
     return (
       <div
@@ -458,29 +497,22 @@ var Button = React.createClass({
       </div>
     );
   }
-});
+};
 
-var LocationBox = React.createClass({
-  getDefaultProps() {
-    return {
-      selectType: false,
-      name: '',
-      description: ''
-    };
-  },
-  getInitialState(){
-    return {
+class LocationBox extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
       hover: '',
       limit: false,
       name: this.props.name,
       description: this.props.description
     };
-  },
+    autoBind(this);
+  }
   handleCancel(){
-
     this.props.onEdit();
-
-  },
+  }
   render(){
     let p = this.props;
     let refFav = _.findIndex(p.favorites, (fav)=>{
@@ -631,7 +663,7 @@ var LocationBox = React.createClass({
             className="ui segment"
             style={utils.css(locationItemStyle)}>
               <span style={{fontWeight: '600'}}>Mods Used ({p.location.mods.length})</span>:
-              {p.location.mods.map((mod, i)=>{
+              {_.map(p.location.mods, (mod, i)=>{
                 return (
                   <div
                   key={i}
@@ -685,32 +717,58 @@ var LocationBox = React.createClass({
       </div>
     );
   }
-});
+};
 
-var GalacticMap = React.createClass({
+LocationBox.defaultProps = {
+  selectType: false,
+  name: '',
+  description: ''
+};
+
+class GalacticMap extends React.Component {
+  constructor(props) {
+    super(props);
+    autoBind(this);
+  }
   componentDidMount(){
-    this.buildGalaxyOptions(this.props);
-  },
-  buildGalaxyOptions(p){
+    this.buildGalaxyOptions(this.props, true);
+  }
+  componentWillReceiveProps(nextProps){
+    if (!_.isEqual(nextProps.storedLocations, this.props.storedLocations)
+      || !_.isEqual(nextProps.remoteLocations, this.props.remoteLocations)
+      || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
+      this.buildGalaxyOptions(nextProps, false);
+    }
+  }
+  buildGalaxyOptions(p, init){
     let options = [];
-    _.each(p.storedLocations, (location, i)=>{
+    let currentGalaxy = 0;
+    utils.each(p.storedLocations, (location, i)=>{
+      if (location.id === p.currentLocation && location.galaxy) {
+        currentGalaxy = location.galaxy;
+      }
       options.push({id: location.galaxy});
     });
     if (p.remoteLocations && p.remoteLocations.results) {
-      _.each(p.remoteLocations.results, (location, i)=>{
-        options.push({id: location.data.galaxy});
+      utils.each(p.remoteLocations.results, (location, i)=>{
+        if (location.data.galaxy) {
+          options.push({id: location.data.galaxy});
+        }
       });
     }
-    if (p.selectedLocation) {
+    if (p.selectedLocation && p.selectedLocation.galaxy) {
       options.push({id: p.selectedLocation.galaxy});
     }
-    options = _.uniqBy(options, 'id');
-    _.each(options, (option, i)=>{
+    options = _.chain(options).uniqBy('id').orderBy('id', 'asc').value();
+    utils.each(options, (option, i)=>{
       options[i].label = galaxies[option.id];
       options[i].onClick = (id)=>state.set({selectedGalaxy: id});
     });
-    state.set({galaxyOptions: options});
-  },
+    state.set({
+      galaxyOptions: options,
+      selectedGalaxy: init ? currentGalaxy : p.selectedGalaxy
+    });
+  }
   render(){
     let p = this.props;
     let compact = p.width <= 1212 || p.height <= 850;
@@ -748,6 +806,7 @@ var GalacticMap = React.createClass({
           top: '16px'
         }}>
           <BasicDropdown
+          height={p.height}
           options={p.galaxyOptions}
           selectedGalaxy={p.selectedGalaxy} />
         </div> : null}
@@ -773,20 +832,24 @@ var GalacticMap = React.createClass({
           height={p.height}
           remoteLocations={p.remoteLocations}
           selectedLocation={p.selectedLocation}
+          currentLocation={p.currentLocation}
           username={p.username} />
         </div>
       </div>
     );
   }
-});
+};
 
-var Container = React.createClass({
-  getInitialState(){
-    return {
+class Container extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
       updating: false,
       edit: false
     };
-  },
+    autoBind(this);
+  }
   componentDidMount(){
     let checkRemote = ()=>{
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
@@ -796,24 +859,24 @@ var Container = React.createClass({
       }
     };
     checkRemote();
-  },
+  }
   componentWillReceiveProps(nextProps) {
     if (!_.isEqual(nextProps.s.selectedLocation, this.props.s.selectedLocation)) {
       this.setState({edit: false});
     }
-  },
+  }
   componentWillUnmount(){
     if (this.refs.recentExplorations) {
       this.refs.recentExplorations.removeEventListener('scroll', this.scrollListener);
     }
-  },
+  }
   scrollListener(){
     let node = this.refs.recentExplorations;
     if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 180
       && this.props.s.remoteLocations.next) {
       this.props.onPagination(this.props.s.page);
     }
-  },
+  }
   handleFavorite(location){
     let refFav = _.findIndex(this.props.s.favorites, (fav)=>{
       return fav === location.id;
@@ -852,7 +915,7 @@ var Container = React.createClass({
     }).catch((err)=>{
       log.error(`Failed to favorite remote location: ${err}`);
     });
-  },
+  }
   handleUpdate(name, description){
     this.setState({updating: true}, ()=>{
       if (description.length > 200) {
@@ -894,7 +957,7 @@ var Container = React.createClass({
         log.error(`Failed to update remote location: ${err}`);
       });
     });
-  },
+  }
   handleUploadScreen(e){
     e.persist();
     this.setState({updating: true}, ()=>{
@@ -947,7 +1010,7 @@ var Container = React.createClass({
       };
       reader.readAsDataURL(e.target.files[0]);
     });
-  },
+  }
   handleDeleteScreen(){
     utils.ajax.post('/nmslocation/', {
       username: this.props.s.username,
@@ -976,7 +1039,7 @@ var Container = React.createClass({
         });
       });
     });
-  },
+  }
   handleSelectLocation(location){
     location = _.cloneDeep(location);
     let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id;
@@ -994,7 +1057,7 @@ var Container = React.createClass({
       selectedLocation: deselected ? null : location,
       selectedGalaxy: deselected ? 0 : location.galaxy
     });
-  },
+  }
   render(){
     let p = this.props;
     let locationItemStyle = {padding: '0px 3px', background: '#0B2B39', fontFamily: 'geosanslight-nmsregular', fontSize: '16px'};
@@ -1021,7 +1084,7 @@ var Container = React.createClass({
               }}>
                 <h3>Stored Locations</h3>
                 <div className="ui segments" style={{maxHeight: `${p.s.height - (p.s.mapZoom ? 498 : 125)}px`, overflowY: 'auto'}}>
-                  {storedLocations.map((location, i)=>{
+                  {_.map(storedLocations, (location, i)=>{
                     return (
                       <div
                       key={location.id}
@@ -1055,6 +1118,7 @@ var Container = React.createClass({
               height={p.s.height}
               remoteLocations={p.s.remoteLocations}
               selectedLocation={p.s.selectedLocation}
+              currentLocation={p.s.currentLocation}
               username={p.s.username} />
               {p.s.selectedLocation ?
               <LocationBox
@@ -1110,7 +1174,7 @@ var Container = React.createClass({
                 overflowX: 'hidden',
               }}
               ref="recentExplorations">
-                {p.s.remoteLocations.results.map((location, i)=>{
+                {_.map(p.s.remoteLocations.results, (location, i)=>{
                   location.data.teleports = location.teleports;
                   location.upvote = location.data.upvote;
                   return (
@@ -1138,18 +1202,17 @@ var Container = React.createClass({
       </div>
     );
   }
-});
+};
 
-var App = React.createClass({
-  mixins: [
-    Reflux.ListenerMixin,
-    ReactUtils.Mixins.WindowSizeWatch
-  ],
-  getInitialState(){
-    return state.get();
-  },
+class App extends Reflux.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {};
+    this.store = state;
+    autoBind(this);
+  }
   componentDidMount(){
-    this.listenTo(state, this.stateChange);
     this.saveJSON = path.join(__dirname, 'saveCache.json');
     this.saveJSON = path.resolve(__dirname, this.saveJSON);
     this.saveTool = process.env.NODE_ENV === 'production' ? '\\nmssavetool\\nmssavetool.exe' : '\\app\\nmssavetool\\nmssavetool.exe';
@@ -1178,7 +1241,7 @@ var App = React.createClass({
           fs.readdir(path, (err, list)=>{
             if (err) {
               log.error(`Failed to read mods directory: ${err}`);
-              initialize();
+              this.handleInstallDirFailure();
               return;
             }
             state.set({mods: list}, ()=>{
@@ -1188,20 +1251,24 @@ var App = React.createClass({
         };
 
         let paths = [
-          `:/Program Files (x86)/Steam/steamapps/common`,
-          `:/Steam/steamapps/common`,
-          `:/steamapps/common`,
-          `:/Program Files`,
-          `:GOG Games`,
-          `:Games`,
+          `/Program Files (x86)/Steam/steamapps/common/No Man's Sky`,
+          `/Steam/steamapps/common/No Man's Sky`,
+          `/steamapps/common/No Man's Sky`,
+          `/Program Files/No Man's Sky`,
+          `/GOG Games/No Man's Sky`,
+          `/Games/No Man's Sky`,
         ];
 
-        let modPath = `/No Man's Sky/GAMEDATA/PCBANKS/MODS`;
+        if (this.state.installDirectory) {
+          paths = [this.state.installDirectory.split(':\\')[1]].concat(paths);
+        }
+
+        let modPath = `/GAMEDATA/PCBANKS/MODS`;
 
         let hasPath = false;
-        _.each(letters, (drive, key)=>{
-          _.each(paths, (path)=>{
-            let __path = `${drive}${path}${modPath}`;
+        utils.each(letters, (drive, key)=>{
+          utils.each(paths, (path)=>{
+            let __path = `${drive}:${path}${modPath}`;
             if (fs.existsSync(__path)) {
               hasPath = true;
               indexModsInUse(__path);
@@ -1210,26 +1277,26 @@ var App = React.createClass({
           });
         });
         if (!hasPath) {
-          initialize();
+          this.handleInstallDirFailure();
         }
       }).catch((err) => {
         log.error(`Failed to locate NMS install: ${err}`);
-        initialize();
+        this.handleInstallDirFailure();
       });
     };
     indexMods();
-  },
+  }
   componentDidUpdate(pP, pS){
     if (pS.search.length > 0 && this.state.search.length === 0 && this.state.searchInProgress) {
       state.set({searchInProgress: false}, ()=>{
         this.handleClearSearch();
       });
     }
-  },
+  }
   handleSync(page=1, sort=this.state.sort, init=false){
     this.syncRemoteOwned(()=>{
       let locations = [];
-      _.each(this.state.storedLocations, (location)=>{
+      utils.each(this.state.storedLocations, (location)=>{
         location = _.cloneDeep(location);
         location.timeStamp = new Date(location.timeStamp);
         locations.push(location);
@@ -1244,7 +1311,7 @@ var App = React.createClass({
         log.error(`Failed to sync local locations to remote locations: ${err}`);
       });
     });
-  },
+  }
   formatRemoteLocations(res, page, sort, init, partial, cb){
     if (this.state.remoteLocations.length === 0) {
       this.state.remoteLocations = {
@@ -1256,7 +1323,7 @@ var App = React.createClass({
       let order = sort === '-created' ? 'created' : sort === '-score' ? 'score' : 'teleports';
       res.data.results = _.chain(this.state.remoteLocations.results).concat(res.data.results).uniqBy('id').orderBy(order, 'desc').value();
     }
-    _.each(res.data.results, (remoteLocation, key)=>{
+    utils.each(res.data.results, (remoteLocation, key)=>{
       let refFav = _.findIndex(this.state.favorites, (fav)=>{
         return fav === remoteLocation.data.id;
       });
@@ -1273,7 +1340,7 @@ var App = React.createClass({
         res.data.results[key].data.image = '';
       }
 
-      _.each(this.state.storedLocations, (storedLocation, key)=>{
+      utils.each(this.state.storedLocations, (storedLocation, key)=>{
         if (remoteLocation.data.id === storedLocation.id) {
           this.state.storedLocations[key].username = remoteLocation.data.username;
           this.state.storedLocations[key].name = remoteLocation.name;
@@ -1309,7 +1376,7 @@ var App = React.createClass({
       page: page,
       init: false
     }, cb);
-  },
+  }
   syncRemoteOwned(cb){
     utils.ajax.get('/nmslocationsync', {
       params: {
@@ -1320,7 +1387,7 @@ var App = React.createClass({
     }).catch((err)=>{
       log.error('Failed to sync to remote locations.');
     });
-  },
+  }
   pollRemoteLocations(){
     if (this.timeout)  {
       clearTimeout(this.timeout);
@@ -1353,7 +1420,7 @@ var App = React.createClass({
     }).catch((err)=>{
       console.log(err);
     });
-  },
+  }
   fetchRemoteLocations(page=1, sort=this.state.sort, init=false){
     let q = this.state.search.length > 0 ? this.state.search : null;
     let path = q ? '/nmslocationsearch' : '/nmslocation';
@@ -1374,25 +1441,23 @@ var App = React.createClass({
       console.log(err);
       log.error(`Failed to fetch remote locations: ${err}`);
     });
-  },
+  }
   handleTeleport(location, i){
     console.log(location, i);
     state.set({installing: `t${i}`}, ()=>{
-      utils.exc(this.whichCmd).then((result)=>{
-        let saveData = JSON.parse(fs.readFileSync(this.saveJSON));
-
+      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
         if (location.data) {
           location = location.data;
         }
 
-        _.assignIn(saveData.SpawnStateData, {
+        _.assignIn(saveData.result.SpawnStateData, {
           PlayerPositionInSystem: location.playerPosition,
           PlayerTransformAt: location.playerTransform,
           ShipPositionInSystem: location.shipPosition,
           ShipTransformAt: location.shipTransform
         });
 
-        _.assignIn(saveData.PlayerStateData.UniverseAddress.GalacticAddress, {
+        _.assignIn(saveData.result.PlayerStateData.UniverseAddress.GalacticAddress, {
           PlanetIndex: location.PlanetIndex,
           SolarSystemIndex: location.SolarSystemIndex,
           VoxelX: location.VoxelX,
@@ -1400,9 +1465,9 @@ var App = React.createClass({
           VoxelZ: location.VoxelZ
         });
 
-        saveData.PlayerStateData.UniverseAddress.RealityIndex = location.galaxy;
+        saveData.result.PlayerStateData.UniverseAddress.RealityIndex = location.galaxy;
 
-        fs.writeFile(this.saveJSON, JSON.stringify(saveData), {flag : 'w'}, (err, data)=>{
+        fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data)=>{
           if (err) {
             console.log(err);
           }
@@ -1436,11 +1501,13 @@ var App = React.createClass({
             state.set({installing: false});
           });
         });
-      }).catch((e)=>{
-        console.log(e);
+      }).catch((err)=>{
+        this.handleSaveDataFailure(this.state.mode, false, ()=>{
+          this.handleTeleport(location, i);
+        });
       });
     });
-  },
+  }
   pollSaveData(mode, init=false){
     ps.snapshot(['ProcessName']).then((list) => {
       let NMSRunning = _.findIndex(list, {ProcessName: 'NMS.exe'}) !== -1;
@@ -1452,7 +1519,7 @@ var App = React.createClass({
           this.fetchRemoteLocations(1, this.state.sort, init);
         }
         if (init) {
-          watch.createMonitor(path.join(state.get().homedir, 'AppData', 'Roaming', 'HelloGames', 'NMS'), {
+          watch.createMonitor(this.state.saveDirectory/*path.join(state.get().homedir, 'AppData', 'Roaming', 'HelloGames', 'NMS')*/, {
             ignoreDotFiles: true,
             ignoreNotPermitted: true,
 
@@ -1469,105 +1536,134 @@ var App = React.createClass({
         this.state.mode = mode;
       }
 
-      utils.exc(this.whichCmd).then((result)=>{
-        let saveData = JSON.parse(fs.readFileSync(this.saveJSON));
-        let location = utils.formatID(saveData.PlayerStateData.UniverseAddress);
-        const refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
-        let username = saveData.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+      let handleSavaData = ()=>{
+        utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
+          let location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
+          const refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
+          let username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
 
-        console.log(saveData)
+          console.log(saveData.result)
 
-        let refFav = _.findIndex(this.state.favorites, (fav)=>{
-          return fav === location.id;
-        });
-        let upvote = refFav !== -1;
-
-        screenshot(init || !NMSRunning || !this.state.autoCapture, (image)=>{
-          _.assignIn(location, {
-            username: _.isString(username) && username.length > 0 ? username : '',
-            playerPosition: _.clone(saveData.SpawnStateData.PlayerPositionInSystem),
-            playerTransform: _.clone(saveData.SpawnStateData.PlayerTransformAt),
-            shipPosition: _.clone(saveData.SpawnStateData.ShipPositionInSystem),
-            shipTransform: _.clone(saveData.SpawnStateData.ShipTransformAt),
-            galaxy: _.clone(saveData.PlayerStateData.UniverseAddress.RealityIndex),
-            distanceToCenter: Math.sqrt(Math.pow(location.VoxelX, 2) + Math.pow(location.VoxelY, 2) + Math.pow(location.VoxelZ, 2)) * 100,
-            translatedX: utils.convertInteger(location.VoxelX, 'x'),
-            translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
-            translatedY: utils.convertInteger(location.VoxelY, 'y'),
-            upvote: upvote,
-            image: image,
-            mods: this.state.mods,
-            timeStamp: Date.now(),
+          let refFav = _.findIndex(this.state.favorites, (fav)=>{
+            return fav === location.id;
           });
+          let upvote = refFav !== -1;
 
-          location.jumps = Math.ceil(location.distanceToCenter / 400);
-
-          location.translatedId = `${utils.toHex(location.translatedX, 4)}:${utils.toHex(location.translatedY, 4)}:${utils.toHex(location.translatedZ, 4)}:${utils.toHex(location.SolarSystemIndex, 4)}`;
-
-          if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
-            console.error(`translatedId formatting is NaN: ${location}`);
-            state.set({username: location.username}, ()=>{
-              next();
+          screenshot(init || !NMSRunning || !this.state.autoCapture, (image)=>{
+            _.assignIn(location, {
+              username: _.isString(username) && username.length > 0 ? username : '',
+              playerPosition: _.clone(saveData.result.SpawnStateData.PlayerPositionInSystem),
+              playerTransform: _.clone(saveData.result.SpawnStateData.PlayerTransformAt),
+              shipPosition: _.clone(saveData.result.SpawnStateData.ShipPositionInSystem),
+              shipTransform: _.clone(saveData.result.SpawnStateData.ShipTransformAt),
+              galaxy: _.clone(saveData.result.PlayerStateData.UniverseAddress.RealityIndex),
+              distanceToCenter: Math.sqrt(Math.pow(location.VoxelX, 2) + Math.pow(location.VoxelY, 2) + Math.pow(location.VoxelZ, 2)) * 100,
+              translatedX: utils.convertInteger(location.VoxelX, 'x'),
+              translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
+              translatedY: utils.convertInteger(location.VoxelY, 'y'),
+              upvote: upvote,
+              image: image,
+              mods: this.state.mods,
+              timeStamp: Date.now(),
             });
-            return;
-          }
 
-          this.state.storedLocations.push(location);
-          this.state.storedLocations = _.orderBy(_.uniqBy(this.state.storedLocations, 'id'), 'timeStamp', 'desc');
+            location.jumps = Math.ceil(location.distanceToCenter / 400);
 
-          // Detect player base
+            location.translatedId = `${utils.toHex(location.translatedX, 4)}:${utils.toHex(location.translatedY, 4)}:${utils.toHex(location.translatedZ, 4)}:${utils.toHex(location.SolarSystemIndex, 4)}`;
 
-          let base = null;
-          let refBase = _.find(saveData.PlayerStateData.TeleportEndpoints, {TeleporterType: 'Base'});
-
-          if (refBase !== undefined && refBase) {
-            base = utils.formatID(refBase.UniverseAddress);
-            _.each(this.state.storedLocations, (storedLocation, i)=>{
-              let hasBase = (base.VoxelX === storedLocation.VoxelX
-                && base.VoxelY === storedLocation.VoxelY
-                && base.VoxelZ === storedLocation.VoxelZ
-                && base.SolarSystemIndex === storedLocation.SolarSystemIndex
-                && base.PlanetIndex === storedLocation.PlanetIndex
-                && refBase.UniverseAddress.RealityIndex === storedLocation.galaxy);
-              this.state.storedLocations[i].base = hasBase;
-            });
-          }
-
-          state.set({
-            storedLocations: this.state.storedLocations,
-            username: location.username
-          }, ()=>{
-            if (refLocation === -1) {
-              utils.ajax.post('/nmslocation/', {
-                username: location.username,
-                mode: this.state.mode,
-                image: image,
-                data: location
-              }).then((res)=>{
-                next();
-              }).catch((err)=>{
+            if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
+              console.error(`translatedId formatting is NaN: ${location}`);
+              state.set({username: location.username}, ()=>{
                 next();
               });
-            } else {
-              next();
+              return;
             }
+
+            this.state.storedLocations.push(location);
+            this.state.storedLocations = _.orderBy(_.uniqBy(this.state.storedLocations, 'id'), 'timeStamp', 'desc');
+
+            // Detect player base
+
+            let base = null;
+            let refBase = _.find(saveData.result.PlayerStateData.TeleportEndpoints, {TeleporterType: 'Base'});
+
+            if (refBase !== undefined && refBase) {
+              base = utils.formatID(refBase.UniverseAddress);
+              utils.each(this.state.storedLocations, (storedLocation, i)=>{
+                let hasBase = (base.VoxelX === storedLocation.VoxelX
+                  && base.VoxelY === storedLocation.VoxelY
+                  && base.VoxelZ === storedLocation.VoxelZ
+                  && base.SolarSystemIndex === storedLocation.SolarSystemIndex
+                  && base.PlanetIndex === storedLocation.PlanetIndex
+                  && refBase.UniverseAddress.RealityIndex === storedLocation.galaxy);
+                this.state.storedLocations[i].base = hasBase;
+              });
+            }
+
+            state.set({
+              storedLocations: this.state.storedLocations,
+              currentLocation: location.id,
+              username: location.username,
+              saveDirectory: this.state.saveDirectory,
+              saveFileName: saveData.path
+            }, ()=>{
+              if (refLocation === -1) {
+                utils.ajax.post('/nmslocation/', {
+                  username: location.username,
+                  mode: this.state.mode,
+                  image: image,
+                  data: location
+                }).then((res)=>{
+                  next();
+                }).catch((err)=>{
+                  next();
+                });
+              } else {
+                next();
+              }
+            });
+          });
+        }).catch((err)=>{
+          this.handleSaveDataFailure(mode, init, ()=>{
+            this.pollSaveData(mode, init);
           });
         });
-      }).catch((err)=>{
-        log.error(`Failed to fetch save data: ${err}`);
-        next();
-      });
+      };
+
+      handleSavaData();
     });
-  },
+  }
   stateChange(e){
     this.setState(e);
-  },
+  }
   onWindowResize(){
     state.set({
       width: window.innerWidth,
       height: window.innerHeight
     });
-  },
+  }
+  handleInstallDirFailure(){
+    state.set({
+      title: 'NMS Install Directory Not Found, Please Select Location'
+    }, ()=>{
+      this.handleSelectInstallDirectory();
+    });
+  }
+  handleSaveDataFailure(mode=this.state.mode, init=false, cb){
+    if (!this.state.saveDirectory) {
+      this.state.saveDirectory = `${this.state.homedir}/AppData/Roaming/HelloGames/NMS`;
+      cb();
+    } else if (this.state.saveDirectory.indexOf('DefaultUser') !== -1) {
+      this.state.saveDirectory = `${this.state.homedir.split(':\\')[0]}:/Users/DefaultUser/AppData/Roaming/HelloGames/NMS`;
+      cb();
+    } else {
+      state.set({
+        title: 'NMS Save Directory Not Found, Please Select Location'
+      }, ()=>{
+        this.handleSelectSaveDirectory();
+      });
+    }
+  }
   handleUpgrade(){
     var infoUrl = 'https://github.com/jaszhix/NoMansConnect/releases';
     var helpMessage = 'A newer version of No Man\'s Connect was found.';
@@ -1585,22 +1681,22 @@ var App = React.createClass({
         }
       });
     });
-  },
+  }
   handleEnter(e, id){
     if (e.keyCode === 13) {
       this.fetchRemoteLocations(1)
     }
-  },
+  }
   handleSort(sort){
     state.set({sort: sort}, ()=>{
       this.fetchRemoteLocations(1, sort);
     });
-  },
+  }
   handleSearch(){
     state.set({remoteLocationsCache: this.state.remoteLocations}, ()=>{
       this.fetchRemoteLocations(1);
     });
-  },
+  }
   handleClearSearch(){
     state.set({search: ''}, ()=>{
       if (this.state.remoteLocationsCache) {
@@ -1609,7 +1705,34 @@ var App = React.createClass({
         this.fetchRemoteLocations(1, this.state.sort);
       }
     })
-  },
+  }
+  handleSelectInstallDirectory(){
+    dialog.showOpenDialog({properties: ['openDirectory']}, (cb)=>{
+      if (cb && cb[0]) {
+        state.set({
+          installDirectory: cb[0]
+        }, ()=>{
+          this.handleRestart();
+        });
+      }
+    });
+  }
+  handleSelectSaveDirectory(){
+    dialog.showOpenDialog({properties: ['openDirectory']}, (cb)=>{
+      if (cb && cb[0]) {
+        state.set({
+          saveDirectory: cb[0],
+          title: 'No Man\'s Connect'
+        }, ()=>{
+          this.handleRestart();
+        });
+      }
+    });
+  }
+  handleRestart(){
+    remote.app.relaunch();
+    window.close();
+  }
   handleMaximize(){
     state.set({maximized: !this.state.maximized}, ()=>{
       if (this.state.maximized) {
@@ -1625,12 +1748,9 @@ var App = React.createClass({
         win.setContentBounds(bounds);
       }
     });
-  },
+  }
   render(){
     var s = this.state;
-    if (s.init) {
-      return <Loader />
-    }
     return (
       <div>
         <div className="ui top attached menu" style={{
@@ -1645,32 +1765,37 @@ var App = React.createClass({
             left: '16px',
             top: '5px',
             margin: 'initial',
-            WebkitTransition: 'left 0.1s'
+            WebkitTransition: 'left 0.1s',
+            textTransform: 'uppercase'
           }}>{s.title}</h2>
           <div className="right menu">
+            {!s.init ?
             <div
             style={{WebkitAppRegion: 'no-drag'}}
             className={`ui dropdown icon item${s.sort === '-created' ? ' selected' : ''}`}
             onClick={()=>this.handleSort('-created')}>
               Recent
-            </div>
+            </div> : null}
+            {!s.init ?
             <div
             style={{WebkitAppRegion: 'no-drag'}}
             className={`ui dropdown icon item${s.sort === '-teleports' ? ' selected' : ''}`}
             onClick={()=>this.handleSort('-teleports')}>
               Popular
-            </div>
+            </div> : null}
+            {!s.init ?
             <div
             style={{WebkitAppRegion: 'no-drag'}}
             className={`ui dropdown icon item${s.sort === '-score' ? ' selected' : ''}`}
             onClick={()=>this.handleSort('-score')}>
               Favorites
-            </div>
+            </div> : null}
             {/*<div
             className={`ui dropdown icon item${s.sort === 'distanceToCenter' ? ' selected' : ''}`}
             onClick={()=>this.handleSort('distanceToCenter')} >
               Distance
             </div>*/}
+            {!s.init ?
             <div className="item">
               <div
               className="ui transparent icon input"
@@ -1678,9 +1803,11 @@ var App = React.createClass({
                 <input type="text" style={{letterSpacing: '2px'}} placeholder="Search..." value={s.search} onChange={(e)=>state.set({search: e.target.value})} onKeyDown={this.handleEnter}/>
                 <i className={s.searchInProgress ? 'remove link icon' : 'search link icon'} style={{cursor: 'default', padding: '0px'}} onClick={s.searchInProgress ? ()=>this.handleClearSearch() : ()=>this.handleSearch()}/>
               </div>
-            </div>
+            </div> : null}
             <DropdownMenu
             s={s}
+            onSelectSaveDirectory={this.handleSelectSaveDirectory}
+            onSelectInstallDirectory={this.handleSelectInstallDirectory}
             onSync={this.handleSync}
             onModeSwitch={(mode)=>this.pollSaveData(mode)}  />
           </div>
@@ -1717,14 +1844,18 @@ var App = React.createClass({
           </div>
         </div>
         {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} /> : null}
+        {s.init ?
+        <Loader />
+        :
         <Container
         s={s}
         onTeleport={(location, i)=>this.handleTeleport(location, i)}
-        onPagination={(page)=>this.fetchRemoteLocations(++page)} />
+        onPagination={(page)=>this.fetchRemoteLocations(++page)} />}
       </div>
     );
   }
-});
+};
+reactMixin(App.prototype, ReactUtils.Mixins.WindowSizeWatch);
 // Render to the #app element
 ReactDOM.render(
   <App />,

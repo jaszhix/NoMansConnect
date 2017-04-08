@@ -7,16 +7,22 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.4.2',
+      version: '0.5.0',
       init: true,
       homedir: os.homedir(),
       width: window.innerWidth,
       height: window.innerHeight,
       tableData: [],
       title: 'NO MAN\'S CONNECT',
+      installDirectory: null,
+      saveDirectory: null,
+      saveFileName: '',
+      triggerSaveDirFileDialogue: false,
+      triggerInstallDirFileDialogue: false,
       mode: 'normal',
       storedLocations: [],
       remoteLocations: [],
+      currentLocation: null,
       selectedLocation: null,
       username: '',
       favorites: [],
@@ -40,6 +46,14 @@ var state = Reflux.createStore({
       mapZoom: false,
       transparent: false
     };
+    let installDirectory = store.get('installDirectory');
+    if (installDirectory) {
+      this.state.installDirectory = installDirectory;
+    }
+    let saveDirectory = store.get('saveDirectory');
+    if (saveDirectory) {
+      this.state.saveDirectory = saveDirectory;
+    }
     let mapLines = store.get('mapLines');
     if (mapLines) {
       this.state.mapLines = mapLines;
@@ -128,6 +142,14 @@ var state = Reflux.createStore({
 
     if (obj.mapZoom) {
       store.set('mapZoom', obj.mapZoom);
+    }
+
+    if (obj.installDirectory) {
+      store.set('installDirectory', obj.installDirectory);
+    }
+
+    if (obj.saveDirectory) {
+      store.set('saveDirectory', obj.saveDirectory);
     }
 
     if (cb) {

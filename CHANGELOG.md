@@ -1,3 +1,11 @@
+# 0.5.0
+
+  * The app will now ask for your NMS install and save file directories on init if they can't be found
+  * Implemented native parsing of NMS save files
+  * Fixed the galaxy list not updating as locations change
+  * Fixed the current location being inaccurate, and set the current location's galaxy as the initial galaxy seen on the map
+  * Optimizations
+
 # 0.4.2
 
   * Fixed location order becoming inaccurate when switching sort options
