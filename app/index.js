@@ -52,7 +52,7 @@ var DropdownMenu = onClickOutside(React.createClass({
       type: 'info',
       buttons: [],
       title: 'No Man\'s Connect',
-      message: '0.4.1',
+      message: '0.4.2',
       detail: 'This version is beta. Please back up your save files.'
     });
   },
@@ -1253,7 +1253,8 @@ var App = React.createClass({
     }
 
     if (this.state.search.length === 0 && page > 1 && sort === this.state.sort || partial) {
-      res.data.results = _.chain(this.state.remoteLocations.results).concat(res.data.results).uniqBy('id').orderBy('created', 'desc').value();
+      let order = sort === '-created' ? 'created' : sort === '-score' ? 'score' : 'teleports';
+      res.data.results = _.chain(this.state.remoteLocations.results).concat(res.data.results).uniqBy('id').orderBy(order, 'desc').value();
     }
     _.each(res.data.results, (remoteLocation, key)=>{
       let refFav = _.findIndex(this.state.favorites, (fav)=>{
@@ -1323,6 +1324,11 @@ var App = React.createClass({
   pollRemoteLocations(){
     if (this.timeout)  {
       clearTimeout(this.timeout);
+    }
+
+    if (this.state.sort !== '-created') {
+      this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
+      return;
     }
 
     let lastRemoteLocation = _.chain(this.state.remoteLocations.results).orderBy('created', 'desc').first().value();

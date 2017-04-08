@@ -7,7 +7,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.4.1',
+      version: '0.4.2',
       init: true,
       homedir: os.homedir(),
       width: window.innerWidth,

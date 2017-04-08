@@ -1,3 +1,7 @@
+# 0.4.2
+
+  * Fixed location order becoming inaccurate when switching sort options
+
 # 0.4.1
 
   * Fixed the screenshot in the selected location changing when switching sort options
