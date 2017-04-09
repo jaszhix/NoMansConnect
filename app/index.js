@@ -3,7 +3,8 @@ import {remote} from 'electron';
 const win = remote.getCurrentWindow();
 import fs from 'fs';
 import path from 'path';
-import log from 'electron-log';
+import Log from './log';
+const log = new Log();
 import watch from 'watch';
 import {usedLetters} from 'windows-drive-letters';
 const ps = require('win-ps');
@@ -1213,6 +1214,8 @@ class App extends Reflux.Component {
     autoBind(this);
   }
   componentDidMount(){
+    log.init(this.state.configDir);
+    log.error(`Initializing No Man's Connect ${this.state.version}`);
     this.saveJSON = path.join(__dirname, 'saveCache.json');
     this.saveJSON = path.resolve(__dirname, this.saveJSON);
     this.saveTool = process.env.NODE_ENV === 'production' ? '\\nmssavetool\\nmssavetool.exe' : '\\app\\nmssavetool\\nmssavetool.exe';
@@ -1277,6 +1280,7 @@ class App extends Reflux.Component {
           });
         });
         if (!hasPath) {
+          log.error('Failed to locate NMS install: path doesn\'t exist, asking user.')
           this.handleInstallDirFailure();
         }
       }).catch((err) => {
@@ -1385,7 +1389,7 @@ class App extends Reflux.Component {
     }).then((res)=>{
       this.formatRemoteLocations(res, 1, this.state.sort, false, true, cb);
     }).catch((err)=>{
-      log.error('Failed to sync to remote locations.');
+      log.error(`Failed to sync to remote locations: ${err}`);
     });
   }
   pollRemoteLocations(){
@@ -1418,6 +1422,7 @@ class App extends Reflux.Component {
         this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
       }
     }).catch((err)=>{
+      log.error(`Remote location polling error: ${err}`);
       console.log(err);
     });
   }
@@ -1465,6 +1470,8 @@ class App extends Reflux.Component {
           VoxelZ: location.VoxelZ
         });
 
+        //saveData.result = utils.repairInventory(saveData);
+
         saveData.result.PlayerStateData.UniverseAddress.RealityIndex = location.galaxy;
 
         fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data)=>{
@@ -1497,11 +1504,12 @@ class App extends Reflux.Component {
               remoteLocations: this.state.remoteLocations
             });
           }).catch((err)=>{
-            log.error(err);
+            log.error(`Unable to send teleport stat to server: ${err}`);
             state.set({installing: false});
           });
         });
       }).catch((err)=>{
+        log.error(`Unable to teleport to location: ${err}`);
         this.handleSaveDataFailure(this.state.mode, false, ()=>{
           this.handleTeleport(location, i);
         });
@@ -1536,22 +1544,23 @@ class App extends Reflux.Component {
         this.state.mode = mode;
       }
 
-      let handleSavaData = ()=>{
-        utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
-          let location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
-          const refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
-          let username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
+        let location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
+        const refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
+        let username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+        username = _.isString(username) && username.length > 0 ? username : '';
 
-          console.log(saveData.result)
+        console.log(saveData.result)
 
-          let refFav = _.findIndex(this.state.favorites, (fav)=>{
-            return fav === location.id;
-          });
-          let upvote = refFav !== -1;
+        let refFav = _.findIndex(this.state.favorites, (fav)=>{
+          return fav === location.id;
+        });
+        let upvote = refFav !== -1;
 
-          screenshot(init || !NMSRunning || !this.state.autoCapture, (image)=>{
+        screenshot(init || !NMSRunning || !this.state.autoCapture, (image)=>{
+          if (refLocation === -1) {
             _.assignIn(location, {
-              username: _.isString(username) && username.length > 0 ? username : '',
+              username: username,
               playerPosition: _.clone(saveData.result.SpawnStateData.PlayerPositionInSystem),
               playerTransform: _.clone(saveData.result.SpawnStateData.PlayerTransformAt),
               shipPosition: _.clone(saveData.result.SpawnStateData.ShipPositionInSystem),
@@ -1580,7 +1589,7 @@ class App extends Reflux.Component {
             }
 
             this.state.storedLocations.push(location);
-            this.state.storedLocations = _.orderBy(_.uniqBy(this.state.storedLocations, 'id'), 'timeStamp', 'desc');
+            this.state.storedLocations =  _.chain(this.state.storedLocations).uniqBy('id').orderBy('timeStamp', 'desc').value();
 
             // Detect player base
 
@@ -1599,38 +1608,50 @@ class App extends Reflux.Component {
                 this.state.storedLocations[i].base = hasBase;
               });
             }
-
-            state.set({
-              storedLocations: this.state.storedLocations,
-              currentLocation: location.id,
-              username: location.username,
-              saveDirectory: this.state.saveDirectory,
-              saveFileName: saveData.path
-            }, ()=>{
-              if (refLocation === -1) {
-                utils.ajax.post('/nmslocation/', {
-                  username: location.username,
-                  mode: this.state.mode,
-                  image: image,
-                  data: location
-                }).then((res)=>{
-                  next();
-                }).catch((err)=>{
-                  next();
-                });
-              } else {
-                next();
+          } else {
+            utils.each(this.state.storedLocations, (storedLocation, i)=>{
+              if (_.isString(storedLocation.timeStamp)) {
+                this.state.storedLocations[i].timeStamp = new Date(storedLocation.timeStamp).getTime() / 1000
               }
             });
-          });
-        }).catch((err)=>{
-          this.handleSaveDataFailure(mode, init, ()=>{
-            this.pollSaveData(mode, init);
+            this.state.storedLocations = _.orderBy(this.state.storedLocations, 'timeStamp', 'desc');
+          }
+
+          state.set({
+            storedLocations: this.state.storedLocations,
+            currentLocation: location.id,
+            username: username,
+            saveDirectory: this.state.saveDirectory,
+            saveFileName: saveData.path
+          }, ()=>{
+            if (refLocation === -1) {
+              utils.ajax.post('/nmslocation/', {
+                username: location.username,
+                mode: this.state.mode,
+                image: image,
+                data: location
+              }).then((res)=>{
+                next();
+              }).catch((err)=>{
+                next();
+              });
+            } else {
+              next();
+            }
           });
         });
-      };
+      }).catch((err)=>{
+        console.log(err, this.state.saveDirectory, this.state.saveFileName)
+        log.error(`Unable to retrieve NMS save file: ${err}`)
+        log.error(`${this.state.saveDirectory}, ${this.state.saveFileName}`);
+        try {
+          log.error(err.stack)
+        } catch (e) {}
 
-      handleSavaData();
+        this.handleSaveDataFailure(mode, init, ()=>{
+          this.pollSaveData(mode, init);
+        });
+      });
     });
   }
   stateChange(e){
@@ -1651,11 +1672,13 @@ class App extends Reflux.Component {
   }
   handleSaveDataFailure(mode=this.state.mode, init=false, cb){
     if (!this.state.saveDirectory) {
-      this.state.saveDirectory = `${this.state.homedir}/AppData/Roaming/HelloGames/NMS`;
-      cb();
+      state.set({
+        saveDirectory: `${this.state.homedir}/AppData/Roaming/HelloGames/NMS`
+      }, cb);
     } else if (this.state.saveDirectory.indexOf('DefaultUser') !== -1) {
-      this.state.saveDirectory = `${this.state.homedir.split(':\\')[0]}:/Users/DefaultUser/AppData/Roaming/HelloGames/NMS`;
-      cb();
+      state.set({
+        saveDirectory: `${this.state.homedir.split(':\\')[0]}:/Users/DefaultUser/AppData/Roaming/HelloGames/NMS`
+      }, cb);
     } else {
       state.set({
         title: 'NMS Save Directory Not Found, Please Select Location'
@@ -1665,6 +1688,7 @@ class App extends Reflux.Component {
     }
   }
   handleUpgrade(){
+    log.error(`Newer version of NMC found.`);
     var infoUrl = 'https://github.com/jaszhix/NoMansConnect/releases';
     var helpMessage = 'A newer version of No Man\'s Connect was found.';
 

@@ -1,7 +1,7 @@
 {
   "name": "no-mans-connect",
   "productName": "No Man's Connect",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
   "scripts": {
@@ -162,7 +162,6 @@
     "dotenv": "^4.0.0",
     "electron-debug": "^1.1.0",
     "electron-json-storage": "^3.0.4",
-    "electron-log": "^2.0.2",
     "electron-remote": "^1.1.2",
     "electron-window-state": "^4.1.0",
     "eslint": "^3.8.1",

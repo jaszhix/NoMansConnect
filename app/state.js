@@ -1,15 +1,17 @@
+import {remote} from 'electron';
+import os from 'os';
 import Reflux from 'reflux';
 import _ from 'lodash';
-import os from 'os';
 import {store} from './utils';
 
 var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.5.0',
+      version: '0.5.1',
       init: true,
       homedir: os.homedir(),
+      configDir: remote.app.getPath('userData'),
       width: window.innerWidth,
       height: window.innerHeight,
       tableData: [],

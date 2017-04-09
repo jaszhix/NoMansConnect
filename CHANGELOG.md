@@ -1,3 +1,9 @@
+# 0.5.1
+
+  * Fixed a critical bug preventing the app from correctly identifying the newest save slot
+  * Fixed logging, the log file can be found at AppData/Roaming/NoMansConnect/NMC.log
+  * Added names for galaxies 66-72 courtesy of NMS Wiki and parsec on Nexus Mods
+
 # 0.5.0
 
   * The app will now ask for your NMS install and save file directories on init if they can't be found

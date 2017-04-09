@@ -185,7 +185,7 @@ export var getLastGameModeSave = (saveDirectory, mode, cb)=>{
       _.each(saveInts, (int)=>{
         _.each(results, (result)=>{
           let fileName = _.last(result.split('\\'));
-          if (int === 0 && fileName === 'storage.hg' || result.indexOf(`storage${int}.hg`) !== -1) {
+          if (int === 0 && fileName === 'storage.hg' || result.indexOf(`storage${int + 1}.hg`) !== -1) {
             saves.push({
               fileName: fileName,
               result: result,
@@ -220,6 +220,21 @@ export var each = (obj, cb)=>{
   }
 };
 
+export var repairInventory = (saveData)=>{
+  each(saveData.result.PlayerStateData.ShipOwnership[0].Inventory.Slots, (slot, i)=>{
+    saveData.result.PlayerStateData.ShipOwnership[0].Inventory.Slots[i].DamageFactor = 0;
+  });
+
+  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i)=>{
+    saveData.result.PlayerStateData.Inventory.Slots[i].DamageFactor = 0;
+  });
+
+  each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i)=>{
+    saveData.result.PlayerStateData.WeaponInventory.Slots[i].DamageFactor = 0;
+  });
+  return saveData.result;
+};
+
 export var writeCurrentSaveFile = (fileName, json, cb)=>{
   json = JSON.stringify(json) + '\0';
   fs.writeFile(fileName, json, {flag: 'w'}, (err, data)=>{
@@ -238,6 +253,6 @@ export var css = (styleObject, newObject)=>{
 export var ajax = axios.create({
   //baseURL: 'http://192.168.1.148:8000/api/',
   baseURL: 'https://neuropuff.com/api/',
-  timeout: 30000,
+  timeout: 8000,
   xsrfCookieName: 'csrftoken'
 });
