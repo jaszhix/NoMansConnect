@@ -1611,7 +1611,7 @@ class App extends Reflux.Component {
           } else {
             utils.each(this.state.storedLocations, (storedLocation, i)=>{
               if (_.isString(storedLocation.timeStamp)) {
-                this.state.storedLocations[i].timeStamp = new Date(storedLocation.timeStamp).getTime() / 1000
+                this.state.storedLocations[i].timeStamp = new Date(storedLocation.timeStamp).getTime()
               }
             });
             this.state.storedLocations = _.orderBy(this.state.storedLocations, 'timeStamp', 'desc');
