@@ -8,7 +8,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.5.1',
+      version: '0.5.2',
       init: true,
       homedir: os.homedir(),
       configDir: remote.app.getPath('userData'),

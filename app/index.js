@@ -26,6 +26,7 @@ import Loader from './loader';
 const screenshot = require('./capture');
 import * as utils from './utils';
 import knownGalaxies from './static/galaxies.json';
+
 // Temporary until all 256 galaxy names are known
 let galaxies = knownGalaxies.concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat([knownGalaxies[0]]);
 let galaxyIter = 1;
@@ -1254,6 +1255,7 @@ class App extends Reflux.Component {
         };
 
         let paths = [
+          `/Program Files (x86)/GalaxyClient/Games/No Man's Sky`,
           `/Program Files (x86)/Steam/steamapps/common/No Man's Sky`,
           `/Steam/steamapps/common/No Man's Sky`,
           `/steamapps/common/No Man's Sky`,
@@ -1280,12 +1282,17 @@ class App extends Reflux.Component {
           });
         });
         if (!hasPath) {
-          log.error('Failed to locate NMS install: path doesn\'t exist, asking user.')
-          this.handleInstallDirFailure();
+          log.error('Failed to locate NMS install: path doesn\'t exist.')
+          initialize();
         }
       }).catch((err) => {
+        initialize();
         log.error(`Failed to locate NMS install: ${err}`);
-        this.handleInstallDirFailure();
+        if (err.toString().indexOf('not recognized') !== -1) {
+          initialize();
+        } else {
+          this.handleInstallDirFailure();
+        }
       });
     };
     indexMods();
@@ -1677,7 +1684,7 @@ class App extends Reflux.Component {
       }, cb);
     } else if (this.state.saveDirectory.indexOf('DefaultUser') !== -1) {
       state.set({
-        saveDirectory: `${this.state.homedir.split(':\\')[0]}:/Users/DefaultUser/AppData/Roaming/HelloGames/NMS`
+        saveDirectory: `${this.state.homedir}/AppData/Roaming/HelloGames/NMS/DefaultUser`
       }, cb);
     } else {
       state.set({

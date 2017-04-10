@@ -171,7 +171,7 @@ export var getLastGameModeSave = (saveDirectory, mode, cb)=>{
         reject(err);
       }
       results = _.filter(results, (result)=>{
-        return result.indexOf('st_') !== -1 && result.indexOf('\\cache\\') === -1 && result.indexOf('.hg') !== -1 && result.indexOf('mf_') === -1;
+        return (result.indexOf('st_') !== -1 || result.indexOf('DefaultUser') !== -1) && result.indexOf('\\cache\\') === -1 && result.indexOf('.hg') !== -1 && result.indexOf('mf_') === -1;
       });
 
       let obj = {

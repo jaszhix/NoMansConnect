@@ -1,3 +1,8 @@
+# 0.5.2
+
+  * Fixed save data not being found for GOG users
+  * Fixed a bug preventing users from getting past the NMS install path selection prompt on a fresh install
+
 # 0.5.1
 
   * Fixed a critical bug preventing the app from correctly identifying the newest save slot
