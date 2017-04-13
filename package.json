@@ -1,7 +1,7 @@
 {
   "name": "no-mans-connect",
   "productName": "No Man's Connect",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
   "scripts": {
@@ -162,7 +162,7 @@
     "dotenv": "^4.0.0",
     "electron-debug": "^1.1.0",
     "electron-json-storage": "^3.0.4",
-    "electron-remote": "^1.1.2",
+    "electron-machine-id": "^1.0.9",
     "electron-window-state": "^4.1.0",
     "eslint": "^3.8.1",
     "eslint-plugin-react": "^6.4.1",
@@ -185,7 +185,9 @@
     "react-redux": "^5.0.3",
     "react-router": "^4.0.0",
     "react-router-redux": "^4.0.8",
+    "react-tooltip": "^3.2.10",
     "react-utils": "^1.0.0",
+    "react-visibility-sensor": "^3.9.0",
     "recharts": "^0.22.0",
     "redux": "^3.6.0",
     "redux-thunk": "^2.2.0",

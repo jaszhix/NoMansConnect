@@ -20648,7 +20648,7 @@ ol.ui.horizontal.list li:before,
   display: flex;
   margin: 1rem 0em;
   font-family: 'geosanslight-nmsregular';
-  background: #707370;
+  background: rgba(23, 26, 22, 0.901961);
   font-weight: normal;
   border: 1px solid rgba(34, 36, 38, 0.15);
   box-shadow: 0px 1px 2px 0 rgba(34, 36, 38, 0.15);
@@ -20863,7 +20863,7 @@ ol.ui.horizontal.list li:before,
   left: 0px;
   min-width: calc(100% - 1px);
   border-radius: 0em 0em 0.28571429rem 0.28571429rem;
-  background: #707370;
+  background: rgba(23, 26, 22, 0.97);
   margin: 0em 0px 0px;
   -webkit-box-orient: vertical !important;
   -webkit-box-direction: normal !important;
@@ -29019,7 +29019,7 @@ body.dimmable > .dimmer {
   text-shadow: none;
   text-align: left;
   box-shadow: 0px 2px 3px 0px rgba(34, 36, 38, 0.15);
-  border: 1px solid #0B2B39;
+  border: 1px solid #95220e;
   border-radius: 0.28571429rem;
   -webkit-transition: opacity 0.1s ease;
   transition: opacity 0.1s ease;

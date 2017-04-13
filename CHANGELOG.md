@@ -1,3 +1,18 @@
+# 0.6.0
+
+  * Added local caching for shared locations
+  * Added username protection. This will associate your username with your computer to prevent impersonation. Please read the information before enabling this option.
+  * Added a cheat menu unlockable by exploring
+  * Current location indicator on the map now shows up for base locations
+  * Moved the location buttons to their own dropdown menu to conserve space
+  * Added base and space station indicator icons to locations
+  * Fixed a bug that could prevent bases from being recognized
+  * Fixed the screenshot capture setting not being stored correctly
+  * Fixed the "Explored by" row not appearing when a location name is set
+  * Fixed the scroll box not resetting when selecting a new selected location
+  * Fixed non-pak files being listed with mods
+  * Style overhaul
+
 # 0.5.2
 
   * Fixed save data not being found for GOG users

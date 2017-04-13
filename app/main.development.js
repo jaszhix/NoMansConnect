@@ -76,7 +76,7 @@ app.on('ready', async () => {
     if (mainWindow.isFocused()) {
       mainWindow.minimize();
       mainWindow.webContents.executeJavaScript(`
-        document.body.style.background = '#171A16';
+        window.handleWallpaper();
         state.set({transparent: false});
         `)
     } else {
@@ -87,5 +87,5 @@ app.on('ready', async () => {
       `)
       mainWindow.focus();
     }
-  })
+  });
 });

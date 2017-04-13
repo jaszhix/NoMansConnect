@@ -221,8 +221,9 @@ export var each = (obj, cb)=>{
 };
 
 export var repairInventory = (saveData)=>{
-  each(saveData.result.PlayerStateData.ShipOwnership[0].Inventory.Slots, (slot, i)=>{
-    saveData.result.PlayerStateData.ShipOwnership[0].Inventory.Slots[i].DamageFactor = 0;
+  let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
+  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i)=>{
+    saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].DamageFactor = 0;
   });
 
   each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i)=>{
@@ -231,6 +232,82 @@ export var repairInventory = (saveData)=>{
 
   each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i)=>{
     saveData.result.PlayerStateData.WeaponInventory.Slots[i].DamageFactor = 0;
+  });
+  return saveData.result;
+};
+
+export var refuelEnergy = (saveData)=>{
+  let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
+  let refillableTech = [
+    // Suit inventory
+    '^PROTECT',
+    '^ENERGY',
+    '^TOX1',
+    '^TOX2',
+    '^TOX3',
+    '^RAD1',
+    '^RAD2',
+    '^RAD3',
+    '^COLD1',
+    '^COLD2',
+    '^COLD3',
+    '^HOT1',
+    '^HOT2',
+    '^HOT3',
+    '^UNW1',
+    '^UNW2',
+    '^UNW3',
+    // Ship inventory
+    '^SHIPGUN1',
+    '^SHIPSHIELD',
+    '^SHIPJUMP1',
+    '^HYPERDRIVE',
+    '^LAUNCHER',
+    '^SHIPLAS1',
+    // Multitool inventory
+    '^LASER',
+    '^GRENADE'
+  ];
+
+  saveData.result.PlayerStateData.ShipHealth = 8;
+  saveData.result.PlayerStateData.ShipShield = 200;
+  saveData.result.PlayerStateData.Health = 8;
+  saveData.result.PlayerStateData.Energy = 100;
+  saveData.result.PlayerStateData.Shield = 100;
+  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i)=>{
+    if (slot.Type.InventoryType === 'Technology' && refillableTech.indexOf(slot.Id) !== -1) {
+      saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].Amount = slot.MaxAmount;
+    }
+  });
+  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i)=>{
+    if (slot.Type.InventoryType === 'Technology' && refillableTech.indexOf(slot.Id) !== -1) {
+      saveData.result.PlayerStateData.Inventory.Slots[i].Amount = slot.MaxAmount;
+    }
+  });
+  each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i)=>{
+    if (refillableTech.indexOf(slot.Id) !== -1) {
+      saveData.result.PlayerStateData.WeaponInventory.Slots[i].Amount = slot.MaxAmount;
+    }
+  });
+  return saveData.result;
+};
+
+export var stockInventory = (saveData)=>{
+  let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
+  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i)=>{
+    if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
+      saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].Amount = slot.MaxAmount;
+    }
+  });
+  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i)=>{
+    if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
+      saveData.result.PlayerStateData.Inventory.Slots[i].Amount = slot.MaxAmount;
+    }
+  });
+  each(saveData.result.PlayerStateData.FreighterInventory.Slots, (slot, i)=>{
+    if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
+      saveData.result.PlayerStateData.FreighterInventory.Slots[i].Amount = slot.MaxAmount;
+    }
   });
   return saveData.result;
 };
@@ -246,9 +323,18 @@ export var writeCurrentSaveFile = (fileName, json, cb)=>{
   });
 };
 
+export var modifyUnits = (saveData, n=100000)=>{
+  saveData.result.PlayerStateData.Units += n;
+  return saveData.result;
+};
+
 export var css = (styleObject, newObject)=>{
   return _.assignIn(_.clone(styleObject), _.clone(newObject));
 };
+
+export var tip = (content)=>{
+  return `<div style="font-family:'geosanslight-nmsregular';font-size:14px;border-radius:0px;">${content}</div>`
+}
 
 export var ajax = axios.create({
   //baseURL: 'http://192.168.1.148:8000/api/',
