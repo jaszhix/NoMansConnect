@@ -1,3 +1,10 @@
+# 0.6.1
+
+  * Fixed a bug related to filtering stored locations.
+  * Fixed a regression with the extra columns not rendering correctly.
+  * Fixed a bug causing duplicate location be located for some players.
+  * The app now checks your NMS settings for whether or not fullscreen is enabled, and if so it will disable auto capturing on init.
+
 # 0.6.0
 
   * Added local caching for shared locations

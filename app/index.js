@@ -49,7 +49,7 @@ if (module.hot) {
 
 const {Menu, MenuItem, dialog} = remote;
 
-const IMAGE_DOMAIN = /*process.env.NODE_ENV === 'development' ? 'http://192.168.1.148:8000' : */'https://neuropuff.com'
+const IMAGE_DOMAIN = process.env.NODE_ENV === 'development' ? 'http://192.168.1.148:8000' : 'https://neuropuff.com'
 
 class SaveEditorDropdownMenu extends React.Component {
   constructor(props) {
@@ -641,6 +641,9 @@ class LocationBox extends React.Component {
       isVisible: !this.props.enableVisibilityCheck
     };
     autoBind(this);
+    this.wrapperStyle = {
+      minHeight: '245px'
+    };
     this.inputStyle = {
       width: '300px',
       position: 'relative',
@@ -760,18 +763,14 @@ class LocationBox extends React.Component {
         onClick: ()=>p.onRemoveStoredLocation()
       });
     }
+
     return (
-      <div style={{minHeight: '245px'}}>
-        <VisibilitySensor
-        active={p.enableVisibilityCheck}
-        partialVisibility={true}
-        onChange={this.onVisibilityChange} />
-        {this.state.isVisible ?
         <div
         className="ui segment"
         style={{
           background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
           display: 'inline-table',
+          opacity: this.state.isVisible ? '1' : '0',
           borderTop: '2px solid #95220E',
           textAlign: 'left',
           marginTop: p.selectType ? '26px' : 'initial',
@@ -779,6 +778,7 @@ class LocationBox extends React.Component {
           marginRight: !p.selectType && p.i % 1 === 0 ? '26px' : 'initial',
           minWidth: `${compact ? 358 : 386}px`,
           maxWidth: '386px',
+          minHeight: '245px',
           maxHeight: '289px',
           zIndex: p.mapZoom ? '91' : 'inherit',
           position: p.mapZoom ? 'fixed' : '',
@@ -786,11 +786,19 @@ class LocationBox extends React.Component {
           top: p.mapZoom ? `${p.height - 365}px` : 'inherit',
           WebkitUserSelect: 'none'
         }}>
-          <h3 style={{textAlign: 'center', maxHeight: '23px'}}>{p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected'}</h3>
+          <VisibilitySensor
+          active={p.enableVisibilityCheck}
+          partialVisibility={true}
+          onChange={this.onVisibilityChange}>
+            <h3 style={{textAlign: 'center', maxHeight: '23px'}}>{p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected'}</h3>
+          </VisibilitySensor>
+
+          {this.state.isVisible ?
           <i
           style={this.starStyle}
           className={`${upvote ? '' : 'empty '}star icon`}
-          onClick={()=>p.onFav(p.location)} />
+          onClick={()=>p.onFav(p.location)} /> : null}
+          {this.state.isVisible ?
           <div style={{
             position: 'absolute',
             left: '17px',
@@ -811,8 +819,8 @@ class LocationBox extends React.Component {
             <span data-tip={utils.tip('Space Station')} style={{position: 'absolute', left: '26px', top: '0px'}}>
               <img style={this.baseStyle} src={spaceStationIcon} />
             </span> : null}
-          </div>
-          {p.edit ?
+          </div> : null}
+          {p.edit && this.state.isVisible ?
           <div>
             <div
             className="ui segment"
@@ -848,7 +856,7 @@ class LocationBox extends React.Component {
               </div>
             </div>
           </div>
-          :
+          : this.state.isVisible ?
           <div>
             <div
             ref="scrollBox"
@@ -890,11 +898,11 @@ class LocationBox extends React.Component {
                     </div>
                   );
                 })}
-              </div>: null}
+              </div> : null}
             </div>
-          </div>}
-        </div> : null}
-      </div>
+          </div> : null}
+        </div>
+
     );
   }
 };
@@ -1107,6 +1115,7 @@ class RemoteLocations extends React.Component {
       maxWidth: p.s.mapZoom ? `${Math.abs(p.s.width - 1482)}px !important` : remoteLocationsWidth,
       overflowY: 'auto',
       overflowX: 'hidden',
+      position: 'relative'
     };
     let enableVisibilityCheck = p.s.remoteLength >= 200;
     return (
@@ -1580,18 +1589,26 @@ class App extends Reflux.Component {
 
     let indexMods = ()=>{
       usedLetters().then((letters) => {
-        let indexModsInUse = (path)=>{
-          fs.readdir(path, (err, list)=>{
-            if (err) {
-              log.error(`Failed to read mods directory: ${err}`);
-              this.handleInstallDirFailure();
-              return;
+        let indexModsInUse = (_path)=>{
+          fs.readFile(`${_path}\\Binaries\\SETTINGS\\TKGRAPHICSSETTINGS.MXML`, (err, data)=>{
+            if (!err) {
+              let fullscreen = data.toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
+              if (fullscreen === 'true') {
+                state.set({autoCapture: false});
+              }
             }
-            list = _.filter(list, (item)=>{
-              return item.toLowerCase().indexOf('.pak') !== -1;
-            });
-            state.set({mods: list}, ()=>{
-              initialize();
+            fs.readdir(`${_path}\\GAMEDATA\\PCBANKS\\MODS`, (err, list)=>{
+              if (err) {
+                log.error(`Failed to read mods directory: ${err}`);
+                this.handleInstallDirFailure();
+                return;
+              }
+              list = _.filter(list, (item)=>{
+                return item.toLowerCase().indexOf('.pak') !== -1;
+              });
+              state.set({mods: list}, ()=>{
+                initialize();
+              });
             });
           });
         };
@@ -1614,8 +1631,8 @@ class App extends Reflux.Component {
 
         let hasPath = false;
         utils.each(letters, (drive, key)=>{
-          utils.each(paths, (path)=>{
-            let __path = `${drive}:${path}${modPath}`;
+          utils.each(paths, (_path)=>{
+            let __path = `${drive}:${_path}`;
             if (fs.existsSync(__path)) {
               hasPath = true;
               indexModsInUse(__path);
@@ -1655,6 +1672,7 @@ class App extends Reflux.Component {
       this.formatRemoteLocations(res, 1, this.state.sort, false, true, true, cb);
     }).catch((err)=>{
       log.error(`Failed to sync to remote locations: ${err}`);
+      cb();
     });
   }
   handleSync(page=1, sort=this.state.sort, init=false){
@@ -1897,8 +1915,9 @@ class App extends Reflux.Component {
             ignoreNotPermitted: true,
 
           }, (monitor)=>{
+            this.pollSaveDataThrottled = _.throttle(this.pollSaveData, 15000, {leading: true});
             monitor.on('changed', (f, curr, prev)=>{
-              this.pollSaveData();
+              this.pollSaveDataThrottled();
             });
           });
         }

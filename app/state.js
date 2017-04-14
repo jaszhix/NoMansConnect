@@ -10,7 +10,7 @@ var state = Reflux.createStore({
   init(){
     this.state = {
       // Core
-      version: '0.6.0',
+      version: '0.6.1',
       machineId: null,
       protected: false,
       init: true,
