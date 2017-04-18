@@ -58,7 +58,7 @@ input[type="password"] {
 *******************************/
 
 /*! normalize.css v3.0.1 | MIT License | git.io/normalize */
-f
+
 /**
  * Correct `block` display not defined in IE 8/9.
  */
@@ -7174,8 +7174,7 @@ a.ui.inverted.grey.header:hover {
 
 @font-face {
   font-family: 'Icons';
-  src: url("./assets/styles/themes/default/assets/fonts/icons.eot");
-  src: url("./assets/styles/themes/default/assets/fonts/icons.eot?#iefix") format('embedded-opentype'), url("./assets/styles/themes/default/assets/fonts/icons.woff2") format('woff2'), url("./assets/styles/themes/default/assets/fonts/icons.woff") format('woff'), url("./assets/styles/themes/default/assets/fonts/icons.ttf") format('truetype'), url("./assets/styles/themes/default/assets/fonts/icons.svg#icons") format('svg');
+  src: url("./assets/styles/themes/default/assets/fonts/icons.ttf") format('truetype'), url("./assets/styles/themes/default/assets/fonts/icons.svg#icons") format('svg');
   font-style: normal;
   font-weight: normal;
   font-variant: normal;
@@ -36741,7 +36740,6 @@ html.ios body {
     transform: scale3d(1, 1, 1);
   }
 }
-
 /*******************************
          Site Overrides
 *******************************/
@@ -38616,4 +38614,25 @@ body {
 ::-webkit-scrollbar-thumb {
   background-color: #000000;
   border: 2px solid #555555;
+}
+.marquee {
+  margin: 0 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.marquee span {
+  display: inline-block;
+  text-indent: 0;
+  animation: marquee 6s linear infinite;
+}
+/*.marquee span:hover {
+  animation-play-state: paused
+}*/
+
+/* Make it move */
+@keyframes marquee {
+  0%   { transform: translate(0, 0); }
+  100% { transform: translate(-100%, 0); }
 }

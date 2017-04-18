@@ -51,7 +51,10 @@ app.on('ready', async () => {
     width: 1421,
     height: 1040,
     frame: false,
-    transparent: true
+    transparent: true,
+    webPreferences: {
+      nodeIntegrationInWorker: true
+    },
   });
 
   mainWindow.loadURL(`file://${__dirname}/app.html`);

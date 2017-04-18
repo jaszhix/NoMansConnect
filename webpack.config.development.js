@@ -12,6 +12,8 @@ import baseConfig from './webpack.config.base';
 const port = process.env.PORT || 3000;
 const publicPath = `http://localhost:${port}/dist`;
 
+process.traceDeprecation = true
+
 export default merge(baseConfig, {
   devtool: 'inline-source-map',
 

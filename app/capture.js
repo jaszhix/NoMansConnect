@@ -1,4 +1,5 @@
 import log from './log';
+import sizeOf from 'object-sizeof';
 
 function screenshot(init, callback) {
   if (init) {
@@ -46,7 +47,9 @@ function screenshot(init, callback) {
         canvas.width = width;
         canvas.height = height;
         context.drawImage(video, 0, 0, width, height);
-        callback(canvas.toDataURL('image/jpeg', 0.75));
+        let img = canvas.toDataURL('image/jpeg', 0.75);
+        console.log('IMAGE size: ', sizeOf(img));
+        callback(img);
       }
     }
   }, false);

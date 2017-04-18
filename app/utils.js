@@ -5,6 +5,7 @@ const decoder = new StringDecoder('utf8');
 import axios from 'axios';
 import _ from 'lodash';
 import state from './state';
+import each from './each';
 
 var exec = require('child_process').exec;
 export var formatBytes = (bytes, decimals)=>{
@@ -60,7 +61,9 @@ export var store = {
     window.localStorage.setItem(key, JSON.stringify(obj));
   },
   get: (key)=>{
-    return JSON.parse(window.localStorage.getItem(key));
+    let res = window.localStorage.getItem(key);
+    res = res === 'undefined' ? null : res;
+    return JSON.parse(res);
   },
   remove: (key)=>{
     window.localStorage.removeItem(key);
@@ -127,7 +130,7 @@ var setDefaultValueIfNull = (variable, defaultVal)=>{
 }
 
 export var toHex = (str, totalChars)=>{
-  totalChars = setDefaultValueIfNull(totalChars,2);
+  totalChars = setDefaultValueIfNull(totalChars, 2);
   str = ('0'.repeat(totalChars)+Number(str).toString(16)).slice(-totalChars).toUpperCase();
   return str;
 }
@@ -146,7 +149,7 @@ export var walk = (dir, done)=>{
     if (!pending) {
       return done(null, results);
     }
-    _.each(list, (file)=>{
+    each(list, (file)=>{
       file = path.resolve(dir, file);
       fs.stat(file, (err, stat)=>{
         if (stat && stat.isDirectory()) {
@@ -167,7 +170,7 @@ export var walk = (dir, done)=>{
   });
 };
 
-export var getLastGameModeSave = (saveDirectory, mode, cb)=>{
+export var getLastGameModeSave = (saveDirectory, mode)=>{
   return new Promise((resolve, reject)=>{
     walk(saveDirectory, (err, results)=>{
       if (err) {
@@ -186,8 +189,8 @@ export var getLastGameModeSave = (saveDirectory, mode, cb)=>{
       };
       let saves = [];
       let saveInts = obj[mode];
-      _.each(saveInts, (int)=>{
-        _.each(results, (result)=>{
+      each(saveInts, (int)=>{
+        each(results, (result)=>{
           let fileName = _.last(result.split('\\'));
           if (int === 0 && fileName === 'storage.hg' || result.indexOf(`storage${int + 1}.hg`) !== -1) {
             saves.push({
@@ -210,18 +213,6 @@ export var getLastGameModeSave = (saveDirectory, mode, cb)=>{
       resolve(lastModifiedSave);
     });
   });
-};
-
-export var each = (obj, cb)=>{
-  if (Array.isArray(obj)) {
-    for (let i = 0, len = obj.length; i < len; i++) {
-      cb(obj[i], i);
-    }
-  } else {
-    for (let key in obj) {
-      cb(obj[key], key);
-    }
-  }
 };
 
 export var repairInventory = (saveData)=>{
@@ -343,6 +334,6 @@ export var tip = (content)=>{
 export var ajax = axios.create({
   //baseURL: 'http://192.168.1.148:8000/api/',
   baseURL: 'https://neuropuff.com/api/',
-  timeout: 8000,
+  timeout: 15000,
   xsrfCookieName: 'csrftoken'
 });

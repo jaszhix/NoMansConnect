@@ -1,12 +1,12 @@
-import fs from 'fs';
+const fs = require('fs');
 
 class Json {
   constructor(path, cb){
     this.path = `${path}/cache.json`;
     this.data = {
-      remoteLocations: null
+      remoteLocations: []
     };
-    fs.readFile(this.path, (err, data)=>{
+    fs.readFile(this.path, (err, data=this.data)=>{
       if (err) {
         fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
           if (err) {
@@ -51,4 +51,4 @@ class Json {
   }
 }
 
-export default Json;
+module.exports = Json;

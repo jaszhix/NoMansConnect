@@ -27,6 +27,10 @@
         // HACK: Writing the script path should be done with webpack
         document.body.appendChild(script);
       }
+      window.ajaxWorker = new Worker('ajaxWorker.js');
+      window.jsonWorker = new Worker('jsonWorker.js');
+      window.formatWorker = new Worker('formatWorker.js');
+      window.mapWorker = new Worker('mapWorker.js')
     </script>
   </body>
 </html>

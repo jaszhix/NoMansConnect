@@ -1,20 +1,33 @@
 import {remote} from 'electron';
-import {machineId} from 'electron-machine-id';
 import os from 'os';
+import fs from 'fs';
 import Reflux from 'reflux';
 import _ from 'lodash';
+import each from './each';
 import * as utils from './utils';
-import Json from './json';
+import knownGalaxies from './static/galaxies.json';
+
 
 var state = Reflux.createStore({
   init(){
+    // Temporary until all 256 galaxy names are known
+    let galaxies = knownGalaxies.concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat([knownGalaxies[0]]);
+    let galaxyIter = 1;
+    each(galaxies, (g, k)=>{
+      ++galaxyIter;
+      if (galaxyIter > knownGalaxies.length) {
+        galaxies[k] = `Galaxy ${galaxyIter}`;
+      }
+    });
+    this.galaxies = galaxies;
     this.state = {
       // Core
-      version: '0.6.1',
+      version: '0.7.0',
+      winVersion: os.release(),
       machineId: null,
       protected: false,
       init: true,
-      homedir: os.homedir(),
+      homedir: remote.app.getPath('home'),
       configDir: remote.app.getPath('userData'),
       width: window.innerWidth,
       height: window.innerHeight,
@@ -56,93 +69,125 @@ var state = Reflux.createStore({
       mapZoom: false,
       transparent: false,
       wallpaper: null,
-      filterOthers: false
+      filterOthers: false,
+      show: {
+        Shared: true,
+        Explored: true,
+        Center: true,
+        Favorite: true,
+        Current: true,
+        Selected: true,
+        Base: true
+      }
     };
-    machineId().then((id) => {
-      this.state.machineId = id;
-      this.json = new Json(this.state.configDir, (res)=>{
-        if (res.remoteLocations) {
-          this.state.remoteLocations = res.remoteLocations;
-          this.state.page = _.round(this.state.remoteLocations.results.length / this.state.pageSize);
-        }
-
-        let wallpaper = utils.store.get('wallpaper');
-        if (wallpaper) {
-          this.state.wallpaper = wallpaper;
-        }
-        let installDirectory = utils.store.get('installDirectory');
-        if (installDirectory) {
-          this.state.installDirectory = installDirectory;
-        }
-        let saveDirectory = utils.store.get('saveDirectory');
-        if (saveDirectory) {
-          this.state.saveDirectory = saveDirectory;
-        }
-        let mapLines = utils.store.get('mapLines');
-        if (mapLines) {
-          this.state.mapLines = mapLines;
-        }
-        let mapZoom = utils.store.get('mapZoom');
-        if (mapZoom) {
-          this.state.mapZoom = mapZoom;
-        }
-        let filterOthers = utils.store.get('filterOthers');
-        if (filterOthers) {
-          this.state.filterOthers = filterOthers;
-        }
-        let mode = utils.store.get('mode');
-        if (mode) {
-          this.state.mode = mode;
-        }
-        let storedLocations = utils.store.get('storedLocations');
-        // temporary
-        if (_.isArray(storedLocations)) {
-          storedLocations = {
-            normal: storedLocations,
-            creative: [],
-            survival: [],
-            permadeath: []
-          }
-          utils.store.set('storedLocations', storedLocations)
-        }
-        if (storedLocations) {
-          this.state.storedLocations = storedLocations[this.state.mode];
-        } else {
-          utils.store.set('storedLocations', {
-            normal: [],
-            creative: [],
-            survival: [],
-            permadeath: []
-          });
-        }
-        let favorites = utils.store.get('favorites');
-        if (favorites) {
-          this.state.favorites = favorites;
-        } else {
-          utils.store.set('favorites', []);
-        }
-        let autoCapture = utils.store.get('autoCapture');
-        if (autoCapture !== null) {
-          this.state.autoCapture = autoCapture;
-        } else {
-          utils.store.set('autoCapture', false);
-        }
-      });
+    this.handleJsonWorker();
+    window.jsonWorker.postMessage({
+      method: 'new',
+      configDir: this.state.configDir,
     });
+    let wallpaper = utils.store.get('wallpaper');
+    if (wallpaper) {
+      this.state.wallpaper = wallpaper;
+    }
+    let basePath = this.state.configDir.split('\\AppData')[0];
+    let installDirectory = utils.store.get('installDirectory');
+    if (installDirectory) {
+      this.state.installDirectory = installDirectory;
+    }
+    let saveDirectory = utils.store.get('saveDirectory');
+    if (saveDirectory) {
+      this.state.saveDirectory = saveDirectory;
+    } else {
+      let saveDirPath;
+      let steamPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS`;
+      let gogPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS\\DefaultUser`;
+      if (fs.existsSync(steamPath)) {
+        saveDirPath = steamPath;
+      } else if (fs.existsSync(gogPath)) {
+        saveDirPath = gogPath;
+      }
+      this.state.saveDirectory = saveDirPath;
+    }
+    let mapLines = utils.store.get('mapLines');
+    if (mapLines) {
+      this.state.mapLines = mapLines;
+    }
+    let mapZoom = utils.store.get('mapZoom');
+    if (mapZoom) {
+      this.state.mapZoom = mapZoom;
+    }
+    let show = utils.store.get('show');
+    if (show) {
+      this.state.show = show;
+    }
+    let filterOthers = utils.store.get('filterOthers');
+    if (filterOthers) {
+      this.state.filterOthers = filterOthers;
+    }
+    let mode = utils.store.get('mode');
+    if (mode) {
+      this.state.mode = mode;
+    }
+    let storedLocations = utils.store.get('storedLocations');
+    // temporary
+    if (_.isArray(storedLocations)) {
+      storedLocations = {
+        normal: storedLocations,
+        creative: [],
+        survival: [],
+        permadeath: []
+      }
+      utils.store.set('storedLocations', storedLocations)
+    }
+    if (storedLocations) {
+      this.state.storedLocations = storedLocations[this.state.mode];
+    } else {
+      utils.store.set('storedLocations', {
+        normal: [],
+        creative: [],
+        survival: [],
+        permadeath: []
+      });
+    }
+    let favorites = utils.store.get('favorites');
+    if (favorites) {
+      this.state.favorites = favorites;
+    } else {
+      utils.store.set('favorites', []);
+    }
+    let autoCapture = utils.store.get('autoCapture');
+    if (autoCapture !== null) {
+      this.state.autoCapture = autoCapture;
+    } else {
+      utils.store.set('autoCapture', false);
+    }
+  },
+  handleJsonWorker(){
+    window.jsonWorker.onmessage = (e)=>{
+      console.log('JSON WORKER: ', e.data)
+      this.state.remoteLocations = e.data.remoteLocations;
+      if (this.state.remoteLocations.results === undefined) {
+        this.state.remoteLocations.results = [];
+        this.state.page = 1;
+      } else {
+        this.state.page = _.round(this.state.remoteLocations.results.length / this.state.pageSize);
+      }
+      this.trigger(this.state);
+    }
   },
   set(obj, cb=null, sync=false){
-    obj = _.cloneDeep(obj);
+    obj = _.clone(obj);
     console.log('STATE INPUT: ', obj);
     if (obj.selectedLocation) {
       this.state.selectedLocation = null;
     }
 
-    if (obj.remoteLocations && obj.remoteLocations.results.length > 0 && this.state.search.length === 0) {
-      this.state.remoteLocations = this.json.get('remoteLocations');
+    if (obj.remoteLocations && obj.remoteLocations.results.length > 0 && this.state.search.length === 0 && this.state.remoteLocations.results && this.state.remoteLocations.results.length > 0) {
+      //this.state.remoteLocations = this.json.get('remoteLocations');
       let hasState = false;
       if (this.state.remoteLocations) {
         hasState = true;
-        utils.each(obj.remoteLocations.results, (location, i)=>{
+        each(obj.remoteLocations.results, (location, i)=>{
           let refNewLocation = _.findIndex(this.state.remoteLocations.results, {id: location.id});
           if (refNewLocation !== -1) {
             this.state.remoteLocations.results[refNewLocation] = obj.remoteLocations.results[i];
@@ -153,7 +198,11 @@ var state = Reflux.createStore({
       } else {
         this.state.remoteLocations = obj.remoteLocations;
       }
-      this.json.set('remoteLocations', this.state.remoteLocations);
+      window.jsonWorker.postMessage({
+        method: 'set',
+        key: 'remoteLocations',
+        value: this.state.remoteLocations,
+      });
       let sort = 'created';
       if (this.state.sort === '-teleports') {
         sort = 'teleports';
@@ -197,6 +246,10 @@ var state = Reflux.createStore({
 
     if (obj.hasOwnProperty('mapZoom')) {
       utils.store.set('mapZoom', obj.mapZoom);
+    }
+
+    if (obj.hasOwnProperty('show')) {
+      utils.store.set('show', obj.show);
     }
 
     if (obj.hasOwnProperty('filterOthers')) {

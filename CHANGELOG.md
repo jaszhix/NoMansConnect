@@ -1,8 +1,18 @@
+# 0.7.0
+
+  * Added multithreading: Moved some of the renderer work to worker threads for a performance boost.
+  * Fixed a bug preventing Windows 7 users from using the app.
+  * Fixed the name and description fields not resetting when a location is updated.
+  * Fixed teleporting to stored locations not working for users with save data in non-default locations.
+  * Widened the stored locations column.
+  * Added ability to select locations directly from the shared location list.
+  * Added galaxies 80-120 ct. NMS Wiki.
+
 # 0.6.1
 
   * Fixed a bug related to filtering stored locations.
   * Fixed a regression with the extra columns not rendering correctly.
-  * Fixed a bug causing duplicate location be uploaded for some players.
+  * Fixed a bug causing duplicate locations to be uploaded for some players.
   * The app now checks your NMS settings for whether or not fullscreen is enabled, and if so it will disable auto capturing on init.
 
 # 0.6.0

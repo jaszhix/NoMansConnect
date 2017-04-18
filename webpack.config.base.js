@@ -9,9 +9,9 @@ import { dependencies as externals } from './app/package.json';
 export default {
   module: {
     rules: [{
-      test: /\.jsx?$/,
+      test: /\.js?$/,
       use: 'babel-loader',
-      exclude: /node_modules/
+      exclude: /(node_modules|bower_components)/,
     }]
   },
 
