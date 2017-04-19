@@ -136,10 +136,6 @@ export var toHex = (str, totalChars)=>{
 }
 
 export var walk = (dir, done)=>{
-  if (!_.isString(dir)) {
-    done('Passing');
-    return;
-  }
   var results = [];
   fs.readdir(dir, (err, list)=>{
     if (err) {

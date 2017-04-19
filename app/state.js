@@ -22,7 +22,7 @@ var state = Reflux.createStore({
     this.galaxies = galaxies;
     this.state = {
       // Core
-      version: '0.7.0',
+      version: '0.7.1',
       winVersion: os.release(),
       machineId: null,
       protected: false,
@@ -36,8 +36,6 @@ var state = Reflux.createStore({
       installDirectory: null,
       saveDirectory: null,
       saveFileName: '',
-      triggerSaveDirFileDialogue: false,
-      triggerInstallDirFileDialogue: false,
       mode: 'normal',
       storedLocations: [],
       remoteLocations: [],
@@ -67,7 +65,6 @@ var state = Reflux.createStore({
       maximized: false,
       mapLines: false,
       mapZoom: false,
-      transparent: false,
       wallpaper: null,
       filterOthers: false,
       show: {
@@ -165,7 +162,11 @@ var state = Reflux.createStore({
   handleJsonWorker(){
     window.jsonWorker.onmessage = (e)=>{
       console.log('JSON WORKER: ', e.data)
-      this.state.remoteLocations = e.data.remoteLocations;
+      if (e.data.hasOwnProperty('remoteLocations')) {
+        this.state.remoteLocations = e.data.remoteLocations;
+      } else {
+        this.state.remoteLocations = e.data;
+      }
       if (this.state.remoteLocations.results === undefined) {
         this.state.remoteLocations.results = [];
         this.state.page = 1;

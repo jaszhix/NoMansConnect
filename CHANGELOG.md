@@ -1,12 +1,20 @@
+# 0.7.1
+
+  * Added markdown support to descriptions.
+  * Fixed a regression with manual screenshot uploads not working.
+  * Fixed the app window not being able to be repositioned correctly, and added window position state saving.
+  * Fixed a bug causing the remote location cache to reset when resetting a search query.
+  * Added galaxies 80-134 ct. NMS Wiki.
+
 # 0.7.0
 
-  * Added multithreading: Moved some of the renderer work to worker threads for a performance boost.
+  * Added multi-threading: Moved some of the renderer work to worker threads for a performance boost.
   * Fixed a bug preventing Windows 7 users from using the app.
   * Fixed the name and description fields not resetting when a location is updated.
   * Fixed teleporting to stored locations not working for users with save data in non-default locations.
   * Widened the stored locations column.
   * Added ability to select locations directly from the shared location list.
-  * Added galaxies 80-120 ct. NMS Wiki.
+  * Added galaxies 80-119 ct. NMS Wiki.
 
 # 0.6.1
 

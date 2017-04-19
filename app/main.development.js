@@ -1,5 +1,6 @@
 // @flow
 import { app, BrowserWindow, Menu, globalShortcut } from 'electron';
+import windowStateKeeper from 'electron-window-state';
 import fs from 'fs';
 import os from 'os';
 let mainWindow = null;
@@ -46,17 +47,26 @@ const installExtensions = async () => {
 app.on('ready', async () => {
   await installExtensions();
 
+  let mainWindowState = windowStateKeeper({
+    defaultWidth: 1421,
+    defaultHeight: 1040
+  });
+
   mainWindow = new BrowserWindow({
     show: false,
-    width: 1421,
-    height: 1040,
+    x: mainWindowState.x,
+    y: mainWindowState.y,
+    width: mainWindowState.width,
+    height: mainWindowState.height,
     frame: false,
-    transparent: true,
+    thickFrame: false,
+    transparent: false,
     webPreferences: {
       nodeIntegrationInWorker: true
     },
   });
 
+  mainWindowState.manage(mainWindow);
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
   mainWindow.webContents.on('did-finish-load', () => {
@@ -78,16 +88,8 @@ app.on('ready', async () => {
   globalShortcut.register('Insert', ()=>{
     if (mainWindow.isFocused()) {
       mainWindow.minimize();
-      mainWindow.webContents.executeJavaScript(`
-        window.handleWallpaper();
-        state.set({transparent: false});
-        `)
     } else {
       mainWindow.maximize();
-      mainWindow.webContents.executeJavaScript(`
-        document.body.style.background = 'transparent';
-        state.set({transparent: true});
-      `)
       mainWindow.focus();
     }
   });

@@ -5,6 +5,23 @@ import fs from 'fs';
 import path from 'path';
 import Log from './log';
 const log = new Log();
+/*(function(){
+  var oldLog = console.log;
+  console.log = function (message) {
+    log.error(message)
+    oldLog.apply(console, arguments);
+  };
+  var oldWarn = console.warn;
+  console.warn = function (message) {
+    log.error(message)
+    oldWarn.apply(console, arguments);
+  };
+  var oldError = console.error;
+  console.error = function (message) {
+    log.error(message)
+    oldError.apply(console, arguments);
+  };
+})();*/
 import watch from 'watch';
 const ps = require('win-ps');
 import {machineId} from 'electron-machine-id';
@@ -16,7 +33,7 @@ import reactMixin from 'react-mixin';
 import Reflux from 'reflux';
 import VisibilitySensor from 'react-visibility-sensor';
 import ReactUtils from 'react-utils';
-//import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
@@ -91,15 +108,47 @@ class Item extends React.Component {
     this.labelStyle = {
       fontWeight: '600'
     };
+    this.descriptionStyle = {
+      marginBottom: '8px'
+    };
+  }
+  handleDescClick(e){
+    e.preventDefault();
+    openExternal(e.target.href);
+  }
+  componentDidMount(){
+    if (this.props.label === 'Description') {
+      _.defer(()=>{
+        if (this.refs.desc) {
+          this.refs.desc.addEventListener('click', this.handleDescClick);
+        }
+      });
+    }
+  }
+  componentWillUnmount(){
+    if (this.refs.desc) {
+      this.refs.desc.removeEventListener('click', this.handleDescClick);
+    }
   }
   render(){
-    return (
-      <div
-      className="ui segment"
-      style={utils.css(locationItemStyle, this.wrapperStyle)}>
-        <span style={this.labelStyle}>{`${this.props.label}`}</span> <span style={this.valueStyle}>{this.props.value}</span>
-      </div>
-    );
+    if (this.props.label === 'Description') {
+      return (
+        <div
+        ref="desc"
+        className="ui segment"
+        style={utils.css(locationItemStyle, this.wrapperStyle)}>
+          <ReactMarkdown className="md-p" source={this.props.value} />
+        </div>
+      );
+    } else {
+      return (
+        <div
+        className="ui segment"
+        style={utils.css(locationItemStyle, this.wrapperStyle)}>
+          <span style={this.labelStyle}>{`${this.props.label}`}</span> <span style={this.valueStyle}>{this.props.value}</span>
+        </div>
+      );
+    }
   }
 };
 
@@ -210,7 +259,10 @@ class LocationBox extends React.Component {
   componentWillReceiveProps(nextProps){
     if (nextProps.selectType && !_.isEqual(nextProps.location, this.props.location) && this.refs.scrollBox
       || nextProps.updating !== this.props.updating && nextProps.updating) {
-      this.refs.scrollBox.scrollTop = 0;
+      if (this.refs.scrollBox) {
+        this.refs.scrollBox.scrollTop = 0;
+      }
+
       this.setState({name: '', description: ''});
     }
     if (nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck && !nextProps.enableVisibilityCheck) {
@@ -886,7 +938,6 @@ class Container extends React.Component {
             username={p.s.username}/>
             <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
               <GalacticMap
-              transparent={p.s.transparent}
               mapZoom={p.s.mapZoom}
               mapLines={p.s.mapLines}
               galaxyOptions={p.s.galaxyOptions}
@@ -1393,6 +1444,12 @@ class App extends Reflux.Component {
             stateUpdate.profile = profile.data;
           }
 
+          if (init) {
+            log.error(`Username: ${stateUpdate.username}`);
+            log.error(`Active save file: ${stateUpdate.saveFileName}`);
+            log.error(`Current location: ${stateUpdate.currentLocation}`);
+          }
+
           state.set(stateUpdate, ()=>{
             if (refLocation === -1) {
               utils.ajax.post('/nmslocation/', {
@@ -1549,11 +1606,10 @@ class App extends Reflux.Component {
   }
   handleClearSearch(){
     state.set({search: ''}, ()=>{
-      if (this.state.remoteLocationsCache) {
-        state.set({remoteLocations: this.state.remoteLocationsCache});
-      } else {
-        this.fetchRemoteLocations(1, this.state.sort);
-      }
+      window.jsonWorker.postMessage({
+        method: 'get',
+        key: 'remoteLocations'
+      });
     })
   }
   handleWallpaper(){
@@ -1621,16 +1677,9 @@ class App extends Reflux.Component {
   handleMaximize(){
     state.set({maximized: !this.state.maximized}, ()=>{
       if (this.state.maximized) {
-        win.maximize();
+        win.unmaximize();
       } else {
-        let bounds = {
-          height: 1040,
-          width: 1351,
-          x: 600,
-          y: 5
-        };
-        win.setBounds(bounds);
-        win.setContentBounds(bounds);
+        win.maximize();
       }
     });
   }
@@ -1716,16 +1765,16 @@ class App extends Reflux.Component {
               </div>
               <div className="titlebar-resize" onClick={this.handleMaximize}>
                 {s.maximized ?
+                <svg className="fullscreen-svg" x="0px" y="0px" viewBox="0 0 10 10">
+                  <path fill="#FFFFFF" d="M 0 0 L 0 10 L 10 10 L 10 0 L 0 0 z M 1 1 L 9 1 L 9 9 L 1 9 L 1 1 z "/>
+                </svg>
+                :
                 <svg className="maximize-svg" x="0px" y="0px" viewBox="0 0 10 10">
                   <mask id="Mask">
                     <path fill="#FFFFFF" d="M 3 1 L 9 1 L 9 7 L 8 7 L 8 2 L 3 2 L 3 1 z"/>
                     <path fill="#FFFFFF" d="M 1 3 L 7 3 L 7 9 L 1 9 L 1 3 z"/>
                   </mask>
                   <path fill="#FFFFFF" d="M 2 0 L 10 0 L 10 8 L 8 8 L 8 10 L 0 10 L 0 2 L 2 2 L 2 0 z" mask="url(#Mask)"/>
-                </svg>
-                :
-                <svg className="fullscreen-svg" x="0px" y="0px" viewBox="0 0 10 10">
-                  <path fill="#FFFFFF" d="M 0 0 L 0 10 L 10 10 L 10 0 L 0 0 z M 1 1 L 9 1 L 9 9 L 1 9 L 1 1 z "/>
                 </svg>}
               </div>
               <div className="titlebar-close" onClick={()=>win.close()}>

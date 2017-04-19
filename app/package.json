@@ -1,7 +1,7 @@
 {
   "name": "NoMansConnect",
   "productName": "NoMansConnect",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "An online location manager for No Man's Sky.",
   "main": "./main.js",
   "author": {

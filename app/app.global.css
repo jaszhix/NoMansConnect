@@ -617,12 +617,12 @@ p:last-child {
 --------------------*/
 
 a {
-  color: #4183C4;
+  color: #bcd4ec;
   text-decoration: none;
 }
 
 a:hover {
-  color: #1e70bf;
+  color: #a9bed4;
   text-decoration: none;
 }
 
@@ -38635,4 +38635,8 @@ body {
 @keyframes marquee {
   0%   { transform: translate(0, 0); }
   100% { transform: translate(-100%, 0); }
+}
+
+.md-p {
+  margin-bottom: 8px;
 }

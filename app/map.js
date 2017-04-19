@@ -252,8 +252,7 @@ class GalacticMap extends React.Component {
     }
   }
   shouldComponentUpdate(nextProps, nextState){
-    return (nextProps.transparent !== this.props.transparent
-      || nextProps.mapZoom !== this.props.mapZoom
+    return (nextProps.mapZoom !== this.props.mapZoom
       || nextProps.mapLines !== this.props.mapLines
       || nextProps.galaxyOptions !== this.props.galaxyOptions
       || nextProps.selectedGalaxy !== this.props.selectedGalaxy
