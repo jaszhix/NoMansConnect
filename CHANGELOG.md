@@ -4,7 +4,7 @@
   * Fixed a regression with manual screenshot uploads not working.
   * Fixed the app window not being able to be repositioned correctly, and added window position state saving.
   * Fixed a bug causing the remote location cache to reset when resetting a search query.
-  * Added galaxies 80-134 ct. NMS Wiki.
+  * Added galaxies 120-134 ct. NMS Wiki.
 
 # 0.7.0
 
