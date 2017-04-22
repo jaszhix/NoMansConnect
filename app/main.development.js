@@ -1,5 +1,5 @@
 // @flow
-import { app, BrowserWindow, Menu, globalShortcut } from 'electron';
+import { app, BrowserWindow, Menu, globalShortcut, systemPreferences } from 'electron';
 import windowStateKeeper from 'electron-window-state';
 import fs from 'fs';
 import os from 'os';
@@ -52,14 +52,16 @@ app.on('ready', async () => {
     defaultHeight: 1040
   });
 
+  let aeroEnabled = systemPreferences.isAeroGlassEnabled();
+
   mainWindow = new BrowserWindow({
     show: false,
     x: mainWindowState.x,
     y: mainWindowState.y,
     width: mainWindowState.width,
     height: mainWindowState.height,
-    frame: false,
-    thickFrame: false,
+    frame: !aeroEnabled,
+    thickFrame: !aeroEnabled,
     transparent: false,
     webPreferences: {
       nodeIntegrationInWorker: true
