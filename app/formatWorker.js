@@ -2,9 +2,13 @@ const _ = require('lodash');
 const each = require('./each');
 
 onmessage = function(e) {
+  let order = e.data.sort === '-created' ? 'created' : e.data.sort === '-score' ? 'score' : 'teleports';;
   if (e.data.state.search.length === 0 && e.data.page > 1 && e.data.sort === e.data.state.sort || e.data.partial && !e.data.sync) {
-    let order = e.data.sort === '-created' ? 'created' : e.data.sort === '-score' ? 'score' : 'teleports';
-    e.data.res.data.results = _.chain(e.data.state.remoteLocations.results).concat(e.data.res.data.results).uniqBy('id').orderBy(order, 'desc').value();
+    e.data.res.data.results = _.chain(e.data.state.remoteLocations.results)
+      .concat(e.data.res.data.results)
+      .uniqBy('id')
+      .orderBy(order, 'desc')
+      .value();
   }
   each(e.data.res.data.results, (remoteLocation, key)=>{
     let refFav = _.findIndex(e.data.state.favorites, (fav)=>{
@@ -31,18 +35,6 @@ onmessage = function(e) {
       e.data.state.storedLocations[refStoredLocation].description = remoteLocation.description;
       e.data.state.storedLocations[refStoredLocation].score = remoteLocation.score;
     }
-
-    // Sync remote locations to stored
-
-    if (!e.data.init) {
-      let remoteOwnedLocations = _.filter(e.data.res.data.results, (remoteOwnedLocation)=>{
-        let refStoredLocation = _.findIndex(e.data.state.storedLocations, {id: remoteOwnedLocation.data.id});
-        return remoteOwnedLocation.username === e.data.state.username && refStoredLocation === -1;
-      });
-      if (remoteOwnedLocations.length > 0) {
-        e.data.state.storedLocations = _.chain(e.data.state.storedLocations).concat(_.map(remoteOwnedLocations, 'data')).uniqBy('id').orderBy('timeStamp', 'desc').value()
-      }
-    }
   });
 
   let stateUpdate = {
@@ -56,11 +48,14 @@ onmessage = function(e) {
   if (e.data.partial) {
     e.data.res.data.count = e.data.state.remoteLocations.count;
     e.data.res.data.next = e.data.state.remoteLocations.next;
+    stateUpdate.remoteLocations.results = _.chain(e.data.state.remoteLocations.results)
+      .concat(stateUpdate.remoteLocations.results)
+      .uniqBy('id')
+      .orderBy(order, 'desc')
+      .value();
   }
 
-  if (!e.data.sync) {
-    stateUpdate.page = e.data.init ? 1 : e.data.page;
-  }
+  stateUpdate.page = e.data.init ? 1 : e.data.page;
 
   postMessage({
     stateUpdate: stateUpdate,

@@ -6,7 +6,7 @@ import _ from 'lodash';
 import each from './each';
 import * as utils from './utils';
 import knownGalaxies from './static/galaxies.json';
-
+import knownProducts from './static/knownProducts.json';
 
 var state = Reflux.createStore({
   init(){
@@ -19,6 +19,7 @@ var state = Reflux.createStore({
         galaxies[k] = `Galaxy ${galaxyIter}`;
       }
     });
+    this.knownProducts = knownProducts;
     this.galaxies = galaxies;
     this.state = {
       // Core
@@ -37,6 +38,7 @@ var state = Reflux.createStore({
       saveDirectory: null,
       saveFileName: '',
       mode: 'normal',
+      storedBases: [],
       storedLocations: [],
       remoteLocations: [],
       remoteLength: 0,
@@ -54,6 +56,7 @@ var state = Reflux.createStore({
       // UI
       settingsOpen: false,
       editorOpen: false,
+      baseOpen: false,
       view: 'index',
       sort: '-created',
       search: '',
@@ -67,6 +70,7 @@ var state = Reflux.createStore({
       mapZoom: false,
       wallpaper: null,
       filterOthers: false,
+      usernameOverride: false,
       show: {
         Shared: true,
         Explored: true,
@@ -105,6 +109,10 @@ var state = Reflux.createStore({
       }
       this.state.saveDirectory = saveDirPath;
     }
+    let username = utils.store.get('username');
+    if (username) {
+      this.state.username = username;
+    }
     let mapLines = utils.store.get('mapLines');
     if (mapLines) {
       this.state.mapLines = mapLines;
@@ -124,6 +132,10 @@ var state = Reflux.createStore({
     let mode = utils.store.get('mode');
     if (mode) {
       this.state.mode = mode;
+    }
+    let storedBases = utils.store.get('storedBases');
+    if (storedBases) {
+      this.state.storedBases = storedBases;
     }
     let storedLocations = utils.store.get('storedLocations');
     // temporary
@@ -183,11 +195,13 @@ var state = Reflux.createStore({
       this.state.selectedLocation = null;
     }
 
-    if (obj.remoteLocations && obj.remoteLocations.results.length > 0 && this.state.search.length === 0 && this.state.remoteLocations.results && this.state.remoteLocations.results.length > 0) {
-      //this.state.remoteLocations = this.json.get('remoteLocations');
-      let hasState = false;
+    if (obj.remoteLocations
+      && obj.remoteLocations.results.length > 0
+      && this.state.search.length === 0
+      && this.state.remoteLocations.results
+      && this.state.remoteLocations.results.length > 0
+      && this.state.sort === '-created') {
       if (this.state.remoteLocations) {
-        hasState = true;
         each(obj.remoteLocations.results, (location, i)=>{
           let refNewLocation = _.findIndex(this.state.remoteLocations.results, {id: location.id});
           if (refNewLocation !== -1) {
@@ -204,15 +218,6 @@ var state = Reflux.createStore({
         key: 'remoteLocations',
         value: this.state.remoteLocations,
       });
-      let sort = 'created';
-      if (this.state.sort === '-teleports') {
-        sort = 'teleports';
-      } else if (this.state.sort === '-score') {
-        sort = 'score';
-      }
-      if (hasState) {
-        obj.remoteLocations.results = _.chain(this.state.remoteLocations.results).orderBy(sort, 'desc').value();
-      }
     }
     if (obj.remoteLocations) {
       this.state.remoteLength = obj.remoteLocations.results.length;
@@ -231,6 +236,10 @@ var state = Reflux.createStore({
       console.log('STORED: ', storedLocations);
       storedLocations[this.state.mode] = obj.storedLocations;
       utils.store.set('storedLocations', storedLocations);
+    }
+
+    if (obj.hasOwnProperty('storedBases')) {
+      utils.store.set('storedBases', obj.storedBases);
     }
 
     if (obj.hasOwnProperty('favorites')) {
@@ -267,6 +276,10 @@ var state = Reflux.createStore({
 
     if (obj.hasOwnProperty('wallpaper')) {
       utils.store.set('wallpaper', obj.wallpaper);
+    }
+
+    if (obj.hasOwnProperty('username')) {
+      utils.store.set('username', obj.username);
     }
 
     if (cb) {

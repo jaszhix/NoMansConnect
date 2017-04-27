@@ -1,8 +1,8 @@
 const axios = require('axios')
 
 const ajax = axios.create({
-  //baseURL: 'http://192.168.1.148:8000/api/',
-  baseURL: 'https://neuropuff.com/api/',
+  baseURL: 'http://z.npff.co:8000/api/',
+  //baseURL: 'https://neuropuff.com/api/',
   timeout: 15000,
   xsrfCookieName: 'csrftoken'
 });

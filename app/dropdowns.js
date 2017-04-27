@@ -14,6 +14,104 @@ import * as utils from './utils';
 
 const {dialog} = remote;
 
+const menuContainerStyle = {
+  minWidth: '183px',
+  borderBottomLeftRadius: '0px',
+  borderBottomRightRadius: '0px',
+  borderTop: '1px solid rgb(149, 34, 14)'
+};
+
+export class BaseDropdownMenu extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hover: -1
+    };
+    autoBind(this);
+    this.trashIconContainerStyle = {
+      position: 'relative',
+      left: '92%',
+      width: '179px',
+      top: '-14px',
+      cursor: 'pointer'
+    };
+    this.baseItemStyle = {
+      height: '36px'
+    };
+  }
+  componentDidMount(){
+    _.defer(()=>ReactTooltip.rebuild());
+  }
+  handleClickOutside(){
+    if (this.props.baseOpen) {
+      state.set({baseOpen: false});
+    }
+  }
+  handleSave(e){
+    e.stopPropagation();
+    this.props.onSaveBase();
+  }
+  handleDelete(e, base){
+    e.stopPropagation();
+    let refBase = _.findIndex(this.props.storedBases, {Name: base.Name});
+    if (refBase !== -1) {
+      _.pullAt(this.props.storedBases, refBase);
+      state.set({storedBases: this.props.storedBases});
+    }
+  }
+  render(){
+    var p = this.props;
+    return (
+      <div
+      style={{WebkitAppRegion: 'no-drag'}}
+      className={`ui dropdown icon item${p.baseOpen ? ' visible' : ''}`}
+      onClick={()=>state.set({baseOpen: !p.baseOpen})}>
+        <img
+        style={{width: '19px'}}
+        src={p.baseIcon} />
+        <div
+        style={menuContainerStyle}
+        className={`menu transition ${p.baseOpen ? 'visible' : 'hidden'}`}>
+          <div className="item" onClick={this.handleSave}>
+            Save Base
+          </div>
+          {p.storedBases && p.storedBases.length > 0 ? <div className="divider" /> : null}
+          {p.storedBases && p.storedBases.length > 0 ? p.storedBases.map((base, i)=>{
+            let baseName = base.Name;
+            if (baseName.indexOf(' Base') !== -1) {
+              baseName = baseName.split(' Base')[0];
+            }
+            return (
+              <div
+              key={i}
+              style={this.baseItemStyle}
+              className="item"
+              onMouseEnter={()=>this.setState({hover: i})}
+              onMouseLeave={()=>this.setState({hover: -1})}>
+                <div
+                onClick={()=>this.props.onRestoreBase(base)}
+                data-place="left"
+                data-tip={utils.tip('Restore Base')}>
+                  {baseName}
+                </div>
+                <div
+                style={this.trashIconContainerStyle}
+                onClick={(e)=>this.handleDelete(e, base)}
+                data-place="right"
+                data-tip={utils.tip('Remove Base')}>
+                  {this.state.hover === i ? <i className="trash outline icon" /> : null}
+                </div>
+              </div>
+            );
+          }) : null}
+        </div>
+      </div>
+    );
+  }
+};
+
+BaseDropdownMenu = onClickOutside(BaseDropdownMenu);
+
 export class SaveEditorDropdownMenu extends React.Component {
   constructor(props) {
     super(props);
@@ -28,6 +126,7 @@ export class SaveEditorDropdownMenu extends React.Component {
     }
   }
   render(){
+    let dev = process.env.NODE_ENV === 'development';
     var p = this.props;
     return (
       <div
@@ -36,17 +135,12 @@ export class SaveEditorDropdownMenu extends React.Component {
       onClick={()=>state.set({editorOpen: !p.editorOpen})}>
         <i className="database icon" />
         <div
-        style={{
-          minWidth: '183px',
-          borderBottomLeftRadius: '0px',
-          borderBottomRightRadius: '0px',
-          borderTop: '1px solid rgb(149, 34, 14)'
-        }}
+        style={menuContainerStyle}
         className={`menu transition ${p.editorOpen ? 'visible' : 'hidden'}`}>
           <div
           style={{opacity: p.profile.exp >= 50 ? '1' : '0.5'}}
           className="item"
-          onClick={p.profile.exp >= 50 ? ()=>p.onCheat('repairInventory') : null}
+          onClick={p.profile.exp >= 50 || dev ? ()=>p.onCheat('repairInventory') : null}
           data-place="left"
           data-tip={utils.tip('Requires 50 registered locations.')}>
             Repair Inventory
@@ -54,7 +148,7 @@ export class SaveEditorDropdownMenu extends React.Component {
           <div
           style={{opacity: p.profile.exp >= 100 ? '1' : '0.5'}}
           className="item"
-          onClick={p.profile.exp >= 100 ? ()=>p.onCheat('stockInventory') : null}
+          onClick={p.profile.exp >= 100 || dev ? ()=>p.onCheat('stockInventory') : null}
           data-place="left"
           data-tip={utils.tip('Requires 100 registered locations.')}>
             Fully Stock Inventory
@@ -62,7 +156,7 @@ export class SaveEditorDropdownMenu extends React.Component {
           <div
           style={{opacity: p.profile.exp >= 200 ? '1' : '0.5'}}
           className="item"
-          onClick={p.profile.exp >= 200 ? ()=>p.onCheat('refuelEnergy') : null}
+          onClick={p.profile.exp >= 200 || dev ? ()=>p.onCheat('refuelEnergy') : null}
           data-place="left"
           data-tip={utils.tip('Requires 200 registered locations.')}>
             Refuel Energies/Shields
@@ -103,6 +197,8 @@ export class DropdownMenu extends React.Component {
 
       Special Thanks
 
+      - Cranky-Cat
+      - monkeyman192
       - pgrace
       - rayrod118
       `
@@ -124,8 +220,7 @@ export class DropdownMenu extends React.Component {
       key: 'remoteLocations'
     });
 
-    remote.app.relaunch();
-    window.close();
+    this.props.onRestart();
   }
   handleUsernameProtection(){
     let helpMessage = 'When you protect your username, the app will associate your computer with your username to prevent impersonation. If you plan on using the app on another computer, you will need to disable protection before switching.';
@@ -153,6 +248,11 @@ export class DropdownMenu extends React.Component {
       }
     });
   }
+  handleModeSwitch(mode){
+    state.set({mode: mode}, ()=>{
+      this.props.onRestart();
+    });
+  }
   render(){
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
@@ -162,20 +262,16 @@ export class DropdownMenu extends React.Component {
       className={`ui dropdown icon item${p.s.settingsOpen ? ' visible' : ''}`}
       onClick={()=>state.set({settingsOpen: !p.s.settingsOpen})}>
         <i className="wrench icon" />
+        {p.s.username.length > 0 ? <span style={{paddingLeft: '8px'}}>{p.s.username}</span> : null}
         <div
-        style={{
-          minWidth: '183px',
-          borderBottomLeftRadius: '0px',
-          borderBottomRightRadius: '0px',
-          borderTop: '1px solid rgb(149, 34, 14)'
-        }}
+        style={menuContainerStyle}
         className={`menu transition ${p.s.settingsOpen ? 'visible' : 'hidden'}`}>
           {_.map(modes, (mode, i)=>{
             return (
               <div
               key={i}
               className={`item${p.s.mode === mode ? ' selected' : ''}`}
-              onClick={()=>state.set({mode: mode}, ()=>this.props.onModeSwitch(mode))}>
+              onClick={()=>this.handleModeSwitch(mode)}>
                 {_.upperFirst(mode)}
               </div>
             );
@@ -201,6 +297,11 @@ export class DropdownMenu extends React.Component {
           <div className="item" onClick={this.handleUsernameProtection}>
             {`Username Protection: ${p.s.profile.protected ? 'On' : 'Off'}`}
           </div> : null}
+          <div
+          className="item"
+          onClick={this.props.onUsernameOverride}>
+            Override Username
+          </div>
           <div className="item" onClick={this.handleWallpaper}>
             {p.s.wallpaper ? 'Reset Wallpaper' : 'Set Wallpaper'}
           </div>

@@ -8,17 +8,6 @@ import state from './state';
 import each from './each';
 
 var exec = require('child_process').exec;
-export var formatBytes = (bytes, decimals)=>{
-  if (bytes === 0) {
-    return '0 Byte';
-  }
-  var k = 1000;
-  var dm = decimals + 1 || 3;
-  var sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  var i = Math.floor(Math.log(bytes) / Math.log(k));
-  return (bytes / Math.pow(k, i)).toPrecision(dm) + ' ' + sizes[i];
-};
-
 export var msToTime = (s)=>{
   var ms = s % 1000;
   s = (s - ms) / 1000;
@@ -58,6 +47,7 @@ export var exc = (cmd)=>{
 
 export var store = {
   set: (key, obj)=>{
+    console.log(`Setting storage key ${key}:`, obj)
     window.localStorage.setItem(key, JSON.stringify(obj));
   },
   get: (key)=>{
@@ -112,6 +102,8 @@ export var convertInteger = (int, axis)=>{
 
   return int - 1;
 };
+
+window.convertInteger = convertInteger
 
 export var convertIntegerZ = (int, na)=>{
   int = Math.abs(int);
@@ -328,8 +320,66 @@ export var tip = (content)=>{
 }
 
 export var ajax = axios.create({
-  //baseURL: 'http://192.168.1.148:8000/api/',
-  baseURL: 'https://neuropuff.com/api/',
+  baseURL: 'http://z.npff.co:8000/api/',
+  //baseURL: 'https://neuropuff.com/api/',
   timeout: 15000,
   xsrfCookieName: 'csrftoken'
 });
+
+export var formatBase = (saveData, knownProducts)=>{
+  let base = _.cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[0]);
+  // Check for modded objects and remove them
+  let moddedObjectKeys = [];
+  each(base.Objects, (object, key)=>{
+    let refProduct = _.findIndex(knownProducts, (product)=>product === object.ObjectID);
+    if (refProduct === -1) {
+      moddedObjectKeys.push(key);
+    }
+  });
+  each(moddedObjectKeys, (key)=>{
+    _.pullAt(base.Objects, key);
+  });
+  let cachedBase = {
+    Objects: base.Objects,
+    Forward: base.Forward,
+    Position: base.Position,
+    Name: base.Name
+  };
+  return cachedBase;
+};
+
+var flip = (string)=>{
+  console.log('flip', string)
+  let stringArr = string.split('').reverse();
+  string = stringArr.join('');
+  console.log('flip return: ', string)
+  return string;
+};
+
+var signInt = (x, byteLen)=>{
+  console.log('signInt', x, byteLen)
+  let y = parseInt(x, 16);
+  if (y > 0.5 * Math.pow(16, byteLen)) {
+    console.log('y > 0.5 * (16 ^ byteLen)', y > 0.5 * (16 ^ byteLen), 'y - (16 ^ byteLen)', y - (16 ^ byteLen))
+    return y - Math.pow(16, byteLen);
+  } else {
+    return y;
+  }
+}
+
+var toAdd = (x)=>{
+  let y = null;
+  if (typeof x === 'string' && x.indexOf('0x') !== -1) {
+    y = x.substr(2, x.length);
+  }
+  let data = {
+    PlanetIndex: parseInt(flip(y.substring(0, 3)), 16),
+    SolarSystemIndex: parseInt(flip(y.substring(3, 6)), 16),
+    VoxelY: signInt(y.substring(6, 8), 2),
+    VoxelZ: signInt(y.substring(8, 11), 3),
+    VoxelX: signInt(y.substring(11, y.length), 3)
+  };
+  return data;
+}
+window.toAdd = toAdd;
+

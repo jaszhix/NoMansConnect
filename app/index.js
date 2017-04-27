@@ -40,17 +40,19 @@ import openExternal from 'open-external';
 import _ from 'lodash';
 import $ from 'jquery';
 import moment from 'moment';
+import math from 'mathjs';
 
 import Loader from './loader';
 const screenshot = require('./capture');
 import each from './each';
 import * as utils from './utils';
+window.utils = utils
 
 import defaultWallpaper from './assets/images/default_wallpaper.png';
 import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
 
-import {BasicDropdown, DropdownMenu, SaveEditorDropdownMenu} from './dropdowns';
+import {BasicDropdown, DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu} from './dropdowns';
 import GalacticMap from './map';
 
 if (module.hot) {
@@ -60,6 +62,35 @@ if (module.hot) {
 const {dialog} = remote;
 
 const IMAGE_DOMAIN = /*process.env.NODE_ENV === 'development' ? 'http://192.168.1.148:8000' :*/ 'https://neuropuff.com'
+
+class Button extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      hover: false,
+    };
+  }
+  render(){
+    return (
+      <div
+      className="ui segment"
+      style={{
+        letterSpacing: '3px',
+        fontFamily: 'geosanslight-nmsregular',
+        fontSize: '16px',
+        padding: '3px 3px',
+        textAlign: 'center',
+        cursor: 'pointer',
+        background: this.state.hover ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+      }}
+      onMouseEnter={()=>this.setState({hover: true})}
+      onMouseLeave={()=>this.setState({hover: false})}
+      onClick={this.props.onClick}>
+        {this.props.children}
+      </div>
+    );
+  }
+};
 
 class ImageModal extends React.Component {
   constructor(props) {
@@ -72,7 +103,8 @@ class ImageModal extends React.Component {
       top: '12%',
       zIndex: '1001',
       WebkitTransformOrigin: '50% 25%',
-      boxShadow: 'none'
+      boxShadow: 'none',
+      border: '1px solid #DA2600',
     };
   }
   handleClickOutside(){
@@ -89,6 +121,60 @@ class ImageModal extends React.Component {
 };
 
 ImageModal = onClickOutside(ImageModal);
+
+class UsernameOverrideModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      name: ''
+    };
+    this.modalStyle = {
+      padding: '8px',
+      textAlign: 'center',
+      zIndex: '1001',
+      WebkitTransformOrigin: '50% 25%',
+      boxShadow: 'none',
+      borderTop: '2px solid #95220E',
+      border: '1px solid #DA2600',
+      width: '400px'
+    };
+    this.inputStyle = {
+      width: '300px',
+      position: 'relative',
+      top: '7px',
+      color: '#FFF',
+      background: 'rgb(23, 26, 22)',
+      padding: '0.67861429em',
+      borderRadius: '0px',
+      border: '1px solid #DA2600',
+      fontFamily: 'geosanslight-nmsregular',
+      fontSize: '15px',
+      letterSpacing: '2px'
+    };
+  }
+  handleClickOutside(){
+    state.set({usernameOverride: false});
+  }
+  render(){
+    return (
+      <div className="ui small modal active" style={this.modalStyle}>
+        <span className="close"/>
+        <input
+        style={this.inputStyle}
+        type="text"
+        value={this.state.name}
+        onChange={(e)=>this.setState({name: e.target.value})}
+        maxLength={30}
+        placeholder="Username" />
+        <Button onClick={()=>this.props.onSave(this.state.name)}>
+          Save
+        </Button>
+      </div>
+    );
+  }
+};
+
+UsernameOverrideModal = onClickOutside(UsernameOverrideModal);
 
 const locationItemStyle = {padding: '0px 2px', margin: '0px 3px', background: 'rgba(23, 26, 22, 0.8)', fontFamily: 'geosanslight-nmsregular', fontSize: '16px'};
 
@@ -149,35 +235,6 @@ class Item extends React.Component {
         </div>
       );
     }
-  }
-};
-
-class Button extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      hover: false,
-    };
-  }
-  render(){
-    return (
-      <div
-      className="ui segment"
-      style={{
-        letterSpacing: '3px',
-        fontFamily: 'geosanslight-nmsregular',
-        fontSize: '16px',
-        padding: '3px 3px',
-        textAlign: 'center',
-        cursor: 'pointer',
-        background: this.state.hover ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
-      }}
-      onMouseEnter={()=>this.setState({hover: true})}
-      onMouseLeave={()=>this.setState({hover: false})}
-      onClick={this.props.onClick}>
-        {this.props.children}
-      </div>
-    );
   }
 };
 
@@ -288,6 +345,13 @@ class LocationBox extends React.Component {
         onClick: ()=>p.onTeleport(p.location, p.selectType ? 'selected' : p.i)
       });
     }
+    if (p.location.base && p.location.baseData) {
+      leftOptions.push({
+        id: 'storeBase',
+        label: 'Store Base',
+        onClick: ()=>p.onSaveBase(p.location.baseData)
+      });
+    }
     if (p.isOwnLocation && p.selectType && p.location.username === p.username) {
       leftOptions.push({
         id: 'edit',
@@ -311,7 +375,7 @@ class LocationBox extends React.Component {
         let refLeftOption = _.findIndex(leftOptions, {id: 'deleteScreen'});
         _.pullAt(leftOptions, refLeftOption);
       }
-    } else if (p.selectType && p.location.id !== p.currentLocation) {
+    } else if (p.selectType && p.location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
       leftOptions.push({
         id: 'removeStored',
         label: 'Remove From Storage',
@@ -351,7 +415,7 @@ class LocationBox extends React.Component {
               cursor: p.selectType ? 'default' : 'pointer'
             }}
             onClick={()=>state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
-              {p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected'}
+              {p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : p.location.base && p.location.baseData ? p.location.baseData.Name : `${p.location.username} explored` : 'Selected'}
             </h3>
           </VisibilitySensor>
 
@@ -374,11 +438,11 @@ class LocationBox extends React.Component {
             persist={p.edit}
             options={leftOptions} /> : null}
             {p.location.base ?
-            <span data-tip={utils.tip('Base')} style={{position: 'absolute', left: '26px', top: '0px'}}>
+            <span data-tip={utils.tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
               <img style={this.baseStyle} src={baseIcon} />
             </span> : null}
             {isSpaceStation ?
-            <span data-tip={utils.tip('Space Station')} style={{position: 'absolute', left: '26px', top: '0px'}}>
+            <span data-tip={utils.tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
               <img style={this.baseStyle} src={spaceStationIcon} />
             </span> : null}
           </div> : null}
@@ -439,7 +503,7 @@ class LocationBox extends React.Component {
               {p.location.mode ? <Item label="Mode" value={_.upperFirst(p.location.mode)} /> : null}
               {p.location.teleports ? <Item label="Teleports" value={p.location.teleports} /> : null}
               {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
-              {p.name.length > 0 ? <Item label="Explored by" value={p.location.username} /> : null}
+              {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
               <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
               {p.location.mods && p.location.mods.length > 0 ?
               <div
@@ -478,6 +542,9 @@ LocationBox.defaultProps = {
 class RemoteLocations extends React.Component {
   constructor(props){
     super(props);
+    this.state = {
+      init: true
+    };
     autoBind(this);
   }
   componentDidMount(){
@@ -492,6 +559,7 @@ class RemoteLocations extends React.Component {
     let checkRemote = ()=>{
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
         this.refs.recentExplorations.addEventListener('scroll', this.scrollListener);
+        this.setState({init: false});
       } else {
         _.delay(()=>checkRemote(), 500);
       }
@@ -505,7 +573,8 @@ class RemoteLocations extends React.Component {
       || nextProps.updating !== this.props.updating
       || nextProps.s.installing !== this.props.s.installing
       || nextProps.s.mapZoom !== this.props.s.mapZoom
-      || nextProps.s.width !== this.props.s.width)
+      || nextProps.s.width !== this.props.s.width
+      || this.state.init)
   }
   componentWillUnmount(){
     if (this.refs.recentExplorations) {
@@ -578,6 +647,7 @@ class RemoteLocations extends React.Component {
                   image={location.image}
                   onFav={this.handleFavorite}
                   onTeleport={p.onTeleport}
+                  onSaveBase={p.onSaveBase}
                   />
                 );
               })}
@@ -923,6 +993,12 @@ class Container extends React.Component {
         return location.username === p.s.username;
       });
     }
+    console.log(storedLocations)
+    let isSelectedLocationRemovable = false;
+    if (p.s.selectedLocation) {
+      let refLocation = _.findIndex(p.s.storedLocations, {id: p.s.selectedLocation.id});
+      isSelectedLocationRemovable = refLocation !== -1;
+    }
     return (
       <div className="ui grid row" style={{paddingTop: '51px', float: 'left', position: 'absolute', margin: '0px auto', left: '0px', right: '0px'}}>
         <input ref="uploadScreenshot" onChange={this.handleUploadScreen} style={{display: 'none'}} type="file" accept="image/*" multiple={false} />
@@ -967,6 +1043,7 @@ class Container extends React.Component {
               width={p.s.width}
               height={p.s.height}
               mapZoom={p.s.mapZoom}
+              isSelectedLocationRemovable={isSelectedLocationRemovable}
               onUploadScreen={()=>this.refs.uploadScreenshot.click()}
               onDeleteScreen={this.handleDeleteScreen}
               onFav={this.handleFavorite}
@@ -974,6 +1051,7 @@ class Container extends React.Component {
               onRemoveStoredLocation={p.onRemoveStoredLocation}
               onTeleport={(location, type)=>p.onTeleport(location, type)}
               onSubmit={(name, description)=>this.handleUpdate(name, description)}
+              onSaveBase={p.onSaveBase}
                /> : null}
             </div>
           </div>
@@ -986,7 +1064,8 @@ class Container extends React.Component {
         updating={this.state.updating}
         onPagination={p.onPagination}
         onTeleport={p.onTeleport}
-        onFav={this.handleFavorite}/> : null}
+        onFav={this.handleFavorite}
+        onSaveBase={p.onSaveBase}/> : null}
       </div>
     );
   }
@@ -1067,7 +1146,7 @@ class App extends Reflux.Component {
       ];
 
       if (this.state.installDirectory) {
-        paths = [this.state.installDirectory.split(':\\')[1]].concat(paths);
+        paths = [this.state.installDirectory.split(':\\')[1]];
       }
 
       let modPath = `\\GAMEDATA\\PCBANKS\\MODS`;
@@ -1088,13 +1167,11 @@ class App extends Reflux.Component {
         initialize();
       }
     };
-    indexMods();
+    _.defer(indexMods);
   }
   componentDidUpdate(pP, pS){
     if (pS.search.length > 0 && this.state.search.length === 0 && this.state.searchInProgress) {
-      state.set({searchInProgress: false}, ()=>{
-        this.handleClearSearch();
-      });
+      this.handleClearSearch();
     }
   }
   handleWorkers(){
@@ -1104,6 +1181,8 @@ class App extends Reflux.Component {
         state.set({init: false});
         if (e.data.func === 'handleSync') {
           this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true);
+        } else if (e.data.func === 'pollRemoteLocations') {
+          this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
         }
         return;
       }
@@ -1113,18 +1192,29 @@ class App extends Reflux.Component {
           this.handleUpgrade();
         }
       } else if (e.data.func === 'syncRemoteOwned') {
-        this.formatRemoteLocations(e.data, 1, this.state.sort, false, true, true);
+        each(e.data.results, (location, i)=>{
+          _.assignIn(location.data, {
+            name: location.name,
+            description: location.description,
+            teleports: location.teleports,
+            score: location.score,
+            image: location.image
+          })
+          e.data.data.results[i] = location;
+        });
+        this.state.storedLocations = _.chain(this.state.storedLocations).concat(_.map(e.data.data.results, 'data')).uniqBy('id').orderBy('timeStamp', 'desc').value();
+        state.set({storedLocations: this.state.storedLocations});
       } else if (e.data.func === 'handleSync') {
         this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true, true);
       } else if (e.data.func === 'fetchRemoteLocations') {
-        this.formatRemoteLocations(e.data, e.data.params[0], e.data.params[1], e.data.params[2], false, e.data.params[3], ()=>{
+        this.formatRemoteLocations(e.data, e.data.params[0], e.data.params[1], e.data.params[2], e.data.params[2], e.data.params[3], ()=>{
           if (e.data.params[2]) { // init
             this.pollRemoteLocations(e.data.params[2]);
           }
         });
       } else if (e.data.func === 'pollRemoteLocations') {
-        if (e.data.data.results.length > 0) {
-          this.formatRemoteLocations(e.data, e.data.params[0], e.data.params[1], false, true, false, ()=>{
+        if (e.data.data.results.length > 0 && this.state.search.length === 0) {
+          this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, true, false, ()=>{
             this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
           });
         } else {
@@ -1144,7 +1234,8 @@ class App extends Reflux.Component {
       url: '/nmslocationsync',
       obj: {
         params: {
-          username: this.state.username
+          username: this.state.username,
+          page_size: 9999
         }
       }
     });
@@ -1167,7 +1258,7 @@ class App extends Reflux.Component {
         obj: {
           locations: locations,
           mode: this.state.mode,
-          username: this.state.username
+          username: this.state.username,
         },
         params: [page, sort, init]
       });
@@ -1251,6 +1342,106 @@ class App extends Reflux.Component {
     if (currentLocation) {
       this.handleTeleport(currentLocation, 0, id, n);
     }
+  }
+  baseError(){
+    dialog.showMessageBox({
+      type: 'info',
+      buttons: [],
+      title: 'Base Save',
+      message: 'Unable to save your base. Have you claimed a base yet?'
+    });
+  }
+  handleSaveBase(){
+    utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
+      let base = utils.formatBase(saveData, state.knownProducts);
+      let refBase = _.findIndex(this.state.storedBases, {Name: base.Name});
+      if (refBase === -1) {
+        this.state.storedBases.push(base);
+      }
+      state.set({storedBases: this.state.storedBases});
+    }).catch(()=>{
+      this.baseError();
+    });
+  }
+  handleRestoreBase(base){
+    utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
+      if (saveData.result.PlayerStateData.PersistentPlayerBases.length === 0) {
+        this.baseError();
+        return;
+      }
+      let newBase = saveData.result.PlayerStateData.PersistentPlayerBases[0];
+      let storedBase = _.cloneDeep(base);
+
+      // Base conversion algorithm by monkeyman192
+
+      // 3-vector
+      let fwdOriginal = storedBase.Forward;
+      // 3-vector
+      let upOriginal = storedBase.Objects[0].Up;
+      // cross is defined in the math.js library.
+      let perpOriginal = math.cross(fwdOriginal, upOriginal);
+
+      // This creates  3rd vector orthogonal to the previous 2 to create a set of linearly independent basis vectors
+      // this is a matrix made up from the other 3 vectors as columns
+      let P = math.matrix([[fwdOriginal[0], upOriginal[0], perpOriginal[0]],
+        [fwdOriginal[1], upOriginal[1], perpOriginal[1]],
+        [fwdOriginal[2], upOriginal[2], perpOriginal[2]]]);
+
+      // now read the new data, ensuring the user has created at least one Object to read data from (need that Up value!)
+      // 3-vector
+      let fwdNew = newBase.Forward;
+      // 3-vector
+      let upNew;
+      if (newBase.Objects.length > 0) {
+        upNew = newBase.Objects[0].Up;
+      } else {
+        dialog.showMessageBox({
+          type: 'info',
+          buttons: [],
+          title: 'Base Restore',
+          message: 'In order to restore your base correctly, at least one base building object must be placed on the new base first.'
+        });
+        return;
+      }
+      let perpNew = math.cross(fwdNew, upNew);
+
+      // again, we construct a matrix from the column vectors:
+      let Q = math.matrix([[fwdNew[0], upNew[0], perpNew[0]],
+               [fwdNew[1], upNew[1], perpNew[1]],
+               [fwdNew[2], upNew[2], perpNew[2]]]);
+
+      // our final transform matrix is now equal to:
+      let M = math.multiply(Q, math.inv(P))
+
+      each(storedBase.Objects, (object, i)=>{
+        console.log(math.multiply(M, object.At))
+        storedBase.Objects[i].At = math.multiply(M, object.At)._data
+        storedBase.Objects[i].Up = upNew;
+        storedBase.Objects[i].Position = math.multiply(M, object.Position)._data;
+      });
+
+      saveData.result.PlayerStateData.PersistentPlayerBases[0].Objects = storedBase.Objects;
+
+      console.log(saveData.result.PlayerStateData.PersistentPlayerBases[0])
+
+      fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data)=>{
+        if (err) {
+          console.log(err);
+          return;
+        }
+        // todo - wrap in a function
+        let absoluteSaveDir = this.state.saveFileName.split('\\');
+        _.pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
+        absoluteSaveDir = absoluteSaveDir.join('\\');
+        utils.exc(`.${this.saveTool} encrypt -g ${this.state.mode} -i ${this.saveJSON} -s ${absoluteSaveDir}`, (res)=>{
+          console.log(res);
+        }).catch((e)=>{
+          console.log(e);
+        });
+      });
+    }).catch((err)=>{
+      log.error(err);
+    });
   }
   handleTeleport(location, i, action=null, n=null){
     state.set({installing: `t${i}`}, ()=>{
@@ -1343,8 +1534,9 @@ class App extends Reflux.Component {
             ignoreNotPermitted: true,
 
           }, (monitor)=>{
+            this.monitor = monitor;
             this.pollSaveDataThrottled = _.throttle(this.pollSaveData, 15000, {leading: true});
-            monitor.on('changed', (f, curr, prev)=>{
+            this.monitor.on('changed', (f, curr, prev)=>{
               this.pollSaveDataThrottled();
             });
           });
@@ -1361,6 +1553,7 @@ class App extends Reflux.Component {
           uniquePlayers.push(record.OWS.USN);
         });
         console.log(_.uniq(uniquePlayers))*/
+
         username = _.isString(username) && username.length > 0 ? username : '';
 
         console.log('SAVE DATA: ', saveData.result)
@@ -1383,6 +1576,8 @@ class App extends Reflux.Component {
               translatedX: utils.convertInteger(location.VoxelX, 'x'),
               translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
               translatedY: utils.convertInteger(location.VoxelY, 'y'),
+              base: false,
+              baseData: null,
               upvote: upvote,
               image: image,
               mods: this.state.mods,
@@ -1402,7 +1597,6 @@ class App extends Reflux.Component {
             }
 
             this.state.storedLocations.push(location);
-            this.state.storedLocations =  _.chain(this.state.storedLocations).uniqBy('id').orderBy('timeStamp', 'desc').value();
 
           }
 
@@ -1427,6 +1621,11 @@ class App extends Reflux.Component {
                 && base.PlanetIndex === storedLocation.PlanetIndex
                 && refBase.UniverseAddress.RealityIndex === storedLocation.galaxy);
               this.state.storedLocations[i].base = hasBase;
+              if (hasBase) {
+                console.log('>>>>>>>>>>>>>>>>>>>>>>')
+                this.state.storedLocations[i].baseData = utils.formatBase(saveData, state.knownProducts);
+                console.log(this.state.storedLocations[i].baseData)
+              }
             }
           });
           this.state.storedLocations = _.orderBy(this.state.storedLocations, 'timeStamp', 'desc');
@@ -1474,8 +1673,15 @@ class App extends Reflux.Component {
 
       utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
         let location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
+        console.log(location)
         const refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
         let username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+
+        if (this.state.username.length > 0 && this.state.username !== username) {
+          username = this.state.username;
+        }
+
+        console.log(username)
 
         utils.ajax.get('/nmsprofile', {
           params: {
@@ -1483,6 +1689,7 @@ class App extends Reflux.Component {
             machineId: machineId
           }
         }).then((profile)=>{
+
           processData(saveData, location, refLocation, username, profile);
         }).catch((err)=>{
           console.log(err)
@@ -1532,6 +1739,39 @@ class App extends Reflux.Component {
         window.close();
       } else {
         window.close();
+      }
+    });
+  }
+  handleUsernameOverride(username){
+    utils.ajax.post('/nmsoverride/', {
+      username: this.state.username,
+      override: username,
+      machineId: this.state.machineId
+    }).then((res)=>{
+      window.jsonWorker.postMessage({
+        method: 'remove',
+        key: 'remoteLocations'
+      });
+      each(this.state.storedLocations, (location, i)=>{
+        if (this.state.storedLocations[i].username === this.state.username) {
+          this.state.storedLocations[i].username = username;
+        }
+      });
+      state.set({
+        storedLocations: this.state.storedLocations,
+        username: username
+      }, ()=>{
+        _.defer(this.handleRestart);
+      });
+
+    }).catch((err)=>{
+      if (typeof err.response.data.status !== 'undefined' && err.response.data.status === 'protected') {
+        dialog.showMessageBox({
+          type: 'info',
+          buttons: [],
+          title: 'Username Protected',
+          message: 'You must disable username protection before changing your username.'
+        });
       }
     });
   }
@@ -1605,7 +1845,10 @@ class App extends Reflux.Component {
     });
   }
   handleClearSearch(){
-    state.set({search: ''}, ()=>{
+    state.set({
+      search: '',
+      searchInProgress: false
+    }, ()=>{
       window.jsonWorker.postMessage({
         method: 'get',
         key: 'remoteLocations'
@@ -1653,7 +1896,7 @@ class App extends Reflux.Component {
         state.set({
           installDirectory: cb[0]
         }, ()=>{
-          this.handleRestart();
+          //_.delay(()=>this.handleRestart(), 2000);
         });
       }
     });
@@ -1671,8 +1914,15 @@ class App extends Reflux.Component {
     });
   }
   handleRestart(){
-    remote.app.relaunch();
-    window.close();
+    if (process.env.NODE_ENV === 'production') {
+      remote.app.relaunch();
+      window.close();
+    } else {
+      if (this.monitor) {
+        this.monitor.stop();
+      }
+      window.location.reload();
+    }
   }
   handleMaximize(){
     state.set({maximized: !this.state.maximized}, ()=>{
@@ -1738,8 +1988,17 @@ class App extends Reflux.Component {
                 <i className={s.searchInProgress ? 'remove link icon' : 'search link icon'} style={{cursor: 'default', padding: '0px'}} onClick={s.searchInProgress ? ()=>this.handleClearSearch() : ()=>this.handleSearch()}/>
               </div>
             </div> : null}
+            <BaseDropdownMenu
+            onSaveBase={this.handleSaveBase}
+            onRestoreBase={this.handleRestoreBase}
+            baseOpen={s.baseOpen}
+            baseIcon={baseIcon}
+            storedBases={this.state.storedBases}
+            />
             {s.profile ?
             <SaveEditorDropdownMenu
+            onSaveBase={this.handleSaveBase}
+            onRestoreBase={this.handleRestoreBase}
             profile={s.profile}
             editorOpen={s.editorOpen}
             onCheat={this.handleCheat}
@@ -1751,7 +2010,7 @@ class App extends Reflux.Component {
             onRestart={this.handleRestart}
             onSync={this.handleSync}
             onSetWallpaper={this.handleSetWallpaper}
-            onModeSwitch={(mode)=>this.pollSaveData(mode)}  />
+            onUsernameOverride={()=>state.set({usernameOverride: true})} />
           </div>
           <div
           style={{WebkitAppRegion: 'no-drag', paddingRight: '0px'}}
@@ -1786,6 +2045,7 @@ class App extends Reflux.Component {
           </div>
         </div>
         {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} /> : null}
+        {this.state.usernameOverride ? <UsernameOverrideModal onSave={this.handleUsernameOverride}/> : null}
         {s.init ?
         <Loader />
         :
@@ -1793,7 +2053,8 @@ class App extends Reflux.Component {
         s={s}
         onTeleport={(location, i)=>this.handleTeleport(location, i)}
         onPagination={(page)=>this.fetchRemoteLocations(++page)}
-        onRemoveStoredLocation={this.handleRemoveStoredLocation} />}
+        onRemoveStoredLocation={this.handleRemoveStoredLocation}
+        onSaveBase={this.handleSaveBase} />}
         <ReactTooltip
         effect="solid"
         place="bottom"
