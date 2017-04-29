@@ -23,7 +23,7 @@ var state = Reflux.createStore({
     this.galaxies = galaxies;
     this.state = {
       // Core
-      version: '0.7.1',
+      version: '0.8.0',
       winVersion: os.release(),
       machineId: null,
       protected: false,
@@ -71,6 +71,7 @@ var state = Reflux.createStore({
       wallpaper: null,
       filterOthers: false,
       usernameOverride: false,
+      sortStoredByTime: false,
       show: {
         Shared: true,
         Explored: true,
@@ -128,6 +129,10 @@ var state = Reflux.createStore({
     let filterOthers = utils.store.get('filterOthers');
     if (filterOthers) {
       this.state.filterOthers = filterOthers;
+    }
+    let sortStoredByTime = utils.store.get('sortStoredByTime');
+    if (sortStoredByTime) {
+      this.state.sortStoredByTime = sortStoredByTime;
     }
     let mode = utils.store.get('mode');
     if (mode) {
@@ -199,8 +204,7 @@ var state = Reflux.createStore({
       && obj.remoteLocations.results.length > 0
       && this.state.search.length === 0
       && this.state.remoteLocations.results
-      && this.state.remoteLocations.results.length > 0
-      && this.state.sort === '-created') {
+      && this.state.remoteLocations.results.length > 0) {
       if (this.state.remoteLocations) {
         each(obj.remoteLocations.results, (location, i)=>{
           let refNewLocation = _.findIndex(this.state.remoteLocations.results, {id: location.id});
@@ -263,7 +267,11 @@ var state = Reflux.createStore({
     }
 
     if (obj.hasOwnProperty('filterOthers')) {
-      utils.store.set('filterOthers', obj.mapZoom);
+      utils.store.set('filterOthers', obj.filterOthers);
+    }
+
+    if (obj.hasOwnProperty('sortStoredByTime')) {
+      utils.store.set('sortStoredByTime', obj.sortStoredByTime);
     }
 
     if (obj.hasOwnProperty('installDirectory')) {

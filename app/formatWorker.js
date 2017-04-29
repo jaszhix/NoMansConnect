@@ -2,11 +2,13 @@ const _ = require('lodash');
 const each = require('./each');
 
 onmessage = function(e) {
-  let order = e.data.sort === '-created' ? 'created' : e.data.sort === '-score' ? 'score' : 'teleports';;
-  if (e.data.state.search.length === 0 && e.data.page > 1 && e.data.sort === e.data.state.sort || e.data.partial && !e.data.sync) {
+  let order = e.data.sort === '-created' ? 'created' : e.data.sort === '-score' ? 'score' : 'teleports';
+  if (e.data.state.search.length === 0 && e.data.sort === e.data.state.sort || e.data.sort === '-created' || e.data.partial) {
+    console.log(e.data.sort, e.data.partial)
     e.data.res.data.results = _.chain(e.data.state.remoteLocations.results)
-      .concat(e.data.res.data.results)
-      .uniqBy('id')
+      .unionWith(e.data.res.data.results, (a, b)=>{
+        return a.id === b.id;
+      })
       .orderBy(order, 'desc')
       .value();
   }
@@ -44,15 +46,25 @@ onmessage = function(e) {
     init: false
   };
 
+  if (e.data.sort === '-created') {
+    if (e.data.state.remoteLocations.next) {
+      stateUpdate.remoteLocations.next = e.data.state.remoteLocations.next;
+    }
+
+    if (e.data.state.remoteLocations.next) {
+      stateUpdate.remoteLocations.next = e.data.state.remoteLocations.next;
+    }
+  }
+
   // Preserve pagination data from being overwritten on partials
   if (e.data.partial) {
-    e.data.res.data.count = e.data.state.remoteLocations.count;
-    e.data.res.data.next = e.data.state.remoteLocations.next;
-    stateUpdate.remoteLocations.results = _.chain(e.data.state.remoteLocations.results)
+    /*e.data.res.data.count = e.data.state.remoteLocations.count;
+    e.data.res.data.next = e.data.state.remoteLocations.next;*/
+    /*stateUpdate.remoteLocations.results = _.chain(e.data.state.remoteLocations.results)
       .concat(stateUpdate.remoteLocations.results)
       .uniqBy('id')
       .orderBy(order, 'desc')
-      .value();
+      .value();*/
   }
 
   stateUpdate.page = e.data.init ? 1 : e.data.page;

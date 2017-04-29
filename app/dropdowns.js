@@ -262,7 +262,7 @@ export class DropdownMenu extends React.Component {
       className={`ui dropdown icon item${p.s.settingsOpen ? ' visible' : ''}`}
       onClick={()=>state.set({settingsOpen: !p.s.settingsOpen})}>
         <i className="wrench icon" />
-        {p.s.username.length > 0 ? <span style={{paddingLeft: '8px'}}>{p.s.username}</span> : null}
+        {p.s.username.length > 0 ? <span style={{paddingLeft: '12px'}}>{p.s.username}</span> : null}
         <div
         style={menuContainerStyle}
         className={`menu transition ${p.s.settingsOpen ? 'visible' : 'hidden'}`}>

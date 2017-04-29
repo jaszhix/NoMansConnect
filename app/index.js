@@ -1,5 +1,5 @@
 import './app.global.css';
-import {remote} from 'electron';
+import {remote, clipboard} from 'electron';
 const win = remote.getCurrentWindow();
 import fs from 'fs';
 import path from 'path';
@@ -99,12 +99,13 @@ class ImageModal extends React.Component {
       background: 'rgb(23, 26, 22)',
       borderTop: '2px solid #95220E',
       position: 'fixed',
-      left: '50%',
-      top: '12%',
+      left: '13%',
+      top: '6%',
       zIndex: '1001',
       WebkitTransformOrigin: '50% 25%',
       boxShadow: 'none',
       border: '1px solid #DA2600',
+      maxWidth: '75%'
     };
   }
   handleClickOutside(){
@@ -382,6 +383,11 @@ class LocationBox extends React.Component {
         onClick: ()=>p.onRemoveStoredLocation()
       });
     }
+    leftOptions.push({
+      id: 'copyAddress',
+      label: 'Copy Address to Clipboard',
+      onClick: ()=>clipboard.writeText(p.location.translatedId)
+    });
 
     return (
         <div
@@ -576,6 +582,11 @@ class RemoteLocations extends React.Component {
       || nextProps.s.width !== this.props.s.width
       || this.state.init)
   }
+  componentWillReceiveProps(nextProps){
+    if (nextProps.s.sort !== this.props.s.sort && this.refs.recentExplorations) {
+      this.refs.recentExplorations.scrollTop = 0;
+    }
+  }
   componentWillUnmount(){
     if (this.refs.recentExplorations) {
       this.refs.recentExplorations.removeEventListener('scroll', this.scrollListener);
@@ -585,9 +596,9 @@ class RemoteLocations extends React.Component {
     if (!this.props.s.remoteLocations.next) {
       return;
     }
+
     let node = this.refs.recentExplorations;
-    if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 180
-      && this.props.s.remoteLocations.next) {
+    if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 180) {
       this.throttledPagination(this.props.s.page);
     }
   }
@@ -743,8 +754,13 @@ class StoredLocations extends React.Component {
     let leftOptions = [
       {
         id: 'hideOthers',
-        label: this.props.filterOthers ? 'Show all locations' : 'Hide others\' locations',
+        label: this.props.filterOthers ? 'Show All Locations' : 'Hide Others\' Locations',
         onClick: ()=>state.set({filterOthers: !this.props.filterOthers})
+      },
+      {
+        id: 'sortTime',
+        label: this.props.sortStoredByTime ? 'Sort by Favorites' : 'Sort Chronologically',
+        onClick: ()=>state.set({sortStoredByTime: !this.props.sortStoredByTime})
       }
     ];
     return (
@@ -993,7 +1009,9 @@ class Container extends React.Component {
         return location.username === p.s.username;
       });
     }
-    console.log(storedLocations)
+    if (p.s.sortStoredByTime) {
+      storedLocations = _.orderBy(storedLocations, 'timeStamp', 'desc');
+    }
     let isSelectedLocationRemovable = false;
     if (p.s.selectedLocation) {
       let refLocation = _.findIndex(p.s.storedLocations, {id: p.s.selectedLocation.id});
@@ -1011,6 +1029,7 @@ class Container extends React.Component {
             height={p.s.height}
             mapZoom={p.s.mapZoom}
             filterOthers={p.s.filterOthers}
+            sortStoredByTime={p.s.sortStoredByTime}
             username={p.s.username}/>
             <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
               <GalacticMap
@@ -1214,7 +1233,7 @@ class App extends Reflux.Component {
         });
       } else if (e.data.func === 'pollRemoteLocations') {
         if (e.data.data.results.length > 0 && this.state.search.length === 0) {
-          this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, true, false, ()=>{
+          this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, false, false, ()=>{
             this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
           });
         } else {
@@ -1622,9 +1641,7 @@ class App extends Reflux.Component {
                 && refBase.UniverseAddress.RealityIndex === storedLocation.galaxy);
               this.state.storedLocations[i].base = hasBase;
               if (hasBase) {
-                console.log('>>>>>>>>>>>>>>>>>>>>>>')
                 this.state.storedLocations[i].baseData = utils.formatBase(saveData, state.knownProducts);
-                console.log(this.state.storedLocations[i].baseData)
               }
             }
           });
@@ -1743,6 +1760,15 @@ class App extends Reflux.Component {
     });
   }
   handleUsernameOverride(username){
+    if (username.length === 0) {
+      dialog.showMessageBox({
+        type: 'info',
+        buttons: [],
+        title: 'Username Override',
+        message: 'Username field cannot be blank.'
+      });
+      return;
+    }
     utils.ajax.post('/nmsoverride/', {
       username: this.state.username,
       override: username,
@@ -1840,14 +1866,19 @@ class App extends Reflux.Component {
     });
   }
   handleSearch(){
-    state.set({remoteLocationsCache: this.state.remoteLocations}, ()=>{
+    state.set({
+      remoteLocationsCache: this.state.remoteLocations,
+      sort: 'search'
+    }, ()=>{
       this.fetchRemoteLocations(1);
     });
   }
   handleClearSearch(){
     state.set({
       search: '',
-      searchInProgress: false
+      searchInProgress: false,
+      sort: '-created',
+      remoteLocations: this.stateremoteLocationsCache
     }, ()=>{
       window.jsonWorker.postMessage({
         method: 'get',
@@ -2044,7 +2075,7 @@ class App extends Reflux.Component {
             </div>
           </div>
         </div>
-        {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} /> : null}
+        {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} width={this.state.width} /> : null}
         {this.state.usernameOverride ? <UsernameOverrideModal onSave={this.handleUsernameOverride}/> : null}
         {s.init ?
         <Loader />

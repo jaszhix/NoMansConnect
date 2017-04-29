@@ -1,4 +1,4 @@
-# 0.7.2
+# 0.8.0
 
   * Added a new base backup and restore feature!
     * This allows you to save your current base to the app's storage, and restore it and all of its building objects at another location, or in another game mode save.
@@ -6,6 +6,10 @@
     * Only building objects from the vanilla game will be saved. This prevents the game from crashing for other players.
     * This feature was made possible thanks to monkeyman192, who wrote the algorithm that makes base object position matrices compatible in new locations.
   * Added username overriding.
+  * Added a Copy Address to Clipboard option.
+  * Added ability to sort stored locations chronologically.
+  * Added galaxies 135-257 ct. NMS Wiki.
+  * Fixed the scaling of enlarged screenshots.
   * Fixed a bug causing the window to become invisible if DWM is disabled.
   * Fixed a time stamp bug with locations.
   * Fixed a bug that can cause the install directory to not be set by the user's preference.
