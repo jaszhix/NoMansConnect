@@ -421,7 +421,7 @@ class LocationBox extends React.Component {
               cursor: p.selectType ? 'default' : 'pointer'
             }}
             onClick={()=>state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
-              {p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : p.location.base && p.location.baseData ? p.location.baseData.Name : `${p.location.username} explored` : 'Selected'}
+              {p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected'}
             </h3>
           </VisibilitySensor>
 
