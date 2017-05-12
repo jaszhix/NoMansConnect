@@ -1,6 +1,6 @@
 import {remote} from 'electron';
 import os from 'os';
-import fs from 'fs';
+import fs from 'graceful-fs';
 import Reflux from 'reflux';
 import _ from 'lodash';
 import each from './each';

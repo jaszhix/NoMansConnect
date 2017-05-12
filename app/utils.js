@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'graceful-fs';
 import path from 'path';
 import {StringDecoder} from 'string_decoder';
 const decoder = new StringDecoder('utf8');

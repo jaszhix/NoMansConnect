@@ -27,6 +27,9 @@ onmessage = function(e) {
         });
       }
     });
+    if (!e.data.p.remoteLocations) {
+      return;
+    }
     each(e.data.p.remoteLocations.results, (location)=>{
       if (location.data.galaxy !== e.data.p.selectedGalaxy) {
         return;

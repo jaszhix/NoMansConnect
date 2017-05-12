@@ -259,7 +259,7 @@ class GalacticMap extends React.Component {
       || nextProps.storedLocations !== this.props.storedLocations
       || nextProps.width !== this.props.width
       || nextProps.height !== this.props.height
-      || nextProps.remoteLocations.results !== this.props.remoteLocations.results
+      || (nextProps.remoteLocations && this.props.remoteLocations && nextProps.remoteLocations.results !== this.props.remoteLocations.results)
       || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)
       || nextProps.currentLocation !== this.props.currentLocation
       || nextState.init !== this.state.init)

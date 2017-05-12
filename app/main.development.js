@@ -1,7 +1,7 @@
 // @flow
 import { app, BrowserWindow, Menu, globalShortcut, systemPreferences } from 'electron';
 import windowStateKeeper from 'electron-window-state';
-import fs from 'fs';
+import fs from 'graceful-fs';
 import os from 'os';
 let mainWindow = null;
 

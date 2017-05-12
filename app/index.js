@@ -1,27 +1,29 @@
 import './app.global.css';
 import {remote, clipboard} from 'electron';
 const win = remote.getCurrentWindow();
-import fs from 'fs';
+import fs from 'graceful-fs';
 import path from 'path';
+import each from './each';
 import Log from './log';
 const log = new Log();
-/*(function(){
-  var oldLog = console.log;
-  console.log = function (message) {
-    log.error(message)
-    oldLog.apply(console, arguments);
-  };
+(function(){
   var oldWarn = console.warn;
   console.warn = function (message) {
-    log.error(message)
+    let args = arguments;
+    each(args, (arg, i)=>{
+      log.error(arg)
+    });
     oldWarn.apply(console, arguments);
   };
   var oldError = console.error;
   console.error = function (message) {
-    log.error(message)
+    let args = arguments;
+    each(args, (arg, i)=>{
+      log.error(arg)
+    });
     oldError.apply(console, arguments);
   };
-})();*/
+})();
 import watch from 'watch';
 const ps = require('win-ps');
 import {machineId} from 'electron-machine-id';
@@ -31,7 +33,7 @@ import ReactDOM from 'react-dom';
 import autoBind from 'react-autobind';
 import reactMixin from 'react-mixin';
 import Reflux from 'reflux';
-import VisibilitySensor from 'react-visibility-sensor';
+import VisibilitySensor from './visibilitySensor';
 import ReactUtils from 'react-utils';
 import ReactMarkdown from 'react-markdown';
 import ReactTooltip from 'react-tooltip';
@@ -44,7 +46,6 @@ import math from 'mathjs';
 
 import Loader from './loader';
 const screenshot = require('./capture');
-import each from './each';
 import * as utils from './utils';
 window.utils = utils
 
@@ -58,6 +59,16 @@ import GalacticMap from './map';
 if (module.hot) {
   module.hot.accept();
 }
+
+$.fn.scrollEnd = function(callback, timeout) {
+  $(this).scroll(function(){
+    var $this = $(this);
+    if ($this.data('scrollTimeout')) {
+      clearTimeout($this.data('scrollTimeout'));
+    }
+    $this.data('scrollTimeout', setTimeout(callback,timeout));
+  });
+};
 
 const {dialog} = remote;
 
@@ -413,8 +424,11 @@ class LocationBox extends React.Component {
         }}>
           <VisibilitySensor
           active={p.enableVisibilityCheck}
+          intervalCheck={false}
+          intervalDelay={6000}
           partialVisibility={true}
-          onChange={this.onVisibilityChange}>
+          onChange={this.onVisibilityChange}
+          checkVisibility={p.checkVisibility}>
             <h3 style={{
               textAlign: 'center',
               maxHeight: '23px',
@@ -549,7 +563,8 @@ class RemoteLocations extends React.Component {
   constructor(props){
     super(props);
     this.state = {
-      init: true
+      init: true,
+      checkVisibility: true
     };
     autoBind(this);
   }
@@ -564,8 +579,8 @@ class RemoteLocations extends React.Component {
     };
     let checkRemote = ()=>{
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
-        this.refs.recentExplorations.addEventListener('scroll', this.scrollListener);
-        this.setState({init: false});
+        $(this.refs.recentExplorations).scrollEnd(this.scrollListener, 100);
+        this.setState({init: false, visibilityCheck: false});
       } else {
         _.delay(()=>checkRemote(), 500);
       }
@@ -573,13 +588,14 @@ class RemoteLocations extends React.Component {
     checkRemote();
     this.throttledPagination = _.throttle(this.props.onPagination, 1000, {leading: true});
   }
-  shouldComponentUpdate(nextProps) {
+  shouldComponentUpdate(nextProps, nextState) {
     return (nextProps.s.remoteLocations.results !== this.props.s.remoteLocations.results
       || nextProps.s.favorites !== this.props.s.favorites
       || nextProps.updating !== this.props.updating
       || nextProps.s.installing !== this.props.s.installing
       || nextProps.s.mapZoom !== this.props.s.mapZoom
       || nextProps.s.width !== this.props.s.width
+      || nextState.checkVisibility !== this.state.checkVisibility
       || this.state.init)
   }
   componentWillReceiveProps(nextProps){
@@ -592,7 +608,15 @@ class RemoteLocations extends React.Component {
       this.refs.recentExplorations.removeEventListener('scroll', this.scrollListener);
     }
   }
+  toggleCheckVisibilityState(){
+    _.delay(()=>{
+      this.setState({checkVisibility: true}, ()=>{
+        this.setState({checkVisibility: false});
+      });
+    });
+  }
   scrollListener(){
+    this.toggleCheckVisibilityState();
     if (!this.props.s.remoteLocations.next) {
       return;
     }
@@ -659,6 +683,7 @@ class RemoteLocations extends React.Component {
                   onFav={this.handleFavorite}
                   onTeleport={p.onTeleport}
                   onSaveBase={p.onSaveBase}
+                  checkVisibility={this.state.checkVisibility}
                   />
                 );
               })}
@@ -806,6 +831,7 @@ class Container extends React.Component {
       edit: false,
       mapRender: '<div />'
     };
+    this.remotePollingFailures = 0;
     autoBind(this);
   }
   componentWillReceiveProps(nextProps) {
@@ -1201,6 +1227,12 @@ class App extends Reflux.Component {
         if (e.data.func === 'handleSync') {
           this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true);
         } else if (e.data.func === 'pollRemoteLocations') {
+          if (this.remotePollingFailures >= 5) {
+            log.error('Restarting the client after 5 consecutive polling failures.');
+            this.handleRestart();
+            return;
+          }
+          ++this.remotePollingFailures;
           this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
         }
         return;
@@ -1233,6 +1265,8 @@ class App extends Reflux.Component {
         });
       } else if (e.data.func === 'pollRemoteLocations') {
         if (e.data.data.results.length > 0 && this.state.search.length === 0) {
+          // Reset the remote polling failure count on success
+          this.remotePollingFailures = 0;
           this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, false, false, ()=>{
             this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
           });
@@ -1342,6 +1376,7 @@ class App extends Reflux.Component {
   fetchRemoteLocations(page=this.state.page, sort=this.state.sort, init=false, sync=false){
     let q = this.state.search.length > 0 ? this.state.search : null;
     let path = q ? '/nmslocationsearch' : '/nmslocation';
+    sort = sort === 'search' ? '-created' : sort;
     window.ajaxWorker.postMessage({
       method: 'get',
       func: 'fetchRemoteLocations',
@@ -1426,22 +1461,19 @@ class App extends Reflux.Component {
 
       // again, we construct a matrix from the column vectors:
       let Q = math.matrix([[fwdNew[0], upNew[0], perpNew[0]],
-               [fwdNew[1], upNew[1], perpNew[1]],
-               [fwdNew[2], upNew[2], perpNew[2]]]);
+              [fwdNew[1], upNew[1], perpNew[1]],
+              [fwdNew[2], upNew[2], perpNew[2]]]);
 
       // our final transform matrix is now equal to:
       let M = math.multiply(Q, math.inv(P))
 
       each(storedBase.Objects, (object, i)=>{
-        console.log(math.multiply(M, object.At))
         storedBase.Objects[i].At = math.multiply(M, object.At)._data
         storedBase.Objects[i].Up = upNew;
         storedBase.Objects[i].Position = math.multiply(M, object.Position)._data;
       });
 
       saveData.result.PlayerStateData.PersistentPlayerBases[0].Objects = storedBase.Objects;
-
-      console.log(saveData.result.PlayerStateData.PersistentPlayerBases[0])
 
       fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data)=>{
         if (err) {
