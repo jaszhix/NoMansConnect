@@ -1,4 +1,4 @@
-const fs = require('graceful-fs');
+const fs = require('fs');
 
 class Json {
   constructor(path, cb){
