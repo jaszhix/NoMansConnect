@@ -14,8 +14,9 @@
     * Descriptions
     * Distance to center
     * Least modded
-  * Improved location loading
-  * Added an option to change how often the app checks for new locations
+    * Bases
+  * Improved location loading.
+  * Added an option to change how often the app checks for new locations.
   * Fixed the location name and description fields not showing their current values when updating them.
 
 # 0.8.0
