@@ -35,7 +35,7 @@ class Json {
   }
   get(key){
     try {
-      return this.data[key];
+      return this.data;
     } catch (e) {
       return null;
     }

@@ -178,7 +178,7 @@ module.exports = createReactClass({
     } else {
       this.stopWatching();
     }
-    
+
     if (nextProps.checkVisibility !== this.props.checkVisibility && nextProps.checkVisibility) {
       this.check();
     }

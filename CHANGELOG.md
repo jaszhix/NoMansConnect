@@ -1,3 +1,23 @@
+# 0.9.0
+
+  * Improved CPU and RAM usage.
+  * Fixed storing of other people's bases (for importation into your own game) not working.
+  * Fixed cached remote location metadata not updating when they're edited.
+  * Fixed the search functionality breaking on large remote location lists.
+  * Reorganized the layout to optimize the best use of available space.
+  * Added an option to toggle between 1-2 columns for remote locations.
+  * Added an option to show locations' galactic addresses in the stored location list.
+  * Added several new sorting options for locations. You can now drill down locations by:
+    * Galaxy
+    * Screenshots
+    * Names
+    * Descriptions
+    * Distance to center
+    * Least modded
+  * Improved location loading
+  * Added an option to change how often the app checks for new locations
+  * Fixed the location name and description fields not showing their current values when updating them.
+
 # 0.8.0
 
   * Added a new base backup and restore feature!

@@ -75,7 +75,7 @@ var Loader = React.createClass({
           <div className="circle"></div>
         </div>
       </div>
-    ); 
+    );
   }
 });
 

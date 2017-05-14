@@ -8,7 +8,10 @@
   "env": {
     "production": {
       "presets": ["react-optimize"],
-      "plugins": ["babel-plugin-dev-expression"]
+      "plugins": [
+        "babel-plugin-dev-expression",
+        "babel-plugin-transform-remove-console"
+      ]
     },
     "development": {
       "plugins": [

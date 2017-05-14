@@ -23,7 +23,8 @@ var state = Reflux.createStore({
     this.galaxies = galaxies;
     this.state = {
       // Core
-      version: '0.8.0',
+      version: '0.9.0',
+      apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
       protected: false,
@@ -52,7 +53,7 @@ var state = Reflux.createStore({
       autoCapture: false,
       selectedGalaxy: 0,
       galaxyOptions: [],
-      remoteLocationsCache: null,
+      pollRate: 60000,
       // UI
       settingsOpen: false,
       editorOpen: false,
@@ -61,16 +62,23 @@ var state = Reflux.createStore({
       sort: '-created',
       search: '',
       searchInProgress: false,
+      searchCache: {
+        results: [],
+        count: 0,
+        next: null,
+        prev: null
+      },
       page: 1,
       pageSize: 60,
       paginationEnabled: true,
       loading: false,
       maximized: false,
       mapLines: false,
-      mapZoom: false,
       wallpaper: null,
       filterOthers: false,
+      useGAFormat: false,
       usernameOverride: false,
+      remoteLocationsColumns: 1,
       sortStoredByTime: false,
       show: {
         Shared: true,
@@ -118,10 +126,6 @@ var state = Reflux.createStore({
     if (mapLines) {
       this.state.mapLines = mapLines;
     }
-    let mapZoom = utils.store.get('mapZoom');
-    if (mapZoom) {
-      this.state.mapZoom = mapZoom;
-    }
     let show = utils.store.get('show');
     if (show) {
       this.state.show = show;
@@ -130,9 +134,21 @@ var state = Reflux.createStore({
     if (filterOthers) {
       this.state.filterOthers = filterOthers;
     }
+    let useGAFormat = utils.store.get('useGAFormat');
+    if (useGAFormat) {
+      this.state.useGAFormat = useGAFormat;
+    }
+    let remoteLocationsColumns = utils.store.get('remoteLocationsColumns');
+    if (remoteLocationsColumns) {
+      this.state.remoteLocationsColumns = remoteLocationsColumns;
+    }
     let sortStoredByTime = utils.store.get('sortStoredByTime');
     if (sortStoredByTime) {
       this.state.sortStoredByTime = sortStoredByTime;
+    }
+    let pollRate = utils.store.get('pollRate');
+    if (pollRate) {
+      this.state.pollRate = pollRate;
     }
     let mode = utils.store.get('mode');
     if (mode) {
@@ -178,22 +194,30 @@ var state = Reflux.createStore({
   },
   handleJsonWorker(){
     window.jsonWorker.onmessage = (e)=>{
-      console.log('JSON WORKER: ', e.data)
-      if (e.data.hasOwnProperty('remoteLocations')) {
-        this.state.remoteLocations = e.data.remoteLocations;
+      this.state.remoteLocations = JSON.parse(e.data).remoteLocations;
+
+      if (!this.state.remoteLocations || this.state.remoteLocations && this.state.remoteLocations.results === undefined) {
+        this.state.remoteLocations = {
+          results: [],
+          count: 0,
+          next: null,
+          prev: null
+        };
       } else {
-        this.state.remoteLocations = e.data;
-      }
-      if (this.state.remoteLocations.results === undefined) {
-        this.state.remoteLocations.results = [];
-        this.state.page = 1;
-      } else {
-        this.state.page = _.round(this.state.remoteLocations.results.length / this.state.pageSize);
+        this.state.page = Math.floor(this.state.remoteLocations.results.length / this.state.pageSize) + 1;
       }
       this.trigger(this.state);
     }
   },
   set(obj, cb=null, sync=false){
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        throw new Error('STATE STACK')
+      } catch (e) {
+        let stackParts = e.stack.split('\n');
+        console.log('STATE CALLEE: ', stackParts[2].trim());
+      }
+    }
     obj = _.clone(obj);
     console.log('STATE INPUT: ', obj);
     if (obj.selectedLocation) {
@@ -203,27 +227,16 @@ var state = Reflux.createStore({
     if (obj.remoteLocations
       && obj.remoteLocations.results.length > 0
       && this.state.search.length === 0
+      && this.state.remoteLocations
       && this.state.remoteLocations.results
       && this.state.remoteLocations.results.length > 0) {
-      if (this.state.remoteLocations) {
-        each(obj.remoteLocations.results, (location, i)=>{
-          let refNewLocation = _.findIndex(this.state.remoteLocations.results, {id: location.id});
-          if (refNewLocation !== -1) {
-            this.state.remoteLocations.results[refNewLocation] = obj.remoteLocations.results[i];
-          } else {
-            this.state.remoteLocations.results.push(location);
-          }
-        });
-      } else {
-        this.state.remoteLocations = obj.remoteLocations;
-      }
       window.jsonWorker.postMessage({
         method: 'set',
         key: 'remoteLocations',
-        value: this.state.remoteLocations,
+        value: JSON.stringify(obj.remoteLocations),
       });
     }
-    if (obj.remoteLocations) {
+    if (obj.remoteLocations && obj.remoteLocations.results) {
       this.state.remoteLength = obj.remoteLocations.results.length;
     }
 
@@ -258,10 +271,6 @@ var state = Reflux.createStore({
       utils.store.set('mapLines', obj.mapLines);
     }
 
-    if (obj.hasOwnProperty('mapZoom')) {
-      utils.store.set('mapZoom', obj.mapZoom);
-    }
-
     if (obj.hasOwnProperty('show')) {
       utils.store.set('show', obj.show);
     }
@@ -270,8 +279,20 @@ var state = Reflux.createStore({
       utils.store.set('filterOthers', obj.filterOthers);
     }
 
+    if (obj.hasOwnProperty('useGAFormat')) {
+      utils.store.set('useGAFormat', obj.useGAFormat);
+    }
+
+    if (obj.hasOwnProperty('remoteLocationsColumns')) {
+      utils.store.set('remoteLocationsColumns', obj.remoteLocationsColumns);
+    }
+
     if (obj.hasOwnProperty('sortStoredByTime')) {
       utils.store.set('sortStoredByTime', obj.sortStoredByTime);
+    }
+
+    if (obj.hasOwnProperty('pollRate')) {
+      utils.store.set('pollRate', obj.pollRate);
     }
 
     if (obj.hasOwnProperty('installDirectory')) {

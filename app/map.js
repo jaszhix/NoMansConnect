@@ -6,7 +6,6 @@ import _ from 'lodash';
 import $ from 'jquery';
 import each from './each';
 import {BasicDropdown} from './dropdowns';
-import Loader from './loader';
 
 class TooltipChild extends React.Component {
   constructor(props) {
@@ -60,8 +59,8 @@ class ThreeDimScatterChart extends React.Component {
         z: 127
       }],
       size: 480,
-      zRange: this.props.mapZoom ? [14, 64] : [22, 64],
-      ticks: this.props.mapZoom ? [0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096] : [0, 512, 1024, 1536, 2048, 2560, 3072, 3584, 4096],
+      zRange: [14, 64],
+      ticks: [0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096],
       range: [0, 4096]
     };
     this.legendStyle = {
@@ -85,9 +84,9 @@ class ThreeDimScatterChart extends React.Component {
     this.handlePostMessageSelect(this.props);
   }
   componentWillReceiveProps(nextProps){
-    if (nextProps.mapZoom !== this.props.mapZoom
-      || nextProps.width !== this.props.width
-      || nextProps.height !== this.props.height) {
+    if (nextProps.width !== this.props.width
+      || nextProps.height !== this.props.height
+      || nextProps.remoteLocationsColumns !== this.props.remoteLocationsColumns) {
       this.handlePostMessageSize(nextProps);
     } else if (nextProps.selectedGalaxy !== this.props.selectedGalaxy
       || nextProps.storedLocations !== this.props.storedLocations
@@ -97,11 +96,13 @@ class ThreeDimScatterChart extends React.Component {
       this.handlePostMessageSelect(nextProps);
     }
   }
+  shouldComponentUpdate(nextProps, nextState){
+    return !_.isEqual(this.state, nextState) || !_.isEqual(this.props, nextProps)
+  }
   handlePostMessage(p){
-    window.mapWorker.postMessage({
+    window.mapWorker.postMessage(JSON.stringify({
       selectOnly: false,
       p: {
-        mapZoom: p.mapZoom,
         storedLocations: p.storedLocations,
         remoteLocations: p.remoteLocations,
         selectedLocation: p.selectedLocation,
@@ -116,24 +117,24 @@ class ThreeDimScatterChart extends React.Component {
         locations: true,
         selectedLocation: true
       }
-    });
+    }));
   }
   handlePostMessageSize(p){
-    window.mapWorker.postMessage({
+    window.mapWorker.postMessage(JSON.stringify({
       selectOnly: false,
       p: {
-        mapZoom: p.mapZoom,
         width: p.width,
         height: p.height,
+        remoteLocationsColumns: p.remoteLocationsColumns,
         show: p.show
       },
       opts: {
         size: true
       }
-    });
+    }));
   }
   handlePostMessageSelect(p){
-    window.mapWorker.postMessage({
+    window.mapWorker.postMessage(JSON.stringify({
       p: {
         selectedLocation: p.selectedLocation,
         selectedGalaxy: p.selectedGalaxy,
@@ -144,12 +145,11 @@ class ThreeDimScatterChart extends React.Component {
       opts: {
         selectedLocation: true
       }
-    });
+    }));
   }
   handleMapWorker(){
     window.mapWorker.onmessage = (e)=>{
-      console.log('MAP WORKER: ', e.data)
-      this.setState(e.data, ()=>{
+      this.setState(JSON.parse(e.data), ()=>{
         if (this.props.init) {
           _.defer(()=>{
             $('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
@@ -252,13 +252,13 @@ class GalacticMap extends React.Component {
     }
   }
   shouldComponentUpdate(nextProps, nextState){
-    return (nextProps.mapZoom !== this.props.mapZoom
-      || nextProps.mapLines !== this.props.mapLines
+    return (nextProps.mapLines !== this.props.mapLines
       || nextProps.galaxyOptions !== this.props.galaxyOptions
       || nextProps.selectedGalaxy !== this.props.selectedGalaxy
       || nextProps.storedLocations !== this.props.storedLocations
       || nextProps.width !== this.props.width
       || nextProps.height !== this.props.height
+      || nextProps.remoteLocationsColumns !== this.props.remoteLocationsColumns
       || (nextProps.remoteLocations && this.props.remoteLocations && nextProps.remoteLocations.results !== this.props.remoteLocations.results)
       || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)
       || nextProps.currentLocation !== this.props.currentLocation
@@ -305,24 +305,19 @@ class GalacticMap extends React.Component {
         label: `Show Path: ${p.mapLines ? 'On' : 'Off'}`,
         onClick: ()=>state.set({mapLines: !p.mapLines})
       },
-      {
-        id: 'mapZoom',
-        label: `Enlarge Map: ${p.mapZoom ? 'On' : 'Off'}`,
-        onClick: ()=>state.set({mapZoom: !p.mapZoom})
-      }
     ];
 
     return (
       <div className="ui segment" style={{
-        background: p.mapZoom && (p.width > 1804 && p.selectedLocation || p.width > 1698 && !p.selectedLocation) ? `rgba(23, 26, 22, 0.9)` : 'rgb(23, 26, 0.95)',
+        background: 'rgba(23, 26, 22, 0.9)',
         display: 'inline-table',
         borderTop: '2px solid #95220E',
         textAlign: 'center',
-        position: p.mapZoom ? 'absolute' : 'inherit',
-        top: p.mapZoom ? '-11px' : 'inherit',
-        left: p.mapZoom ? p.selectedLocation ? '123px' : '15px' : 'inherit',
+        position: 'absolute',
+        top: '-11px',
+        left: '15px',
         WebkitTransition: 'left 0.1s, background 0.1s',
-        zIndex: p.mapZoom ? '90' : 'inherit',
+        zIndex: '90',
         WebkitUserSelect: 'none',
         minWidth: '360px',
         minHeight: '360px',
@@ -350,13 +345,13 @@ class GalacticMap extends React.Component {
         </div>
         <div style={this.mapWrapper}>
           <ThreeDimScatterChart
-          mapZoom={p.mapZoom}
           mapLines={p.mapLines}
           show={p.show}
           selectedGalaxy={p.selectedGalaxy}
           storedLocations={p.storedLocations}
           width={p.width}
           height={p.height}
+          remoteLocationsColumns={p.remoteLocationsColumns}
           remoteLocations={p.remoteLocations}
           selectedLocation={p.selectedLocation}
           currentLocation={p.currentLocation}

@@ -29,12 +29,14 @@ const ps = require('win-ps');
 import {machineId} from 'electron-machine-id';
 import state from './state';
 import React from 'react';
+/*if (process.env.NODE_ENV !== 'production') {
+  const {whyDidYouUpdate} = require('why-did-you-update')
+  whyDidYouUpdate(React)
+}*/
 import ReactDOM from 'react-dom';
 import autoBind from 'react-autobind';
-import reactMixin from 'react-mixin';
 import Reflux from 'reflux';
 import VisibilitySensor from './visibilitySensor';
-import ReactUtils from 'react-utils';
 import ReactMarkdown from 'react-markdown';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
@@ -224,6 +226,7 @@ class Item extends React.Component {
     }
   }
   componentWillUnmount(){
+    window.removeEventListener('resize', this.onWindowResize);
     if (this.refs.desc) {
       this.refs.desc.removeEventListener('click', this.handleDescClick);
     }
@@ -338,6 +341,9 @@ class LocationBox extends React.Component {
       this.setState({isVisible: true});
     }
   }
+  shouldComponentUpdate(nextProps, nextState){
+    return !_.isEqual(this.state, nextState) || !_.isEqual(this.props, nextProps)
+  }
   render(){
     let p = this.props;
     let refFav = _.findIndex(p.favorites, (fav)=>{
@@ -416,10 +422,10 @@ class LocationBox extends React.Component {
           maxWidth: '386px',
           minHeight: '245px',
           maxHeight: '289px',
-          zIndex: p.mapZoom ? '91' : 'inherit',
-          position: p.mapZoom ? 'fixed' : '',
-          left: p.mapZoom ? '28px' : 'inherit',
-          top: p.mapZoom ? `${p.height - 365}px` : 'inherit',
+          zIndex: p.selectType ? '91' : 'inherit',
+          position: p.selectType ? 'fixed' : '',
+          left: p.selectType ? '28px' : 'inherit',
+          top: p.selectType ? `${p.height - 271}px` : 'inherit',
           WebkitUserSelect: 'none'
         }}>
           <VisibilitySensor
@@ -564,7 +570,14 @@ class RemoteLocations extends React.Component {
     super(props);
     this.state = {
       init: true,
-      checkVisibility: true
+      checkVisibility: true,
+      showOnlyNames: false,
+      showOnlyDesc: false,
+      showOnlyScreenshots: false,
+      showOnlyGalaxy: false,
+      showOnlyBases: false,
+      sortByDistance: false,
+      sortByModded: false
     };
     autoBind(this);
   }
@@ -587,20 +600,47 @@ class RemoteLocations extends React.Component {
     };
     checkRemote();
     this.throttledPagination = _.throttle(this.props.onPagination, 1000, {leading: true});
+    this.throttledToggleCheckVisibilityState = _.throttle(this.toggleCheckVisibilityState, 1000, {leading: true});
   }
   shouldComponentUpdate(nextProps, nextState) {
     return (nextProps.s.remoteLocations.results !== this.props.s.remoteLocations.results
+      || this.props.s.search.length > 0
+      || !_.isEqual(this.props.s.searchCache, this.props.s.searchCache)
       || nextProps.s.favorites !== this.props.s.favorites
       || nextProps.updating !== this.props.updating
       || nextProps.s.installing !== this.props.s.installing
-      || nextProps.s.mapZoom !== this.props.s.mapZoom
       || nextProps.s.width !== this.props.s.width
+      || nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
       || nextState.checkVisibility !== this.state.checkVisibility
+      || nextState.showOnlyScreenshots !== this.state.showOnlyScreenshots
+      || nextState.showOnlyNames !== this.state.showOnlyNames
+      || nextState.showOnlyDesc !== this.state.showOnlyDesc
+      || nextState.showOnlyGalaxy !== this.state.showOnlyGalaxy
+      || nextState.showOnlyBases !== this.state.showOnlyBases
+      || nextProps.s.selectedGalaxy !== this.props.s.selectedGalaxy
+      || nextState.sortByDistance !== this.state.sortByDistance
+      || nextState.sortByModded !== this.state.sortByModded
       || this.state.init)
   }
+  componentDidUpdate(prevProps, prevState){
+    if (prevState.showOnlyScreenshots !== this.state.showOnlyScreenshots
+      || prevState.showOnlyNames !== this.state.showOnlyNames
+      || prevState.showOnlyDesc !== this.state.showOnlyDesc
+      || prevState.showOnlyGalaxy !== this.state.showOnlyGalaxy
+      || prevState.showOnlyBases !== this.state.showOnlyBases
+      || prevState.sortByDistance !== this.state.sortByDistance
+      || prevState.sortByModded !== this.state.sortByModded) {
+      this.throttledToggleCheckVisibilityState();
+    }
+  }
   componentWillReceiveProps(nextProps){
-    if (nextProps.s.sort !== this.props.s.sort && this.refs.recentExplorations) {
+    let searchChanged = !_.isEqual(this.props.s.searchCache, this.props.s.searchCache);
+    if (nextProps.s.sort !== this.props.s.sort && this.refs.recentExplorations || searchChanged) {
       this.refs.recentExplorations.scrollTop = 0;
+    }
+    if (nextProps.s.remoteLocations.results !== this.props.s.remoteLocations.results
+      || searchChanged) {
+      this.throttledToggleCheckVisibilityState();
     }
   }
   componentWillUnmount(){
@@ -613,17 +653,20 @@ class RemoteLocations extends React.Component {
       this.setState({checkVisibility: true}, ()=>{
         this.setState({checkVisibility: false});
       });
-    });
+    }, 50);
   }
   scrollListener(){
-    this.toggleCheckVisibilityState();
-    if (!this.props.s.remoteLocations.next) {
+    this.throttledToggleCheckVisibilityState();
+    if (this.props.s.remoteLength >= this.props.s.remoteLocations.count - this.props.s.pageSize || this.props.s.searchCache.results.length > 0) {
       return;
     }
 
     let node = this.refs.recentExplorations;
     if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 180) {
       this.throttledPagination(this.props.s.page);
+      _.delay(()=>{
+        this.refs.recentExplorations.scrollTop = Math.floor(node.scrollHeight - this.props.s.pageSize * 271);
+      }, 1500);
     }
   }
   handleFavorite(location, upvote){
@@ -631,44 +674,152 @@ class RemoteLocations extends React.Component {
   }
   render(){
     let p = this.props;
-    let remoteLocationsWidth = `${p.s.width <= 1747 ? 441 : p.s.width <= 2164 ? 902 : 1300}px`;
+    let remoteLocationsWidth;
+    if (p.s.remoteLocationsColumns === 1) {
+      remoteLocationsWidth = '441px';
+    } else if (p.s.remoteLocationsColumns === 2) {
+      remoteLocationsWidth = '902px';
+    } else {
+      remoteLocationsWidth = '1300px';
+    }
     let containerStyle = {
       position: 'absolute',
-      right: p.s.mapZoom ? '0px' : '68px',
-      zIndex: p.s.mapZoom && p.s.width >= 1854 ? '91' : 'inherit',
+      right: '54px',
+      zIndex: '91',
       maxWidth: remoteLocationsWidth,
-      opacity: p.s.mapZoom && (p.s.width < 1804 && p.s.selectedLocation || p.s.width < 1694) ? '0.5' : '1',
-      WebkitTransition: '0.1s opacity'
     };
     let uiSegmentsStyle = {
       display: 'inline-flex',
       paddingTop: '14px',
-      width: p.s.mapZoom ? '400px !important' : 'inherit'
+      width: '400px !important'
     };
     let innerContainerStyle = {
       maxHeight: `${p.s.height - 125}px`,
-      width: p.s.mapZoom ? '400px' : remoteLocationsWidth,
+      width: remoteLocationsWidth,
       minWidth: '400px',
-      maxWidth: p.s.mapZoom ? `${Math.abs(p.s.width - 1482)}px !important` : remoteLocationsWidth,
+      maxWidth: remoteLocationsWidth,
       overflowY: 'auto',
       overflowX: 'hidden',
       position: 'relative'
     };
     let enableVisibilityCheck = p.s.remoteLength >= 200;
+    let leftOptions = [
+      {
+        id: 'remoteLocationsColumns',
+        label: `Max Columns: ${p.s.remoteLocationsColumns}`,
+        onClick: ()=>state.set({remoteLocationsColumns: p.s.remoteLocationsColumns === 1 ? 2 : p.s.remoteLocationsColumns === 2 ? 3 : 1})
+      },
+      {
+        id: 'showOnlyGalaxy',
+        label: this.state.showOnlyGalaxy ? 'Show Locations From All Galaxies' : `Show Only Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
+        onClick: ()=>this.setState({showOnlyGalaxy: !this.state.showOnlyGalaxy})
+      },
+      {
+        id: 'showOnlyScreenshots',
+        label: this.state.showOnlyScreenshots ? 'Show Only Locations With Screenshots: On' : 'Show Only Locations With Screenshots: Off',
+        onClick: ()=>this.setState({showOnlyScreenshots: !this.state.showOnlyScreenshots})
+      },
+      {
+        id: 'showOnlyNames',
+        label: this.state.showOnlyNames ? 'Show Only Locations With Names: On' : 'Show Only Locations With Names: Off',
+        onClick: ()=>this.setState({showOnlyNames: !this.state.showOnlyNames})
+      },
+      {
+        id: 'showOnlyDesc',
+        label: this.state.showOnlyDesc ? 'Show Only Locations With Descriptions: On' : 'Show Only Locations With Descriptions: Off',
+        onClick: ()=>this.setState({showOnlyDesc: !this.state.showOnlyDesc})
+      },
+      {
+        id: 'showOnlyBases',
+        label: this.state.showOnlyBases ? 'Show Only Locations With Bases: On' : 'Show Only Locations With Bases: Off',
+        onClick: ()=>this.setState({showOnlyBases: !this.state.showOnlyBases})
+      },
+      {
+        id: 'sortByDistance',
+        label: this.state.sortByDistance ? 'Sort by Distance to Center: On' : 'Sort by Distance to Center: Off',
+        onClick: ()=>this.setState({sortByDistance: !this.state.sortByDistance})
+      },
+      {
+        id: 'sortByModded',
+        label: this.state.sortByModded ? 'Sort by Least Modded: On' : 'Sort by Least Modded: Off',
+        onClick: ()=>this.setState({sortByModded: !this.state.sortByModded})
+      }
+    ];
+    if (p.s.remoteLocations && p.s.remoteLocations.results && p.s.searchCache.results.length === 0 && p.s.remoteLength < p.s.remoteLocations.count - p.s.pageSize) {
+      leftOptions.push({
+        id: 'loadMore',
+        label: `Load ${p.s.pageSize} More Locations`,
+        onClick: ()=>this.throttledPagination(p.s.page)
+      });
+    }
+    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular'} Explorations (${p.s.remoteLength})`
+    let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.s.remoteLocations.results;
+    if (this.state.showOnlyScreenshots) {
+      locations = _.filter(locations, (location)=>{
+        return location.image.length > 0;
+      });
+    }
+    if (this.state.showOnlyNames) {
+      locations = _.filter(locations, (location)=>{
+        return location.data.name.length > 0;
+      });
+    }
+    if (this.state.showOnlyDesc) {
+      locations = _.filter(locations, (location)=>{
+        return location.data.description.length > 0;
+      });
+    }
+    if (this.state.showOnlyGalaxy) {
+      locations = _.filter(locations, (location)=>{
+        return location.data.galaxy === p.s.selectedGalaxy;
+      });
+    }
+    if (this.state.showOnlyBases) {
+      locations = _.filter(locations, (location)=>{
+        return location.data.base;
+      });
+    }
+    if (this.state.sortByDistance || this.state.sortByModded) {
+      locations = _.orderBy(locations, (location)=>{
+        if (!location.data.mods) {
+          location.data.mods = [];
+        }
+        if (this.state.sortByModded && this.state.sortByDistance) {
+          return location.data.mods.length + location.data.distanceToCenter;
+        } else if (this.state.sortByDistance) {
+          return location.data.distanceToCenter;
+        } else if (this.state.sortByModded) {
+          return location.data.mods.length;
+        }
+      });
+    }
+
+    console.log('#######Locations', locations)
     return (
       <div className="columns" style={containerStyle}>
         <div className="ui segments" style={uiSegmentsStyle}>
           <div className="ui segment" style={this.uiSegmentStyle}>
-            <h3>{p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular'} Explorations</h3>
+            <h3>{title}</h3>
+            <div style={{
+              position: 'absolute',
+              left: '17px',
+              top: '16px'
+            }}>
+              <BasicDropdown
+              icon="ellipsis horizontal"
+              showValue={null}
+              persist={true}
+              options={leftOptions} />
+            </div>
             <div
             style={innerContainerStyle}
             ref="recentExplorations">
-              {_.map(p.s.remoteLocations.results, (location, i)=>{
+              {_.map(locations, (location, i)=>{
                 location.data.teleports = location.teleports;
                 location.upvote = location.data.upvote;
                 return (
                   <LocationBox
-                  key={i}
+                  key={location.id}
                   i={i}
                   enableVisibilityCheck={enableVisibilityCheck}
                   name={location.name}
@@ -701,6 +852,10 @@ class StoredLocationItem extends React.Component {
     this.state = {
       hover: false
     };
+    autoBind(this);
+  }
+  handleClick(){
+    this.props.onClick(this.props.location, this.props.i);
   }
   render(){
     let uiSegmentStyle = {
@@ -712,18 +867,19 @@ class StoredLocationItem extends React.Component {
       background: this.state.hover || this.props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'inherit',
       textAlign: 'right'
     };
-    let name = this.props.location.name && this.props.location.name.length > 0 ? this.props.location.name : this.props.location.id;
+    let usesName = this.props.location.name && this.props.location.name.length > 0;
+    let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.id}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
+    let name = usesName ? this.props.location.name : idFormat;
     let isMarquee = (this.state.hover || this.props.isSelected) && name.length >= 25;
-    name = isMarquee ? name : _.truncate(name, {length: 22});
+    name = isMarquee ? name : _.truncate(name, {length: 23});
     let isSpaceStation = this.props.location.id[this.props.location.id.length - 1] === '0';
     return (
       <div
-      key={this.props.location.id}
       className="ui segment"
       style={uiSegmentStyle}
       onMouseEnter={()=>this.setState({hover: true})}
       onMouseLeave={()=>this.setState({hover: false})}
-      onClick={this.props.onClick}>
+      onClick={this.handleClick}>
         {this.props.location.base ?
         <span data-tip={utils.tip('Base')} style={{position: 'absolute', left: `${this.props.location.upvote ? 31 : 4}px`, top: '4px'}}>
           <img style={{width: '21px', height: '21px'}} src={baseIcon} />
@@ -745,7 +901,7 @@ class StoredLocationItem extends React.Component {
           maxWidth: `${isMarquee ? 200 : 177}px`,
           whiteSpace: 'nowrap',
           position: 'relative',
-          left: `${isMarquee ? 33 : name.length >= 25 ? 76 : 86}px`,
+          left: `${isMarquee ? 33 : name.length >= 25 ? 76 : !usesName && this.props.useGAFormat ? 56 : 86}px`,
         }}><span>{name}</span></p>
       </div>
     );
@@ -755,6 +911,7 @@ class StoredLocationItem extends React.Component {
 class StoredLocations extends React.Component {
   constructor(props){
     super(props);
+    autoBind(this);
   }
   componentDidMount(){
     this.uiSegmentStyle = {
@@ -772,8 +929,17 @@ class StoredLocations extends React.Component {
     return (nextProps.storedLocations !== this.props.storedLocations
       || nextProps.selectedLocationId !== this.props.selectedLocationId
       || nextProps.height !== this.props.height
-      || nextProps.mapZoom !== this.props.mapZoom
-      || nextProps.filterOthers !== this.props.filterOthers)
+      || nextProps.filterOthers !== this.props.filterOthers
+      || nextProps.useGAFormat !== this.props.useGAFormat)
+  }
+  handleSelect(location, i){
+    let hasSelectedId = this.props.selectedLocationId;
+    this.props.onSelect(location);
+    _.defer(()=>{
+      if (location.id === this.props.selectedLocationId && !hasSelectedId) {
+        this.refs.storedLocations.scrollTop = i * 29;
+      }
+    });
   }
   render(){
     let leftOptions = [
@@ -786,6 +952,11 @@ class StoredLocations extends React.Component {
         id: 'sortTime',
         label: this.props.sortStoredByTime ? 'Sort by Favorites' : 'Sort Chronologically',
         onClick: ()=>state.set({sortStoredByTime: !this.props.sortStoredByTime})
+      },
+      {
+        id: 'useGAFormat',
+        label: this.props.useGAFormat ? 'Show Voxel Addresses' : 'Show Galactic Addresses',
+        onClick: ()=>state.set({useGAFormat: !this.props.useGAFormat})
       }
     ];
     return (
@@ -793,7 +964,7 @@ class StoredLocations extends React.Component {
         className="ui segment"
         style={{display: 'inline-flex', background: 'transparent', WebkitUserSelect: 'none'}}>
           <div className="ui segment" style={this.uiSegmentStyle}>
-            <h3>Stored Locations</h3>
+            <h3>{`Stored Locations (${this.props.storedLocations.length})`}</h3>
             <div style={{
               position: 'absolute',
               left: '17px',
@@ -805,14 +976,25 @@ class StoredLocations extends React.Component {
               persist={true}
               options={leftOptions} />
             </div>
-            <div className="ui segments" style={{maxHeight: `${this.props.height - (this.props.mapZoom ? 498 : 125)}px`, overflowY: 'auto', overflowX: 'hidden'}}>
+            <div
+            ref="storedLocations"
+            className="ui segments"
+            style={{
+              maxHeight: `${this.props.height - (this.props.selectedLocationId ? 404 : 125)}px`,
+              //maxHeight: `${this.props.height - 125}px`,
+              WebkitTransition: 'max-height 0.1s',
+              overflowY: 'auto',
+              overflowX: 'hidden'}}>
               {_.map(this.props.storedLocations, (location, i)=>{
                 return (
                   <StoredLocationItem
                   key={i}
-                  onClick={()=>this.props.onSelect(location)}
+                  ref={location.id}
+                  i={i}
+                  onClick={this.handleSelect}
                   isSelected={this.props.selectedLocationId === location.id}
-                  location={location}/>
+                  location={location}
+                  useGAFormat={this.props.useGAFormat}/>
                 );
               })}
             </div>
@@ -1015,8 +1197,14 @@ class Container extends React.Component {
       });
 
       if (refRemoteLocation !== undefined && refRemoteLocation) {
+        let name = location.name;
+        let description = location.description;
+
         refRemoteLocation.data.image = refRemoteLocation.image;
         _.assignIn(location, refRemoteLocation.data);
+
+        location.name = name;
+        location.description = description;
       }
     }
     state.set({
@@ -1053,24 +1241,25 @@ class Container extends React.Component {
             storedLocations={storedLocations}
             selectedLocationId={p.s.selectedLocation ? p.s.selectedLocation.id : null}
             height={p.s.height}
-            mapZoom={p.s.mapZoom}
             filterOthers={p.s.filterOthers}
             sortStoredByTime={p.s.sortStoredByTime}
+            useGAFormat={p.s.useGAFormat}
             username={p.s.username}/>
             <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
+              {p.s.remoteLocations && p.s.remoteLocations.results || p.s.searchCache.results.length > 0 ?
               <GalacticMap
-              mapZoom={p.s.mapZoom}
               mapLines={p.s.mapLines}
               galaxyOptions={p.s.galaxyOptions}
               selectedGalaxy={p.s.selectedGalaxy}
               storedLocations={p.s.storedLocations}
               width={p.s.width}
               height={p.s.height}
+              remoteLocationsColumns={p.s.remoteLocationsColumns}
               remoteLocations={p.s.remoteLocations}
               selectedLocation={p.s.selectedLocation}
               currentLocation={p.s.currentLocation}
               username={p.s.username}
-              show={p.s.show} />
+              show={p.s.show} /> : <Loader />}
               {p.s.selectedLocation ?
               <LocationBox
               name={p.s.selectedLocation.name}
@@ -1087,7 +1276,6 @@ class Container extends React.Component {
               image={p.s.selectedLocation.image}
               width={p.s.width}
               height={p.s.height}
-              mapZoom={p.s.mapZoom}
               isSelectedLocationRemovable={isSelectedLocationRemovable}
               onUploadScreen={()=>this.refs.uploadScreenshot.click()}
               onDeleteScreen={this.handleDeleteScreen}
@@ -1101,7 +1289,7 @@ class Container extends React.Component {
             </div>
           </div>
         </div>
-        {p.s.remoteLocations && p.s.remoteLocations.results ?
+        {p.s.remoteLocations && p.s.remoteLocations.results || p.s.searchCache.results.length > 0 ?
         <RemoteLocations
         s={p.s}
         currentLocation={p.s.currentLocation}
@@ -1110,7 +1298,7 @@ class Container extends React.Component {
         onPagination={p.onPagination}
         onTeleport={p.onTeleport}
         onFav={this.handleFavorite}
-        onSaveBase={p.onSaveBase}/> : null}
+        onSaveBase={p.onSaveBase}/> : <Loader />}
       </div>
     );
   }
@@ -1125,6 +1313,7 @@ class App extends Reflux.Component {
     autoBind(this);
   }
   componentDidMount(){
+    window.addEventListener('resize', this.onWindowResize);
     log.init(this.state.configDir);
     log.error(`Initializing No Man's Connect ${this.state.version}`);
     this.handleWorkers();
@@ -1233,7 +1422,7 @@ class App extends Reflux.Component {
             return;
           }
           ++this.remotePollingFailures;
-          this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
+          this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
         }
         return;
       }
@@ -1268,10 +1457,10 @@ class App extends Reflux.Component {
           // Reset the remote polling failure count on success
           this.remotePollingFailures = 0;
           this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, false, false, ()=>{
-            this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
+            this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
           });
         } else {
-          this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
+          this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
         }
       }
     }
@@ -1318,7 +1507,7 @@ class App extends Reflux.Component {
     });
   }
   formatRemoteLocations(res, page, sort, init, partial, sync, cb=null){
-    if (this.state.remoteLocations.length === 0 || !this.state.remoteLocations) {
+    if (!this.state.remoteLocations || this.state.remoteLocations.length === 0) {
       this.state.remoteLocations = {
         results: []
       };
@@ -1337,6 +1526,7 @@ class App extends Reflux.Component {
         sort: this.state.sort,
         favorites: this.state.favorites,
         storedLocations: this.state.storedLocations,
+        pageSize: this.state.pageSize
       }
     });
 
@@ -1350,7 +1540,7 @@ class App extends Reflux.Component {
     }
 
     if (this.state.sort !== '-created' || this.state.remoteLocations.results.length === 0 || init) {
-      this.timeout = setTimeout(()=>this.pollRemoteLocations(), 30000);
+      this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
       return;
     }
 
@@ -1370,14 +1560,15 @@ class App extends Reflux.Component {
           id: lastRemoteLocation.data.id
         }
       },
-      params: [this.state.page, this.statesort]
+      params: [this.state.page, this.state.sort]
     });
   }
   fetchRemoteLocations(page=this.state.page, sort=this.state.sort, init=false, sync=false){
     let q = this.state.search.length > 0 ? this.state.search : null;
     let path = q ? '/nmslocationsearch' : '/nmslocation';
     sort = sort === 'search' ? '-created' : sort;
-    window.ajaxWorker.postMessage({
+
+    let workerParams = {
       method: 'get',
       func: 'fetchRemoteLocations',
       url: path,
@@ -1389,7 +1580,9 @@ class App extends Reflux.Component {
         }
       },
       params: [page, sort, init, sync]
-    });
+    };
+
+    window.ajaxWorker.postMessage(workerParams);
   }
   handleCheat(id, n){
     let currentLocation = _.find(this.state.storedLocations, {id: this.state.currentLocation});
@@ -1405,7 +1598,12 @@ class App extends Reflux.Component {
       message: 'Unable to save your base. Have you claimed a base yet?'
     });
   }
-  handleSaveBase(){
+  handleSaveBase(baseData=null){
+    if (baseData) {
+      this.state.storedBases.push(baseData);
+      state.set({storedBases: this.state.storedBases});
+      return;
+    }
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
       let base = utils.formatBase(saveData, state.knownProducts);
       let refBase = _.findIndex(this.state.storedBases, {Name: base.Name});
@@ -1576,10 +1774,6 @@ class App extends Reflux.Component {
         if (init) {
           this.handleWallpaper();
           this.handleSync(1, this.state.sort, init);
-        } else {
-          this.fetchRemoteLocations(1, this.state.sort, init);
-        }
-        if (init) {
           watch.createMonitor(this.state.saveDirectory, {
             ignoreDotFiles: true,
             ignoreNotPermitted: true,
@@ -1591,6 +1785,11 @@ class App extends Reflux.Component {
               this.pollSaveDataThrottled();
             });
           });
+          if (this.state.username.toLowerCase() === 'explorer') {
+            state.set({usernameOverride: true});
+          }
+        } else {
+          this.fetchRemoteLocations(1, this.state.sort, init);
         }
       };
 
@@ -1899,7 +2098,6 @@ class App extends Reflux.Component {
   }
   handleSearch(){
     state.set({
-      remoteLocationsCache: this.state.remoteLocations,
       sort: 'search'
     }, ()=>{
       this.fetchRemoteLocations(1);
@@ -1908,15 +2106,26 @@ class App extends Reflux.Component {
   handleClearSearch(){
     state.set({
       search: '',
+      searchCache: {
+        results: [],
+        count: 0,
+        next: null,
+        prev: null
+      },
       searchInProgress: false,
-      sort: '-created',
-      remoteLocations: this.stateremoteLocationsCache
+      sort: '-created'
     }, ()=>{
       window.jsonWorker.postMessage({
         method: 'get',
         key: 'remoteLocations'
       });
     })
+  }
+  handlePagination(){
+    let page = this.state.page === 1 ? 2 : this.state.page + 1;
+    state.set({page: page}, ()=>{
+      this.fetchRemoteLocations(this.state.page);
+    });
   }
   handleWallpaper(){
     let wallpaper = defaultWallpaper;
@@ -2115,7 +2324,7 @@ class App extends Reflux.Component {
         <Container
         s={s}
         onTeleport={(location, i)=>this.handleTeleport(location, i)}
-        onPagination={(page)=>this.fetchRemoteLocations(++page)}
+        onPagination={this.handlePagination}
         onRemoveStoredLocation={this.handleRemoveStoredLocation}
         onSaveBase={this.handleSaveBase} />}
         <ReactTooltip
@@ -2128,7 +2337,7 @@ class App extends Reflux.Component {
     );
   }
 };
-reactMixin(App.prototype, ReactUtils.Mixins.WindowSizeWatch);
+
 // Render to the #app element
 ReactDOM.render(
   <App />,

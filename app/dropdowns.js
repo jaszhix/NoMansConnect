@@ -4,11 +4,11 @@ const log = new Log();
 import state from './state';
 import React from 'react';
 import autoBind from 'react-autobind';
-//import ReactMarkdown from 'react-markdown';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
 import _ from 'lodash';
+import $ from 'jquery';
 
 import * as utils from './utils';
 
@@ -252,6 +252,23 @@ export class DropdownMenu extends React.Component {
     state.set({mode: mode}, ()=>{
       this.props.onRestart();
     });
+    let x = []
+    $('#mw-content-text > div > ul > li > a').each(function(){
+      x.push($(this).text().split(' ')[1])
+    })
+    console.log(JSON.stringify(x))
+  }
+  handlePollRate(e){
+    e.stopPropagation();
+    let rate;
+    if (this.props.s.pollRate === 45000) {
+      rate = 60000;
+    } else if (this.props.s.pollRate === 60000) {
+      rate = 90000;
+    } else {
+      rate = 45000;
+    }
+    state.set({pollRate: rate});
   }
   render(){
     var p = this.props;
@@ -292,6 +309,9 @@ export class DropdownMenu extends React.Component {
           </div>
           <div className="item" onClick={this.handleResetRemoteCache}>
             Reset Remote Cache
+          </div>
+          <div className="item" onClick={this.handlePollRate}>
+            {`Check For New Locations Every ${p.s.pollRate / 1000} Seconds`}
           </div>
           {p.s.profile ?
           <div className="item" onClick={this.handleUsernameProtection}>

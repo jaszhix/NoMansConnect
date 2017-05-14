@@ -113,7 +113,9 @@ export default merge(baseConfig, {
     /**
      * Babli is an ES6+ aware minifier based on the Babel toolchain (beta)
      */
-    new BabiliPlugin(),
+    new BabiliPlugin({
+      removeConsole: true
+    }),
 
     new ExtractTextPlugin('style.css'),
 
