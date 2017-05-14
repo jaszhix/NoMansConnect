@@ -13,6 +13,14 @@ This includes a binary of Matthew Humphrey's [nmssavetool](https://github.com/ma
 ## Features
 
 * Syncs coordinates while the game is running after each save
+* Drill down locations by:
+  * Galaxy
+  * Screenshots
+  * Names
+  * Descriptions
+  * Distance to center
+  * Least modded
+  * Bases
 * Upload coordinates and have them tagged with your Steam ID
 * Add descriptions to locations for other's to view
 * Map all locations on a galaxy map
@@ -24,3 +32,4 @@ This includes a binary of Matthew Humphrey's [nmssavetool](https://github.com/ma
 * Upload screenshots, and optionally have them taken automically upon save
 * Unlockable cheat menu
 * Backup and restore your base and move it to new locations
+* Download other people's bases and import them into your game
