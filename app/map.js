@@ -6,6 +6,7 @@ import _ from 'lodash';
 import $ from 'jquery';
 import each from './each';
 import {BasicDropdown} from './dropdowns';
+import Map3D from './map3d'
 
 class TooltipChild extends React.Component {
   constructor(props) {
@@ -236,7 +237,7 @@ class GalacticMap extends React.Component {
     };
     this.leftDropdownWrapper = {
       position: 'absolute',
-      right: '54px',
+      right: this.props.map3d ? '38px' : '54px',
       top: '16px'
     };
     autoBind(this);
@@ -301,11 +302,81 @@ class GalacticMap extends React.Component {
     let compact = p.width <= 1212 || p.height <= 850;
     let leftOptions = [
       {
+        id: 'map3d',
+        label: `3D Map (BETA): ${p.map3d ? 'On' : 'Off'}`,
+        onClick: ()=>state.set({map3d: !p.map3d}, p.onRestart)
+      }
+    ];
+    if (p.map3d) {
+      leftOptions.push({
+        id: 'mapDrawDistance',
+        label: `Draw Distance: ${p.mapDrawDistance ? 'High' : 'Medium'}`,
+        onClick: ()=>state.set({mapDrawDistance: !p.mapDrawDistance}, p.onRestart)
+      });
+      leftOptions.push({
+        id: 'travelTo',
+        label: `Go to Center`,
+        onClick: ()=>window.travelTo = [0, 2, 0]
+      });
+      leftOptions.push({
+        id: 'travelTo',
+        label: `Travel to Galactic Hub`,
+        onClick: ()=>{
+          state.set({
+            selectedGalaxy: 0,
+            search: '0469:0081:0D6D:0211'
+          }, ()=>{
+            p.onSearch();
+            window.travelTo = [-7344, 400, 11120];
+          });
+        }
+      });
+      leftOptions.push({
+        id: 'travelTo',
+        label: `Travel to Pilgrim Star`,
+        onClick: ()=>{
+          state.set({
+            selectedGalaxy: 0,
+            search: '064A:0082:01B9:009A'
+          }, ()=>{
+            p.onSearch();
+            window.travelTo = [-3496, 600, -12848];
+          });
+        }
+      });
+      leftOptions.push({
+        id: 'travelTo',
+        label: `Travel to Pathfinder Hub`,
+        onClick: ()=>{
+          state.set({
+            selectedGalaxy: 0,
+            search: '0115:0083:08F8:0030'
+          }, ()=>{
+            p.onSearch();
+            window.travelTo = [14160, -800, 1992];
+          });
+        }
+      });
+    } else {
+      leftOptions.push({
         id: 'mapLines',
         label: `Show Path: ${p.mapLines ? 'On' : 'Off'}`,
         onClick: ()=>state.set({mapLines: !p.mapLines})
-      },
-    ];
+      });
+    }
+
+    let remoteLocationsWidth;
+    if (p.remoteLocationsColumns === 1) {
+      remoteLocationsWidth = 441;
+    } else if (p.remoteLocationsColumns === 2) {
+      remoteLocationsWidth = 902;
+    } else {
+      remoteLocationsWidth = 1300;
+    }
+
+    let size = p.width - (remoteLocationsWidth + 438);
+    let maxSize = p.height - 105;
+    size = size > maxSize ? maxSize : size < 260 ? 260 : size;
 
     return (
       <div className="ui segment" style={{
@@ -317,11 +388,11 @@ class GalacticMap extends React.Component {
         top: '-11px',
         left: '15px',
         WebkitTransition: 'left 0.1s, background 0.1s',
-        zIndex: '90',
+        zIndex: p.map3d ? '0' : '90',
         WebkitUserSelect: 'none',
         minWidth: '360px',
         minHeight: '360px',
-        opacity: this.state.init ? '0' : '1'
+        opacity: this.state.init && !p.map3d ? '0' : '1'
       }}>
         <h3 style={{textAlign: compact ? 'left' : 'inherit'}}>Galactic Map</h3>
         {p.galaxyOptions.length > 0 ?
@@ -333,7 +404,7 @@ class GalacticMap extends React.Component {
         </div> : null}
         <div style={{
           position: 'absolute',
-          left: compact ? 'initial' : '48px',
+          left: compact ? 'initial' : p.map3d ? '16px' : '48px',
           right: compact ? '143px' : 'initial',
           top: '16px'
         }}>
@@ -344,6 +415,18 @@ class GalacticMap extends React.Component {
           options={leftOptions} />
         </div>
         <div style={this.mapWrapper}>
+          {p.map3d ?
+          <Map3D
+          size={size}
+          selectedGalaxy={p.selectedGalaxy}
+          storedLocations={p.storedLocations}
+          remoteLocationsColumns={p.remoteLocationsColumns}
+          remoteLocations={p.remoteLocations}
+          selectedLocation={p.selectedLocation}
+          currentLocation={p.currentLocation}
+          mapDrawDistance={p.mapDrawDistance}
+          />
+          :
           <ThreeDimScatterChart
           mapLines={p.mapLines}
           show={p.show}
@@ -357,7 +440,7 @@ class GalacticMap extends React.Component {
           currentLocation={p.currentLocation}
           username={p.username}
           init={this.state.init}
-          onInit={this.handleInit} />
+          onInit={this.handleInit} />}
         </div>
       </div>
     );

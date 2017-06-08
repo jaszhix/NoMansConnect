@@ -1,3 +1,10 @@
+# 0.10.0
+
+  * Added a 3D map option. Enable from the map options menu in the top left corner of the map.
+    * Includes three locations to travel to: Galactic Hub, Pilgrim Star, and Pathfinder Hub. You can also travel to any location by clicking a star, or selecting a location in the UI.
+    * Two draw distance options are available. Default is medium. A rotating core is rendered in the center of the galaxy on high draw distance mode.
+  * Changed the behavior of the protected username dialog so it doesn't boot users out of the app.
+
 # 0.9.0
 
   * Improved CPU and RAM usage.

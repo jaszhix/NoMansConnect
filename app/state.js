@@ -23,7 +23,7 @@ var state = Reflux.createStore({
     this.galaxies = galaxies;
     this.state = {
       // Core
-      version: '0.9.0',
+      version: '0.10.0',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -74,6 +74,8 @@ var state = Reflux.createStore({
       loading: false,
       maximized: false,
       mapLines: false,
+      map3d: false,
+      mapDrawDistance: false,
       wallpaper: null,
       filterOthers: false,
       useGAFormat: false,
@@ -125,6 +127,14 @@ var state = Reflux.createStore({
     let mapLines = utils.store.get('mapLines');
     if (mapLines) {
       this.state.mapLines = mapLines;
+    }
+    let map3d = utils.store.get('map3d');
+    if (map3d) {
+      this.state.map3d = map3d;
+    }
+    let mapDrawDistance = utils.store.get('mapDrawDistance');
+    if (mapDrawDistance) {
+      this.state.mapDrawDistance = mapDrawDistance;
     }
     let show = utils.store.get('show');
     if (show) {
@@ -269,6 +279,14 @@ var state = Reflux.createStore({
 
     if (obj.hasOwnProperty('mapLines')) {
       utils.store.set('mapLines', obj.mapLines);
+    }
+
+    if (obj.hasOwnProperty('map3d')) {
+      utils.store.set('map3d', obj.map3d);
+    }
+
+    if (obj.hasOwnProperty('mapDrawDistance')) {
+      utils.store.set('mapDrawDistance', obj.mapDrawDistance);
     }
 
     if (obj.hasOwnProperty('show')) {

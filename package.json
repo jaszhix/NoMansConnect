@@ -1,18 +1,18 @@
 {
   "name": "no-mans-connect",
   "productName": "No Man's Connect",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
   "scripts": {
     "lint": "eslint --cache --format=node_modules/eslint-formatter-pretty .",
     "lint-fix": "npm run lint -- --fix",
-    "hot-server": "cross-env NODE_ENV=development node --trace-warnings -r babel-register ./node_modules/webpack-dev-server/bin/webpack-dev-server --config ./webpack.config.development.js",
-    "build-main": "cross-env NODE_ENV=production node --trace-warnings -r babel-register ./node_modules/webpack/bin/webpack --config webpack.config.electron.js --progress --profile --colors",
-    "build-renderer": "cross-env NODE_ENV=production node --trace-warnings -r babel-register ./node_modules/webpack/bin/webpack --config webpack.config.production.js --progress --profile --colors",
+    "hot-server": "cross-env NODE_ENV=development node --max_old_space_size=16192 --trace-warnings -r babel-register ./node_modules/webpack-dev-server/bin/webpack-dev-server --config ./webpack.config.development.js",
+    "build-main": "cross-env NODE_ENV=production node --max_old_space_size=16192 --trace-warnings -r babel-register ./node_modules/webpack/bin/webpack --config webpack.config.electron.js --progress --profile --colors",
+    "build-renderer": "cross-env NODE_ENV=production node --max_old_space_size=16192 --trace-warnings -r babel-register ./node_modules/webpack/bin/webpack --config webpack.config.production.js --progress --profile --colors",
     "build": "npm run build-main && npm run build-renderer",
-    "start": "cross-env NODE_ENV=production electron ./app/",
-    "start-hot": "cross-env HOT=1 NODE_ENV=development electron -r babel-register -r babel-polyfill ./app/main.development",
+    "start": "cross-env NODE_ENV=production electron --js-flags=\"--max_old_space_size=16192\" ./app/",
+    "start-hot": "cross-env HOT=1 NODE_ENV=development electron --max_old_space_size=16192 -r babel-register -r babel-polyfill ./app/main.development",
     "postinstall": "concurrently \"install-app-deps\" \"node node_modules/fbjs-scripts/node/check-dev-engines.js package.json\"",
     "dev": "cross-env START_HOT=1 npm run hot-server",
     "nsis": "build --win --x64",
@@ -52,6 +52,10 @@
       {
         "from": "./app/nmssavetool",
         "to": "./nmssavetool"
+      },
+      {
+        "from": "./app/textures",
+        "to": "./app/textures"
       }
     ],
     "extraResources": [
@@ -62,6 +66,10 @@
       {
         "from": "node_modules/lodash",
         "to": "node_modules/lodash"
+      },
+      {
+        "from": "node_modules/is-buffer",
+        "to": "node_modules/is-buffer"
       }
     ],
     "win": {
@@ -174,6 +182,8 @@
     "sinon": "^2.2.0",
     "spectron": "^3.7.0",
     "style-loader": "^0.17.0",
+    "uglify-js": "git://github.com/mishoo/UglifyJS2#harmony-v2.8.22",
+    "uglifyjs-webpack-plugin": "^0.4.3",
     "url-loader": "^0.5.8",
     "webpack": "^2.5.1",
     "webpack-dev-server": "^2.4.5",
@@ -183,7 +193,6 @@
   },
   "dependencies": {
     "axios": "^0.16.1",
-    "css-loader": "^0.25.0",
     "curlrequest": "^1.0.1",
     "dotenv": "^4.0.0",
     "electron-debug": "^1.1.0",
@@ -225,6 +234,10 @@
     "resolve-dir": "^1.0.0",
     "source-map-support": "^0.4.15",
     "style-loader": "^0.13.1",
+    "threact": "^0.2.1",
+    "three": "^0.85.2",
+    "tween.js": "^16.6.0",
+    "vquery": "^4.7.0",
     "watch": "^1.0.2",
     "win-ps": "0.0.1"
   },

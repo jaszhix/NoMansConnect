@@ -794,7 +794,6 @@ class RemoteLocations extends React.Component {
       });
     }
 
-    console.log('#######Locations', locations)
     return (
       <div className="columns" style={containerStyle}>
         <div className="ui segments" style={uiSegmentsStyle}>
@@ -922,7 +921,8 @@ class StoredLocations extends React.Component {
       maxWidth: '285px',
       textAlign: 'center',
       paddingLeft: '0px',
-      paddingRight: '0px'
+      paddingRight: '0px',
+      zIndex: '90'
     };
   }
   shouldComponentUpdate(nextProps){
@@ -1248,6 +1248,8 @@ class Container extends React.Component {
             <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
               {p.s.remoteLocations && p.s.remoteLocations.results || p.s.searchCache.results.length > 0 ?
               <GalacticMap
+              map3d={p.s.map3d}
+              mapDrawDistance={p.s.mapDrawDistance}
               mapLines={p.s.mapLines}
               galaxyOptions={p.s.galaxyOptions}
               selectedGalaxy={p.s.selectedGalaxy}
@@ -1259,7 +1261,9 @@ class Container extends React.Component {
               selectedLocation={p.s.selectedLocation}
               currentLocation={p.s.currentLocation}
               username={p.s.username}
-              show={p.s.show} /> : <Loader />}
+              show={p.s.show}
+              onRestart={p.onRestart}
+              onSearch={p.onSearch} /> : <Loader />}
               {p.s.selectedLocation ?
               <LocationBox
               name={p.s.selectedLocation.name}
@@ -1985,8 +1989,6 @@ class App extends Reflux.Component {
       if (result === 1) {
         openExternal('https://github.com/jaszhix/NoMansConnect/issues');
         window.close();
-      } else {
-        window.close();
       }
     });
   }
@@ -2326,7 +2328,9 @@ class App extends Reflux.Component {
         onTeleport={(location, i)=>this.handleTeleport(location, i)}
         onPagination={this.handlePagination}
         onRemoveStoredLocation={this.handleRemoveStoredLocation}
-        onSaveBase={this.handleSaveBase} />}
+        onSaveBase={this.handleSaveBase}
+        onRestart={this.handleRestart}
+        onSearch={this.handleSearch} />}
         <ReactTooltip
         effect="solid"
         place="bottom"
