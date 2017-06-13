@@ -3,7 +3,7 @@ import React from 'react';
 import autoBind from 'react-autobind';
 import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
 import _ from 'lodash';
-import $ from 'jquery';
+import v from 'vquery';
 import each from './each';
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d'
@@ -153,11 +153,12 @@ class ThreeDimScatterChart extends React.Component {
       this.setState(JSON.parse(e.data), ()=>{
         if (this.props.init) {
           _.defer(()=>{
-            $('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
+            v('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
             each(this.props.show, (type, key)=>{
-              $('.recharts-legend-item').each(function(){
-                if ($(this).text() === key) {
-                  $(this).addClass(key.split(' ').join('_'));
+              v('.recharts-legend-item').each(function(el){
+                let _el = v(el);
+                if (_el.text()[0] === key) {
+                  _el.addClass(key.split(' ').join('_'));
                 }
               });
             });
@@ -185,7 +186,7 @@ class ThreeDimScatterChart extends React.Component {
   }
   handleUpdateLegend(){
     each(this.props.show, (bool, name)=>{
-      $(`.${name.split(' ').join('_')}`).css({
+      v(`.${name.split(' ').join('_')}`).css({
         opacity: bool ? '1' : '0.5'
       });
     });
@@ -297,6 +298,25 @@ class GalacticMap extends React.Component {
   handleInit(){
     this.setState({init: false});
   }
+  travelToCenter(){
+    window.travelTo = [0, 2, 0];
+  }
+  travelToGalacticHub(){
+    this.props.onSearch();
+    window.travelTo = [-7344, 400, 11120];
+  }
+  travelToAGT(){
+    this.props.onSearch();
+    window.travelTo = [6288, 400, -10400];
+  }
+  travelToPilgrimStar(){
+    this.props.onSearch();
+    window.travelTo = [-3496, 600, -12848];
+  }
+  travelToPathFinderHub(){
+    this.props.onSearch();
+    window.travelTo = [14160, -800, 1992];
+  }
   render(){
     let p = this.props;
     let compact = p.width <= 1212 || p.height <= 850;
@@ -316,7 +336,7 @@ class GalacticMap extends React.Component {
       leftOptions.push({
         id: 'travelTo',
         label: `Go to Center`,
-        onClick: ()=>window.travelTo = [0, 2, 0]
+        onClick: this.travelToCenter
       });
       leftOptions.push({
         id: 'travelTo',
@@ -325,10 +345,7 @@ class GalacticMap extends React.Component {
           state.set({
             selectedGalaxy: 0,
             search: '0469:0081:0D6D:0211'
-          }, ()=>{
-            p.onSearch();
-            window.travelTo = [-7344, 400, 11120];
-          });
+          }, this.travelToGalacticHub);
         }
       });
       leftOptions.push({
@@ -338,10 +355,17 @@ class GalacticMap extends React.Component {
           state.set({
             selectedGalaxy: 0,
             search: '064A:0082:01B9:009A'
-          }, ()=>{
-            p.onSearch();
-            window.travelTo = [-3496, 600, -12848];
-          });
+          }, this.travelToPilgrimStar);
+        }
+      });
+      leftOptions.push({
+        id: 'travelTo',
+        label: `Travel to Alliance of Galactic Travellers HQ`,
+        onClick: ()=>{
+          state.set({
+            selectedGalaxy: 0,
+            search: '0B11:0081:02EB:01F2'
+          }, this.travelToAGT);
         }
       });
       leftOptions.push({
@@ -351,10 +375,7 @@ class GalacticMap extends React.Component {
           state.set({
             selectedGalaxy: 0,
             search: '0115:0083:08F8:0030'
-          }, ()=>{
-            p.onSearch();
-            window.travelTo = [14160, -800, 1992];
-          });
+          }, this.travelToPathFinderHub);
         }
       });
     } else {
@@ -428,6 +449,7 @@ class GalacticMap extends React.Component {
           />
           :
           <ThreeDimScatterChart
+          size={size}
           mapLines={p.mapLines}
           show={p.show}
           selectedGalaxy={p.selectedGalaxy}

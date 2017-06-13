@@ -47,3 +47,4 @@ main.js.map
 npm-debug.log.*
 /app/nmssavetool/saveCache.json
 /.env
+/.vscode/settings.json

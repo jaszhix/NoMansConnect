@@ -121,6 +121,14 @@ class Map3D extends React.Component {
     this.orangeMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starOrange));
     this.greenMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starGreen));
     this.redMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starRed));
+    this.skybox = [
+      path.resolve('app/textures/s1.png'),
+      path.resolve('app/textures/s2.png'),
+      path.resolve('app/textures/s3.png'),
+      path.resolve('app/textures/s4.png'),
+      path.resolve('app/textures/s5.png'),
+      path.resolve('app/textures/s6.png')
+    ];
   }
   componentDidMount () {
     _.defer(()=>{
@@ -209,10 +217,9 @@ class Map3D extends React.Component {
     }
   }
   handleTravel(vector3){
-    const _this = this
+    const _this = this;
 
     let onComplete = function () {
-      let tween = new THREE.Vector3(this.x, this.y, this.z)
       _this.controls.distance = 75;
       _this.controls.needsUpdate = true;
 
@@ -328,7 +335,7 @@ class Map3D extends React.Component {
     });
     return el;
   }
-  handleMeshMount (c, location, starType) {
+  handleMeshMount (c, location) {
     c.instance.userData = location;
     if (location.data.id === this.props.currentLocation) {
       this.handleTravel(c.instance.position);
@@ -396,7 +403,7 @@ class Map3D extends React.Component {
         deferred={this.props.mapDrawDistance}
         alpha={false}
         antialias={true}
-
+        stats={process.env.NODE_ENV === 'development' ? 0 : null}
         bgColor={0x00a1ff}
         setPixelRatio={window.devicePixelRatio}
         width={this.props.size}
@@ -405,7 +412,7 @@ class Map3D extends React.Component {
         logarithmicDepthBuffer={true}
         camera={new THREE.PerspectiveCamera(75, this.props.size / this.props.size, 10, 100000)}
         scene={new THREE.Scene()}
-        skybox={[path.resolve('app/textures/s1.png'), path.resolve('app/textures/s2.png'), path.resolve('app/textures/s3.png'), path.resolve('app/textures/s4.png'), path.resolve('app/textures/s5.png'), path.resolve('app/textures/s6.png')]}
+        skybox={this.skybox}
         onMouseMove={this.handleMouseMove}
         onMouseDown={this.handleMouseDown}
         onMount={this.handleMount}
@@ -423,7 +430,7 @@ class Map3D extends React.Component {
             c.instance.rotation.x += 0.02;
             c.instance.rotation.y += 0.02;
           }}  /> : <threact />}
-          {_.map(this.state.locations, (location, i) => {
+          {_.map(this.state.locations, (location) => {
             let position = [location.data.VoxelX * 8, location.data.VoxelY * 200, location.data.VoxelZ * 8]
             return (
               <Mesh

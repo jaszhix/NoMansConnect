@@ -18,6 +18,8 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
+app.commandLine.appendSwitch('--enable-native-gpu-memory-buffers');
+app.commandLine.appendSwitch('--enable-gpu-rasterization');
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

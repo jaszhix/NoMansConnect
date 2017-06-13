@@ -1,63 +1,30 @@
-import log from './log';
+import {remote, desktopCapturer} from 'electron';
 
-function screenshot(init, callback) {
+const primaryDisplay = remote.screen.getPrimaryDisplay();
+
+function screenshot(init, callback, debug) {
   if (init) {
     callback('');
     return;
   }
-  let screenConstraints = {
-    mandatory: {
-      chromeMediaSource: 'screen',
-      maxHeight: 3440,
-      maxWidth: 1440,
-      minAspectRatio: 1.77
-    },
-    optional: []
-  };
 
-  let session = {
-    audio: false,
-    video: screenConstraints
-  };
-
-  let streaming = false;
-  let canvas = document.createElement('canvas');
-  let video = document.createElement('video');
-
-  let width = screen.width;
-  let height = 0;
-
-  video.addEventListener('canplay', function() {
-    if (!streaming) {
-      height = video.videoHeight / (video.videoWidth / width);
-
-      if (isNaN(height)) {
-        height = width / (4 / 3);
-      }
-
-      video.setAttribute('width', width.toString());
-      video.setAttribute('height', height.toString());
-      canvas.setAttribute('width', width.toString());
-      canvas.setAttribute('height', height.toString());
-      streaming = true;
-
-      let context = canvas.getContext('2d');
-      if (width && height) {
-        canvas.width = width;
-        canvas.height = height;
-        context.drawImage(video, 0, 0, width, height);
-        let img = canvas.toDataURL('image/jpeg', 0.75);
-        callback(img);
+  desktopCapturer.getSources({
+    types: ['window', 'screen'],
+    thumbnailSize: {
+      width: primaryDisplay.workArea.width / 2,
+      height: primaryDisplay.workArea.height / 2
+    }
+  }, (error, sources) => {
+    if (error) {
+      callback('');
+      return;
+    };
+    for (let i = 0; i < sources.length; ++i) {
+      if (sources[i].name === 'Screen 1') {
+        callback(sources[i].thumbnail.toDataURL('image/jpeg', 0.75));
+        return
       }
     }
-  }, false);
-
-  navigator['webkitGetUserMedia'](session, function(stream) {
-    video.src = window.URL.createObjectURL(stream);
-    video.play();
-  }, function() {
-    callback('');
-    log.error(`Failed to take screenshot in capture.js.`);
   });
 }
 

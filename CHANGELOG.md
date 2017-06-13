@@ -1,3 +1,10 @@
+# 0.11.0
+
+  * Fixed the map scaling becoming unbalanced.
+  * Fixed the auto screenshot feature capturing all monitors. It now only captures the primary monitor.
+  * Performance improvements.
+  * Minor style fixes.
+
 # 0.10.0
 
   * Added a 3D map option. Enable from the map options menu in the top left corner of the map.

@@ -23,7 +23,7 @@ var state = Reflux.createStore({
     this.galaxies = galaxies;
     this.state = {
       // Core
-      version: '0.10.0',
+      version: '0.11.0',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -90,13 +90,20 @@ var state = Reflux.createStore({
         Current: true,
         Selected: true,
         Base: true
-      }
+      },
+      maintenanceTS: Date.now()
     };
     this.handleJsonWorker();
     window.jsonWorker.postMessage({
       method: 'new',
       configDir: this.state.configDir,
     });
+    let maintenanceTS = utils.store.get('maintenanceTS');
+    if (maintenanceTS) {
+      this.state.storedBases = maintenanceTS;
+    } else {
+      this.state.maintenanceTS = this.state.maintenanceTS - 6.048e+8; // Set initial run
+    }
     let wallpaper = utils.store.get('wallpaper');
     if (wallpaper) {
       this.state.wallpaper = wallpaper;
@@ -219,7 +226,32 @@ var state = Reflux.createStore({
       this.trigger(this.state);
     }
   },
-  set(obj, cb=null, sync=false){
+  handleMaintenance(obj){
+    return new Promise((resolve, reject)=>{
+      if (this.state.maintenanceTS + 6.048e+8 < Date.now()) {
+        // Maintenance task set to run once a week
+        let locations = [];
+        _.each(obj.remoteLocations.results, (location, i)=>{
+          // Remove locations with invalid coordinates
+          if (location.data.VoxelY > -128 && location.data.VoxelY < 127
+            && location.data.VoxelZ > -2048 && location.data.VoxelZ < 2047
+            && location.data.VoxelX > -2048 && location.data.VoxelX < 2047) {
+            locations.push(location)
+          }
+        });
+        obj.remoteLocations.results = locations;
+        obj.remoteLocations.count = locations.length;
+
+        _.defer(()=>{
+          obj.maintenanceTS = Date.now();
+          resolve(obj)
+        });
+      } else {
+        resolve(obj);
+      }
+    });
+  },
+  set(obj, cb=null){
     if (process.env.NODE_ENV === 'development') {
       try {
         throw new Error('STATE STACK')
@@ -234,20 +266,32 @@ var state = Reflux.createStore({
       this.state.selectedLocation = null;
     }
 
+    let objRemoteLen = 0;
+    if (obj.remoteLocations) {
+      objRemoteLen = obj.remoteLocations.results.length;
+    }
+
     if (obj.remoteLocations
-      && obj.remoteLocations.results.length > 0
+      && objRemoteLen > 0
       && this.state.search.length === 0
       && this.state.remoteLocations
       && this.state.remoteLocations.results
       && this.state.remoteLocations.results.length > 0) {
-      window.jsonWorker.postMessage({
-        method: 'set',
-        key: 'remoteLocations',
-        value: JSON.stringify(obj.remoteLocations),
+      this.handleMaintenance(obj).then((newObj)=>{
+        window.jsonWorker.postMessage({
+          method: 'set',
+          key: 'remoteLocations',
+          value: JSON.stringify(newObj.remoteLocations),
+        });
+        this.handleState(newObj, cb, objRemoteLen);
       });
+    } else {
+      this.handleState(obj, cb, objRemoteLen);
     }
+  },
+  handleState(obj, cb=null, objRemoteLen){
     if (obj.remoteLocations && obj.remoteLocations.results) {
-      this.state.remoteLength = obj.remoteLocations.results.length;
+      this.state.remoteLength = objRemoteLen;
     }
 
     _.assignIn(this.state, obj);
@@ -329,8 +373,12 @@ var state = Reflux.createStore({
       utils.store.set('username', obj.username);
     }
 
+    if (obj.hasOwnProperty('maintenanceTS')) {
+      utils.store.set('maintenanceTS', obj.maintenanceTS);
+    }
+
     if (cb) {
-      _.defer(()=>cb());
+      _.defer(cb);
     }
   },
   get(){

@@ -8,7 +8,6 @@ import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
 import _ from 'lodash';
-import $ from 'jquery';
 
 import * as utils from './utils';
 
@@ -19,6 +18,13 @@ const menuContainerStyle = {
   borderBottomLeftRadius: '0px',
   borderBottomRightRadius: '0px',
   borderTop: '1px solid rgb(149, 34, 14)'
+};
+const noDragStyle = {
+  WebkitAppRegion: 'no-drag'
+};
+const basicMenuContainerStyle = {
+  fontFamily: 'geosanslight-nmsregular',
+  fontSize: '16px'
 };
 
 export class BaseDropdownMenu extends React.Component {
@@ -38,9 +44,12 @@ export class BaseDropdownMenu extends React.Component {
     this.baseItemStyle = {
       height: '36px'
     };
+    this.menuContainerStyle = _.assignIn(_.clone(menuContainerStyle), {
+      width: '260px'
+    });
   }
   componentDidMount(){
-    _.defer(()=>ReactTooltip.rebuild());
+    _.defer(ReactTooltip.rebuild);
   }
   handleClickOutside(){
     if (this.props.baseOpen) {
@@ -59,24 +68,33 @@ export class BaseDropdownMenu extends React.Component {
       state.set({storedBases: this.props.storedBases});
     }
   }
+  handleToggleOpen(){
+    state.set({baseOpen: !this.props.baseOpen})
+  }
+  handleOnMouseEnter(e){
+    this.setState({hover: parseInt(e.target.id)});
+  }
+  handleOnMouseLeave(){
+    this.setState({hover: -1});
+  }
   render(){
     var p = this.props;
     return (
       <div
-      style={{WebkitAppRegion: 'no-drag'}}
+      style={noDragStyle}
       className={`ui dropdown icon item${p.baseOpen ? ' visible' : ''}`}
-      onClick={()=>state.set({baseOpen: !p.baseOpen})}>
+      onClick={this.handleToggleOpen}>
         <img
         style={{width: '19px'}}
         src={p.baseIcon} />
         <div
-        style={menuContainerStyle}
+        style={this.menuContainerStyle}
         className={`menu transition ${p.baseOpen ? 'visible' : 'hidden'}`}>
           <div className="item" onClick={this.handleSave}>
             Save Base
           </div>
           {p.storedBases && p.storedBases.length > 0 ? <div className="divider" /> : null}
-          {p.storedBases && p.storedBases.length > 0 ? p.storedBases.map((base, i)=>{
+          {p.storedBases && p.storedBases.length > 0 ? _.map(p.storedBases, (base, i)=>{
             let baseName = base.Name;
             if (baseName.indexOf(' Base') !== -1) {
               baseName = baseName.split(' Base')[0];
@@ -84,10 +102,11 @@ export class BaseDropdownMenu extends React.Component {
             return (
               <div
               key={i}
+              id={i}
               style={this.baseItemStyle}
               className="item"
-              onMouseEnter={()=>this.setState({hover: i})}
-              onMouseLeave={()=>this.setState({hover: -1})}>
+              onMouseEnter={this.handleOnMouseEnter}
+              onMouseLeave={this.handleOnMouseLeave}>
                 <div
                 onClick={()=>this.props.onRestoreBase(base)}
                 data-place="left"
@@ -118,52 +137,75 @@ export class SaveEditorDropdownMenu extends React.Component {
     autoBind(this);
   }
   componentDidMount(){
-    _.defer(()=>ReactTooltip.rebuild());
+    _.defer(ReactTooltip.rebuild);
   }
   handleClickOutside(){
     if (this.props.editorOpen) {
       state.set({editorOpen: false});
     }
   }
+  handleClick(e){
+    let id = e.target.id;
+    let requirement;
+    if (e.target.id.indexOf('|') !== -1) {
+      let split = e.target.id.split('|');
+      id = split[0];
+      requirement = parseInt(split[1]);
+    }
+    let isUnits = id === 'modifyUnits';
+    if (isUnits || this.props.profile.exp >= requirement || process.env.NODE_ENV === 'development') {
+      let args = [id];
+      if (isUnits) {
+        args.push(this.props.profile.exp * 1000);
+      }
+      this.props.onCheat(...args);
+    }
+  }
+  handleToggleOpen(){
+    state.set({editorOpen: !this.props.editorOpen});
+  }
   render(){
-    let dev = process.env.NODE_ENV === 'development';
     var p = this.props;
     return (
       <div
-      style={{WebkitAppRegion: 'no-drag'}}
+      style={noDragStyle}
       className={`ui dropdown icon item${p.editorOpen ? ' visible' : ''}`}
-      onClick={()=>state.set({editorOpen: !p.editorOpen})}>
+      onClick={this.handleToggleOpen}>
         <i className="database icon" />
         <div
         style={menuContainerStyle}
         className={`menu transition ${p.editorOpen ? 'visible' : 'hidden'}`}>
           <div
+          id="repairInventory|50"
           style={{opacity: p.profile.exp >= 50 ? '1' : '0.5'}}
           className="item"
-          onClick={p.profile.exp >= 50 || dev ? ()=>p.onCheat('repairInventory') : null}
+          onClick={this.handleClick}
           data-place="left"
           data-tip={utils.tip('Requires 50 registered locations.')}>
             Repair Inventory
           </div>
           <div
+          id="stockInventory|100"
           style={{opacity: p.profile.exp >= 100 ? '1' : '0.5'}}
           className="item"
-          onClick={p.profile.exp >= 100 || dev ? ()=>p.onCheat('stockInventory') : null}
+          onClick={this.handleClick}
           data-place="left"
           data-tip={utils.tip('Requires 100 registered locations.')}>
             Fully Stock Inventory
           </div>
           <div
+          id="refuelEnergy|200"
           style={{opacity: p.profile.exp >= 200 ? '1' : '0.5'}}
           className="item"
-          onClick={p.profile.exp >= 200 || dev ? ()=>p.onCheat('refuelEnergy') : null}
+          onClick={this.handleClick}
           data-place="left"
           data-tip={utils.tip('Requires 200 registered locations.')}>
             Refuel Energies/Shields
           </div>
           <div
+          id="modifyUnits"
           className="item"
-          onClick={()=>p.onCheat('modifyUnits', p.profile.exp * 1000)}
+          onClick={this.handleClick}
           data-place="left"
           data-tip={utils.tip('Explore more to increase your units allowance.')}>
             {`Add ${p.profile.exp * 1000}k Units`}
@@ -193,7 +235,7 @@ export class DropdownMenu extends React.Component {
       title: 'No Man\'s Connect',
       message: this.props.s.version,
       detail: `
-      This version is beta. Please back up your save files.
+      Please back up your save files.
 
       Special Thanks
 
@@ -201,6 +243,8 @@ export class DropdownMenu extends React.Component {
       - monkeyman192
       - pgrace
       - rayrod118
+
+      Software written by Jason Hicks (jaszhix).
       `
     });
   }
@@ -238,7 +282,7 @@ export class DropdownMenu extends React.Component {
           machineId: this.props.s.machineId,
           protected: !this.props.s.profile.protected
         }).then(()=>{
-          this.props.s.profile.protected = !this.props.s.profile.protected
+          this.props.s.profile.protected = !this.props.s.profile.protected;
           state.set({profile: this.props.s.profile});
         }).catch((err)=>{
           log.error(`Error enabling username protection: ${err}`);
@@ -249,14 +293,7 @@ export class DropdownMenu extends React.Component {
     });
   }
   handleModeSwitch(mode){
-    state.set({mode: mode}, ()=>{
-      this.props.onRestart();
-    });
-    let x = []
-    $('#mw-content-text > div > ul > li > a').each(function(){
-      x.push($(this).text().split(' ')[1])
-    })
-    console.log(JSON.stringify(x))
+    state.set({mode: mode}, this.props.onRestart);
   }
   handlePollRate(e){
     e.stopPropagation();
@@ -270,12 +307,15 @@ export class DropdownMenu extends React.Component {
     }
     state.set({pollRate: rate});
   }
+  handleSupport(){
+    openExternal('https://neuropuff.com/static/donate.html');
+  }
   render(){
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
     return (
       <div
-      style={{WebkitAppRegion: 'no-drag'}}
+      style={noDragStyle}
       className={`ui dropdown icon item${p.s.settingsOpen ? ' visible' : ''}`}
       onClick={()=>state.set({settingsOpen: !p.s.settingsOpen})}>
         <i className="wrench icon" />
@@ -329,14 +369,14 @@ export class DropdownMenu extends React.Component {
           <div className="item" onClick={this.handleAbout}>
             About
           </div>
-          <div className="item" onClick={()=>openExternal('https://neuropuff.com/static/donate.html')}>
+          <div className="item" onClick={this.handleSupport}>
             Support NMC
           </div>
           <div className="divider"></div>
           <div className="item" onClick={p.onRestart}>
             Restart
           </div>
-          <div className="item" onClick={()=>window.close()}>
+          <div className="item" onClick={window.close}>
             Quit
           </div>
         </div>
@@ -354,6 +394,7 @@ export class BasicDropdown extends React.Component {
       open: false
     };
     autoBind(this);
+
   }
   handleOptionClick(e, option){
     if (this.props.persist) {
@@ -367,19 +408,18 @@ export class BasicDropdown extends React.Component {
       this.setState({open: false});
     }
   }
+  handleToggleOpen(){
+    this.setState({open: !this.state.open});
+  }
   render(){
-    let p = this.props;
-    let height = p.height ? p.height : window.innerHeight;
+    let height = this.props.height ? this.props.height : window.innerHeight;
     return (
       <div
-      style={{
-        fontFamily: 'geosanslight-nmsregular',
-        fontSize: '16px'
-      }}
+      style={basicMenuContainerStyle}
       className={`ui dropdown${this.state.open ? ' active visible' : ''}`}
-      onClick={()=>this.setState({open: !this.state.open})}>
-        {p.showValue ? <div className="text">{state.galaxies[p.selectedGalaxy]}</div> : null}
-        <i className={`${p.icon} icon`} />
+      onClick={this.handleToggleOpen}>
+        {this.props.showValue ? <div className="text">{state.galaxies[this.props.selectedGalaxy]}</div> : null}
+        <i className={`${this.props.icon} icon`} />
         <div
         style={{
           display: this.state.open ? 'block !important' : 'none',
