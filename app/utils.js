@@ -33,7 +33,7 @@ export var exc = (cmd)=>{
       env: null
     };
     if (process.platform === 'win32') {
-      opts.shell = 'cmd.exe';
+      opts.shell = 'powershell.exe';
     }
     exec(cmd, function (err, stdout, stderr) {
       if (err) {

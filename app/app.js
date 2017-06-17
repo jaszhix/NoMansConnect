@@ -5,24 +5,6 @@ import path from 'path';
 import each from './each';
 import Log from './log';
 const log = new Log();
-(function(){
-  var oldWarn = console.warn;
-  console.warn = function (message) {
-    let args = arguments;
-    each(args, (arg, i)=>{
-      log.error(arg)
-    });
-    oldWarn.apply(console, arguments);
-  };
-  var oldError = console.error;
-  console.error = function (message) {
-    let args = arguments;
-    each(args, (arg, i)=>{
-      log.error(arg)
-    });
-    oldError.apply(console, arguments);
-  };
-})();
 import watch from 'watch';
 const ps = require('win-ps');
 import {machineId} from 'electron-machine-id';
@@ -2214,9 +2196,7 @@ class App extends Reflux.Component {
       if (cb && cb[0]) {
         state.set({
           installDirectory: cb[0]
-        }, ()=>{
-          //_.delay(()=>this.handleRestart(), 2000);
-        });
+        }, this.handleRestart);
       }
     });
   }
@@ -2226,9 +2206,7 @@ class App extends Reflux.Component {
         state.set({
           saveDirectory: cb[0],
           title: 'No Man\'s Connect'
-        }, ()=>{
-          this.handleRestart();
-        });
+        }, this.handleRestart);
       }
     });
   }

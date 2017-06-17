@@ -10,7 +10,7 @@ import knownProducts from './static/knownProducts.json';
 
 var state = Reflux.createStore({
   init(){
-    // Temporary until all 256 galaxy names are known
+    this.completedMigration = false;
     let galaxies = knownGalaxies.concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat([knownGalaxies[0]]);
     let galaxyIter = 1;
     each(galaxies, (g, k)=>{
@@ -93,121 +93,61 @@ var state = Reflux.createStore({
       },
       maintenanceTS: Date.now()
     };
+
+    let saveDirPath;
+    let basePath = this.state.configDir.split('\\AppData')[0];
+    let steamPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS`;
+    let gogPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS\\DefaultUser`;
+    if (fs.existsSync(steamPath)) {
+      saveDirPath = steamPath;
+    } else if (fs.existsSync(gogPath)) {
+      saveDirPath = gogPath;
+    }
+
+    console.log(saveDirPath);
+
+    this.state.saveDirectory = saveDirPath;
+
     this.handleJsonWorker();
     window.jsonWorker.postMessage({
       method: 'new',
+      default: {
+        remoteLocations: []
+      },
+      fileName: 'cache.json',
       configDir: this.state.configDir,
     });
-    let maintenanceTS = utils.store.get('maintenanceTS');
-    if (maintenanceTS) {
-      this.state.storedBases = maintenanceTS;
-    } else {
-      this.state.maintenanceTS = this.state.maintenanceTS - 6.048e+8; // Set initial run
-    }
-    let wallpaper = utils.store.get('wallpaper');
-    if (wallpaper) {
-      this.state.wallpaper = wallpaper;
-    }
-    let basePath = this.state.configDir.split('\\AppData')[0];
-    let installDirectory = utils.store.get('installDirectory');
-    if (installDirectory) {
-      this.state.installDirectory = installDirectory;
-    }
-    let saveDirectory = utils.store.get('saveDirectory');
-    if (saveDirectory) {
-      this.state.saveDirectory = saveDirectory;
-    } else {
-      let saveDirPath;
-      let steamPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS`;
-      let gogPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS\\DefaultUser`;
-      if (fs.existsSync(steamPath)) {
-        saveDirPath = steamPath;
-      } else if (fs.existsSync(gogPath)) {
-        saveDirPath = gogPath;
-      }
-      this.state.saveDirectory = saveDirPath;
-    }
-    let username = utils.store.get('username');
-    if (username) {
-      this.state.username = username;
-    }
-    let mapLines = utils.store.get('mapLines');
-    if (mapLines) {
-      this.state.mapLines = mapLines;
-    }
-    let map3d = utils.store.get('map3d');
-    if (map3d) {
-      this.state.map3d = map3d;
-    }
-    let mapDrawDistance = utils.store.get('mapDrawDistance');
-    if (mapDrawDistance) {
-      this.state.mapDrawDistance = mapDrawDistance;
-    }
-    let show = utils.store.get('show');
-    if (show) {
-      this.state.show = show;
-    }
-    let filterOthers = utils.store.get('filterOthers');
-    if (filterOthers) {
-      this.state.filterOthers = filterOthers;
-    }
-    let useGAFormat = utils.store.get('useGAFormat');
-    if (useGAFormat) {
-      this.state.useGAFormat = useGAFormat;
-    }
-    let remoteLocationsColumns = utils.store.get('remoteLocationsColumns');
-    if (remoteLocationsColumns) {
-      this.state.remoteLocationsColumns = remoteLocationsColumns;
-    }
-    let sortStoredByTime = utils.store.get('sortStoredByTime');
-    if (sortStoredByTime) {
-      this.state.sortStoredByTime = sortStoredByTime;
-    }
-    let pollRate = utils.store.get('pollRate');
-    if (pollRate) {
-      this.state.pollRate = pollRate;
-    }
-    let mode = utils.store.get('mode');
-    if (mode) {
-      this.state.mode = mode;
-    }
-    let storedBases = utils.store.get('storedBases');
-    if (storedBases) {
-      this.state.storedBases = storedBases;
-    }
-    let storedLocations = utils.store.get('storedLocations');
-    // temporary
-    if (_.isArray(storedLocations)) {
-      storedLocations = {
-        normal: storedLocations,
-        creative: [],
-        survival: [],
-        permadeath: []
-      }
-      utils.store.set('storedLocations', storedLocations)
-    }
-    if (storedLocations) {
-      this.state.storedLocations = storedLocations[this.state.mode];
-    } else {
-      utils.store.set('storedLocations', {
-        normal: [],
-        creative: [],
-        survival: [],
-        permadeath: []
-      });
-    }
-    let favorites = utils.store.get('favorites');
-    if (favorites) {
-      this.state.favorites = favorites;
-    } else {
-      utils.store.set('favorites', []);
-    }
-    let autoCapture = utils.store.get('autoCapture');
-    if (autoCapture !== null) {
-      this.state.autoCapture = autoCapture;
-    } else {
-      utils.store.set('autoCapture', false);
-    }
+    this.handleSettingsWorker();
+    this.settingsKeys = [
+      'maintenanceTS',
+      'wallpaper',
+      'installDirectory',
+      'saveDirectory',
+      'username',
+      'mapLines',
+      'map3d',
+      'mapDrawDistance',
+      'show',
+      'filterOthers',
+      'useGAFormat',
+      'remoteLocationsColumns',
+      'sortStoredByTime',
+      'pollRate',
+      'mode',
+      'storedBases',
+      'storedLocations',
+      'favorites',
+      'autoCapture'
+    ];
+    this.handleSettingsMigration();
+    const settings = _.pick(this.state, this.settingsKeys);
+    window.settingsWorker.postMessage({
+      method: 'new',
+      default: settings,
+      fileName: 'settings.json',
+      configDir: this.state.configDir,
+    });
+    
   },
   handleJsonWorker(){
     window.jsonWorker.onmessage = (e)=>{
@@ -224,6 +164,24 @@ var state = Reflux.createStore({
         this.state.page = Math.floor(this.state.remoteLocations.results.length / this.state.pageSize) + 1;
       }
       this.trigger(this.state);
+    }
+  },
+  handleSettingsWorker(){
+    window.settingsWorker.onmessage = (e)=>{
+      let data = JSON.parse(e.data);
+      let stateUpdate = {};
+      if (!data.maintenanceTS) {
+        stateUpdate.maintenanceTS = this.state.maintenanceTS - 6.048e+8;
+      }
+      each(data, (value, key)=>{
+        if (this.settingsKeys.indexOf(key) > -1) {
+          stateUpdate[key] = value;
+        }
+      });
+      if (this.completedMigration) {
+        utils.store.clear();
+      }
+      this.set(stateUpdate);
     }
   },
   handleMaintenance(obj){
@@ -296,86 +254,17 @@ var state = Reflux.createStore({
 
     _.assignIn(this.state, obj);
     console.log('STATE: ', this.state);
-    if (obj.mode) {
-      let storedLocations = utils.store.get('storedLocations');
-      utils.store.set('mode', obj.mode);
-      this.state.storedLocations = storedLocations[obj.mode];
-    }
     this.trigger(this.state);
-    if (obj.storedLocations) {
-      let storedLocations = utils.store.get('storedLocations');
-      console.log('STORED: ', storedLocations);
-      storedLocations[this.state.mode] = obj.storedLocations;
-      utils.store.set('storedLocations', storedLocations);
-    }
 
-    if (obj.hasOwnProperty('storedBases')) {
-      utils.store.set('storedBases', obj.storedBases);
-    }
-
-    if (obj.hasOwnProperty('favorites')) {
-      utils.store.set('favorites', obj.favorites);
-    }
-
-    if (obj.hasOwnProperty('autoCapture')) {
-      utils.store.set('autoCapture', obj.autoCapture);
-    }
-
-    if (obj.hasOwnProperty('mapLines')) {
-      utils.store.set('mapLines', obj.mapLines);
-    }
-
-    if (obj.hasOwnProperty('map3d')) {
-      utils.store.set('map3d', obj.map3d);
-    }
-
-    if (obj.hasOwnProperty('mapDrawDistance')) {
-      utils.store.set('mapDrawDistance', obj.mapDrawDistance);
-    }
-
-    if (obj.hasOwnProperty('show')) {
-      utils.store.set('show', obj.show);
-    }
-
-    if (obj.hasOwnProperty('filterOthers')) {
-      utils.store.set('filterOthers', obj.filterOthers);
-    }
-
-    if (obj.hasOwnProperty('useGAFormat')) {
-      utils.store.set('useGAFormat', obj.useGAFormat);
-    }
-
-    if (obj.hasOwnProperty('remoteLocationsColumns')) {
-      utils.store.set('remoteLocationsColumns', obj.remoteLocationsColumns);
-    }
-
-    if (obj.hasOwnProperty('sortStoredByTime')) {
-      utils.store.set('sortStoredByTime', obj.sortStoredByTime);
-    }
-
-    if (obj.hasOwnProperty('pollRate')) {
-      utils.store.set('pollRate', obj.pollRate);
-    }
-
-    if (obj.hasOwnProperty('installDirectory')) {
-      utils.store.set('installDirectory', obj.installDirectory);
-    }
-
-    if (obj.hasOwnProperty('saveDirectory')) {
-      utils.store.set('saveDirectory', obj.saveDirectory);
-    }
-
-    if (obj.hasOwnProperty('wallpaper')) {
-      utils.store.set('wallpaper', obj.wallpaper);
-    }
-
-    if (obj.hasOwnProperty('username')) {
-      utils.store.set('username', obj.username);
-    }
-
-    if (obj.hasOwnProperty('maintenanceTS')) {
-      utils.store.set('maintenanceTS', obj.maintenanceTS);
-    }
+    each(obj, (value, key)=>{
+      if (this.settingsKeys.indexOf(key) > -1) {
+        window.settingsWorker.postMessage({
+          method: 'set',
+          key: key,
+          value: JSON.stringify(value),
+        });
+      }
+    });
 
     if (cb) {
       _.defer(cb);
@@ -383,7 +272,86 @@ var state = Reflux.createStore({
   },
   get(){
     return this.state;
-  }
+  },
+  handleSettingsMigration(){
+    let username = utils.store.get('username');
+    if (username) {
+      this.state.username = username;
+      let maintenanceTS = utils.store.get('maintenanceTS');
+      if (maintenanceTS) {
+        this.state.storedBases = maintenanceTS;
+      }
+      let wallpaper = utils.store.get('wallpaper');
+      if (wallpaper) {
+        this.state.wallpaper = wallpaper;
+      }
+      let installDirectory = utils.store.get('installDirectory');
+      if (installDirectory) {
+        this.state.installDirectory = installDirectory;
+      }
+      let saveDirectory = utils.store.get('saveDirectory');
+      if (saveDirectory) {
+        this.state.saveDirectory = saveDirectory;
+      }
+      let mapLines = utils.store.get('mapLines');
+      if (mapLines) {
+        this.state.mapLines = mapLines;
+      }
+      let map3d = utils.store.get('map3d');
+      if (map3d) {
+        this.state.map3d = map3d;
+      }
+      let mapDrawDistance = utils.store.get('mapDrawDistance');
+      if (mapDrawDistance) {
+        this.state.mapDrawDistance = mapDrawDistance;
+      }
+      let show = utils.store.get('show');
+      if (show) {
+        this.state.show = show;
+      }
+      let filterOthers = utils.store.get('filterOthers');
+      if (filterOthers) {
+        this.state.filterOthers = filterOthers;
+      }
+      let useGAFormat = utils.store.get('useGAFormat');
+      if (useGAFormat) {
+        this.state.useGAFormat = useGAFormat;
+      }
+      let remoteLocationsColumns = utils.store.get('remoteLocationsColumns');
+      if (remoteLocationsColumns) {
+        this.state.remoteLocationsColumns = remoteLocationsColumns;
+      }
+      let sortStoredByTime = utils.store.get('sortStoredByTime');
+      if (sortStoredByTime) {
+        this.state.sortStoredByTime = sortStoredByTime;
+      }
+      let pollRate = utils.store.get('pollRate');
+      if (pollRate) {
+        this.state.pollRate = pollRate;
+      }
+      let mode = utils.store.get('mode');
+      if (mode) {
+        this.state.mode = mode;
+      }
+      let storedBases = utils.store.get('storedBases');
+      if (storedBases) {
+        this.state.storedBases = storedBases;
+      }
+      let storedLocations = utils.store.get('storedLocations');
+      if (storedLocations) {
+        this.state.storedLocations = storedLocations[this.state.mode];
+      }
+      let favorites = utils.store.get('favorites');
+      if (favorites) {
+        this.state.favorites = favorites;
+      }
+      let autoCapture = utils.store.get('autoCapture');
+      if (autoCapture !== null) {
+        this.state.autoCapture = autoCapture;
+      }
+      this.completedMigration = true;
+    }
+  },
 });
 window.state = state;
 export default state;
