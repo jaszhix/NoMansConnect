@@ -54,6 +54,7 @@ class ThreeDimScatterChart extends React.Component {
       selectedLocation: [],
       favLocations: [],
       baseLocations: [],
+      ps4Locations: [],
       center: [{
         x: 2047,
         y: 2047,
@@ -158,7 +159,7 @@ class ThreeDimScatterChart extends React.Component {
               v('.recharts-legend-item').each(function(el){
                 let _el = v(el);
                 if (_el.text()[0] === key) {
-                  _el.addClass(key.split(' ').join('_'));
+                  _el.addClass(key);
                 }
               });
             });
@@ -186,7 +187,7 @@ class ThreeDimScatterChart extends React.Component {
   }
   handleUpdateLegend(){
     each(this.props.show, (bool, name)=>{
-      v(`.${name.split(' ').join('_')}`).css({
+      v(`.${name}`).css({
         opacity: bool ? '1' : '0.5'
       });
     });
@@ -196,7 +197,7 @@ class ThreeDimScatterChart extends React.Component {
     state.set({show: this.props.show}, ()=>{
       if (e.payload.name === 'Center') {
         this.handlePostMessageSize(this.props);
-      } else if (e.payload.name === 'Selected') {
+      } else if (e.payload.name.indexOf('Selected') > -1) {
         this.handlePostMessageSelect(this.props);
       } else {
         this.handlePostMessage(this.props);
@@ -215,6 +216,7 @@ class ThreeDimScatterChart extends React.Component {
         <Tooltip cursor={this.tooltipCursor} content={<TooltipChild />}/>
         <Legend align="right" wrapperStyle={this.legendStyle} iconSize={12} onClick={this.handleLegendClick}/>
         <Scatter name="Shared" data={this.state.remoteLocations} fill="#0080db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
+        <Scatter name="PS4" data={this.state.ps4Locations} fill="#0039db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
         <Scatter name="Explored" data={this.state.locations} fill="#5fcc93" shape="circle" line={this.props.mapLines} isAnimationActive={false} onClick={this.handleSelect}/>
         <Scatter name="Center" data={this.state.center} fill="#ba3935" shape="circle" isAnimationActive={false}/>
         <Scatter name="Base" data={this.state.baseLocations} fill="#9A9D99" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>

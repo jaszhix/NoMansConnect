@@ -118,7 +118,7 @@ export default merge(baseConfig, {
       removeConsole: true
     }),*/
     new UglifyJSPlugin({
-      sourceMap: false,
+      sourceMap: true,
       mangle: false,
       compress: {
         warnings: false,

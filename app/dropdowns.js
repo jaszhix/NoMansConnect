@@ -69,7 +69,12 @@ export class BaseDropdownMenu extends React.Component {
     }
   }
   handleToggleOpen(){
-    state.set({baseOpen: !this.props.baseOpen})
+    ReactTooltip.hide();
+    state.set({
+      baseOpen: !this.props.baseOpen,
+      editorOpen: false,
+      settingsOpen: false
+    })
   }
   handleOnMouseEnter(e){
     this.setState({hover: parseInt(e.target.id)});
@@ -83,14 +88,20 @@ export class BaseDropdownMenu extends React.Component {
       <div
       style={noDragStyle}
       className={`ui dropdown icon item${p.baseOpen ? ' visible' : ''}`}
-      onClick={this.handleToggleOpen}>
+      onClick={this.handleToggleOpen}
+      data-place="bottom"
+      data-tip={utils.tip('Save/Restore Bases')}>
         <img
         style={{width: '19px'}}
         src={p.baseIcon} />
         <div
         style={this.menuContainerStyle}
         className={`menu transition ${p.baseOpen ? 'visible' : 'hidden'}`}>
-          <div className="item" onClick={this.handleSave}>
+          <div
+          className="item"
+          onClick={this.handleSave}
+          data-place="left"
+          data-tip={utils.tip('Saves the base claimed in the currently loaded save file.')}>
             Save Base
           </div>
           {p.storedBases && p.storedBases.length > 0 ? <div className="divider" /> : null}
@@ -110,7 +121,7 @@ export class BaseDropdownMenu extends React.Component {
                 <div
                 onClick={()=>this.props.onRestoreBase(base)}
                 data-place="left"
-                data-tip={utils.tip('Restore Base')}>
+                data-tip={utils.tip('Restores the base over the claimed base in the currently loaded save file. In order for this to work, you must ensure at least one base item is placed on your existing base, as this is how the saved base\'s vertices are converted for the new location\'s geometry.')}>
                   {baseName}
                 </div>
                 <div
@@ -162,7 +173,12 @@ export class SaveEditorDropdownMenu extends React.Component {
     }
   }
   handleToggleOpen(){
-    state.set({editorOpen: !this.props.editorOpen});
+    ReactTooltip.hide();
+    state.set({
+      editorOpen: !this.props.editorOpen,
+      baseOpen: false,
+      settingsOpen: false
+    });
   }
   render(){
     var p = this.props;
@@ -170,7 +186,9 @@ export class SaveEditorDropdownMenu extends React.Component {
       <div
       style={noDragStyle}
       className={`ui dropdown icon item${p.editorOpen ? ' visible' : ''}`}
-      onClick={this.handleToggleOpen}>
+      onClick={this.handleToggleOpen}
+      data-place="bottom"
+      data-tip={utils.tip('Save Editor')}>
         <i className="database icon" />
         <div
         style={menuContainerStyle}
@@ -292,6 +310,9 @@ export class DropdownMenu extends React.Component {
       }
     });
   }
+  handlePlatformToggle(){
+    state.set({ps4User: !this.props.s.ps4User}, this.props.onRestart);
+  }
   handleModeSwitch(mode){
     state.set({mode: mode}, this.props.onRestart);
   }
@@ -310,6 +331,14 @@ export class DropdownMenu extends React.Component {
   handleSupport(){
     openExternal('https://neuropuff.com/static/donate.html');
   }
+  handleToggleOpen(){
+    ReactTooltip.hide();
+    state.set({
+      settingsOpen: !this.props.s.settingsOpen,
+      baseOpen: false,
+      editorOpen: false
+    });
+  }
   render(){
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
@@ -317,66 +346,115 @@ export class DropdownMenu extends React.Component {
       <div
       style={noDragStyle}
       className={`ui dropdown icon item${p.s.settingsOpen ? ' visible' : ''}`}
-      onClick={()=>state.set({settingsOpen: !p.s.settingsOpen})}>
+      onClick={this.handleToggleOpen}
+      data-place="bottom"
+      data-tip={utils.tip('Options')}>
         <i className="wrench icon" />
         {p.s.username.length > 0 ? <span style={{paddingLeft: '12px'}}>{p.s.username}</span> : null}
         <div
         style={menuContainerStyle}
         className={`menu transition ${p.s.settingsOpen ? 'visible' : 'hidden'}`}>
-          {_.map(modes, (mode, i)=>{
+          {!p.s.ps4User ? _.map(modes, (mode, i)=>{
             return (
               <div
               key={i}
               className={`item${p.s.mode === mode ? ' selected' : ''}`}
-              onClick={()=>this.handleModeSwitch(mode)}>
+              onClick={()=>this.handleModeSwitch(mode)}
+              data-place="left"
+              data-tip={utils.tip('Controls which save file is loaded and saved.')}>
                 {_.upperFirst(mode)}
               </div>
             );
-          })}
-          <div className="divider"></div>
-          <div className="item" onClick={this.handleAutoCapture}>
+          }) : null}
+          {!p.s.ps4User ? <div className="divider"></div> : null}
+          {!p.s.ps4User ?
+          <div className="item" onClick={this.handleAutoCapture}
+          data-place="left"
+          data-tip={utils.tip('Automatically grabs your screen when NMS is running and the game is saved. Only works when NMS is in window mode.')}>
             Screenshots: {p.s.autoCapture ? 'Auto' : 'Manual'}
+          </div> : null}
+          {!p.s.ps4User ? <div className="divider"></div> : null}
+          <div className="item" onClick={this.handlePlatformToggle}
+          data-place="left"
+          data-tip={utils.tip('Select which platform you play NMS.')}>
+            {`Platform: ${p.s.ps4User ? 'PS4' : 'PC'}`}
           </div>
-          <div className="divider"></div>
-          <div className="item" onClick={this.props.onSelectInstallDirectory}>
+          {!p.s.ps4User ?
+          <div
+          className="item"
+          onClick={this.props.onSelectInstallDirectory}
+          data-place="left"
+          data-tip={utils.tip('Optional. Select the location NMS is installed in. This is used to associate your mods with a location, so other players can see a location which may not load properly for them.')}>
             Select NMS Install Directory
-          </div>
-          <div className="item" onClick={this.props.onSelectSaveDirectory}>
+          </div> : null}
+          {!p.s.ps4User ?
+          <div
+          className="item"
+          onClick={this.props.onSelectSaveDirectory}
+          data-place="left"
+          data-tip={utils.tip('Required. Select the location the save files are in.')}>
             Select NMS Save Directory
-          </div>
-          <div className="item" onClick={this.handleSync}>
+          </div> : null}
+          <div
+          className="item"
+          onClick={this.handleSync}
+          data-place="left"
+          data-tip={utils.tip('Downloads stored locations belonging to you, that are available on the server, and uploads locations missing on the server.')}>
             Sync Locations
           </div>
-          <div className="item" onClick={this.handleResetRemoteCache}>
+          <div
+          className="item"
+          onClick={this.handleResetRemoteCache}
+          data-place="left"
+          data-tip={utils.tip('This clears the remote locations list that is stored locally in Roaming/NoMansConnect.')}>
             Reset Remote Cache
           </div>
-          <div className="item" onClick={this.handlePollRate}>
-            {`Check For New Locations Every ${p.s.pollRate / 1000} Seconds`}
+          <div
+          className="item"
+          onClick={this.handlePollRate}
+          data-place="left"
+          data-tip={utils.tip('Controls how often the client will check the server for new locations. If you experience performance issues, consider increasing this value.')}>
+            {`Polling Rate: ${p.s.pollRate / 1000} Seconds`}
           </div>
           {p.s.profile ?
-          <div className="item" onClick={this.handleUsernameProtection}>
+          <div className="item" onClick={this.handleUsernameProtection}
+          data-place="left"
+          data-tip={utils.tip('Highly recommended! Anyone can claim your username and impersonate you if this is not enabled. This associates your username with your Windows installation\'s cryptographic signature, so be sure to disable this when switching computers, upgrading hardware, or reinstalling Windows.')}>
             {`Username Protection: ${p.s.profile.protected ? 'On' : 'Off'}`}
           </div> : null}
           <div
           className="item"
-          onClick={this.props.onUsernameOverride}>
+          onClick={this.props.onUsernameOverride}
+          data-place="left"
+          data-tip={utils.tip('Changes your username. This will update all of your locations. You must disable username protection before setting this.')}>
             Override Username
           </div>
-          <div className="item" onClick={this.handleWallpaper}>
+          <div className="item" onClick={this.handleWallpaper}
+          data-place="left"
+          data-tip={utils.tip('Changes the NMC background.')}>
             {p.s.wallpaper ? 'Reset Wallpaper' : 'Set Wallpaper'}
           </div>
           <div className="divider"></div>
-          <div className="item" onClick={this.handleAbout}>
+          <div className="item" onClick={this.handleAbout}
+          data-place="left"
+          data-tip={utils.tip('NMC info.')}>
             About
           </div>
-          <div className="item" onClick={this.handleSupport}>
+          <div className="item" onClick={this.handleSupport}
+          data-place="left"
+          data-tip={utils.tip('Help pay for server time. Total contributions as of this release: $80. Thanks a lot!')}>
             Support NMC
           </div>
           <div className="divider"></div>
-          <div className="item" onClick={p.onRestart}>
+          <div className="item"
+          onClick={p.onRestart}
+          data-place="left"
+          data-tip={utils.tip('Restarts the NMC process.')}>
             Restart
           </div>
-          <div className="item" onClick={window.close}>
+          <div className="item" onClick={window.close}
+          data-place="left"
+          data-tip={utils.tip('Exit NMC.')}>
             Quit
           </div>
         </div>
@@ -396,6 +474,12 @@ export class BasicDropdown extends React.Component {
     autoBind(this);
 
   }
+  componentDidMount(){
+    _.defer(ReactTooltip.rebuild);
+  }
+  componentWillUnmount(){
+    this.willUnmount = true;
+  }
   handleOptionClick(e, option){
     if (this.props.persist) {
       e.stopPropagation();
@@ -404,7 +488,7 @@ export class BasicDropdown extends React.Component {
     this.setState({open: this.props.persist});
   }
   handleClickOutside(){
-    if (this.state.open) {
+    if (this.state.open && !this.willUnmount) {
       this.setState({open: false});
     }
   }
@@ -431,8 +515,19 @@ export class BasicDropdown extends React.Component {
         }}
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
           {this.props.options.length > 0 ? _.map(this.props.options, (option, i)=>{
+            let tooltip = '';
+            if (option.id === 'teleport') {
+              tooltip = 'Ensure the game is paused before teleporting, and afterwards, select "Reload Last Save" from the game\'s options menu.'
+            }
             return (
-              <div key={i} className="item" onClick={(e)=>this.handleOptionClick(e, option)}>{option.label}</div>
+              <div
+              key={i}
+              className="item"
+              onClick={(e)=>this.handleOptionClick(e, option)}
+              data-place="left"
+              data-tip={utils.tip(tooltip)}>
+                {option.label}
+              </div>
             );
           }) : null}
         </div>

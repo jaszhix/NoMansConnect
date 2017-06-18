@@ -8,11 +8,13 @@ import { dependencies as externals } from './app/package.json';
 
 export default {
   module: {
-    rules: [{
-      test: /\.js?$/,
-      use: 'babel-loader',
-      exclude: /(node_modules|bower_components)/,
-    }]
+    rules: [
+      {
+        test: /\.js?$/,
+        use: 'babel-loader',
+        exclude: /(node_modules|bower_components)/,
+      }
+    ]
   },
 
   output: {

@@ -1,7 +1,7 @@
 {
   "name": "no-mans-connect",
   "productName": "No Man's Connect",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
   "scripts": {
@@ -215,6 +215,7 @@
     "object-sizeof": "^1.2.0",
     "open-external": "^0.1.1",
     "prop-types": "^15.5.10",
+    "raven-js": "^3.16.0",
     "react": "^15.5.4",
     "react-autobind": "^1.0.6",
     "react-create-class": "^1.0.0",

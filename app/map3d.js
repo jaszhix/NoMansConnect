@@ -1,10 +1,7 @@
-import fs from 'fs'
-import watch from 'watch';
-import {remote} from 'electron';
 import React from 'react'
 import autoBind from 'react-autobind'
 import * as THREE from 'three';
-import {WebGLRenderer, Mesh, SpotLight, PointLight, Line} from 'threact';
+import {WebGLRenderer, Mesh, SpotLight} from 'threact';
 import state from './state';
 import each from './each';
 import path from 'path'
@@ -91,6 +88,7 @@ class Map3D extends React.Component {
     this.starOrange = this.loader.load(path.resolve('app/textures/star_orange.jpg'));
     this.starBlue = this.loader.load(path.resolve('app/textures/star_blue.jpg'));
     this.starGreen = this.loader.load(path.resolve('app/textures/star_green.jpg'));
+    this.starPurple = this.loader.load(path.resolve('app/textures/star_purple.jpg'));
 
     this.sphere = new THREE.SphereGeometry(5, 9, 9);
     this.sphereVs = document.getElementById('surface-vertexShader').textContent;
@@ -121,6 +119,7 @@ class Map3D extends React.Component {
     this.orangeMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starOrange));
     this.greenMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starGreen));
     this.redMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starRed));
+    this.purpleMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starPurple));
     this.skybox = [
       path.resolve('app/textures/s1.png'),
       path.resolve('app/textures/s2.png'),
@@ -151,17 +150,38 @@ class Map3D extends React.Component {
     }
   }
   updateLocations(props){
+    console.log('>>>> updating map3d locations')
     let storedLocations = [];
     each(this.props.storedLocations, (location)=>{
       storedLocations.push({data: location});
     });
     let locations = _.chain(props.remoteLocations.results)
       .concat(storedLocations)
-      .uniqBy((location)=>{
-        return location.data.id;
-      })
+      .cloneDeep()
       .value();
-    this.setState({locations: locations});
+
+
+    let systems = _.uniqBy(locations, (location)=>{
+      return location.data.translatedId;
+    });
+    each(systems, (location)=>{
+      let planets = _.filter(locations, (planet)=>{
+        return planet.data.translatedId === location.data.translatedId;
+      });
+      let planetData = {};
+      each(planets, (planet)=>{
+        if (!planetData[planet.data.username]) {
+          planetData[planet.data.username] = [];
+        }
+        let label = planet.data.name ? planet.data.name : planet.data.id;
+        planetData[planet.data.username] = _.chain(planetData[planet.data.username])
+          .concat([label])
+          .uniq()
+          .value();
+      });
+      location.data.planetData = planetData;
+    });
+    this.setState({locations: systems});
   }
   handleMount (c) {
     console.log('Renderer: ', c)
@@ -208,7 +228,7 @@ class Map3D extends React.Component {
 
     if (this.travelTo) {
       let refMesh = _.findIndex(this.scene.children, (child)=>{
-        return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.id === this.travelTo.data.id;
+        return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === this.travelTo.data.translatedId;
       });
       this.travelTo = false;
       if (refMesh > -1) {
@@ -270,8 +290,12 @@ class Map3D extends React.Component {
       if (!intersects[0].object.visible) {
         return;
       }
-      state.set({selectedLocation: intersects[0].object.userData.data});
-      this.handleTravel(intersects[0].object.position);
+
+      state.set({selectedLocation: intersects[0].object.userData.data}, ()=>{
+        if (intersects[0].object.userData.data.translatedId !== this.props.selectedLocation.translatedId) {
+          this.handleTravel(intersects[0].object.position);
+        }
+      });
     }
   }
   handleMouseMove (e) {
@@ -318,21 +342,41 @@ class Map3D extends React.Component {
     }
   }
   getHUDElement(instance, screen){
-    let label = instance.userData.name ? instance.userData.name : instance.userData.data.id;
+    let planets = '';
+    each(instance.userData.data.planetData, (array, key)=>{
+      planets += `<div style="border-bottom: 1px solid rgb(149, 34, 14);">${key}</div>`
+      each(array, (planetLabel)=>{
+        planets += `<div class="planetLabel" style="cursor: pointer;">${planetLabel}</div>`;
+      });
+    });
     let el = v(
     `<div class="hud-element" id="${instance.uuid}" style="position: fixed; bottom: ${screen.y}px; left: ${screen.x}px; background-color: rgba(0, 0, 0, 0.5); color: #FFFFFF; text-shadow: 2px 2px #000000; -webkit-user-select: none; cursor: default;">
-      <div>${label}</div>
-      <div>${instance.userData.data.username}</div>
+      ${planets}
     </div>`
     );
     el.css({
       padding: '4px 8px',
-      maxHeight: '55px',
       borderTop: '2px solid rgb(149, 34, 14)',
       letterSpacing: '3px',
       fontFamily: 'geosanslight-nmsregular',
       fontSize: '16px',
     });
+    each(el.find('.planetLabel').ns, (label)=>{
+      label.addEventListener('click', ()=>{
+        let refLocation = _.find(this.props.remoteLocations.results, (location)=>{
+          return location.name === label.innerText || location.data.id === label.innerText;
+        });
+        if (refLocation) {
+          state.set({selectedLocation: refLocation.data});
+        }
+      });
+      label.addEventListener('mouseenter', ()=>{
+        label.style.fontWeight = '600';
+      });
+      label.addEventListener('mouseleave', ()=>{
+        label.style.fontWeight = 'inherit';
+      });
+    })
     return el;
   }
   handleMeshMount (c, location) {
@@ -364,6 +408,8 @@ class Map3D extends React.Component {
           c.material = this.redMaterial;
         } else if (refSelected > -1) {
           c.material = this.greenMaterial;
+        } else if (!c.instance.userData.data.playerPosition) {
+          c.material = this.purpleMaterial;
         } else {
           c.material = this.blueMaterial;
         }
@@ -371,7 +417,7 @@ class Map3D extends React.Component {
       c.instance.material = c.material;
       c.instance.material.uniforms.time = { type: 'f', value: time }
     }
-    if (distance < 100 && this.props.selectedLocation && c.instance.userData.data.id === this.props.selectedLocation.id) {
+    if (distance < 100 && this.props.selectedLocation && c.instance.userData.data.translatedId === this.props.selectedLocation.translatedId) {
       let screen = toScreenPosition(c.instance, c.camera, c.controls, this.renderer.domElement)
       let rect = this.renderer.domElement.getBoundingClientRect();
       if (screen.x < rect.left || screen.y + 250 < rect.left || screen.x < rect.top || screen.x - 50 > rect.bottom) {

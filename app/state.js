@@ -2,28 +2,22 @@ import {remote} from 'electron';
 import os from 'os';
 import fs from 'graceful-fs';
 import Reflux from 'reflux';
+Reflux.setEventEmitter(require('events').EventEmitter);
 import _ from 'lodash';
 import each from './each';
 import * as utils from './utils';
 import knownGalaxies from './static/galaxies.json';
 import knownProducts from './static/knownProducts.json';
+import Raven from 'raven-js';
 
 var state = Reflux.createStore({
   init(){
     this.completedMigration = false;
-    let galaxies = knownGalaxies.concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat(knownGalaxies).concat([knownGalaxies[0]]);
-    let galaxyIter = 1;
-    each(galaxies, (g, k)=>{
-      ++galaxyIter;
-      if (galaxyIter > knownGalaxies.length) {
-        galaxies[k] = `Galaxy ${galaxyIter}`;
-      }
-    });
     this.knownProducts = knownProducts;
-    this.galaxies = galaxies;
+    this.galaxies = knownGalaxies;
     this.state = {
       // Core
-      version: '0.11.0',
+      version: '0.12.0',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -45,7 +39,7 @@ var state = Reflux.createStore({
       remoteLength: 0,
       currentLocation: null,
       selectedLocation: null,
-      username: '',
+      username: 'Explorer',
       profile: null,
       favorites: [],
       mods: [],
@@ -54,6 +48,7 @@ var state = Reflux.createStore({
       selectedGalaxy: 0,
       galaxyOptions: [],
       pollRate: 60000,
+      ps4User: false,
       // UI
       settingsOpen: false,
       editorOpen: false,
@@ -80,10 +75,12 @@ var state = Reflux.createStore({
       filterOthers: false,
       useGAFormat: false,
       usernameOverride: false,
+      registerLocation: false,
       remoteLocationsColumns: 1,
       sortStoredByTime: false,
       show: {
         Shared: true,
+        PS4: true,
         Explored: true,
         Center: true,
         Favorite: true,
@@ -93,6 +90,27 @@ var state = Reflux.createStore({
       },
       maintenanceTS: Date.now()
     };
+
+    if (process.env.NODE_ENV === 'production') {
+      Raven
+        .config('https://9729d511f78f40d0ae5ebdeabc9217fc@sentry.io/180778', {
+          environment: process.env.NODE_ENV,
+          release: this.state.version,
+          dataCallback: (data)=>{
+            _.assignIn(data.user, {
+              username: this.state.username,
+              resourceUsage: remote.app.getAppMetrics(),
+              winVersion: this.state.winVersion,
+              remoteLength: this.state.remoteLength,
+              map3d: this.state.map3d,
+              mapDrawDistance: this.state.mapDrawDistance,
+              pollRate: this.state.pollRate
+            });
+            return data;
+          }
+        })
+        .install();
+    }
 
     let saveDirPath;
     let basePath = this.state.configDir.split('\\AppData')[0];
@@ -137,7 +155,8 @@ var state = Reflux.createStore({
       'storedBases',
       'storedLocations',
       'favorites',
-      'autoCapture'
+      'autoCapture',
+      'ps4User'
     ];
     this.handleSettingsMigration();
     const settings = _.pick(this.state, this.settingsKeys);
@@ -147,7 +166,7 @@ var state = Reflux.createStore({
       fileName: 'settings.json',
       configDir: this.state.configDir,
     });
-    
+
   },
   handleJsonWorker(){
     window.jsonWorker.onmessage = (e)=>{
@@ -181,6 +200,7 @@ var state = Reflux.createStore({
       if (this.completedMigration) {
         utils.store.clear();
       }
+
       this.set(stateUpdate);
     }
   },

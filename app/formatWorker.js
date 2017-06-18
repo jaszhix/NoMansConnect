@@ -65,7 +65,6 @@ onmessage = function(e) {
   }
 
   postMessage({
-    stateUpdate: stateUpdate,
-    sync: e.data.sync
+    stateUpdate: stateUpdate
   });
 }

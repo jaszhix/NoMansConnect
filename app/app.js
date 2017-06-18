@@ -119,6 +119,7 @@ class UsernameOverrideModal extends React.Component {
     this.state = {
       name: ''
     };
+    _.assignIn(this.state, _.pick(state.get(), ['ps4User']))
     this.modalStyle = {
       padding: '8px',
       textAlign: 'center',
@@ -142,6 +143,7 @@ class UsernameOverrideModal extends React.Component {
       fontSize: '15px',
       letterSpacing: '2px'
     };
+    autoBind(this);
   }
   handleClickOutside(){
     state.set({usernameOverride: false});
@@ -150,6 +152,10 @@ class UsernameOverrideModal extends React.Component {
     this.setState({name: e.target.value})
   }
   handleSave(){
+    if (this.props.ps4User) {
+      state.set({username: this.state.name}, this.props.onRestart);
+      return;
+    }
     this.props.onSave(this.state.name)
   }
   render(){
@@ -172,6 +178,151 @@ class UsernameOverrideModal extends React.Component {
 };
 
 UsernameOverrideModal = onClickOutside(UsernameOverrideModal);
+
+class LocationRegistrationModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      address: '',
+      galaxies: [],
+      galaxy: 0,
+      selectedGalaxy: 0,
+      preventClose: false
+    };
+    this.modalStyle = {
+      padding: '8px',
+      textAlign: 'center',
+      zIndex: '1001',
+      WebkitTransformOrigin: '50% 25%',
+      boxShadow: 'none',
+      borderTop: '2px solid #95220E',
+      border: '1px solid #DA2600',
+      width: '400px',
+      height: '145px',
+      position: 'absolute',
+      left: '0px',
+      right: '0px',
+      top: '45%',
+      margin: '0px auto'
+    };
+    this.inputStyle = {
+      width: '300px',
+      position: 'relative',
+      top: '7px',
+      color: '#FFF',
+      background: 'rgb(23, 26, 22)',
+      padding: '0.67861429em',
+      borderRadius: '0px',
+      border: '1px solid #DA2600',
+      fontFamily: 'geosanslight-nmsregular',
+      fontSize: '15px',
+      letterSpacing: '2px'
+    };
+    this.errorStyle = {
+      fontFamily: 'geosanslight-nmsregular',
+      fontSize: '15px',
+      fontWeight: 600,
+      letterSpacing: '2px',
+      color: 'rgb(218, 38, 0)'
+    };
+    autoBind(this);
+  }
+  componentDidMount(){
+    each(state.galaxies, (galaxy, i)=>{
+      this.state.galaxies.push({
+        id: galaxy,
+        label: galaxy,
+        onClick: ()=>this.setState({
+          galaxy: i,
+          preventClose: false
+        })
+      });
+    });
+    this.setState({galaxies: this.state.galaxies});
+  }
+  handleClickOutside(){
+    /*if (this.state.preventClose) {
+      return;
+    }*/
+    state.set({registerLocation: false});
+  }
+  handleChange(e){
+    this.setState({address: e.target.value})
+  }
+  handleSave(){
+    let location = utils.fromHex(this.state.address, this.props.s.username, this.state.galaxy);
+    console.log(location)
+    if (!location) {
+      this.setState({
+        address: '',
+        error: 'Invalid coordinate format.'
+      });
+      return;
+    }
+
+    let refLocation = _.findIndex(this.props.s.storedLocations, {translatedId: this.state.address});
+
+    if (refLocation > -1) {
+      this.setState({
+        address: '',
+        error: 'This location has already been registered.'
+      });
+      return;
+    }
+
+    this.props.s.storedLocations.push(location);
+    each(this.props.s.storedLocations, (storedLocation, i)=>{
+      if (_.isString(storedLocation.timeStamp)) {
+        this.props.s.storedLocations[i].timeStamp = new Date(storedLocation.timeStamp).getTime()
+      }
+    });
+    this.props.s.storedLocations = _.orderBy(this.props.s.storedLocations, 'timeStamp', 'desc');
+
+    state.set({storedLocations: this.props.s.storedLocations}, ()=>{
+      utils.ajax.post('/nmslocation/', {
+        machineId: this.props.s.machineId,
+        username: location.username,
+        data: location
+      }).then((res)=>{
+        this.handleClickOutside();
+
+      }).catch((err)=>{
+        this.setState({
+          address: '',
+          error: 'There was an error registering this location.'
+        });
+      });
+    });
+  }
+  render(){
+    return (
+      <div className="ui small modal active" style={this.modalStyle}>
+        <span className="close"/>
+        <div onClick={()=>this.setState({preventClose: true})}>
+          <BasicDropdown
+          height={this.props.s.height}
+          options={this.state.galaxies}
+          selectedGalaxy={this.state.galaxy} />
+        </div>
+        {this.state.error ? <div style={this.errorStyle}>{this.state.error}</div> : null}
+        <div style={{position: 'absolute', top: '50px', left: '50px'}}>
+          <input
+          style={this.inputStyle}
+          type="text"
+          value={this.state.name}
+          onChange={this.handleChange}
+          maxLength={30}
+          placeholder="Galactic Address" />
+          <Button onClick={this.handleSave}>
+            Save
+          </Button>
+        </div>
+      </div>
+    );
+  }
+};
+
+LocationRegistrationModal = onClickOutside(LocationRegistrationModal);
 
 const locationItemStyle = {padding: '0px 2px', margin: '0px 3px', background: 'rgba(23, 26, 22, 0.8)', fontFamily: 'geosanslight-nmsregular', fontSize: '16px'};
 
@@ -325,9 +476,6 @@ class LocationBox extends React.Component {
       this.setState({isVisible: true});
     }
   }
-  shouldComponentUpdate(nextProps, nextState){
-    return !_.isEqual(this.state, nextState) || !_.isEqual(this.props, nextProps)
-  }
   handleNameChange(e){
     this.setState({name: e.target.value})
   }
@@ -346,7 +494,7 @@ class LocationBox extends React.Component {
     let isSpaceStation = p.location.id[p.location.id.length - 1] === '0';
     let leftOptions = [];
 
-    if (p.location.id !== p.currentLocation) {
+    if (p.location.id !== p.currentLocation && !p.ps4User && p.location.playerPosition) {
       leftOptions.push({
         id: 'teleport',
         label: p.selectType && p.installing && p.installing === `tselected` || p.i && p.installing === `t${p.i}` ? 'Working...' : 'Teleport Here',
@@ -428,6 +576,7 @@ class LocationBox extends React.Component {
             <h3 style={{
               textAlign: 'center',
               maxHeight: '23px',
+              color: p.location.playerPosition ? 'inherit' : '#7fa0ff',
               cursor: p.selectType ? 'default' : 'pointer'
             }}
             onClick={()=>state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
@@ -823,6 +972,7 @@ class RemoteLocations extends React.Component {
                   onTeleport={p.onTeleport}
                   onSaveBase={p.onSaveBase}
                   checkVisibility={this.state.checkVisibility}
+                  ps4User={p.ps4User}
                   />
                 );
               })}
@@ -853,7 +1003,7 @@ class StoredLocationItem extends React.Component {
       cursor: 'pointer',
       padding: '3px 12px 3px 3px',
       background: this.state.hover || this.props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'inherit',
-      textAlign: 'right'
+      textAlign: 'right',
     };
     let usesName = this.props.location.name && this.props.location.name.length > 0;
     let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.id}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
@@ -885,12 +1035,17 @@ class StoredLocationItem extends React.Component {
           cursor: 'pointer'
         }}
         className="star icon" /> : null}
-        <p className={isMarquee ? 'marquee' : ''} style={{
+        <p
+        className={isMarquee ? 'marquee' : ''}
+        style={{
+          color: this.props.location.playerPosition ? 'inherit' : '#7fa0ff',
           maxWidth: `${isMarquee ? 200 : 177}px`,
           whiteSpace: 'nowrap',
           position: 'relative',
           left: `${isMarquee ? 33 : name.length >= 25 ? 76 : !usesName && this.props.useGAFormat ? 56 : 86}px`,
-        }}><span>{name}</span></p>
+        }}>
+          <span>{name}</span>
+        </p>
       </div>
     );
   }
@@ -1278,6 +1433,7 @@ class Container extends React.PureComponent {
               onTeleport={p.onTeleport}
               onSubmit={this.handleUpdate}
               onSaveBase={p.onSaveBase}
+              ps4User={p.s.ps4User}
                /> : null}
             </div>
           </div>
@@ -1291,7 +1447,8 @@ class Container extends React.PureComponent {
         onPagination={p.onPagination}
         onTeleport={p.onTeleport}
         onFav={this.handleFavorite}
-        onSaveBase={p.onSaveBase}/> : <Loader />}
+        onSaveBase={p.onSaveBase}
+        ps4User={p.s.ps4User} /> : <Loader />}
       </div>
     );
   }
@@ -1386,7 +1543,6 @@ class App extends Reflux.Component {
           fs.readdir(`${_path}${modPath}`, (err, list)=>{
             if (err) {
               log.error(`Failed to read mods directory: ${err}`);
-              this.handleInstallDirFailure();
               return;
             }
             list = _.filter(list, (item)=>{
@@ -1446,12 +1602,6 @@ class App extends Reflux.Component {
         if (e.data.func === 'handleSync') {
           this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true);
         } else if (e.data.func === 'pollRemoteLocations') {
-          if (this.remotePollingFailures >= 5) {
-            log.error('Restarting the client after 5 consecutive polling failures.');
-            this.handleRestart();
-            return;
-          }
-          ++this.remotePollingFailures;
           this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
         }
         return;
@@ -1484,8 +1634,6 @@ class App extends Reflux.Component {
         });
       } else if (e.data.func === 'pollRemoteLocations') {
         if (e.data.data.results.length > 0 && this.state.search.length === 0) {
-          // Reset the remote polling failure count on success
-          this.remotePollingFailures = 0;
           this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, false, false, ()=>{
             this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
           });
@@ -1496,7 +1644,7 @@ class App extends Reflux.Component {
     }
     window.formatWorker.onmessage = (e)=>{
       console.log('FORMAT WORKER: ', e.data);
-      state.set(e.data.stateUpdate, null, e.data.sync);
+      state.set(e.data.stateUpdate); // Sets init
     };
   }
   syncRemoteOwned(cb=null){
@@ -1723,6 +1871,9 @@ class App extends Reflux.Component {
     });
   }
   handleTeleport(location, i, action=null, n=null){
+    if (this.state.ps4User) {
+      return;
+    }
     state.set({installing: `t${i}`}, ()=>{
       utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
         if (location.data) {
@@ -1799,11 +1950,17 @@ class App extends Reflux.Component {
     });
   }
   pollSaveData(mode, init=false, machineId=this.state.machineId){
+    if (this.state.ps4User && this.state.username === 'Explorer') {
+      state.set({usernameOverride: true});
+      return;
+    }
+
     let getLastSave = (NMSRunning=false)=>{
       let next = ()=>{
-        if (init) {
+        if (init && !this.state.ps4User) {
           this.handleWallpaper();
           this.handleSync(1, this.state.sort, init);
+
           watch.createMonitor(this.state.saveDirectory, {
             ignoreDotFiles: true,
             ignoreNotPermitted: true,
@@ -1819,6 +1976,9 @@ class App extends Reflux.Component {
             state.set({usernameOverride: true});
           }
         } else {
+          if (init) {
+            this.handleWallpaper();
+          }
           this.fetchRemoteLocations(1, this.state.sort, init);
         }
       };
@@ -1828,6 +1988,12 @@ class App extends Reflux.Component {
       }
 
       let processData = (saveData, location, refLocation, username, profile=null)=>{
+        if (this.state.ps4User) {
+          state.set({
+            machineId: machineId,
+          }, next);
+          return;
+        }
         /*let uniquePlayers = [];
         each(saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record, (record)=>{
           uniquePlayers.push(record.OWS.USN);
@@ -1949,11 +2115,14 @@ class App extends Reflux.Component {
 
       console.log(this.state.saveDirectory)
 
-      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
-        let location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
-        console.log(location)
-        const refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
-        let username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User).then((saveData)=>{
+        let refLocation, location, username;
+        if (!this.state.ps4User) {
+          location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
+          console.log(location)
+          refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
+          username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+        }
 
         if (this.state.username.length > 0 && this.state.username !== username) {
           username = this.state.username;
@@ -1967,7 +2136,9 @@ class App extends Reflux.Component {
             machineId: machineId
           }
         }).then((profile)=>{
-
+          if (typeof profile.data.username !== 'undefined') {
+            username = profile.data.username;
+          }
           processData(saveData, location, refLocation, username, profile);
         }).catch((err)=>{
           console.log(err)
@@ -2031,7 +2202,8 @@ class App extends Reflux.Component {
     utils.ajax.post('/nmsoverride/', {
       username: this.state.username,
       override: username,
-      machineId: this.state.machineId
+      machineId: this.state.machineId,
+      ps4User: this.state.ps4User
     }).then((res)=>{
       window.jsonWorker.postMessage({
         method: 'remove',
@@ -2081,18 +2253,19 @@ class App extends Reflux.Component {
       height: window.innerHeight
     });
   }
-  handleInstallDirFailure(){
-    state.set({
-      title: 'NMS Install Directory Not Found, Please Select Location'
-    }, ()=>{
-      this.handleSelectInstallDirectory();
-    });
-  }
   handleSaveDataFailure(mode=this.state.mode, init=false, cb){
-    state.set({
-      title: 'NMS Save Directory Not Found, Please Select Location'
-    }, ()=>{
-      this.handleSelectSaveDirectory();
+    dialog.showMessageBox({
+      title: 'Which platform do you use?',
+      message: 'Save data not found. Select PS4 to skip this step, and disable PC specific features.',
+      buttons: ['PC', 'PS4']
+    }, result=>{
+      state.set({ps4User: result === 1}, ()=>{
+        if (result === 0) {
+          this.handleSelectSaveDirectory();
+        } else if (this.state.username === 'Explorer') {
+          state.set({usernameOverride: true});
+        }
+      });
     });
   }
   handleUpgrade(){
@@ -2249,6 +2422,12 @@ class App extends Reflux.Component {
   handleSetUsernameOverride(){
     state.set({usernameOverride: true})
   }
+  handleLocationRegistrationToggle(){
+    state.set({registerLocation: !this.state.registerLocation});
+  }
+  handleLocationRegistration(){
+
+  }
   render(){
     var s = this.state;
     return (
@@ -2286,14 +2465,15 @@ class App extends Reflux.Component {
                 <i className={s.searchInProgress ? 'remove link icon' : 'search link icon'} style={this.searchIconStyle} onClick={this.handleSearchIconClick}/>
               </div>
             </div> : null}
+            {!s.ps4User ?
             <BaseDropdownMenu
             onSaveBase={this.handleSaveBase}
             onRestoreBase={this.handleRestoreBase}
             baseOpen={s.baseOpen}
             baseIcon={baseIcon}
             storedBases={this.state.storedBases}
-            />
-            {s.profile ?
+            /> : null}
+            {s.profile && !s.ps4User ?
             <SaveEditorDropdownMenu
             onSaveBase={this.handleSaveBase}
             onRestoreBase={this.handleRestoreBase}
@@ -2301,6 +2481,14 @@ class App extends Reflux.Component {
             editorOpen={s.editorOpen}
             onCheat={this.handleCheat}
             /> : null}
+            <a
+            style={utils.css(this.noDragStyle, {cursor: 'default'})}
+            className={`ui icon item`}
+            onClick={this.handleLocationRegistrationToggle}
+            data-place="bottom"
+            data-tip={utils.tip('Manually Register Location')}>
+              <i className="location arrow icon" />
+            </a>
             <DropdownMenu
             s={s}
             onSelectSaveDirectory={this.handleSelectSaveDirectory}
@@ -2343,7 +2531,8 @@ class App extends Reflux.Component {
           </div>
         </div>
         {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} width={this.state.width} /> : null}
-        {this.state.usernameOverride ? <UsernameOverrideModal onSave={this.handleUsernameOverride}/> : null}
+        {this.state.usernameOverride ? <UsernameOverrideModal ps4User={this.state.ps4User} onSave={this.handleUsernameOverride} onRestart={this.handleRestart}/> : null}
+        {this.state.registerLocation ? <LocationRegistrationModal s={_.pick(this.state, ['machineId', 'username', 'height', 'storedLocations'])} /> : null}
         {s.init ?
         <Loader />
         :

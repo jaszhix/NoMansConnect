@@ -54,6 +54,7 @@ onmessage = function(e) {
     let remoteLocations = [];
     let favLocations = [];
     let baseLocations = [];
+    let ps4Locations = []
 
     each(eData.p.storedLocations, (location)=>{
       if (location.galaxy !== eData.p.selectedGalaxy) {
@@ -117,6 +118,14 @@ onmessage = function(e) {
             z: location.data.translatedY,
             id: location.id
           });
+        } else if (location.username !== eData.p.username && !location.data.playerPosition && eData.p.show.PS4) {
+          ps4Locations.push({
+            x: location.data.translatedX,
+            y: (0, 4096) - location.data.translatedZ,
+            z: location.data.translatedY,
+            user: location.username,
+            id: location.id
+          });
         } else if (location.username !== eData.p.username && eData.p.show.Shared) {
           remoteLocations.push({
             x: location.data.translatedX,
@@ -134,7 +143,8 @@ onmessage = function(e) {
       locations: locations,
       remoteLocations: remoteLocations,
       favLocations: favLocations,
-      baseLocations: baseLocations
+      baseLocations: baseLocations,
+      ps4Locations: ps4Locations
     });
   }
 

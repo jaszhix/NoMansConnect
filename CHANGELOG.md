@@ -1,3 +1,14 @@
+# 0.12.0
+
+  * Added support for PS4 players.
+    * This work by manually registering coordinates in hex format.
+    * While voxel coordinates are created from a conversion, these locations cannot be teleported to.
+    * Older versions of NMC cannot distinguish PS4 locations from PC locations, and teleporting to them will crash your game. It is recommended to *upgrade immediately*.
+    * Improved the accuracy of the hex address conversion for PC locations.
+  * The settings are now stored in a JSON file named settings.json in AppData/Roaming/NoMansConnect. This makes it easier to change faulty settings, and to report bugs. The app will migrate the old settings format to the new format.
+  * The 3D map now only renders systems and lists the planets inside them on the HUD.
+  * Added helpful information to the options menu.
+
 # 0.11.0
 
   * Fixed the map scaling becoming unbalanced.

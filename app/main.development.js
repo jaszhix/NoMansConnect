@@ -31,8 +31,7 @@ const installExtensions = async () => {
     const installer = require('electron-devtools-installer'); // eslint-disable-line global-require
 
     const extensions = [
-      'REACT_DEVELOPER_TOOLS',
-      'REDUX_DEVTOOLS'
+      'REACT_DEVELOPER_TOOLS'
     ];
 
     const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
@@ -87,6 +86,15 @@ app.on('ready', async () => {
   mainWindow.on('closed', () => {
     mainWindow = null;
   });
+
+  const restartApp = () => {
+    app.relaunch();
+    mainWindow.close();
+  };
+
+  mainWindow.webContents.on('crashed', restartApp);
+  mainWindow.webContents.on('unresponsive', restartApp);
+  mainWindow.webContents.on('uncaughtException', restartApp);
 
   Menu.setApplicationMenu(null);
   globalShortcut.register('Insert', ()=>{
