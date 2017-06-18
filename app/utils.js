@@ -85,22 +85,24 @@ export var isNegativeInteger = (int)=>{
 };
 
 export var convertInteger = (int, axis)=>{
-  let isNegative = int < 0;
-  let offsets = {
-    x: isNegative ? [4096, 2048, 1024] : [3584, 1536, 4096],
-    z: [3584, 1536, 4096],
-    y: isNegative ? [128, 256] : [224, 96, 256],
-  };
-  let na = offsets[axis];
-  int = Math.abs(int);
+  let oldMin = axis === 'y' ? -128 : -2048;
+  let oldMax = axis === 'y' ? 127 : 2047;
+  let oldRange = (oldMax - oldMin);
+  let newMax = axis === 'y' ? 255 : 4096;
+  let newMin = 0;
+  let newRange = (newMax - newMin);
+  return Math.floor(((((int - oldMin) * newRange) / oldRange) + newMin) - 1);
+};
 
-  if (isNegative) {
-    int = Math.abs(Math.abs(int - na[0]) - na[1]);
-  } else {
-    int = Math.abs(Math.abs(Math.abs(int - na[0]) - na[1]) - na[2]);
-  }
-
-  return int - 1;
+export var convertHex = (int, axis)=>{
+  let oldMin = 0;
+  let oldMax = axis === 'y' ? 255 : 4096;
+  let oldRange = (oldMax - oldMin);
+  let newMax = axis === 'y' ? 127 : 2047;
+  let newMin = axis === 'y' ? -128 : -2048;
+  let newRange = (newMax - newMin);
+  let offset = axis === 'y' ? 1 : 2;
+  return Math.floor(((((int - oldMin) * newRange) / oldRange) + newMin) + offset)
 };
 
 window.convertInteger = convertInteger
@@ -113,7 +115,7 @@ export var convertIntegerZ = (int, na)=>{
 };
 
 var isValueNull = (variable)=>{
-  return (variable == undefined || variable == null);
+  return (variable === undefined || variable == null);
 }
 
 var setDefaultValueIfNull = (variable, defaultVal)=>{
@@ -125,6 +127,80 @@ export var toHex = (str, totalChars)=>{
   totalChars = setDefaultValueIfNull(totalChars, 2);
   str = ('0'.repeat(totalChars)+Number(str).toString(16)).slice(-totalChars).toUpperCase();
   return str;
+}
+
+export var fromHex = (str, username, galaxy)=>{
+  try {
+    let result = {x: 0, y: 0, z: 0, SolarSystemIndex: 0};
+    let resultKeys = Object.keys(result);
+    if (str.indexOf(':') === -1) {
+      return null;
+    }
+    let strParts = str.split(':');
+    if (strParts.length !== 4) {
+      return null;
+    }
+    let valid = true;
+    each(strParts, (part, key)=>{
+      part = part.trim();
+      if (!part.match(/^[a-z0-9]+$/i)) {
+        valid = false;
+        return;
+      }
+      let _key = resultKeys[key];
+      result[_key] = _key.length === 1 ? convertHex(parseInt(part, 16), _key) : parseInt(part, 16);
+    });
+
+    if (!valid) {
+      return
+    }
+
+    let manualLocation = {
+      username: username,
+      playerPosition: false,
+      playerTransform: false,
+      shipPosition: false,
+      shipTransform: false,
+      galaxy: galaxy,
+      distanceToCenter: Math.sqrt(Math.pow(result.x, 2) + Math.pow(result.y, 2) + Math.pow(result.z, 2)) * 100,
+      VoxelY: result.y,
+      VoxelX: result.x,
+      VoxelZ: result.z,
+      SolarSystemIndex: result.SolarSystemIndex,
+      PlanetIndex: 0,
+      translatedX: convertInteger(result.x, 'x'),
+      translatedZ: convertInteger(result.z, 'z'),
+      translatedY: convertInteger(result.y, 'y'),
+      base: false,
+      baseData: false,
+      upvote: false,
+      image: '',
+      mods: [],
+      timeStamp: Date.now(),
+    };
+    _.assignIn(manualLocation, {
+      jumps: Math.ceil(manualLocation.distanceToCenter / 400),
+      translatedId: `${toHex(manualLocation.translatedX, 4)}:${toHex(manualLocation.translatedY, 4)}:${toHex(manualLocation.translatedZ, 4)}:${toHex(manualLocation.SolarSystemIndex, 4)}`,
+      GalacticAddress: {
+        VoxelY: result.y,
+        VoxelX: result.x,
+        VoxelZ: result.z,
+        SolarSystemIndex: result.SolarSystemIndex,
+        PlanetIndex: 1,
+        RealityIndex: galaxy
+      },
+      RealityIndex: galaxy
+    });
+
+    let _manualLocation = formatID(manualLocation);
+    delete manualLocation.GalacticAddress;
+    delete manualLocation.RealityIndex;
+
+    _.assignIn(manualLocation, _manualLocation)
+    return manualLocation;
+  } catch (e) {
+    return null;
+  }
 }
 
 export var walk = (dir, done)=>{
@@ -158,8 +234,12 @@ export var walk = (dir, done)=>{
   });
 };
 
-export var getLastGameModeSave = (saveDirectory, mode)=>{
+export var getLastGameModeSave = (saveDirectory, mode, ps4User)=>{
   return new Promise((resolve, reject)=>{
+    if (ps4User) {
+      resolve();
+      return;
+    }
     walk(saveDirectory, (err, results)=>{
       if (err) {
         console.log(err)
@@ -316,7 +396,10 @@ export var css = (styleObject, newObject)=>{
 };
 
 export var tip = (content)=>{
-  return `<div style="font-family:'geosanslight-nmsregular';font-size:14px;border-radius:0px;">${content}</div>`
+  if (content.length === 0) {
+    return null;
+  }
+  return `<div style="font-family:'geosanslight-nmsregular';font-size:14px;border-radius:0px; max-width: 200px;">${content}</div>`
 }
 
 export var ajax = axios.create({
