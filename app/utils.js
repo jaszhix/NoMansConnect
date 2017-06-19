@@ -186,7 +186,7 @@ export var fromHex = (str, username, galaxy)=>{
         VoxelX: result.x,
         VoxelZ: result.z,
         SolarSystemIndex: result.SolarSystemIndex,
-        PlanetIndex: 1,
+        PlanetIndex: 0,
         RealityIndex: galaxy
       },
       RealityIndex: galaxy

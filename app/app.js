@@ -494,7 +494,7 @@ class LocationBox extends React.Component {
     let isSpaceStation = p.location.id[p.location.id.length - 1] === '0';
     let leftOptions = [];
 
-    if (p.location.id !== p.currentLocation && !p.ps4User && p.location.playerPosition) {
+    if (p.location.id !== p.currentLocation && !p.ps4User) {
       leftOptions.push({
         id: 'teleport',
         label: p.selectType && p.installing && p.installing === `tselected` || p.i && p.installing === `t${p.i}` ? 'Working...' : 'Teleport Here',
@@ -1878,6 +1878,36 @@ class App extends Reflux.Component {
       utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
         if (location.data) {
           location = location.data;
+        }
+
+        if (!location.playerPosition) {
+          _.assignIn(location, {
+            playerPosition: [
+              233.02163696289063,
+              6774.24560546875,
+              115.99118041992188,
+              1
+            ],
+            playerTransform: [
+              0.35815203189849854,
+              0.82056683301925659,
+              0.44541805982589722,
+              1
+            ],
+            shipPosition: [
+              234.85250854492188,
+              6777.2685546875,
+              121.86365509033203,
+              1
+            ],
+            shipTransform: [
+              -0.48167002201080322,
+              -0.84464621543884277,
+              -0.23359590768814087,
+              1
+            ],
+          });
+          saveData.result.SpawnStateData.LastKnownPlayerState = 'InShip';
         }
 
         _.assignIn(saveData.result.SpawnStateData, {

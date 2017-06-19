@@ -1,7 +1,13 @@
+# 0.12.1
+
+  * PC players can now teleport to manually registered locations!
+    * You will spawn in space inside your ship at these locations. They are marked in blue.
+    * Thanks to monkeyman192 for helping me figure it out.
+
 # 0.12.0
 
   * Added support for PS4 players.
-    * This work by manually registering coordinates in hex format.
+    * This works by manually registering coordinates in hex format.
     * While voxel coordinates are created from a conversion, these locations cannot be teleported to.
     * Older versions of NMC cannot distinguish PS4 locations from PC locations, and teleporting to them will crash your game. It is recommended to *upgrade immediately*.
     * Improved the accuracy of the hex address conversion for PC locations.

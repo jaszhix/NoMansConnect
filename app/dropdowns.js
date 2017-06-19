@@ -517,7 +517,7 @@ export class BasicDropdown extends React.Component {
           {this.props.options.length > 0 ? _.map(this.props.options, (option, i)=>{
             let tooltip = '';
             if (option.id === 'teleport') {
-              tooltip = 'Ensure the game is paused before teleporting, and afterwards, select "Reload Last Save" from the game\'s options menu.'
+              tooltip = 'Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.'
             }
             return (
               <div
