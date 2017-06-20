@@ -34,8 +34,10 @@ export var exc = (cmd)=>{
     };
     if (process.platform === 'win32') {
       opts.shell = 'powershell.exe';
+    } else {
+      opts.shell = '/bin/sh';
     }
-    exec(cmd, function (err, stdout, stderr) {
+    exec(cmd, [], opts, function (err, stdout, stderr) {
       if (err) {
         reject(err);
       } else {

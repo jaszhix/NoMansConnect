@@ -77,10 +77,23 @@
       "target": "nsis"
     },
     "linux": {
+      "category": "Games",
+      "description": "A location manager for No Man's Sky.",
       "target": [
-        "deb",
-        "AppImage"
-      ]
+        "deb"
+      ],
+      "desktop": {
+        "type": "Application",
+        "encoding": "UTF-8",
+        "comment": "A location manager for No Man's Sky.",
+        "exec": "nomansconnect",
+        "icon": "./resources/icons/48x48.png"
+      },
+      "depends": [
+        "libappindicator1",
+        "libnotify-bin"
+      ],
+      "executableName": "nomansconnect"
     },
     "directories": {
       "buildResources": "resources",
