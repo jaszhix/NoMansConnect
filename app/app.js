@@ -10,6 +10,7 @@ const ps = require('win-ps');
 import {machineId} from 'electron-machine-id';
 import state from './state';
 import React from 'react';
+import ReactDOMServer from 'react-dom/server'
 /*if (process.env.NODE_ENV !== 'production') {
   const {whyDidYouUpdate} = require('why-did-you-update')
   whyDidYouUpdate(React)
@@ -451,13 +452,17 @@ class LocationBox extends React.Component {
     };
     this.scrollBoxStyle = {
       maxHeight: '177px',
-      minHeight: '177px',
       overflowY: 'auto',
       overflowX: 'hidden',
       width: '363px'
     };
+    this.invisibleStyle = {
+      opacity: '0',
+
+    }
   }
   onVisibilityChange(isVisible){
+    this.isVisible = isVisible;
     this.setState({isVisible: isVisible});
   }
   handleCancel(){
@@ -473,14 +478,80 @@ class LocationBox extends React.Component {
       this.setState({name: '', description: ''});
     }
     if (nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck && !nextProps.enableVisibilityCheck) {
+      this.isVisible = true;
       this.setState({isVisible: true});
     }
+
+    if (nextProps.compactRemote !== this.props.compactRemote) {
+      ReactTooltip.rebuild();
+      this.setState({compactRemote: nextProps.compactRemote});
+    }
+  }
+  shouldComponentUpdate(nextProps, nextState){
+    return (!_.isEqual(nextProps.location, this.props.location)
+      || nextProps.updating !== this.props.updating
+      || nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck
+      || nextProps.selectType
+      || nextState.isVisible !== this.state.isVisible
+      || nextProps.scrollTop !== this.props.scrollTop
+      || nextProps.compactRemote !== this.props.compactRemote && nextState.isVisible);
   }
   handleNameChange(e){
     this.setState({name: e.target.value})
   }
   handleDescriptionChange(e){
     this.setState({description: e.target.value})
+  }
+  renderDetails(){
+    let p = this.props;
+    let scrollBoxStyle = this.scrollBoxStyle;
+    if (p.compactRemote) {
+      scrollBoxStyle.maxHeight = '377px';
+    }
+    return (
+      <div
+        ref="scrollBox"
+        style={this.scrollBoxStyle}>
+          {p.image && p.image.length > 0 ?
+          <div style={{textAlign: 'center'}}>
+            <img
+            style={this.imageStyle}
+            src={`${IMAGE_DOMAIN}${p.image}`}
+            onClick={()=>state.set({selectedImage: p.image})} />
+          </div> : null}
+          {p.location.description ? <Item label="Description" value={p.location.description} /> : null }
+          <Item label="Galactic Address" value={p.location.translatedId} />
+          <Item label="Voxel Address" value={p.location.id} />
+          {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
+          {p.location.distanceToCenter ? <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(3)} LY`} /> : null}
+          <Item label="Jumps" value={p.location.jumps} />
+          {p.location.mode ? <Item label="Mode" value={_.upperFirst(p.location.mode)} /> : null}
+          {p.location.teleports ? <Item label="Teleports" value={p.location.teleports} /> : null}
+          {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
+          {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
+          <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
+          {p.location.mods && p.location.mods.length > 0 && !p.compactRemote ?
+          <div
+          className="ui segment"
+          style={utils.css(locationItemStyle)}>
+            <span style={{fontWeight: '600'}}>Mods Used ({p.location.mods.length})</span>:
+            {_.map(p.location.mods, (mod, i)=>{
+              return (
+                <div
+                key={i}
+                className="ui segment"
+                style={utils.css(locationItemStyle, {
+                  marginTop: i === 0 ? '14px' : '0px',
+                  marginBottom: '0px',
+                  fontSize: '14px'
+                })}>
+                  {_.truncate(mod, {length: 43})}
+                </div>
+              );
+            })}
+          </div> : null}
+        </div>
+    );
   }
   render(){
     let p = this.props;
@@ -544,28 +615,32 @@ class LocationBox extends React.Component {
       onClick: ()=>clipboard.writeText(p.location.translatedId)
     });
 
+    let visibleStyle = {
+      background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
+      display: 'inline-table',
+      opacity: '1',
+      borderTop: '2px solid #95220E',
+      textAlign: 'left',
+      marginTop: p.selectType ? '26px' : 'initial',
+      marginBottom: '26px',
+      marginRight: !p.selectType && p.i % 1 === 0 ? '26px' : 'initial',
+      minWidth: `${compact ? 358 : 386}px`,
+      maxWidth: '386px',
+      minHeight: p.compactRemote ? '68px' : '245px',
+      maxHeight: '289px',
+      zIndex: p.selectType ? '91' : 'inherit',
+      position: p.selectType ? 'fixed' : '',
+      left: p.selectType ? '28px' : 'inherit',
+      top: p.selectType ? `${p.height - 271}px` : 'inherit',
+      WebkitUserSelect: 'none'
+    };
+
     return (
         <div
         className="ui segment"
-        style={{
-          background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
-          display: 'inline-table',
-          opacity: this.state.isVisible ? '1' : '0',
-          borderTop: '2px solid #95220E',
-          textAlign: 'left',
-          marginTop: p.selectType ? '26px' : 'initial',
-          marginBottom: '26px',
-          marginRight: !p.selectType && p.i % 1 === 0 ? '26px' : 'initial',
-          minWidth: `${compact ? 358 : 386}px`,
-          maxWidth: '386px',
-          minHeight: '245px',
-          maxHeight: '289px',
-          zIndex: p.selectType ? '91' : 'inherit',
-          position: p.selectType ? 'fixed' : '',
-          left: p.selectType ? '28px' : 'inherit',
-          top: p.selectType ? `${p.height - 271}px` : 'inherit',
-          WebkitUserSelect: 'none'
-        }}>
+        style={this.state.isVisible ? visibleStyle : this.invisibleStyle}
+        data-place="left"
+        data-tip={this.state.isVisible && !p.selectType && p.compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
           <VisibilitySensor
           active={p.enableVisibilityCheck}
           intervalCheck={false}
@@ -647,50 +722,9 @@ class LocationBox extends React.Component {
               </div>
             </div>
           </div>
-          : this.state.isVisible ?
+          : p.selectType || this.state.isVisible && !p.compactRemote ?
           <div>
-            <div
-            ref="scrollBox"
-            style={this.scrollBoxStyle}>
-              {p.image && p.image.length > 0 ?
-              <div style={{textAlign: 'center'}}>
-                <img
-                style={this.imageStyle}
-                src={`${IMAGE_DOMAIN}${p.image}`}
-                onClick={()=>state.set({selectedImage: p.image})} />
-              </div> : null}
-              {p.location.description ? <Item label="Description" value={p.location.description} /> : null }
-              <Item label="Galactic Address" value={p.location.translatedId} />
-              <Item label="Voxel Address" value={p.location.id} />
-              {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
-              <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(3)} LY`} />
-              <Item label="Jumps" value={p.location.jumps} />
-              {p.location.mode ? <Item label="Mode" value={_.upperFirst(p.location.mode)} /> : null}
-              {p.location.teleports ? <Item label="Teleports" value={p.location.teleports} /> : null}
-              {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
-              {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
-              <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
-              {p.location.mods && p.location.mods.length > 0 ?
-              <div
-              className="ui segment"
-              style={utils.css(locationItemStyle)}>
-                <span style={{fontWeight: '600'}}>Mods Used ({p.location.mods.length})</span>:
-                {_.map(p.location.mods, (mod, i)=>{
-                  return (
-                    <div
-                    key={i}
-                    className="ui segment"
-                    style={utils.css(locationItemStyle, {
-                      marginTop: i === 0 ? '14px' : '0px',
-                      marginBottom: '0px',
-                      fontSize: '14px'
-                    })}>
-                      {_.truncate(mod, {length: 43})}
-                    </div>
-                  );
-                })}
-              </div> : null}
-            </div>
+            {this.renderDetails()}
           </div> : null}
         </div>
 
@@ -750,6 +784,7 @@ class RemoteLocations extends React.Component {
       || nextProps.s.installing !== this.props.s.installing
       || nextProps.s.width !== this.props.s.width
       || nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
+      || nextProps.s.compactRemote !== this.props.compactRemote
       || nextState.checkVisibility !== this.state.checkVisibility
       || nextState.showOnlyScreenshots !== this.state.showOnlyScreenshots
       || nextState.showOnlyNames !== this.state.showOnlyNames
@@ -848,6 +883,11 @@ class RemoteLocations extends React.Component {
         onClick: ()=>state.set({remoteLocationsColumns: p.s.remoteLocationsColumns === 1 ? 2 : p.s.remoteLocationsColumns === 2 ? 3 : 1})
       },
       {
+        id: 'compactRemote',
+        label: `Compact View: ${p.s.compactRemote ? 'On' : 'Off'}`,
+        onClick: ()=>state.set({compactRemote: !p.s.compactRemote})
+      },
+      {
         id: 'showOnlyGalaxy',
         label: this.state.showOnlyGalaxy ? 'Show Locations From All Galaxies' : `Show Only Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
         onClick: ()=>this.setState({showOnlyGalaxy: !this.state.showOnlyGalaxy})
@@ -899,12 +939,12 @@ class RemoteLocations extends React.Component {
     }
     if (this.state.showOnlyNames) {
       locations = _.filter(locations, (location)=>{
-        return location.data.name.length > 0;
+        return location.data.name && location.data.name.length > 0;
       });
     }
     if (this.state.showOnlyDesc) {
       locations = _.filter(locations, (location)=>{
-        return location.data.description.length > 0;
+        return location.data.description && location.data.description.length > 0;
       });
     }
     if (this.state.showOnlyGalaxy) {
@@ -958,6 +998,7 @@ class RemoteLocations extends React.Component {
                   <LocationBox
                   key={location.id}
                   i={i}
+                  scrollTop={this.refs.recentExplorations ? this.refs.recentExplorations.scrollTop : 0}
                   enableVisibilityCheck={enableVisibilityCheck}
                   name={location.name}
                   description={location.description}
@@ -973,6 +1014,7 @@ class RemoteLocations extends React.Component {
                   onSaveBase={p.onSaveBase}
                   checkVisibility={this.state.checkVisibility}
                   ps4User={p.ps4User}
+                  compactRemote={p.s.compactRemote}
                   />
                 );
               })}
@@ -2528,6 +2570,7 @@ class App extends Reflux.Component {
             onSetWallpaper={this.handleSetWallpaper}
             onUsernameOverride={this.handleSetUsernameOverride} />
           </div>
+          {process.platform !== 'darwin' ?
           <div
           style={this.titleBarControlsStyle}
           className={this.headerItemClasses}
@@ -2558,7 +2601,7 @@ class App extends Reflux.Component {
                 </svg>
               </div>
             </div>
-          </div>
+          </div> : null}
         </div>
         {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} width={this.state.width} /> : null}
         {this.state.usernameOverride ? <UsernameOverrideModal ps4User={this.state.ps4User} onSave={this.handleUsernameOverride} onRestart={this.handleRestart}/> : null}
@@ -2575,11 +2618,13 @@ class App extends Reflux.Component {
         onRestart={this.handleRestart}
         onSearch={this.handleSearch} />}
         <ReactTooltip
+        className="nmcTip"
+        globalEventOff="click mouseleave"
         effect="solid"
         place="bottom"
         multiline={true}
         html={true}
-        offset={{top: 0, left: 6}} />
+        offset={{top: 0, left: 6}}  />
       </div>
     );
   }

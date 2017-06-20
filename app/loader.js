@@ -1,6 +1,6 @@
 import React from 'react';
 
-var Loader = React.createClass({
+class Loader extends React.Component {
   render(){
     return (
       <div className="loader">
@@ -77,6 +77,6 @@ var Loader = React.createClass({
       </div>
     );
   }
-});
+};
 
 export default Loader;

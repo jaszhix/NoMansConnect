@@ -48,7 +48,7 @@ var state = Reflux.createStore({
       selectedGalaxy: 0,
       galaxyOptions: [],
       pollRate: 60000,
-      ps4User: false,
+      ps4User: process.platform === 'darwin',
       // UI
       settingsOpen: false,
       editorOpen: false,
@@ -88,6 +88,7 @@ var state = Reflux.createStore({
         Selected: true,
         Base: true
       },
+      compactRemote: false,
       maintenanceTS: Date.now()
     };
 
@@ -156,7 +157,8 @@ var state = Reflux.createStore({
       'storedLocations',
       'favorites',
       'autoCapture',
-      'ps4User'
+      'ps4User',
+      'compactRemote'
     ];
     this.handleSettingsMigration();
     const settings = _.pick(this.state, this.settingsKeys);
@@ -277,13 +279,15 @@ var state = Reflux.createStore({
     this.trigger(this.state);
 
     each(obj, (value, key)=>{
-      if (this.settingsKeys.indexOf(key) > -1) {
-        window.settingsWorker.postMessage({
-          method: 'set',
-          key: key,
-          value: JSON.stringify(value),
-        });
-      }
+      _.delay(()=>{
+        if (this.settingsKeys.indexOf(key) > -1) {
+          window.settingsWorker.postMessage({
+            method: 'set',
+            key: key,
+            value: JSON.stringify(value),
+          });
+        }
+      }, 100);
     });
 
     if (cb) {

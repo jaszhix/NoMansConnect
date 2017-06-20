@@ -38640,3 +38640,7 @@ body {
 .md-p {
   margin-bottom: 8px;
 }
+
+.nmcTip {
+  border-radius:0px;
+}
