@@ -37,6 +37,7 @@ export default {
 
   plugins: [
     new webpack.NamedModulesPlugin(),
+    new webpack.optimize.ModuleConcatenationPlugin()
   ],
 
   externals: Object.keys(externals || {})
