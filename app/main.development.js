@@ -87,14 +87,14 @@ app.on('ready', async () => {
     mainWindow = null;
   });
 
-  const restartApp = () => {
+/*  const handleExceptionState = () => {
     app.relaunch();
     mainWindow.close();
   };
 
-  mainWindow.webContents.on('crashed', restartApp);
-  mainWindow.webContents.on('unresponsive', restartApp);
-  mainWindow.webContents.on('uncaughtException', restartApp);
+  mainWindow.webContents.on('crashed', handleExceptionState);
+  mainWindow.webContents.on('unresponsive', handleExceptionState);
+  mainWindow.webContents.on('uncaughtException', handleExceptionState);*/
 
   Menu.setApplicationMenu(null);
   globalShortcut.register('Insert', ()=>{
