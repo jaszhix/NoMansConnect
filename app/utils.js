@@ -37,7 +37,7 @@ export var exc = (cmd)=>{
     } else {
       opts.shell = '/bin/sh';
     }
-    exec(cmd, [], opts, function (err, stdout, stderr) {
+    exec(cmd, function (err, stdout, stderr) {
       if (err) {
         reject(err);
       } else {
@@ -262,7 +262,7 @@ export var getLastGameModeSave = (saveDirectory, mode, ps4User)=>{
       each(saveInts, (int)=>{
         each(results, (result)=>{
           let fileName = _.last(result.split('\\'));
-          if (int === 0 && fileName === 'storage.hg' || result.indexOf(`storage${int + 1}.hg`) !== -1) {
+          if (int === 0 && fileName.indexOf('storage.hg') > -1 || result.indexOf(`storage${int + 1}.hg`) > -1) {
             saves.push({
               fileName: fileName,
               result: result,
@@ -468,3 +468,29 @@ var toAdd = (x)=>{
 }
 window.toAdd = toAdd;
 
+export function whichToShow ({outerHeight, itemHeight, scrollTop, columns}) {
+  let start = Math.floor(scrollTop / itemHeight);
+  let heightOffset = scrollTop % itemHeight;
+  let length = Math.ceil((outerHeight + heightOffset) / itemHeight) * columns;
+
+  return {
+    start: start,
+    length: length,
+  }
+}
+
+/*export function rotateLeft(value, bits) {
+  return (value << bits) | (value >> (32 - bits));
+}
+
+export function parseMeta (buffer, archiveNumber) {
+  archiveNumber += 2;
+
+  // Murmurhash-like
+  var k1 = 0 ^ 0x1422cb8c;
+  var h1 = rotateLeft(k1, 13) * 5 + 0xe6546b64;
+}*/
+
+export function convertRange(value, r1, r2) {
+  return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
+};

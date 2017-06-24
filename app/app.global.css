@@ -11564,7 +11564,7 @@ img.ui.bordered.image {
   text-align: left;
   line-height: 1.2142em;
   font-family: 'geosanslight-nmsregular';
-  padding: 0.67861429em 1em;
+  padding: 0.67861429em 0em;
   background: #171A16;
   border: 1px solid rgba(34, 36, 38, 0.15);
   color: rgba(255, 255, 255, 0.87);
@@ -38643,4 +38643,121 @@ body {
 
 .nmcTip {
   border-radius:0px;
+}
+
+.ui.input.focus input, .ui.input input:focus {
+  border-color: rgba(0, 0, 0, 0);
+  background: rgba(0, 0, 0, 0);
+}
+
+.ui.input input:active, .ui.input.down input {
+  border-color: rgba(0, 0, 0, 0);
+}
+
+/*
+
+Components
+
+*/
+
+/*
+Button
+*/
+
+.Button__div:hover {
+  font-weight: 600;
+}
+
+/*
+LocationBox
+*/
+
+.LocationBox__wrapperStyle {
+  min-height: 245px
+}
+.LocationBox__inputRow {
+  max-width: 100%;
+  margin: 0em;
+  flex: 1 0 auto;
+  outline: none;
+  padding: 0.67861429em 0em;
+  border: 1px solid rgba(34, 36, 38, 0.15);
+  border-radius: 0.28571429rem;
+  -webkit-transition: box-shadow 0.1s ease, border-color 0.1s ease;
+}
+.LocationBox__inputStyle {
+  width: 300px;
+  position: relative;
+  left: 28px;
+  top: 3px;
+  color: #FFF;
+  background: rgba(0, 0, 0, 0);
+  padding: 0.67861429em 0em;
+  border-radius: 0px;
+  border: 0px;
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+.LocationBox__textareaStyle {
+  width: 300px;
+  position: relative;
+  left: 28px;
+  top: 3px;
+  color: #FFF;
+  background: rgba(0, 0, 0, 0);
+  padding: 0.67861429em 0em;
+  border: 0px;
+  font-family: 'geosanslight-nmsregular';
+  font-size: 15px;
+  letter-spacing: 2px;
+  outline-color: none;
+}
+.LocationBox__imageStyle {
+  cursor: pointer;
+  max-height: 144.5px;
+  max-width: 386px;
+  width: 99%;
+}
+.LocationBox__starStyle {
+  position: absolute;
+  top: 15px;
+  right: 10px;
+  cursor: pointer;
+}
+.LocationBox__baseStyle {
+  width: 21px;
+  height: 21px;
+}
+.LocationBox__uiSegmentEditStyle {
+  padding: 3px 3px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0);
+}
+.LocationBox__scrollBoxStyle {
+  max-height: 177px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 363px;
+}
+
+/*
+Item
+*/
+
+.Item__wrapperStyle {
+  position: relative;
+  box-shadow: 0px 1px 2px 0 rgba(34, 36, 38, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.27);
+}
+.Item__valueStyle {
+  float: right;
+  position: relative;
+  top: 1px;
+  -webkit-user-select: initial;
+}
+.Item__labelStyle {
+  font-weight: 600;
+}
+.Item__descriptionStyle {
+  margin-bottom: 8px;
 }

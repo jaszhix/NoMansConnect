@@ -254,6 +254,10 @@ class GalacticMap extends React.Component {
       || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.buildGalaxyOptions(nextProps, false);
     }
+
+    if (nextProps.remoteLocationsColumns !== this.props.remoteLocationsColumns) {
+      this.forceUpdate();
+    }
   }
   shouldComponentUpdate(nextProps, nextState){
     return (nextProps.mapLines !== this.props.mapLines
@@ -303,21 +307,24 @@ class GalacticMap extends React.Component {
   travelToCenter(){
     window.travelTo = [0, 2, 0];
   }
+  travelCurrentLocation(){
+    window.travelToCurrent = true;
+  }
   travelToGalacticHub(){
     this.props.onSearch();
-    window.travelTo = [-7344, 400, 11120];
+    window.travelTo = [-7344, 700, 11120];
   }
   travelToAGT(){
     this.props.onSearch();
-    window.travelTo = [6288, 400, -10400];
+    window.travelTo = [6288, 700, -10400];
   }
   travelToPilgrimStar(){
     this.props.onSearch();
-    window.travelTo = [-3496, 600, -12848];
+    window.travelTo = [-3496, 1050, -12848];
   }
   travelToPathFinderHub(){
     this.props.onSearch();
-    window.travelTo = [14160, -800, 1992];
+    window.travelTo = [-14160, -1400, 1992];
   }
   render(){
     let p = this.props;
@@ -325,7 +332,7 @@ class GalacticMap extends React.Component {
     let leftOptions = [
       {
         id: 'map3d',
-        label: `3D Map (BETA): ${p.map3d ? 'On' : 'Off'}`,
+        label: `3D Map: ${p.map3d ? 'On' : 'Off'}`,
         onClick: ()=>state.set({map3d: !p.map3d}, p.onRestart)
       }
     ];
@@ -339,6 +346,11 @@ class GalacticMap extends React.Component {
         id: 'travelTo',
         label: `Go to Center`,
         onClick: this.travelToCenter
+      });
+      leftOptions.push({
+        id: 'travelToCurrent',
+        label: `Travel to Current Location`,
+        onClick: this.travelCurrentLocation
       });
       leftOptions.push({
         id: 'travelTo',

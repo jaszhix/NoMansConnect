@@ -7,6 +7,7 @@ import each from './each';
 import path from 'path'
 import TWEEN from 'tween.js'
 import v from 'vquery';
+import RNG from './RNG';
 
 function distanceVector (v1, v2) {
   var dx = v1.x - v2.x
@@ -83,6 +84,7 @@ class Map3D extends React.Component {
       locations: null
     };
 
+    this.mounted = false;
     this.loader = new THREE.TextureLoader();
     this.starRed = this.loader.load(path.resolve('app/textures/star_red.jpg'));
     this.starOrange = this.loader.load(path.resolve('app/textures/star_orange.jpg'));
@@ -90,7 +92,7 @@ class Map3D extends React.Component {
     this.starGreen = this.loader.load(path.resolve('app/textures/star_green.jpg'));
     this.starPurple = this.loader.load(path.resolve('app/textures/star_purple.jpg'));
 
-    this.sphere = new THREE.SphereGeometry(5, 9, 9);
+    this.sphere = new THREE.SphereGeometry(3, 9, 9);
     this.sphereVs = document.getElementById('surface-vertexShader').textContent;
     this.sphereFs = document.getElementById('surface-fragmentShader').textContent;
 
@@ -120,14 +122,14 @@ class Map3D extends React.Component {
     this.greenMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starGreen));
     this.redMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starRed));
     this.purpleMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starPurple));
-    this.skybox = [
+    /*this.skybox = [ // Threact bug TBD
       path.resolve('app/textures/s1.png'),
       path.resolve('app/textures/s2.png'),
       path.resolve('app/textures/s3.png'),
       path.resolve('app/textures/s4.png'),
       path.resolve('app/textures/s5.png'),
       path.resolve('app/textures/s6.png')
-    ];
+    ];*/
   }
   componentDidMount () {
     _.defer(()=>{
@@ -136,7 +138,6 @@ class Map3D extends React.Component {
 
     this.lights = 0;
     this.hovered = '';
-
   }
   componentWillReceiveProps(nextProps) {
     if (nextProps.remoteLocations && nextProps.remoteLocations.results !== this.props.remoteLocations.results) {
@@ -197,6 +198,9 @@ class Map3D extends React.Component {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector3();
     console.log(this);
+    if (!this.mounted) {
+      _.delay(()=>this.mounted = true, 3000);
+    }
   }
   handleAnimation (c, time) {
     TWEEN.update(time)
@@ -224,6 +228,16 @@ class Map3D extends React.Component {
       let vector3 = new THREE.Vector3(...coords);
       console.log('travel to', coords)
       this.handleTravel(vector3);
+    }
+
+    if (window.travelToCurrent) {
+      window.travelToCurrent = null;
+      let refMesh = _.findIndex(this.scene.children, (child)=>{
+        return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.id === this.props.currentLocation;
+      });
+      if (refMesh > -1) {
+        this.handleTravel(this.scene.children[refMesh].position);
+      }
     }
 
     if (this.travelTo) {
@@ -273,7 +287,7 @@ class Map3D extends React.Component {
         window.travelTo = null;
       }
   }
-  handleMouseDown (e, c) {
+  handleMouseDown (e) {
     e.preventDefault()
 
     let rect = this.renderer.domElement.getBoundingClientRect();
@@ -286,13 +300,14 @@ class Map3D extends React.Component {
 
     var intersects = this.raycaster.intersectObjects(this.scene.children, true);
     console.log(intersects, this.scene.children);
-    if (intersects.length > 0 && intersects[0].object.name !== 'center' && intersects[0].object.userData) {
+    if (intersects.length > 0 && intersects[0].object.name !== 'Center' && intersects[0].object.userData) {
       if (!intersects[0].object.visible) {
         return;
       }
 
       state.set({selectedLocation: intersects[0].object.userData.data}, ()=>{
-        if (intersects[0].object.userData.data.translatedId !== this.props.selectedLocation.translatedId) {
+        if (intersects[0].object.userData.data
+          && intersects[0].object.userData.data.translatedId !== this.props.selectedLocation.translatedId) {
           this.handleTravel(intersects[0].object.position);
         }
       });
@@ -381,7 +396,37 @@ class Map3D extends React.Component {
   }
   handleMeshMount (c, location) {
     c.instance.userData = location;
-    if (location.data.id === this.props.currentLocation) {
+
+    let dupePositions = _.filter(c.scene.children, (child)=>{
+      return child.position.equals(c.instance.position);
+    });
+
+    let currentCentered = null;
+
+    each(dupePositions, (child)=>{
+      let pos = ['x', 'y', 'z']
+
+      each(pos, (key, i)=>{
+        let div = key === 'y' ? 1 : 2;
+        let rng = new RNG((child.position[key] * child.userData.data.SolarSystemIndex) / div);
+        let value = Math.ceil((rng.uniform() * child.userData.data.SolarSystemIndex) / div);
+        let arg = rng.uniform() > 0.5;
+        if (arg) {
+          pos[key] = child.position[key] + value;
+        } else {
+          pos[key] = child.position[key] - value;
+        }
+      });
+
+      child.position.copy(new THREE.Vector3(pos.x, pos.y, pos.z));
+
+      if (child.userData.data.id === this.props.currentLocation && !this.mounted) {
+        currentCentered = true;
+        this.handleTravel(c.instance.position);
+      }
+    });
+
+    if (location.data.id === this.props.currentLocation && !currentCentered && !this.mounted) {
       this.handleTravel(c.instance.position);
     }
   }
@@ -455,18 +500,16 @@ class Map3D extends React.Component {
         width={this.props.size}
         height={this.props.size}
         setSize={[this.props.size, this.props.size]}
-        logarithmicDepthBuffer={true}
+        logarithmicDepthBuffer={false}
         camera={new THREE.PerspectiveCamera(75, this.props.size / this.props.size, 10, 100000)}
         scene={new THREE.Scene()}
-        skybox={this.skybox}
         onMouseMove={this.handleMouseMove}
         onMouseDown={this.handleMouseDown}
         onMount={this.handleMount}
         onAnimate={this.handleAnimation}>
-          {this.props.mapDrawDistance ?
           <Mesh
           name="Center"
-          geometry={new THREE.SphereGeometry( 40, 12, 12 )}
+          geometry={new THREE.SphereGeometry( 20, 12, 12 )}
           material={this.redMaterial}
           position={[0, 2, 0]}
           onMount={(c)=>{
@@ -475,9 +518,9 @@ class Map3D extends React.Component {
           onAnimate={(c)=>{
             c.instance.rotation.x += 0.02;
             c.instance.rotation.y += 0.02;
-          }}  /> : <threact />}
+          }}  />
           {_.map(this.state.locations, (location) => {
-            let position = [location.data.VoxelX * 8, location.data.VoxelY * 200, location.data.VoxelZ * 8]
+            let position = [location.data.VoxelX * 8, location.data.VoxelY * 348, location.data.VoxelZ * 8]
             return (
               <Mesh
               key={location.data.id}

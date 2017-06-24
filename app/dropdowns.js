@@ -257,6 +257,7 @@ export class DropdownMenu extends React.Component {
 
       Special Thanks
 
+      - afWings/AGT
       - Cranky-Cat
       - monkeyman192
       - pgrace
@@ -339,6 +340,13 @@ export class DropdownMenu extends React.Component {
       editorOpen: false
     });
   }
+  handleOfflineModeToggle(e){
+    e.stopPropagation();
+    state.set({
+      title: `NO MAN\'S ${!this.props.s.offline ? 'DIS' : ''}CONNECT`,
+      offline: !this.props.s.offline
+    });
+  }
   render(){
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
@@ -367,7 +375,7 @@ export class DropdownMenu extends React.Component {
             );
           }) : null}
           {!p.s.ps4User ? <div className="divider"></div> : null}
-          {!p.s.ps4User ?
+          {!p.s.ps4User && !p.s.offline ?
           <div className="item" onClick={this.handleAutoCapture}
           data-place="left"
           data-tip={utils.tip('Automatically grabs your screen when NMS is running and the game is saved. Only works when NMS is in window mode.')}>
@@ -395,13 +403,14 @@ export class DropdownMenu extends React.Component {
           data-tip={utils.tip('Required. Select the location the save files are in.')}>
             Select NMS Save Directory
           </div> : null}
+          {!p.s.offline ?
           <div
           className="item"
           onClick={this.handleSync}
           data-place="left"
           data-tip={utils.tip('Downloads stored locations belonging to you, that are available on the server, and uploads locations missing on the server.')}>
             Sync Locations
-          </div>
+          </div> : null}
           <div
           className="item"
           onClick={this.handleResetRemoteCache}
@@ -409,30 +418,39 @@ export class DropdownMenu extends React.Component {
           data-tip={utils.tip('This clears the remote locations list that is stored locally in Roaming/NoMansConnect.')}>
             Reset Remote Cache
           </div>
+          {!p.s.offline ?
           <div
           className="item"
           onClick={this.handlePollRate}
           data-place="left"
           data-tip={utils.tip('Controls how often the client will check the server for new locations. If you experience performance issues, consider increasing this value.')}>
             {`Polling Rate: ${p.s.pollRate / 1000} Seconds`}
-          </div>
+          </div> : null}
           {p.s.profile ?
           <div className="item" onClick={this.handleUsernameProtection}
           data-place="left"
           data-tip={utils.tip('Highly recommended! Anyone can claim your username and impersonate you if this is not enabled. This associates your username with your Windows installation\'s cryptographic signature, so be sure to disable this when switching computers, upgrading hardware, or reinstalling Windows.')}>
             {`Username Protection: ${p.s.profile.protected ? 'On' : 'Off'}`}
           </div> : null}
+          {!p.s.offline ?
           <div
           className="item"
           onClick={this.props.onUsernameOverride}
           data-place="left"
           data-tip={utils.tip('Changes your username. This will update all of your locations. You must disable username protection before setting this.')}>
             Override Username
-          </div>
+          </div> : null}
           <div className="item" onClick={this.handleWallpaper}
           data-place="left"
           data-tip={utils.tip('Changes the NMC background.')}>
             {p.s.wallpaper ? 'Reset Wallpaper' : 'Set Wallpaper'}
+          </div>
+          <div
+          className="item"
+          onClick={this.handleOfflineModeToggle}
+          data-place="left"
+          data-tip={utils.tip(`Prevents NMC from making network requests to the server, and attempts to keep most features in a functional state.`)}>
+            {`Offline Mode: ${p.s.offline ? 'On' : 'Off'}`}
           </div>
           <div className="divider"></div>
           <div className="item" onClick={this.handleAbout}
@@ -442,7 +460,7 @@ export class DropdownMenu extends React.Component {
           </div>
           <div className="item" onClick={this.handleSupport}
           data-place="left"
-          data-tip={utils.tip('Help pay for server time. Total contributions as of this release: $80. Thanks a lot!')}>
+          data-tip={utils.tip('Help pay for server time. Total contributions as of this release: $105. Thanks a lot!')}>
             Support NMC
           </div>
           <div className="divider"></div>

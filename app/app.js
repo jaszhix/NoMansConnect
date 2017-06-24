@@ -9,6 +9,7 @@ import watch from 'watch';
 const ps = require('win-ps');
 import {machineId} from 'electron-machine-id';
 import state from './state';
+import axios from 'axios';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server'
 /*if (process.env.NODE_ENV !== 'production') {
@@ -17,7 +18,6 @@ import ReactDOMServer from 'react-dom/server'
 }*/
 import autoBind from 'react-autobind';
 import Reflux from 'reflux';
-import VisibilitySensor from './visibilitySensor';
 import ReactMarkdown from 'react-markdown';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
@@ -64,18 +64,16 @@ class Button extends React.Component {
   render(){
     return (
       <div
-      className="ui segment"
+      className="ui segment Button__div"
       style={{
+        left: '9px',
         letterSpacing: '3px',
         fontFamily: 'geosanslight-nmsregular',
         fontSize: '16px',
         padding: '3px 3px',
         textAlign: 'center',
-        cursor: 'pointer',
-        background: this.state.hover ? 'rgba(23, 26, 22, 0.6)' : '#171A16'
+        cursor: 'pointer'
       }}
-      onMouseEnter={()=>this.setState({hover: true})}
-      onMouseLeave={()=>this.setState({hover: false})}
       onClick={this.props.onClick}>
         {this.props.children}
       </div>
@@ -106,7 +104,7 @@ class ImageModal extends React.Component {
     return (
       <div className="ui fullscreen modal active" style={this.modalStyle}>
         <span className="close"/>
-        <img className="image content" src={`${IMAGE_DOMAIN}${this.props.image}`} />
+        <img className="image content" src={this.props.image} />
       </div>
     );
   }
@@ -330,22 +328,6 @@ const locationItemStyle = {padding: '0px 2px', margin: '0px 3px', background: 'r
 class Item extends React.Component {
   constructor(props) {
     super(props);
-    this.wrapperStyle = {
-      position: 'initial',
-      borderBottom: '1px solid rgba(255, 255, 255, 0.27)'
-    };
-    this.valueStyle = {
-      float: 'right',
-      position: 'relative',
-      top: '1px',
-      WebkitUserSelect: 'initial'
-    };
-    this.labelStyle = {
-      fontWeight: '600'
-    };
-    this.descriptionStyle = {
-      marginBottom: '8px'
-    };
   }
   handleDescClick(e){
     e.preventDefault();
@@ -371,17 +353,17 @@ class Item extends React.Component {
       return (
         <div
         ref="desc"
-        className="ui segment"
-        style={utils.css(locationItemStyle, this.wrapperStyle)}>
+        className="Item__wrapperStyle"
+        style={locationItemStyle}>
           <ReactMarkdown className="md-p" source={this.props.value} />
         </div>
       );
     } else {
       return (
         <div
-        className="ui segment"
-        style={utils.css(locationItemStyle, this.wrapperStyle)}>
-          <span style={this.labelStyle}>{`${this.props.label}`}</span> <span style={this.valueStyle}>{this.props.value}</span>
+        className="Item__wrapperStyle"
+        style={locationItemStyle}>
+          <span className="Item__labelStyle">{`${this.props.label}`}</span> <span className="Item__valueStyle">{this.props.value}</span>
         </div>
       );
     }
@@ -396,77 +378,35 @@ class LocationBox extends React.Component {
       limit: false,
       name: this.props.name,
       description: this.props.description,
-      isVisible: !this.props.enableVisibilityCheck
+      image: null
     };
     autoBind(this);
-    this.wrapperStyle = {
-      minHeight: '245px'
-    };
-    this.inputStyle = {
-      width: '300px',
-      position: 'relative',
-      left: '28px',
-      top: '3px',
-      color: '#FFF',
-      background: 'rgb(23, 26, 22)',
-      padding: '0.67861429em 0em',
-      borderRadius: '0px',
-      border: '0px',
-      fontSize: '15px',
-      letterSpacing: '2px'
-    };
-    this.textareaStyle = {
-      width: '300px',
-      position: 'relative',
-      left: '28px',
-      top: '3px',
-      color: '#FFF',
-      background: 'rgb(23, 26, 22)',
-      padding: '0.67861429em 0em',
-      border: '0px',
-      fontFamily: 'geosanslight-nmsregular',
-      fontSize: '15px',
-      letterSpacing: '2px',
-      outlineColor: 'none'
-    };
-    this.imageStyle = {
-      cursor: 'pointer',
-      maxHeight: '144.5px',
-      maxWidth: '386px',
-      width: '99%'
-    };
-    this.starStyle = {
-      position: 'absolute',
-      top: '15px',
-      right: '10px',
-      cursor: 'pointer'
-    };
-    this.baseStyle = {
-      width: '21px',
-      height: '21px'
-    };
-    this.uiSegmentEditStyle = {
-      padding: '3px 3px',
-      cursor: 'pointer',
-      background: '#171A16'
-    };
-    this.scrollBoxStyle = {
-      maxHeight: '177px',
-      overflowY: 'auto',
-      overflowX: 'hidden',
-      width: '363px'
-    };
-    this.invisibleStyle = {
-      opacity: '0',
-
-    }
-  }
-  onVisibilityChange(isVisible){
-    this.isVisible = isVisible;
-    this.setState({isVisible: isVisible});
   }
   handleCancel(){
     this.props.onEdit();
+  }
+  componentDidMount(){
+    if (this.props.image) {
+      let img = this.props.image
+        .replace(/:/g, '~')
+        .replace(/NMSLocation-/, '');
+      let file = path.resolve(`${this.props.configDir}${img}`)
+      if (!fs.existsSync(file)) {
+        axios.get(`${IMAGE_DOMAIN}${this.props.image}`, {
+          responseType: 'arraybuffer'
+        }).then((res)=>{
+          fs.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data)=>{
+            if (!err) {
+              this.setState({image: `${file}`});
+            } else {
+              console.log(err)
+            }
+          });
+        }).catch(()=>{});
+      } else {
+        this.setState({image: `${file}`});
+      }
+    }
   }
   componentWillReceiveProps(nextProps){
     if (nextProps.selectType && !_.isEqual(nextProps.location, this.props.location) && this.refs.scrollBox
@@ -477,24 +417,33 @@ class LocationBox extends React.Component {
 
       this.setState({name: '', description: ''});
     }
-    if (nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck && !nextProps.enableVisibilityCheck) {
-      this.isVisible = true;
-      this.setState({isVisible: true});
+
+    if (nextProps.name !== this.props.name) {
+      this.setState({name: nextProps.name});
     }
 
-    if (nextProps.compactRemote !== this.props.compactRemote) {
+    if (nextProps.description !== this.props.description) {
+      this.setState({description: nextProps.description});
+    }
+
+    if (nextProps.compactRemote !== this.props.compactRemote && !nextProps.selectType) {
       ReactTooltip.rebuild();
-      this.setState({compactRemote: nextProps.compactRemote});
+      this.setState({compactRemote: nextProps.compactRemote}, this.props.onCompactRemoteSwitch);
     }
   }
   shouldComponentUpdate(nextProps, nextState){
-    return (!_.isEqual(nextProps.location, this.props.location)
+    let bool = (!_.isEqual(nextProps.location, this.props.location)
       || nextProps.updating !== this.props.updating
       || nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck
-      || nextProps.selectType
-      || nextState.isVisible !== this.state.isVisible
+      || nextProps.selectType === true
+      || nextProps.isVisible !== this.props.isVisible
       || nextProps.scrollTop !== this.props.scrollTop
-      || nextProps.compactRemote !== this.props.compactRemote && nextState.isVisible);
+      || nextProps.compactRemote !== this.props.compactRemote && nextState.isVisible
+      || nextState.image !== this.state.image);
+    if (!_.isBoolean(bool)) { // TBD
+      return true;
+    }
+    return bool;
   }
   handleNameChange(e){
     this.setState({name: e.target.value})
@@ -504,20 +453,19 @@ class LocationBox extends React.Component {
   }
   renderDetails(){
     let p = this.props;
-    let scrollBoxStyle = this.scrollBoxStyle;
-    if (p.compactRemote) {
-      scrollBoxStyle.maxHeight = '377px';
-    }
+    let scrollBoxStyle = p.compactRemote ? {maxHeight: '500px'} : {};
     return (
       <div
         ref="scrollBox"
-        style={this.scrollBoxStyle}>
+        style={scrollBoxStyle}
+        className="LocationBox__scrollBoxStyle">
           {p.image && p.image.length > 0 ?
           <div style={{textAlign: 'center'}}>
+            {this.state.image ?
             <img
-            style={this.imageStyle}
-            src={`${IMAGE_DOMAIN}${p.image}`}
-            onClick={()=>state.set({selectedImage: p.image})} />
+            className="LocationBox__imageStyle"
+            src={this.state.image}
+            onClick={()=>state.set({selectedImage: this.state.image})} /> : null}
           </div> : null}
           {p.location.description ? <Item label="Description" value={p.location.description} /> : null }
           <Item label="Galactic Address" value={p.location.translatedId} />
@@ -636,97 +584,89 @@ class LocationBox extends React.Component {
     };
 
     return (
-        <div
-        className="ui segment"
-        style={this.state.isVisible ? visibleStyle : this.invisibleStyle}
-        data-place="left"
-        data-tip={this.state.isVisible && !p.selectType && p.compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
-          <VisibilitySensor
-          active={p.enableVisibilityCheck}
-          intervalCheck={false}
-          intervalDelay={6000}
-          partialVisibility={true}
-          onChange={this.onVisibilityChange}
-          checkVisibility={p.checkVisibility}>
-            <h3 style={{
-              textAlign: 'center',
-              maxHeight: '23px',
-              color: p.location.playerPosition ? 'inherit' : '#7fa0ff',
-              cursor: p.selectType ? 'default' : 'pointer'
-            }}
-            onClick={()=>state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
-              {p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected'}
-            </h3>
-          </VisibilitySensor>
+      <div
+      className="ui segment"
+      style={visibleStyle}
+      data-place="left"
+      data-tip={this.props.isVisible && !p.selectType && p.compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
+        {this.props.isVisible ?
+        <h3 style={{
+          textAlign: 'center',
+          maxHeight: '23px',
+          color: p.location.playerPosition ? 'inherit' : '#7fa0ff',
+          cursor: p.selectType ? 'default' : 'pointer'
+        }}
+        onClick={()=>state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
+          {p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected'}
+        </h3> : null}
 
-          {this.state.isVisible ?
-          <i
-          style={this.starStyle}
-          className={`${upvote ? '' : 'empty '}star icon`}
-          onClick={()=>p.onFav(p.location)} /> : null}
-          {this.state.isVisible ?
-          <div style={{
-            position: 'absolute',
-            left: '17px',
-            right: compact ? '143px' : 'initial',
-            top: '16px'
-          }}>
-            {leftOptions.length > 0 ?
-            <BasicDropdown
-            icon="ellipsis horizontal"
-            showValue={null}
-            persist={p.edit}
-            options={leftOptions} /> : null}
-            {p.location.base ?
-            <span data-tip={utils.tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
-              <img style={this.baseStyle} src={baseIcon} />
-            </span> : null}
-            {isSpaceStation ?
-            <span data-tip={utils.tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
-              <img style={this.baseStyle} src={spaceStationIcon} />
-            </span> : null}
-          </div> : null}
-          {p.edit && this.state.isVisible ?
-          <div>
-            <div
-            className="ui segment"
-            style={this.uiSegmentEditStyle}>
-              <div className="ui input" style={{width: '200px'}}>
-                <div className="row">
-                  <input
-                  style={this.inputStyle}
-                  type="text"
-                  value={this.state.name}
-                  onChange={this.handleNameChange}
-                  maxLength={30}
-                  placeholder="Name" />
-                </div>
-              </div>
-              <div className="ui input" style={{width: '200px'}}>
-                <div className="row">
-                  <textarea
-                  style={this.textareaStyle}
-                  type="text"
-                  value={this.state.description}
-                  onChange={this.handleDescriptionChange}
-                  maxLength={200}
-                  placeholder="Description... (200 character limit)" />
-                </div>
+        {this.props.isVisible ?
+        <i
+        className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`}
+        onClick={()=>p.onFav(p.location)} /> : null}
+        {this.props.isVisible ?
+        <div style={{
+          position: 'absolute',
+          left: '17px',
+          right: compact ? '143px' : 'initial',
+          top: '16px'
+        }}>
+          {leftOptions.length > 0 ?
+          <BasicDropdown
+          icon="ellipsis horizontal"
+          showValue={null}
+          persist={p.edit}
+          options={leftOptions} /> : null}
+          {p.location.base ?
+          <span data-tip={utils.tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+            <img className="LocationBox__baseStyle" src={baseIcon} />
+          </span> : null}
+          {isSpaceStation ?
+          <span data-tip={utils.tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+            <img className="LocationBox__baseStyle" src={spaceStationIcon} />
+          </span> : null}
+        </div> : null}
+        {p.edit && this.props.isVisible ?
+        <div>
+          <div
+          className="ui segment"
+          className="LocationBox__uiSegmentEditStyle">
+            <div className="ui input" style={{width: '200px'}}>
+              <div className="row">
+                <input
+                className="LocationBox__inputStyle"
+                type="text"
+                value={this.state.name}
+                onChange={this.handleNameChange}
+                maxLength={30}
+                placeholder="Name" />
               </div>
             </div>
-            <div className="row">
-              <div className="col-xs-6">
-                <Button onClick={()=>p.onSubmit(this.state.name, this.state.description)}>
-                  {p.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
-                </Button>
+            <div className="ui input" style={{width: '200px'}}>
+              <div className="row">
+                <textarea
+                className="LocationBox__textareaStyle"
+                type="text"
+                value={this.state.description}
+                onChange={this.handleDescriptionChange}
+                maxLength={200}
+                placeholder="Description... (200 character limit)" />
               </div>
             </div>
           </div>
-          : p.selectType || this.state.isVisible && !p.compactRemote ?
-          <div>
-            {this.renderDetails()}
-          </div> : null}
+          <div className="row">
+            <div className="col-xs-6">
+              <Button onClick={()=>p.onSubmit(this.state.name, this.state.description)}>
+                {p.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
+              </Button>
+            </div>
+          </div>
         </div>
+        : p.selectType || this.props.isVisible && !p.compactRemote ?
+        <div>
+          {this.renderDetails()}
+        </div> : null}
+      </div>
 
     );
   }
@@ -743,7 +683,6 @@ class RemoteLocations extends React.Component {
     super(props);
     this.state = {
       init: true,
-      checkVisibility: true,
       showOnlyNames: false,
       showOnlyDesc: false,
       showOnlyScreenshots: false,
@@ -753,6 +692,7 @@ class RemoteLocations extends React.Component {
       sortByModded: false
     };
     autoBind(this);
+    this.range = {start: 0, length: 0};
   }
   componentDidMount(){
     this.uiSegmentStyle = {
@@ -765,15 +705,15 @@ class RemoteLocations extends React.Component {
     };
     let checkRemote = ()=>{
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
-        $(this.refs.recentExplorations).scrollEnd(this.scrollListener, 100);
-        this.setState({init: false, visibilityCheck: false});
+        $(this.refs.recentExplorations).scrollEnd(this.scrollListener, 25);
+        this.setState({init: false});
+        this.setViewableRange(this.refs.recentExplorations);
       } else {
         _.delay(()=>checkRemote(), 500);
       }
     };
     checkRemote();
     this.throttledPagination = _.throttle(this.props.onPagination, 1000, {leading: true});
-    this.throttledToggleCheckVisibilityState = _.throttle(this.toggleCheckVisibilityState, 1000, {leading: true});
   }
   shouldComponentUpdate(nextProps, nextState) {
     return (nextProps.s.remoteLocations.results !== this.props.s.remoteLocations.results
@@ -785,7 +725,6 @@ class RemoteLocations extends React.Component {
       || nextProps.s.width !== this.props.s.width
       || nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
       || nextProps.s.compactRemote !== this.props.compactRemote
-      || nextState.checkVisibility !== this.state.checkVisibility
       || nextState.showOnlyScreenshots !== this.state.showOnlyScreenshots
       || nextState.showOnlyNames !== this.state.showOnlyNames
       || nextState.showOnlyDesc !== this.state.showOnlyDesc
@@ -796,24 +735,15 @@ class RemoteLocations extends React.Component {
       || nextState.sortByModded !== this.state.sortByModded
       || this.state.init)
   }
-  componentDidUpdate(prevProps, prevState){
-    if (prevState.showOnlyScreenshots !== this.state.showOnlyScreenshots
-      || prevState.showOnlyNames !== this.state.showOnlyNames
-      || prevState.showOnlyDesc !== this.state.showOnlyDesc
-      || prevState.showOnlyGalaxy !== this.state.showOnlyGalaxy
-      || prevState.showOnlyBases !== this.state.showOnlyBases
-      || prevState.sortByDistance !== this.state.sortByDistance
-      || prevState.sortByModded !== this.state.sortByModded) {
-      this.throttledToggleCheckVisibilityState();
-    }
-  }
   componentWillReceiveProps(nextProps){
     let searchChanged = this.props.s.searchCache.results !== this.props.s.searchCache.results;
     if (nextProps.s.sort !== this.props.s.sort && this.refs.recentExplorations || searchChanged) {
       this.refs.recentExplorations.scrollTop = 0;
     }
-    if (nextProps.s.remoteLocations.results !== this.props.s.remoteLocations.results || searchChanged) {
-      this.throttledToggleCheckVisibilityState();
+
+    if (nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
+      && this.refs.storedLocations) {
+      this.setViewableRange(this.refs.recentExplorations);
     }
   }
   componentWillUnmount(){
@@ -821,20 +751,32 @@ class RemoteLocations extends React.Component {
       this.refs.recentExplorations.removeEventListener('scroll', this.scrollListener);
     }
   }
-  toggleCheckVisibilityState(){
-    _.delay(()=>{
-      this.setState({checkVisibility: true}, ()=>{
-        this.setState({checkVisibility: false});
-      });
-    }, 50);
+  setViewableRange(node){
+    if (!node) {
+      return;
+    }
+    let itemHeight = this.props.s.compactRemote ? 68 : 245;
+    this.range = utils.whichToShow({
+      outerHeight: node.clientHeight,
+      scrollTop: node.scrollTop,
+      itemHeight: itemHeight + 26,
+      columns: this.props.s.remoteLocationsColumns
+    });
+    this.forceUpdate();
   }
   scrollListener(){
-    this.throttledToggleCheckVisibilityState();
-    if (this.props.s.remoteLength >= this.props.s.remoteLocations.count - this.props.s.pageSize || this.props.s.searchCache.results.length > 0) {
+    if (this.props.s.remoteLength >= this.props.s.remoteLocations.count - this.props.s.pageSize) {
       return;
     }
 
     let node = this.refs.recentExplorations;
+
+    this.setViewableRange(node);
+
+    if (this.props.s.searchCache.results.length > 0) {
+      return;
+    }
+
     if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 180) {
       this.throttledPagination(this.props.s.page);
       _.delay(()=>{
@@ -843,7 +785,7 @@ class RemoteLocations extends React.Component {
     }
   }
   handleFavorite(location, upvote){
-    this.props.onFav(location, upvote)
+    this.props.onFav(location, upvote);
   }
   render(){
     let p = this.props;
@@ -875,7 +817,7 @@ class RemoteLocations extends React.Component {
       overflowX: 'hidden',
       position: 'relative'
     };
-    let enableVisibilityCheck = p.s.remoteLength >= 200 && p.s.searchCache.results.length === 0;
+
     let leftOptions = [
       {
         id: 'remoteLocationsColumns',
@@ -930,7 +872,8 @@ class RemoteLocations extends React.Component {
         onClick: ()=>this.throttledPagination(p.s.page)
       });
     }
-    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular'} Explorations (${p.s.remoteLength})`
+    let parenthesis = p.s.offline || p.s.remoteLength === 0 ? '' : `(${p.s.remoteLength})`;
+    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular'} Explorations ${parenthesis}`
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.s.remoteLocations.results;
     if (this.state.showOnlyScreenshots) {
       locations = _.filter(locations, (location)=>{
@@ -971,6 +914,9 @@ class RemoteLocations extends React.Component {
         }
       });
     }
+    let invisibleStyle = {
+      height: `${(p.s.compactRemote ? 68 : 245) + 26}px`
+    };
 
     return (
       <div className="columns" style={containerStyle}>
@@ -994,29 +940,39 @@ class RemoteLocations extends React.Component {
               {_.map(locations, (location, i)=>{
                 location.data.teleports = location.teleports;
                 location.upvote = location.data.upvote;
-                return (
-                  <LocationBox
-                  key={location.id}
-                  i={i}
-                  scrollTop={this.refs.recentExplorations ? this.refs.recentExplorations.scrollTop : 0}
-                  enableVisibilityCheck={enableVisibilityCheck}
-                  name={location.name}
-                  description={location.description}
-                  username={p.s.username}
-                  isOwnLocation={p.isOwnLocation}
-                  location={location.data}
-                  installing={p.s.installing}
-                  updating={p.updating}
-                  favorites={p.s.favorites}
-                  image={location.image}
-                  onFav={this.handleFavorite}
-                  onTeleport={p.onTeleport}
-                  onSaveBase={p.onSaveBase}
-                  checkVisibility={this.state.checkVisibility}
-                  ps4User={p.ps4User}
-                  compactRemote={p.s.compactRemote}
-                  />
-                );
+                let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
+                if (isVisible) {
+                  return (
+                    <LocationBox
+                    key={location.id}
+                    i={i}
+                    scrollTop={this.refs.recentExplorations ? this.refs.recentExplorations.scrollTop : 0}
+                    isVisible={true}
+                    name={location.name}
+                    description={location.description}
+                    username={p.s.username}
+                    isOwnLocation={p.isOwnLocation}
+                    location={location.data}
+                    installing={p.s.installing}
+                    updating={p.updating}
+                    favorites={p.s.favorites}
+                    image={location.image}
+                    onFav={this.handleFavorite}
+                    onTeleport={p.onTeleport}
+                    onSaveBase={p.onSaveBase}
+                    onCompactRemoteSwitch={this.setViewableRange}
+                    ps4User={p.ps4User}
+                    compactRemote={p.s.compactRemote}
+                    configDir={p.s.configDir}
+                    />
+                  );
+                } else {
+                  return (
+                    <div
+                    key={location.id}
+                    style={invisibleStyle} />
+                  );
+                }
               })}
             </div>
           </div>
@@ -1046,6 +1002,8 @@ class StoredLocationItem extends React.Component {
       padding: '3px 12px 3px 3px',
       background: this.state.hover || this.props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'inherit',
       textAlign: 'right',
+      minHeight: '29px',
+      maxHeight: '29px'
     };
     let usesName = this.props.location.name && this.props.location.name.length > 0;
     let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.id}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
@@ -1097,8 +1055,9 @@ class StoredLocations extends React.Component {
   constructor(props){
     super(props);
     autoBind(this);
-  }
-  componentDidMount(){
+    this.invisibleStyle = {
+      height: '29px'
+    };
     this.uiSegmentStyle = {
       background: 'rgba(23, 26, 22, 0.9)',
       display: 'inline-table',
@@ -1110,6 +1069,18 @@ class StoredLocations extends React.Component {
       paddingRight: '0px',
       zIndex: '90'
     };
+    this.range = {start: 0, length: 0};
+  }
+  componentDidMount(){
+    let checkStored = ()=>{
+      if (this.refs.storedLocations) {
+        $(this.refs.storedLocations).scrollEnd(this.scrollListener, 25);
+        this.setViewableRange(this.refs.storedLocations);
+      } else {
+        _.delay(()=>checkStored(), 500);
+      }
+    };
+    checkStored();
   }
   shouldComponentUpdate(nextProps){
     return (nextProps.storedLocations !== this.props.storedLocations
@@ -1117,6 +1088,26 @@ class StoredLocations extends React.Component {
       || nextProps.height !== this.props.height
       || nextProps.filterOthers !== this.props.filterOthers
       || nextProps.useGAFormat !== this.props.useGAFormat)
+  }
+  componentWillUnmount(){
+    if (this.refs.storedLocations) {
+      this.refs.storedLocations.removeEventListener('scroll', this.scrollListener);
+    }
+  }
+  setViewableRange(node){
+    if (!node) {
+      return;
+    }
+    this.range = utils.whichToShow({
+      outerHeight: node.clientHeight,
+      scrollTop: node.scrollTop,
+      itemHeight: 29,
+      columns: 1
+    });
+    this.forceUpdate();
+  }
+  scrollListener(){
+    this.setViewableRange(this.refs.storedLocations);
   }
   handleSelect(location, i){
     let hasSelectedId = this.props.selectedLocationId;
@@ -1172,16 +1163,25 @@ class StoredLocations extends React.Component {
               overflowY: 'auto',
               overflowX: 'hidden'}}>
               {_.map(this.props.storedLocations, (location, i)=>{
-                return (
-                  <StoredLocationItem
-                  key={i}
-                  ref={location.id}
-                  i={i}
-                  onClick={this.handleSelect}
-                  isSelected={this.props.selectedLocationId === location.id}
-                  location={location}
-                  useGAFormat={this.props.useGAFormat}/>
-                );
+                let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
+                if (isVisible) {
+                  return (
+                    <StoredLocationItem
+                    key={location.id}
+                    ref={location.id}
+                    i={i}
+                    onClick={this.handleSelect}
+                    isSelected={this.props.selectedLocationId === location.id}
+                    location={location}
+                    useGAFormat={this.props.useGAFormat}/>
+                  );
+                } else {
+                  return (
+                    <div
+                    key={location.id}
+                    style={this.invisibleStyle} />
+                  );
+                }
               })}
             </div>
           </div>
@@ -1208,6 +1208,10 @@ class Container extends React.PureComponent {
     }
   }
   handleFavorite(location){
+    if (this.props.s.offline) {
+      state.set({error: `Unable to favorite location in offline mode.`});
+      return;
+    }
     let refFav = _.findIndex(this.props.s.favorites, (fav)=>{
       return fav === location.id;
     });
@@ -1254,13 +1258,7 @@ class Container extends React.PureComponent {
         this.setState({limit: true});
         return;
       }
-      utils.ajax.post('/nmslocation/', {
-        machineId: this.props.s.machineId,
-        username: this.props.s.username,
-        name: name,
-        description: description,
-        id: this.props.s.selectedLocation.id
-      }).then((res)=>{
+      const update = ()=>{
         let refLocation = _.findIndex(this.props.s.storedLocations, {id: this.props.s.selectedLocation.id});
         if (refLocation !== -1) {
           this.props.s.storedLocations[refLocation].name = name;
@@ -1286,6 +1284,21 @@ class Container extends React.PureComponent {
             edit: false
           });
         });
+      };
+
+      if (this.props.s.offline) {
+        update();
+        return;
+      }
+
+      utils.ajax.post('/nmslocation/', {
+        machineId: this.props.s.machineId,
+        username: this.props.s.username,
+        name: name,
+        description: description,
+        id: this.props.s.selectedLocation.id
+      }).then((res)=>{
+        update();
       }).catch((err)=>{
         log.error(`Failed to update remote location: ${err}`);
       });
@@ -1293,6 +1306,10 @@ class Container extends React.PureComponent {
   }
   handleUploadScreen(e){
     e.persist();
+    if (this.props.s.offline) {
+      state.set({error: `Unable to upload screenshot in offline mode.`});
+      return;
+    }
     this.setState({updating: true}, ()=>{
       var reader = new FileReader();
       reader.onload = (e)=> {
@@ -1345,6 +1362,10 @@ class Container extends React.PureComponent {
     });
   }
   handleDeleteScreen(){
+    if (this.props.s.offline) {
+      state.set({error: `Unable to delete screenshot in offline mode.`});
+      return;
+    }
     utils.ajax.post('/nmslocation/', {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
@@ -1458,6 +1479,7 @@ class Container extends React.PureComponent {
               selectType={true}
               currentLocation={p.s.currentLocation}
               isOwnLocation={isOwnLocation}
+              isVisible={true}
               location={p.s.selectedLocation}
               installing={p.s.installing}
               updating={this.state.updating}
@@ -1476,7 +1498,9 @@ class Container extends React.PureComponent {
               onSubmit={this.handleUpdate}
               onSaveBase={p.onSaveBase}
               ps4User={p.s.ps4User}
+              configDir={p.s.configDir}
                /> : null}
+              }
             </div>
           </div>
         </div>
@@ -1545,23 +1569,28 @@ class App extends Reflux.Component {
     window.addEventListener('resize', this.onWindowResize);
     log.init(this.state.configDir);
     log.error(`Initializing No Man's Connect ${this.state.version}`);
+    if (this.state.offline) {
+      log.error(`Offline mode enabled.`);
+    }
     this.handleWorkers();
-    window.handleWallpaper = this.handleWallpaper
-    //this.saveJSON = path.join(__dirname, 'saveCache.json');
-    this.saveJSON = process.env.NODE_ENV === 'production' ? '.\\nmssavetool\\saveCache.json' : '.\\app\\nmssavetool\\saveCache.json';//path.resolve(__dirname, this.saveJSON);
-    this.saveTool = process.env.NODE_ENV === 'production' ? '\\nmssavetool\\nmssavetool.exe' : '\\app\\nmssavetool\\nmssavetool.exe';
+    window.handleWallpaper = this.handleWallpaper;
+    this.dirSep = process.platform === 'win32' ? '\\' : '/';
+    this.saveJSON = process.env.NODE_ENV === 'production' ? `.${this.dirSep}nmssavetool${this.dirSep}saveCache.json` : `.${this.dirSep}app${this.dirSep}nmssavetool${this.dirSep}saveCache.json`;
+    this.saveTool = process.env.NODE_ENV === 'production' ? `${this.dirSep}nmssavetool${this.dirSep}nmssavetool.exe` : `${this.dirSep}app${this.dirSep}nmssavetool${this.dirSep}nmssavetool.exe`;
     this.whichCmd = `.${this.saveTool} decrypt -g ${this.state.mode} -o ${this.saveJSON}`;
 
-    window.ajaxWorker.postMessage({
-      method: 'get',
-      func: 'version',
-      url: '/nmslocation',
-      obj: {
-        params: {
-          version: true
+    if (!this.state.offline) {
+      window.ajaxWorker.postMessage({
+        method: 'get',
+        func: 'version',
+        url: '/nmslocation',
+        obj: {
+          params: {
+            version: true
+          }
         }
-      }
-    });
+      });
+    }
 
     let initialize = ()=>{
       machineId().then((id)=>{
@@ -1639,8 +1668,10 @@ class App extends Reflux.Component {
   handleWorkers(){
     window.ajaxWorker.onmessage = (e)=>{
       if (e.data.err) {
-        log.error(`AJAX Worker failure: ${e.data.func}`);
         state.set({init: false});
+        if (!this.state.offline) {
+          log.error(`AJAX Worker failure: ${e.data.func}`);
+        }
         if (e.data.func === 'handleSync') {
           this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true);
         } else if (e.data.func === 'pollRemoteLocations') {
@@ -1690,6 +1721,9 @@ class App extends Reflux.Component {
     };
   }
   syncRemoteOwned(cb=null){
+    if (this.state.offline) {
+      return;
+    }
     window.ajaxWorker.postMessage({
       method: 'get',
       func: 'syncRemoteOwned',
@@ -1706,6 +1740,9 @@ class App extends Reflux.Component {
     }
   }
   handleSync(page=1, sort=this.state.sort, init=false){
+    if (this.state.offline) {
+      return;
+    }
     this.syncRemoteOwned(()=>{
       let locations = [];
       each(this.state.storedLocations, (location)=>{
@@ -1727,6 +1764,9 @@ class App extends Reflux.Component {
     });
   }
   formatRemoteLocations(res, page, sort, init, partial, sync, cb=null){
+    if (this.state.offline) {
+      return;
+    }
     if (!this.state.remoteLocations || this.state.remoteLocations.length === 0) {
       this.state.remoteLocations = {
         results: []
@@ -1759,6 +1799,10 @@ class App extends Reflux.Component {
       clearTimeout(this.timeout);
     }
 
+    if (this.state.offline) {
+      return;
+    }
+
     if (this.state.sort !== '-created' || this.state.remoteLocations.results.length === 0 || init) {
       this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
       return;
@@ -1784,6 +1828,9 @@ class App extends Reflux.Component {
     });
   }
   fetchRemoteLocations(page=this.state.page, sort=this.state.sort, init=false, sync=false){
+    if (this.state.offline) {
+      return;
+    }
     let q = this.state.search.length > 0 ? this.state.search : null;
     let path = q ? '/nmslocationsearch' : '/nmslocation';
     sort = sort === 'search' ? '-created' : sort;
@@ -1833,6 +1880,22 @@ class App extends Reflux.Component {
       state.set({storedBases: this.state.storedBases});
     }).catch(()=>{
       this.baseError();
+    });
+  }
+  signSaveData(){
+    let absoluteSaveDir = this.state.saveFileName.split(this.dirSep);
+    _.pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
+    absoluteSaveDir = absoluteSaveDir.join(this.dirSep);
+    let command = `${process.platform !== 'win32' ? 'wine ' : ''}.${this.saveTool} encrypt -g ${this.state.mode} -i ${this.saveJSON} -s ${absoluteSaveDir}`;
+    console.log(command);
+    utils.exc(command, (res)=>{
+      console.log(res);
+      console.log('sucess');
+    }).catch((e)=>{
+      if (process.platform !== 'win32') {
+        log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?')
+      }
+      console.log(e);
     });
   }
   handleRestoreBase(base){
@@ -1898,24 +1961,13 @@ class App extends Reflux.Component {
           console.log(err);
           return;
         }
-        // todo - wrap in a function
-        let absoluteSaveDir = this.state.saveFileName.split('\\');
-        _.pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
-        absoluteSaveDir = absoluteSaveDir.join('\\');
-        utils.exc(`.${this.saveTool} encrypt -g ${this.state.mode} -i ${this.saveJSON} -s ${absoluteSaveDir}`, (res)=>{
-          console.log(res);
-        }).catch((e)=>{
-          console.log(e);
-        });
+        this.signSaveData();
       });
     }).catch((err)=>{
       log.error(err);
     });
   }
   handleTeleport(location, i, action=null, n=null){
-    if (this.state.ps4User) {
-      return;
-    }
     state.set({installing: `t${i}`}, ()=>{
       utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
         if (location.data) {
@@ -1977,14 +2029,7 @@ class App extends Reflux.Component {
           if (err) {
             console.log(err);
           }
-          let absoluteSaveDir = this.state.saveFileName.split('\\');
-          _.pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
-          absoluteSaveDir = absoluteSaveDir.join('\\');
-          utils.exc(`.${this.saveTool} encrypt -g ${this.state.mode} -i ${this.saveJSON} -s ${absoluteSaveDir}`, (res)=>{
-            console.log(res);
-          }).catch((e)=>{
-            console.log(e);
-          });
+          this.signSaveData();
           let refStoredLocation = _.findIndex(this.state.storedLocations, {id: location.id});
           if (refStoredLocation !== -1) {
             state.set({installing: false});
@@ -2115,7 +2160,6 @@ class App extends Reflux.Component {
             }
 
             this.state.storedLocations.push(location);
-
           }
 
           // Detect player base
@@ -2202,25 +2246,28 @@ class App extends Reflux.Component {
 
         console.log(username)
 
-        utils.ajax.get('/nmsprofile', {
-          params: {
-            username: username,
-            machineId: machineId
-          }
-        }).then((profile)=>{
-          if (typeof profile.data.username !== 'undefined') {
-            username = profile.data.username;
-          }
-          processData(saveData, location, refLocation, username, profile);
-        }).catch((err)=>{
-          console.log(err)
-
-          if (err.response && err.response.status === 403) {
-            this.handleProtectedSession(username);
-          } else {
-            processData(saveData, location, refLocation, username);
-          }
-        });
+        if (this.state.offline) {
+          processData(saveData, location, refLocation, username);
+        } else {
+          utils.ajax.get('/nmsprofile', {
+            params: {
+              username: username,
+              machineId: machineId
+            }
+          }).then((profile)=>{
+            if (typeof profile.data.username !== 'undefined') {
+              username = profile.data.username;
+            }
+            processData(saveData, location, refLocation, username, profile);
+          }).catch((err)=>{
+            if (err.response && err.response.status === 403) {
+              log.error(`Username protected: ${username}`);
+              this.handleProtectedSession(username);
+            } else {
+              processData(saveData, location, refLocation, username);
+            }
+          });
+        }
 
       }).catch((err)=>{
         console.log(err, this.state.saveDirectory, this.state.saveFileName)
@@ -2236,8 +2283,8 @@ class App extends Reflux.Component {
       });
     };
 
-    if (parseFloat(this.state.winVersion) <= 6.1) {
-      log.error(`Skipping process scan for Windows 7 user...`)
+    if (process.platform !== 'win32' || parseFloat(this.state.winVersion) <= 6.1) {
+      log.error(`Skipping process scan...`)
       getLastSave(false);
     } else {
       ps.snapshot(['ProcessName']).then((list) => {
@@ -2289,9 +2336,7 @@ class App extends Reflux.Component {
       state.set({
         storedLocations: this.state.storedLocations,
         username: username
-      }, ()=>{
-        _.defer(this.handleRestart);
-      });
+      }, this.handleRestart);
 
     }).catch((err)=>{
       if (typeof err.response.data.status !== 'undefined' && err.response.data.status === 'protected') {
@@ -2456,15 +2501,17 @@ class App extends Reflux.Component {
     });
   }
   handleRestart(){
-    if (process.env.NODE_ENV === 'production') {
-      remote.app.relaunch();
-      window.close();
-    } else {
-      if (this.monitor) {
-        this.monitor.stop();
+    _.delay(()=>{
+      if (process.env.NODE_ENV === 'production') {
+        remote.app.relaunch();
+        window.close();
+      } else {
+        if (this.monitor) {
+          this.monitor.stop();
+        }
+        window.location.reload();
       }
-      window.location.reload();
-    }
+    }, 200);
   }
   handleMaximize(){
     state.set({maximized: !this.state.maximized}, ()=>{
@@ -2496,9 +2543,6 @@ class App extends Reflux.Component {
   }
   handleLocationRegistrationToggle(){
     state.set({registerLocation: !this.state.registerLocation});
-  }
-  handleLocationRegistration(){
-
   }
   render(){
     var s = this.state;

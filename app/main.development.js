@@ -3,6 +3,13 @@ import { app, BrowserWindow, Menu, globalShortcut, systemPreferences } from 'ele
 import windowStateKeeper from 'electron-window-state';
 import fs from 'graceful-fs';
 import os from 'os';
+
+const userData = app.getPath('userData');
+const mediaDir = `${userData}/media`;
+if (!fs.existsSync(mediaDir)) {
+  fs.mkdirSync(mediaDir);
+}
+const dirSep = process.platform === 'win32' ? '\\' : '/';
 let mainWindow = null;
 
 if (process.env.NODE_ENV === 'production') {
@@ -46,7 +53,7 @@ const installExtensions = async () => {
 };
 
 app.on('ready', async () => {
-  await installExtensions();
+  //await installExtensions();
 
   let mainWindowState = windowStateKeeper({
     defaultWidth: 1421,

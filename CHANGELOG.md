@@ -1,3 +1,13 @@
+# 0.13.0
+
+  * Added an offline mode.
+  * Images are now cached in AppData/Roaming/NoMansConnect, and only download once.
+  * Added a compact view for the remote location list.
+  * Added more accurate clustering of dense hub areas on the 3D map using SolarSystemIndex.
+  * Added a Travel to Current Location 3D map menu option.
+  * Fixed the slugishness of the remote location list.
+  * Fixed a regression causing fields to not be pre-filled when editing existing location names and descriptions.
+
 # 0.12.1
 
   * PC players can now teleport to manually registered locations!
