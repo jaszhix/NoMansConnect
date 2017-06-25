@@ -18,6 +18,7 @@
     "nsis": "build --win --x64",
     "pack-win": "build --publish never --dir",
     "build-linux": "build --linux",
+    "build-win": "build --win --x64",
     "package": "npm run build && build --publish never",
     "package-win": "npm run build && build --win --x64",
     "package-linux": "npm run build && build --linux",
@@ -75,6 +76,8 @@
       }
     ],
     "dmg": {
+      "icon": "./resources/icons/256x256.icns",
+      "iconSize": 256,
       "contents": [
         {
           "x": 130,

@@ -1,6 +1,7 @@
 # 0.13.0
 
   * Added an offline mode.
+  * Added Linux support.
   * Images are now cached in AppData/Roaming/NoMansConnect, and only download once.
   * Added a compact view for the remote location list.
   * Added more accurate clustering of dense hub areas on the 3D map using SolarSystemIndex.

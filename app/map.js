@@ -254,10 +254,6 @@ class GalacticMap extends React.Component {
       || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.buildGalaxyOptions(nextProps, false);
     }
-
-    if (nextProps.remoteLocationsColumns !== this.props.remoteLocationsColumns) {
-      this.forceUpdate();
-    }
   }
   shouldComponentUpdate(nextProps, nextState){
     return (nextProps.mapLines !== this.props.mapLines

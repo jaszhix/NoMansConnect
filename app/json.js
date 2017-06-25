@@ -24,7 +24,6 @@ class Json {
     });
   }
   set(key, value){
-    console.log('Setting key: ', key, value);
     this.data[key] = value;
     fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
       if (err) {
