@@ -873,7 +873,8 @@ class RemoteLocations extends React.Component {
       });
     }
     let parenthesis = p.s.offline || p.s.remoteLength === 0 ? '' : `(${p.s.remoteLength})`;
-    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular'} Explorations ${parenthesis}`
+    let criteria = p.s.offline ? 'Cached' : p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular';
+    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.s.remoteLocations.results;
     if (this.state.showOnlyScreenshots) {
       locations = _.filter(locations, (location)=>{
@@ -1500,7 +1501,6 @@ class Container extends React.PureComponent {
               ps4User={p.s.ps4User}
               configDir={p.s.configDir}
                /> : null}
-              }
             </div>
           </div>
         </div>
@@ -2406,7 +2406,7 @@ class App extends Reflux.Component {
   }
   handleEnter(e){
     if (e.keyCode === 13) {
-      this.fetchRemoteLocations(1)
+      this.handleSearch();
     }
   }
   handleSort(e, sort){
@@ -2416,13 +2416,44 @@ class App extends Reflux.Component {
     });
   }
   handleSearch(){
-    state.set({
-      sort: 'search'
-    }, ()=>{
+    if (this.state.offline) {
+      let searchCache = _.filter(this.state.remoteLocations.results, (location)=>{
+        return (location.data.id === this.state.search
+          || location.data.translatedId === this.state.search
+          || location.username === this.state.search
+          || location.name.indexOf(this.state.search) > -1
+          || location.description.indexOf(this.state.search) > -1)
+      });
+      state.set({
+        searchInProgress: true,
+        searchCache: {
+          results: searchCache,
+          count: searchCache.length,
+          next: null,
+          prev: null
+        }
+      });
+    } else {
       this.fetchRemoteLocations(1);
-    });
+    }
   }
   handleClearSearch(){
+    if (!this.state.offline) {
+      let diff = [];
+      each(this.state.searchCache.results, (location)=>{
+        let refRemoteLocation = _.findIndex(this.state.remoteLocations.results, {id: location.id});
+        if (refRemoteLocation === -1) {
+          diff.push(location);
+        }
+      });
+      this.state.remoteLocations.results = _.chain(this.state.remoteLocations.results)
+        .concat(diff)
+        .uniqBy((location)=>{
+          return location.data.id;
+        })
+        .value();
+    }
+
     state.set({
       search: '',
       searchCache: {
@@ -2431,9 +2462,14 @@ class App extends Reflux.Component {
         next: null,
         prev: null
       },
+      remoteLocations: this.state.remoteLocations,
       searchInProgress: false,
       sort: '-created'
     }, ()=>{
+      if (this.state.offline) {
+        return;
+      }
+
       window.jsonWorker.postMessage({
         method: 'get',
         key: 'remoteLocations'
@@ -2551,21 +2587,21 @@ class App extends Reflux.Component {
         <div className="ui top attached menu" style={this.topAttachedMenuStyle}>
           <h2 style={this.titleStyle}>{s.title}</h2>
           <div className="right menu">
-            {!s.init ?
+            {!s.init && !s.offline ?
             <div
             style={this.noDragStyle}
             className={`${this.headerItemClasses}${s.sort === '-created' ? ' selected' : ''}`}
             onClick={this.handleSort}>
               Recent
             </div> : null}
-            {!s.init ?
+            {!s.init && !s.offline ?
             <div
             style={this.noDragStyle}
             className={`${this.headerItemClasses}${s.sort === '-teleports' ? ' selected' : ''}`}
             onClick={(e)=>this.handleSort(e, '-teleports')}>
               Popular
             </div> : null}
-            {!s.init ?
+            {!s.init  && !s.offline ?
             <div
             style={this.noDragStyle}
             className={`${this.headerItemClasses}${s.sort === '-score' ? ' selected' : ''}`}

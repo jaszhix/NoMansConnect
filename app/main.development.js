@@ -112,4 +112,7 @@ app.on('ready', async () => {
       mainWindow.focus();
     }
   });
+  globalShortcut.register('Control+Shift+P+]', ()=>{
+    mainWindow.webContents.openDevTools();
+  });
 });

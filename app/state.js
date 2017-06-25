@@ -10,6 +10,8 @@ import knownGalaxies from './static/galaxies.json';
 import knownProducts from './static/knownProducts.json';
 import Raven from 'raven-js';
 
+const {dialog} = remote;
+
 var state = Reflux.createStore({
   init(){
     this.completedMigration = false;
@@ -17,7 +19,7 @@ var state = Reflux.createStore({
     this.galaxies = knownGalaxies;
     this.state = {
       // Core
-      version: '0.12.1',
+      version: '0.13.0',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -69,8 +71,8 @@ var state = Reflux.createStore({
       loading: false,
       maximized: false,
       mapLines: false,
-      map3d: false,
-      mapDrawDistance: false,
+      map3d: true,
+      mapDrawDistance: true,
       wallpaper: null,
       filterOthers: false,
       useGAFormat: false,
@@ -89,7 +91,9 @@ var state = Reflux.createStore({
         Base: true
       },
       compactRemote: false,
-      maintenanceTS: Date.now()
+      maintenanceTS: Date.now(),
+      offline: false,
+      error: ''
     };
 
     if (process.env.NODE_ENV === 'production') {
@@ -158,7 +162,8 @@ var state = Reflux.createStore({
       'favorites',
       'autoCapture',
       'ps4User',
-      'compactRemote'
+      'compactRemote',
+      'offline'
     ];
     this.handleSettingsMigration();
     const settings = _.pick(this.state, this.settingsKeys);
@@ -194,6 +199,10 @@ var state = Reflux.createStore({
       if (!data.maintenanceTS) {
         stateUpdate.maintenanceTS = this.state.maintenanceTS - 6.048e+8;
       }
+      if (data.offline) {
+        stateUpdate.title = 'NO MAN\'S DISCONNECT';
+        stateUpdate.init = false;
+      }
       each(data, (value, key)=>{
         if (this.settingsKeys.indexOf(key) > -1) {
           stateUpdate[key] = value;
@@ -218,6 +227,9 @@ var state = Reflux.createStore({
             && location.data.VoxelX > -2048 && location.data.VoxelX < 2047) {
             locations.push(location)
           }
+        });
+        locations = _.uniqBy(locations, (location)=>{
+          return location.data.id;
         });
         obj.remoteLocations.results = locations;
         obj.remoteLocations.count = locations.length;
@@ -250,6 +262,9 @@ var state = Reflux.createStore({
     if (obj.remoteLocations) {
       objRemoteLen = obj.remoteLocations.results.length;
     }
+    if (objRemoteLen === 0 && !this.state.offline && this.state.remoteLocations && this.state.remoteLocations.results) {
+      objRemoteLen = this.state.remoteLocations.results.length;
+    }
 
     if (obj.remoteLocations
       && objRemoteLen > 0
@@ -272,6 +287,11 @@ var state = Reflux.createStore({
   handleState(obj, cb=null, objRemoteLen){
     if (obj.remoteLocations && obj.remoteLocations.results) {
       this.state.remoteLength = objRemoteLen;
+    }
+
+    if (obj.error) {
+      this.displayErrorDialog(obj.error);
+      obj.error = '';
     }
 
     _.assignIn(this.state, obj);
@@ -375,6 +395,9 @@ var state = Reflux.createStore({
       }
       this.completedMigration = true;
     }
+  },
+  displayErrorDialog(error){
+    dialog.showErrorBox('NMC Error', error);
   },
 });
 window.state = state;
