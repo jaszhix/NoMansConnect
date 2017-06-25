@@ -1,6 +1,6 @@
 {
   "name": "no-mans-connect",
-  "productName": "No Man's Connect",
+  "productName": "NoMansConnect",
   "version": "0.13.0",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
@@ -17,6 +17,7 @@
     "dev": "cross-env START_HOT=1 npm run hot-server",
     "nsis": "build --win --x64",
     "pack-win": "build --publish never --dir",
+    "build-linux": "build --linux",
     "package": "npm run build && build --publish never",
     "package-win": "npm run build && build --win --x64",
     "package-linux": "npm run build && build --linux",
@@ -25,7 +26,7 @@
   },
   "browserslist": "electron 1.6",
   "build": {
-    "productName": "No Man's Connect",
+    "productName": "NoMansConnect",
     "appId": "org.jaszhix.nmsc",
     "nsis": {
       "oneClick": false,
@@ -73,6 +74,20 @@
         "to": "node_modules/is-buffer"
       }
     ],
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
     "win": {
       "target": "nsis"
     },
@@ -80,7 +95,9 @@
       "category": "Game",
       "description": "A location manager for No Man's Sky.",
       "target": [
-        "deb"
+        "deb",
+        "pacman",
+        "rpm"
       ],
       "desktop": {
         "type": "Application",

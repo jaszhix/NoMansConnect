@@ -2650,7 +2650,7 @@ class App extends Reflux.Component {
             onSetWallpaper={this.handleSetWallpaper}
             onUsernameOverride={this.handleSetUsernameOverride} />
           </div>
-          {process.platform !== 'darwin' ?
+          {process.platform === 'win32' ?
           <div
           style={this.titleBarControlsStyle}
           className={this.headerItemClasses}
