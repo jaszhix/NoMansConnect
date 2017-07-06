@@ -180,6 +180,16 @@ export var fromHex = (str, username, galaxy)=>{
       mods: [],
       timeStamp: Date.now(),
     };
+    if (isNaN(manualLocation.SolarSystemIndex)
+      || isNaN(manualLocation.translatedX)
+      || isNaN(manualLocation.translatedY)
+      || isNaN(manualLocation.translatedZ)
+      || manualLocation.translatedX > 4096
+      || manualLocation.translatedZ > 4096
+      || manualLocation.translatedY > 256
+      || manualLocation.SolarSystemIndex > 600) {
+      return null;
+    }
     _.assignIn(manualLocation, {
       jumps: Math.ceil(manualLocation.distanceToCenter / 400),
       translatedId: `${toHex(manualLocation.translatedX, 4)}:${toHex(manualLocation.translatedY, 4)}:${toHex(manualLocation.translatedZ, 4)}:${toHex(manualLocation.SolarSystemIndex, 4)}`,
