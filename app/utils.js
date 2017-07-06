@@ -236,7 +236,7 @@ export var walk = (dir, done)=>{
   });
 };
 
-export var getLastGameModeSave = (saveDirectory, mode, ps4User)=>{
+export var getLastGameModeSave = (saveDirectory, mode, ps4User, log)=>{
   return new Promise((resolve, reject)=>{
     if (ps4User) {
       resolve();
@@ -248,7 +248,10 @@ export var getLastGameModeSave = (saveDirectory, mode, ps4User)=>{
         reject(err);
       }
       results = _.filter(results, (result)=>{
-        return (result.indexOf('st_') !== -1 || result.indexOf('DefaultUser') !== -1) && result.indexOf('\\cache\\') === -1 && result.indexOf('.hg') !== -1 && result.indexOf('mf_') === -1;
+        return ((result.indexOf('st_') !== -1 || result.indexOf('DefaultUser') !== -1)
+          && result.indexOf('\\cache\\') === -1
+          && result.indexOf('.hg') !== -1
+          && result.indexOf('mf_') === -1);
       });
 
       let obj = {
@@ -278,8 +281,26 @@ export var getLastGameModeSave = (saveDirectory, mode, ps4User)=>{
         return;
       }
       lastModifiedSave.path = lastModifiedSave.result;
-      lastModifiedSave.result = decoder.write(fs.readFileSync(lastModifiedSave.result)).replace(/\0$/, '');
-      lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
+
+      const json = fs.readFileSync(lastModifiedSave.result);
+      if (json instanceof Buffer) {
+        const decodedJson = decoder.write(json);
+        if (decodedJson.indexOf('\0') > -1) {
+          lastModifiedSave.result = decodedJson.replace(/\0$/, '');
+        } else {
+          lastModifiedSave.result = decodedJson;
+        }
+      } else if (_.isString(json)) {
+        lastModifiedSave.result = json;
+      }
+      try {
+        lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
+      } catch (e) {
+        lastModifiedSave.result = null;
+        log.error(`There was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`);
+        reject();
+        return;
+      }
       resolve(lastModifiedSave);
     });
   });

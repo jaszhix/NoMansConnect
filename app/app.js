@@ -1871,7 +1871,7 @@ class App extends Reflux.Component {
       state.set({storedBases: this.state.storedBases});
       return;
     }
-    utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
+    utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
       let base = utils.formatBase(saveData, state.knownProducts);
       let refBase = _.findIndex(this.state.storedBases, {Name: base.Name});
       if (refBase === -1) {
@@ -1899,7 +1899,7 @@ class App extends Reflux.Component {
     });
   }
   handleRestoreBase(base){
-    utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
+    utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
       if (saveData.result.PlayerStateData.PersistentPlayerBases.length === 0) {
         this.baseError();
         return;
@@ -1969,7 +1969,7 @@ class App extends Reflux.Component {
   }
   handleTeleport(location, i, action=null, n=null){
     state.set({installing: `t${i}`}, ()=>{
-      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode).then((saveData)=>{
+      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
         if (location.data) {
           location = location.data;
         }
@@ -2231,7 +2231,7 @@ class App extends Reflux.Component {
 
       console.log(this.state.saveDirectory)
 
-      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User).then((saveData)=>{
+      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
         let refLocation, location, username;
         if (!this.state.ps4User) {
           location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
