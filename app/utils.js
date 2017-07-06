@@ -282,9 +282,20 @@ export var getLastGameModeSave = (saveDirectory, mode, ps4User, log)=>{
       }
       lastModifiedSave.path = lastModifiedSave.result;
 
-      const json = fs.readFileSync(lastModifiedSave.result);
+      let json = null, decodedJson = null;
       if (json instanceof Buffer) {
-        const decodedJson = decoder.write(json);
+        try {
+          json = fs.readFileSync(lastModifiedSave.result);
+        } catch (e) {
+          if (e.message.indexOf('EBUSY') > -1) {
+            log.error(`Failed to read the save file because it is being used by another program. Make sure you pause or exit your game before teleporting, using cheats, or restoring a base. File: ${lastModifiedSave.path}`);
+          } else {
+            log.error(e.message);
+          }
+          reject();
+          return;
+        }
+        decodedJson = decoder.write(json);
         if (decodedJson.indexOf('\0') > -1) {
           lastModifiedSave.result = decodedJson.replace(/\0$/, '');
         } else {
