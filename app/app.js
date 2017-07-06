@@ -1867,7 +1867,7 @@ class App extends Reflux.Component {
   }
   handleSaveBase(baseData=null){
     if (baseData) {
-      this.state.storedBases.push(baseData);
+      this.state.storedBases.push(_.cloneDeep(baseData));
       state.set({storedBases: this.state.storedBases});
       return;
     }
@@ -1968,8 +1968,10 @@ class App extends Reflux.Component {
     });
   }
   handleTeleport(location, i, action=null, n=null){
+    const _location = _.cloneDeep(location);
     state.set({installing: `t${i}`}, ()=>{
       utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
+
         if (location.data) {
           location = location.data;
         }
@@ -2005,32 +2007,32 @@ class App extends Reflux.Component {
         }
 
         _.assignIn(saveData.result.SpawnStateData, {
-          PlayerPositionInSystem: location.playerPosition,
-          PlayerTransformAt: location.playerTransform,
-          ShipPositionInSystem: location.shipPosition,
-          ShipTransformAt: location.shipTransform
+          PlayerPositionInSystem: _location.playerPosition,
+          PlayerTransformAt: _location.playerTransform,
+          ShipPositionInSystem: _location.shipPosition,
+          ShipTransformAt: _location.shipTransform
         });
 
         _.assignIn(saveData.result.PlayerStateData.UniverseAddress.GalacticAddress, {
-          PlanetIndex: location.PlanetIndex,
-          SolarSystemIndex: location.SolarSystemIndex,
-          VoxelX: location.VoxelX,
-          VoxelY: location.VoxelY,
-          VoxelZ: location.VoxelZ
+          PlanetIndex: _location.PlanetIndex,
+          SolarSystemIndex: _location.SolarSystemIndex,
+          VoxelX: _location.VoxelX,
+          VoxelY: _location.VoxelY,
+          VoxelZ: _location.VoxelZ
         });
 
         if (action) {
           saveData.result = utils[action](saveData, n);
         }
 
-        saveData.result.PlayerStateData.UniverseAddress.RealityIndex = location.galaxy;
+        saveData.result.PlayerStateData.UniverseAddress.RealityIndex = _location.galaxy;
 
         fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data)=>{
           if (err) {
             console.log(err);
           }
           this.signSaveData();
-          let refStoredLocation = _.findIndex(this.state.storedLocations, {id: location.id});
+          let refStoredLocation = _.findIndex(this.state.storedLocations, {id: _location.id});
           if (refStoredLocation !== -1) {
             state.set({installing: false});
             return;
@@ -2038,10 +2040,10 @@ class App extends Reflux.Component {
           utils.ajax.post('/nmslocation/', {
             machineId: this.state.machineId,
             teleports: true,
-            id: location.id
+            id: _location.id
           }).then((res)=>{
             let refRemoteLocation = _.findIndex(this.state.remoteLocations.results, (remoteLocation)=>{
-              return remoteLocation.data.id === location.id;
+              return remoteLocation.data.id === _location.id;
             });
             if (refRemoteLocation !== -1) {
               this.state.remoteLocations.results[refRemoteLocation] = res.data;
@@ -2049,7 +2051,7 @@ class App extends Reflux.Component {
 
             state.set({
               installing: false,
-              currentLocation: location.id,
+              currentLocation: _location.id,
               remoteLocations: this.state.remoteLocations
             });
           }).catch((err)=>{
@@ -2060,9 +2062,6 @@ class App extends Reflux.Component {
       }).catch((err)=>{
         console.log(err);
         log.error(`Unable to teleport to location: ${err}`);
-        this.handleSaveDataFailure(this.state.mode, false, ()=>{
-          this.handleTeleport(location, i);
-        });
       });
     });
   }

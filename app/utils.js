@@ -258,7 +258,8 @@ export var getLastGameModeSave = (saveDirectory, mode, ps4User, log)=>{
         reject(err);
       }
       results = _.filter(results, (result)=>{
-        return ((result.indexOf('st_') !== -1 || result.indexOf('DefaultUser') !== -1)
+        return (result != null
+          && (result.indexOf('st_') !== -1 || result.indexOf('DefaultUser') !== -1)
           && result.indexOf('\\cache\\') === -1
           && result.indexOf('.hg') !== -1
           && result.indexOf('mf_') === -1);
@@ -292,20 +293,18 @@ export var getLastGameModeSave = (saveDirectory, mode, ps4User, log)=>{
       }
       lastModifiedSave.path = lastModifiedSave.result;
 
-      let json = null, decodedJson = null;
-      if (json instanceof Buffer) {
-        try {
-          json = fs.readFileSync(lastModifiedSave.result);
-        } catch (e) {
-          if (e.message.indexOf('EBUSY') > -1) {
-            log.error(`Failed to read the save file because it is being used by another program. Make sure you pause or exit your game before teleporting, using cheats, or restoring a base. File: ${lastModifiedSave.path}`);
-          } else {
-            log.error(e.message);
-          }
-          reject();
-          return;
+      let json;
+      try {
+        json = fs.readFileSync(lastModifiedSave.result);
+      } catch (e) {
+        if (e.message.indexOf('EBUSY') > -1) {
+          log.error(`Unable to read your last modified save file because it is in use by another program. Please make sure you are only teleporting, restoring bases, or using the cheat menu while the game is closed or paused.`);
         }
-        decodedJson = decoder.write(json);
+        reject();
+        return;
+      }
+      if (json instanceof Buffer) {
+        const decodedJson = decoder.write(json);
         if (decodedJson.indexOf('\0') > -1) {
           lastModifiedSave.result = decodedJson.replace(/\0$/, '');
         } else {
@@ -322,7 +321,7 @@ export var getLastGameModeSave = (saveDirectory, mode, ps4User, log)=>{
         reject();
         return;
       }
-      resolve(lastModifiedSave);
+      resolve(_.cloneDeep(lastModifiedSave));
     });
   });
 };
@@ -447,8 +446,8 @@ export var tip = (content)=>{
 }
 
 export var ajax = axios.create({
-  baseURL: 'http://z.npff.co:8000/api/',
-  //baseURL: 'https://neuropuff.com/api/',
+  //baseURL: 'http://z.npff.co:8000/api/',
+  baseURL: 'https://neuropuff.com/api/',
   timeout: 15000,
   xsrfCookieName: 'csrftoken'
 });
@@ -472,7 +471,7 @@ export var formatBase = (saveData, knownProducts)=>{
     Position: base.Position,
     Name: base.Name
   };
-  return cachedBase;
+  return _.cloneDeep(cachedBase);
 };
 
 var flip = (string)=>{
