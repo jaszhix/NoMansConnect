@@ -257,6 +257,7 @@ export class DropdownMenu extends React.Component {
 
       Special Thanks
 
+      - ukmerlin
       - afWings/AGT
       - Cranky-Cat
       - monkeyman192
@@ -331,6 +332,9 @@ export class DropdownMenu extends React.Component {
   }
   handleSupport(){
     openExternal('https://neuropuff.com/static/donate.html');
+  }
+  handleBugReport(){
+    openExternal('https://github.com/jaszhix/NoMansConnect/issues');
   }
   handleToggleOpen(){
     ReactTooltip.hide();
@@ -460,8 +464,13 @@ export class DropdownMenu extends React.Component {
           </div>
           <div className="item" onClick={this.handleSupport}
           data-place="left"
-          data-tip={utils.tip('Help pay for server time. Total contributions as of this release: $105. Thanks a lot!')}>
+          data-tip={utils.tip('Help pay for server time. Total contributions as of this release: $125. Thanks a lot!')}>
             Support NMC
+          </div>
+          <div className="item" onClick={this.handleBugReport}
+          data-place="left"
+          data-tip={utils.tip('Bug reports are an important part of this app\'s development.')}>
+            Report Bug
           </div>
           <div className="divider"></div>
           <div className="item"
