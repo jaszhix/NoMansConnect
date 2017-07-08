@@ -453,7 +453,7 @@ class Map3D extends React.Component {
           c.material = this.redMaterial;
         } else if (refSelected > -1) {
           c.material = this.greenMaterial;
-        } else if (!c.instance.userData.data.playerPosition) {
+        } else if (!c.instance.userData.data.playerPosition || c.instance.userData.data.manuallyEntered) {
           c.material = this.purpleMaterial;
         } else {
           c.material = this.blueMaterial;

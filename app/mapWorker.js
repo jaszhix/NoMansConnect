@@ -2,6 +2,52 @@ const _ = require('lodash');
 
 const each = require('./each');
 
+const getLocationsByTranslatedId = (locations)=>{
+  if (!locations) {
+    return null;
+  }
+  if (_.isArray(locations)) {
+    locations = {results: locations}
+  }
+  let systems = _.uniqBy(locations.results, (location)=>{
+    location = location.data ? location : {data: location};
+    return location.data.translatedX && location.data.translatedY && location.data.translatedZ;
+  });
+  each(systems, (location, i)=>{
+    systems[i] = location.data ? location : {data: location};
+    location = systems[i];
+    let planets = _.filter(locations.results, (planet)=>{
+      planet = planet.data ? planet : {data: planet};
+      return (location.data.translatedX === planet.data.translatedX
+        && location.data.translatedY === planet.data.translatedY
+        && location.data.translatedZ === planet.data.translatedZ);
+    });
+    let planetData = [];
+    each(planets, (planet)=>{
+      planet = planet.data ? planet : {data: planet};
+      if (!planetData[planet.data.username]) {
+        planetData[planet.data.username] = [];
+      }
+      let label = planet.data.name ? planet.data.name : planet.data.id;
+      let refPlanetData = _.findIndex(planetData, {username: planet.data.username});
+      if (refPlanetData > -1) {
+        let refEntry = _.findIndex(planetData[refPlanetData].entries, label);
+        if (refEntry === -1) {
+          planetData[refPlanetData].entries.push(label);
+        }
+      } else {
+        planetData.push({
+          username: planet.data.username,
+          entries: [label]
+        });
+      }
+    });
+    location.data.planetData = planetData;
+  });
+  locations.results = systems;
+  return locations;
+}
+
 onmessage = function(e) {
   let stateUpdate = {};
   let eData = JSON.parse(e.data);
@@ -11,9 +57,12 @@ onmessage = function(e) {
     z: 127
   }] : [];
 
+  eData.p.storedLocations = getLocationsByTranslatedId(eData.p.storedLocations);
+  eData.p.remoteLocations = getLocationsByTranslatedId(eData.p.remoteLocations);
+
   if (eData.opts.selectedLocation) {
     let selectedLocation = [];
-    each(eData.p.storedLocations, (location)=>{
+    each(eData.p.storedLocations.results, (location)=>{
       if (location.galaxy !== eData.p.selectedGalaxy) {
         return;
       }
@@ -23,7 +72,8 @@ onmessage = function(e) {
           y: (0, 4096) - location.translatedZ,
           z: location.translatedY,
           selected: true,
-          id: location.id
+          id: `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`,
+          planetData: location.data.planetData,
         };
       }
     });
@@ -32,13 +82,17 @@ onmessage = function(e) {
         if (location.data.galaxy !== eData.p.selectedGalaxy) {
           return;
         }
-        if (eData.p.selectedLocation && location.data.id === eData.p.selectedLocation.id && eData.p.show.Selected) {
+        if (eData.p.selectedLocation && eData.p.show.Selected
+          && location.data.translatedX === eData.p.selectedLocation.translatedX
+          && location.data.translatedY === eData.p.selectedLocation.translatedY
+          && location.data.translatedZ === eData.p.selectedLocation.translatedZ) {
           selectedLocation[0] = {
             x: location.data.translatedX,
             y: (0, 4096) - location.data.translatedZ,
             z: location.data.translatedY,
             selected: true,
-            id: location.data.id
+            id: `${location.data.translatedX}:${location.data.translatedY}:${location.data.translatedZ}`,
+            planetData: location.data.planetData
           };
         }
       });
@@ -56,40 +110,27 @@ onmessage = function(e) {
     let baseLocations = [];
     let ps4Locations = []
 
-    each(eData.p.storedLocations, (location)=>{
-      if (location.galaxy !== eData.p.selectedGalaxy) {
+    each(eData.p.storedLocations.results, (location)=>{
+      if (location.data.galaxy !== eData.p.selectedGalaxy) {
         return;
       }
-
-      if (location.upvote && eData.p.show.Favorite) {
-        favLocations.push({
-          x: location.translatedX,
-          y: (0, 4096) - location.translatedZ,
-          z: location.translatedY,
-          id: location.id
-        });
-      } else if (location.id === eData.p.currentLocation && eData.p.show.Current) {
-        currentLocation.push({
-          x: location.translatedX,
-          y: (0, 4096) - location.translatedZ,
-          z: location.translatedY,
-          id: location.id
-        });
-      } else if (location.base && eData.p.show.Base) {
-        baseLocations.push({
-          x: location.translatedX,
-          y: (0, 4096) - location.translatedZ,
-          z: location.translatedY,
-          id: location.id
-        });
+      let obj = {
+        x: location.data.translatedX,
+        y: (0, 4096) - location.data.translatedZ,
+        z: location.data.translatedY,
+        id: `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`,
+        planetData: location.data.planetData,
+        stored: true
+      };
+      if (location.data.upvote && eData.p.show.Favorite) {
+        favLocations.push(obj);
+      } else if (location.data.id === eData.p.currentLocation && eData.p.show.Current) {
+        currentLocation.push(obj);
+      } else if (location.locationbase && eData.p.show.Base) {
+        baseLocations.push(obj);
       }
       if (eData.p.show.Explored) {
-        locations.push({
-          x: location.translatedX,
-          y: (0, 4096) - location.translatedZ,
-          z: location.translatedY,
-          id: location.id
-        });
+        locations.push(obj);
       }
     });
     if (eData.p.remoteLocations && eData.p.remoteLocations.results) {
@@ -97,43 +138,23 @@ onmessage = function(e) {
         if (location.data.galaxy !== eData.p.selectedGalaxy) {
           return;
         }
+        let obj = {
+          x: location.data.translatedX,
+          y: (0, 4096) - location.data.translatedZ,
+          z: location.data.translatedY,
+          id: `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`,
+          planetData: location.data.planetData
+        };
         if (location.data.upvote && eData.p.show.Favorite) {
-          favLocations.push({
-            x: location.data.translatedX,
-            y: (0, 4096) - location.data.translatedZ,
-            z: location.data.translatedY,
-            id: location.data.id
-          });
+          favLocations.push(obj);
         } else if (location.data.id === eData.p.currentLocation && eData.p.show.Current) {
-          currentLocation.push({
-            x: location.data.translatedX,
-            y: (0, 4096) - location.data.translatedZ,
-            z: location.data.translatedY,
-            id: location.id
-          });
+          currentLocation.push(obj);
         } else if (location.data.base && eData.p.show.Base) {
-          baseLocations.push({
-            x: location.data.translatedX,
-            y: (0, 4096) - location.data.translatedZ,
-            z: location.data.translatedY,
-            id: location.id
-          });
-        } else if (location.username !== eData.p.username && !location.data.playerPosition && eData.p.show.PS4) {
-          ps4Locations.push({
-            x: location.data.translatedX,
-            y: (0, 4096) - location.data.translatedZ,
-            z: location.data.translatedY,
-            user: location.username,
-            id: location.id
-          });
+          baseLocations.push(obj);
+        } else if (location.username !== eData.p.username && (!location.data.playerPosition || location.data.manuallyEntered) && eData.p.show.PS4) {
+          ps4Locations.push(obj);
         } else if (location.username !== eData.p.username && eData.p.show.Shared) {
-          remoteLocations.push({
-            x: location.data.translatedX,
-            y: (0, 4096) - location.data.translatedZ,
-            z: location.data.translatedY,
-            user: location.username,
-            id: location.id
-          });
+          remoteLocations.push(obj);
         }
       });
     }

@@ -6,33 +6,67 @@ import _ from 'lodash';
 import v from 'vquery';
 import each from './each';
 import {BasicDropdown} from './dropdowns';
-import Map3D from './map3d'
+import Map3D from './map3d';
+import * as utils from './utils';
+
+const toolTipHeaderStyle = {
+  padding: '3px 5px',
+  fontWeight: '600',
+  borderBottom: '1px solid rgb(149, 34, 14)'
+};
+const toolTipChildStyle = {
+  fontWeight: '500'
+}
+const toolTipExploredStyle = {
+  padding: '0px 5px'
+};
+const toolTipContainerStyle = {
+  display: 'inline-table',
+  textAlign: 'left',
+  fontFamily: 'geosanslight-nmsregular',
+  fontSize: '16px',
+  borderTop: '2px solid rgb(149, 34, 14)',
+  letterSpacing: '3px',
+};
 
 class TooltipChild extends React.Component {
   constructor(props) {
     super(props);
   }
   render(){
-    if (this.props.active) {
+    if (this.props.active || this.props.isSelected) {
       return (
-        <div className="ui segments" style={{
-          display: 'inline-table',
-          textAlign: 'left',
-          fontFamily: 'geosanslight-nmsregular',
-          fontSize: '16px'
-        }}>
+        <div className="ui segments" style={toolTipContainerStyle}>
           {this.props.payload[0].payload.user ?
           <div
           className="ui segment"
-          style={{padding: '3px 5px', fontWeight: '600'}}>
+          style={toolTipHeaderStyle}>
             {`${this.props.payload[0].payload.user}`}
           </div> : null}
-          {_.map(this.props.payload, (item, i)=>{
+          {this.props.payload[0].payload.planetData ? _.map(this.props.payload[0].payload.planetData, (sector, i)=>{
             return (
               <div
               key={i}
               className="ui segment"
-              style={{padding: '0px 5px'}}>
+              style={toolTipHeaderStyle}>
+                {sector.username}
+                {_.map(sector.entries, (id, z)=>{
+                  return (
+                    <div
+                    style={toolTipChildStyle}
+                    key={z}>
+                      {id}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          }) : _.map(this.props.payload, (item, i)=>{
+            return (
+              <div
+              key={i}
+              className="ui segment"
+              style={toolTipExploredStyle}>
                 {`${item.name}: ${item.name === 'Z' ? (0, 4096) - item.value : item.value}`}
               </div>
             );
@@ -83,7 +117,6 @@ class ThreeDimScatterChart extends React.Component {
     this.handleMapWorker();
     this.handlePostMessage(this.props);
     this.handlePostMessageSize(this.props);
-    this.handlePostMessageSelect(this.props);
   }
   componentWillReceiveProps(nextProps){
     if (nextProps.width !== this.props.width
@@ -100,6 +133,49 @@ class ThreeDimScatterChart extends React.Component {
   }
   shouldComponentUpdate(nextProps, nextState){
     return !_.isEqual(this.state, nextState) || !_.isEqual(this.props, nextProps)
+  }
+  getLocationsByTranslatedId(locations){
+    if (_.isArray(locations)) {
+      locations = {results: locations}
+    }
+    let _locations = _.cloneDeep(locations);
+    let systems = _.uniqBy(_locations.results, (location)=>{
+      location = location.data ? location : {data: location};
+      return location.data.translatedX && location.data.translatedY && location.data.translatedZ;
+    });
+    each(systems, (location, i)=>{
+      systems[i] = location.data ? location : {data: location};
+      location = systems[i];
+      let planets = _.filter(_locations.results, (planet)=>{
+        planet = planet.data ? planet : {data: planet};
+        return (location.data.translatedX === planet.data.translatedX
+          && location.data.translatedY === planet.data.translatedY
+          && location.data.translatedZ === planet.data.translatedZ);
+      });
+      let planetData = [];
+      each(planets, (planet)=>{
+        planet = planet.data ? planet : {data: planet};
+        if (!planetData[planet.data.username]) {
+          planetData[planet.data.username] = [];
+        }
+        let label = planet.data.name ? planet.data.name : planet.data.id;
+        let refPlanetData = _.findIndex(planetData, {username: planet.data.username});
+        if (refPlanetData > -1) {
+          let refEntry = _.findIndex(planetData[refPlanetData].entries, label);
+          if (refEntry === -1) {
+            planetData[refPlanetData].entries.push(label);
+          }
+        } else {
+          planetData.push({
+            username: planet.data.username,
+            entries: [label]
+          });
+        }
+      });
+      location.data.planetData = planetData;
+    });
+    _locations.results = systems;
+    return _locations;
   }
   handlePostMessage(p){
     window.mapWorker.postMessage(JSON.stringify({
@@ -151,39 +227,84 @@ class ThreeDimScatterChart extends React.Component {
   }
   handleMapWorker(){
     window.mapWorker.onmessage = (e)=>{
-      this.setState(JSON.parse(e.data), ()=>{
-        if (this.props.init) {
-          _.defer(()=>{
-            v('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
-            each(this.props.show, (type, key)=>{
-              v('.recharts-legend-item').each(function(el){
-                let _el = v(el);
-                if (_el.text()[0] === key) {
-                  _el.addClass(key);
-                }
+      let setState = (data)=>{
+        this.setState(data, ()=>{
+          if (this.props.init) {
+            _.defer(()=>{
+              v('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
+              each(this.props.show, (type, key)=>{
+                v('.recharts-legend-item').each(function(el){
+                  let _el = v(el);
+                  if (_el.text()[0] === key) {
+                    _el.addClass(key);
+                  }
+                });
               });
+              this.handleUpdateLegend();
             });
-            this.handleUpdateLegend();
-          });
-          this.props.onInit();
+            this.props.onInit();
+          }
+        });
+      };
+      let data = JSON.parse(e.data);
+      if (data.fromSelected) {
+        if (data.fromSelected.globalState) {
+          state.set(data.fromSelected.globalState, ()=>setState({selectedLocation: data.fromSelected.selectedLocation}));
+        } else {
+          setState({selectedLocation: data.fromSelected.selectedLocation})
         }
-      });
+      } else {
+        setState(data);
+      }
     }
   }
   handleSelect(symbol){
     let stateUpdate = {};
-    let refStoredLocation = _.findIndex(this.props.storedLocations, {id: symbol.id});
-    if (refStoredLocation !== -1) {
-      stateUpdate = {selectedLocation: this.props.storedLocations[refStoredLocation]};
-    }
-    let refRemoteLocation = _.findIndex(this.props.remoteLocations.results, {id: symbol.id});
-    if (refStoredLocation === -1 && refRemoteLocation !== -1) {
-      stateUpdate = {selectedLocation: this.props.remoteLocations.results[refRemoteLocation].data}
-    }
 
-    state.set(stateUpdate, ()=>{
-      _.defer(()=>this.handlePostMessageSelect(this.props));
-    });
+    let findSelected = (locations)=>{
+      let sector;
+      let hexSector;
+      let results = [];
+      each(locations, (location)=>{
+        location = location.data ? location : {
+          data: _.cloneDeep(location),
+          teleports: location.teleports ? location.teleports : 0,
+          id: utils.uuidV4(),
+          image: location.image ? location.image : '',
+          name: location.name ? location.name : '',
+          description: location.description ? location.description : ''
+        };
+        sector = `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`;
+        let hexArr = location.data.translatedId.split(':');
+        hexArr.pop();
+        hexSector = hexArr.join(':');
+        if (sector === symbol.id) {
+          results.push(location);
+        }
+      });
+      let remoteLen = results.length;
+      stateUpdate = {selectedLocation: results[0].data ? results[0].data : results[0]};
+      if (remoteLen > 1) {
+        stateUpdate = {
+          searchCache: {
+            results: results,
+            count: remoteLen,
+            multipleSelectedLocations: true
+          },
+          searchInProgress: true,
+          search: `Sector ${hexSector}`
+        };
+      }
+      state.set(stateUpdate, ()=>{
+        _.defer(()=>this.handlePostMessageSelect(this.props));
+      });
+    };
+
+    if (symbol.stored) {
+      findSelected(this.props.storedLocations);
+    } else {
+      findSelected(this.props.remoteLocations.results);
+    }
   }
   handleUpdateLegend(){
     each(this.props.show, (bool, name)=>{
@@ -206,14 +327,13 @@ class ThreeDimScatterChart extends React.Component {
     });
   }
   render () {
-    console.log('map render');
     return (
       <ScatterChart width={this.state.size} height={this.state.size} margin={this.chartMargin}>
         <XAxis tickLine={false} tickFormatter={this.tickFormatter} ticks={this.state.ticks} domain={[0, 4096]} type="number" dataKey="x" range={this.state.range} name="X" label="X"/>
         <YAxis tickLine={false} tickFormatter={this.tickFormatter} ticks={this.state.ticks} domain={[0, 4096]} type="number" dataKey="y" range={this.state.range} name="Z" label="Z"/>
         <ZAxis dataKey="z" range={this.state.zRange} name="Y" />
         <CartesianGrid />
-        <Tooltip cursor={this.tooltipCursor} content={<TooltipChild />}/>
+        <Tooltip cursor={this.tooltipCursor} content={<TooltipChild />} selectedLocation={this.props.selectedLocation}/>
         <Legend align="right" wrapperStyle={this.legendStyle} iconSize={12} onClick={this.handleLegendClick}/>
         <Scatter name="Shared" data={this.state.remoteLocations} fill="#0080db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
         <Scatter name="PS4" data={this.state.ps4Locations} fill="#0039db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
