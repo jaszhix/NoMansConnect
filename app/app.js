@@ -682,14 +682,7 @@ class RemoteLocations extends React.Component {
   constructor(props){
     super(props);
     this.state = {
-      init: true,
-      showOnlyNames: false,
-      showOnlyDesc: false,
-      showOnlyScreenshots: false,
-      showOnlyGalaxy: false,
-      showOnlyBases: false,
-      sortByDistance: false,
-      sortByModded: false
+      init: true
     };
     autoBind(this);
     this.range = {start: 0, length: 0};
@@ -730,6 +723,7 @@ class RemoteLocations extends React.Component {
       || nextProps.s.showOnlyDesc !== this.props.s.showOnlyDesc
       || nextProps.s.showOnlyGalaxy !== this.props.s.showOnlyGalaxy
       || nextProps.s.showOnlyBases !== this.props.s.showOnlyBases
+      || nextProps.s.showOnlyPC !== this.props.s.showOnlyPC
       || nextProps.s.selectedGalaxy !== this.props.s.selectedGalaxy
       || nextProps.s.sortByDistance !== this.props.s.sortByDistance
       || nextProps.s.sortByModded !== this.props.s.sortByModded
@@ -836,7 +830,7 @@ class RemoteLocations extends React.Component {
       },
       {
         id: 'showOnlyPC',
-        label: this.props.s.showOnlyGalaxy ? 'Show Only PC Locations: On' : 'Show Only PC Locations: Off',
+        label: this.props.s.showOnlyPC ? 'Show Only PC Locations: On' : 'Show Only PC Locations: Off',
         onClick: ()=>state.set({showOnlyPC: !this.props.s.showOnlyPC})
       },
       {

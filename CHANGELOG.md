@@ -1,3 +1,14 @@
+# 0.14.0
+
+  * Rewrote the handling of the 2D map scatter points and tool tips, so they show all the planets at each sector on the map.
+  * Fixed the favorite icons on remote location boxes not updating.
+  * Added more error logging.
+  * Added several more checks inside the save data parsing functions to prevent save file errors when teleporting to manually entered locations in offline mode.
+  * Fixed a bug preventing the app from watching the save file state.
+  * Added an option to show only PC locations in the remote list.
+  * Remote location filter options are now persistent and saved to settings.json.
+  * Performance improvements.
+
 # 0.13.0
 
   * Added an offline mode.

@@ -1,7 +1,7 @@
 {
   "name": "no-mans-connect",
   "productName": "NoMansConnect",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
   "scripts": {
@@ -32,7 +32,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "license": "LICENSE",
+      "license": "LICENSE.md",
       "deleteAppDataOnUninstall": true
     },
     "asar": true,
