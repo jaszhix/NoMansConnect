@@ -19,7 +19,7 @@ var state = Reflux.createStore({
     this.galaxies = knownGalaxies;
     this.state = {
       // Core
-      version: '0.13.0',
+      version: '0.13.1',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -80,6 +80,14 @@ var state = Reflux.createStore({
       registerLocation: false,
       remoteLocationsColumns: 1,
       sortStoredByTime: false,
+      showOnlyNames: false,
+      showOnlyDesc: false,
+      showOnlyScreenshots: false,
+      showOnlyGalaxy: false,
+      showOnlyBases: false,
+      showOnlyPC: false,
+      sortByDistance: false,
+      sortByModded: false,
       show: {
         Shared: true,
         PS4: true,
@@ -163,7 +171,15 @@ var state = Reflux.createStore({
       'autoCapture',
       'ps4User',
       'compactRemote',
-      'offline'
+      'offline',
+      'showOnlyNames',
+      'showOnlyDesc',
+      'showOnlyScreenshots',
+      'showOnlyGalaxy',
+      'showOnlyBases',
+      'showOnlyPC',
+      'sortByDistance',
+      'sortByModded'
     ];
     this.handleSettingsMigration();
     const settings = _.pick(this.state, this.settingsKeys);

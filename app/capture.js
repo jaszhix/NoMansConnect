@@ -2,8 +2,8 @@ import {remote, desktopCapturer} from 'electron';
 
 const primaryDisplay = remote.screen.getPrimaryDisplay();
 
-function screenshot(init, callback, debug) {
-  if (init) {
+function screenshot(proceed, callback, debug) {
+  if (!proceed) {
     callback('');
     return;
   }
@@ -16,15 +16,18 @@ function screenshot(init, callback, debug) {
     }
   }, (error, sources) => {
     if (error) {
+      log.error(error);
       callback('');
       return;
     };
     for (let i = 0; i < sources.length; ++i) {
-      if (sources[i].name === 'Screen 1') {
+      if (sources[i].name === 'Screen 1' || sources[i].name === 'Entire screen') {
         callback(sources[i].thumbnail.toDataURL('image/jpeg', 0.75));
-        return
+        return;
       }
     }
+    log.error('No screen found for screenshot auto-capture.');
+    callback('');
   });
 }
 

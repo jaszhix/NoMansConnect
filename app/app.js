@@ -250,7 +250,6 @@ class LocationRegistrationModal extends React.Component {
   }
   handleSave(){
     let location = utils.fromHex(this.state.address, this.props.s.username, this.state.galaxy);
-    console.log(location)
     if (!location) {
       this.setState({
         address: '',
@@ -399,7 +398,7 @@ class LocationBox extends React.Component {
             if (!err) {
               this.setState({image: `${file}`});
             } else {
-              console.log(err)
+              log.error(err)
             }
           });
         }).catch(()=>{});
@@ -433,6 +432,7 @@ class LocationBox extends React.Component {
   }
   shouldComponentUpdate(nextProps, nextState){
     let bool = (!_.isEqual(nextProps.location, this.props.location)
+      || nextProps.favorites !== this.props.favorites
       || nextProps.updating !== this.props.updating
       || nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck
       || nextProps.selectType === true
@@ -506,7 +506,7 @@ class LocationBox extends React.Component {
     let refFav = _.findIndex(p.favorites, (fav)=>{
       return fav === p.location.id;
     });
-    let upvote = refFav !== -1;
+    let upvote = refFav !== -1 || location.update;
     let isOwnLocation = p.isOwnLocation && p.selectType && p.location.username === p.username;
     let deleteArg = p.location.image && p.location.image.length > 0;
     let compact = p.width && p.width <= 1212;
@@ -593,7 +593,7 @@ class LocationBox extends React.Component {
         <h3 style={{
           textAlign: 'center',
           maxHeight: '23px',
-          color: p.location.playerPosition ? 'inherit' : '#7fa0ff',
+          color:  p.location.playerPosition && !p.location.manuallyEntered ? 'inherit' : '#7fa0ff',
           cursor: p.selectType ? 'default' : 'pointer'
         }}
         onClick={()=>state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
@@ -715,28 +715,28 @@ class RemoteLocations extends React.Component {
     checkRemote();
     this.throttledPagination = _.throttle(this.props.onPagination, 1000, {leading: true});
   }
-  shouldComponentUpdate(nextProps, nextState) {
+  shouldComponentUpdate(nextProps) {
     return (nextProps.s.remoteLocations.results !== this.props.s.remoteLocations.results
       || this.props.s.search.length > 0
-      || this.props.s.searchCache.results !== this.props.s.searchCache.results
+      || nextProps.s.searchCache.results !== this.props.s.searchCache.results
       || nextProps.s.favorites !== this.props.s.favorites
       || nextProps.updating !== this.props.updating
       || nextProps.s.installing !== this.props.s.installing
       || nextProps.s.width !== this.props.s.width
       || nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
       || nextProps.s.compactRemote !== this.props.compactRemote
-      || nextState.showOnlyScreenshots !== this.state.showOnlyScreenshots
-      || nextState.showOnlyNames !== this.state.showOnlyNames
-      || nextState.showOnlyDesc !== this.state.showOnlyDesc
-      || nextState.showOnlyGalaxy !== this.state.showOnlyGalaxy
-      || nextState.showOnlyBases !== this.state.showOnlyBases
+      || nextProps.s.showOnlyScreenshots !== this.props.s.showOnlyScreenshots
+      || nextProps.s.showOnlyNames !== this.props.s.showOnlyNames
+      || nextProps.s.showOnlyDesc !== this.props.s.showOnlyDesc
+      || nextProps.s.showOnlyGalaxy !== this.props.s.showOnlyGalaxy
+      || nextProps.s.showOnlyBases !== this.props.s.showOnlyBases
       || nextProps.s.selectedGalaxy !== this.props.s.selectedGalaxy
-      || nextState.sortByDistance !== this.state.sortByDistance
-      || nextState.sortByModded !== this.state.sortByModded
+      || nextProps.s.sortByDistance !== this.props.s.sortByDistance
+      || nextProps.s.sortByModded !== this.props.s.sortByModded
       || this.state.init)
   }
   componentWillReceiveProps(nextProps){
-    let searchChanged = this.props.s.searchCache.results !== this.props.s.searchCache.results;
+    let searchChanged = nextProps.s.searchCache.results !== this.props.s.searchCache.results;
     if (nextProps.s.sort !== this.props.s.sort && this.refs.recentExplorations || searchChanged) {
       this.refs.recentExplorations.scrollTop = 0;
     }
@@ -831,38 +831,43 @@ class RemoteLocations extends React.Component {
       },
       {
         id: 'showOnlyGalaxy',
-        label: this.state.showOnlyGalaxy ? 'Show Locations From All Galaxies' : `Show Only Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
-        onClick: ()=>this.setState({showOnlyGalaxy: !this.state.showOnlyGalaxy})
+        label: this.props.s.showOnlyGalaxy ? 'Show Locations From All Galaxies' : `Show Only Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
+        onClick: ()=>state.set({showOnlyGalaxy: !this.props.s.showOnlyGalaxy})
+      },
+      {
+        id: 'showOnlyPC',
+        label: this.props.s.showOnlyGalaxy ? 'Show Only PC Locations: On' : 'Show Only PC Locations: Off',
+        onClick: ()=>state.set({showOnlyPC: !this.props.s.showOnlyPC})
       },
       {
         id: 'showOnlyScreenshots',
-        label: this.state.showOnlyScreenshots ? 'Show Only Locations With Screenshots: On' : 'Show Only Locations With Screenshots: Off',
-        onClick: ()=>this.setState({showOnlyScreenshots: !this.state.showOnlyScreenshots})
+        label: this.props.s.showOnlyScreenshots ? 'Show Only Locations With Screenshots: On' : 'Show Only Locations With Screenshots: Off',
+        onClick: ()=>state.set({showOnlyScreenshots: !this.props.s.showOnlyScreenshots})
       },
       {
         id: 'showOnlyNames',
-        label: this.state.showOnlyNames ? 'Show Only Locations With Names: On' : 'Show Only Locations With Names: Off',
-        onClick: ()=>this.setState({showOnlyNames: !this.state.showOnlyNames})
+        label: this.props.s.showOnlyNames ? 'Show Only Locations With Names: On' : 'Show Only Locations With Names: Off',
+        onClick: ()=>state.set({showOnlyNames: !this.props.s.showOnlyNames})
       },
       {
         id: 'showOnlyDesc',
-        label: this.state.showOnlyDesc ? 'Show Only Locations With Descriptions: On' : 'Show Only Locations With Descriptions: Off',
-        onClick: ()=>this.setState({showOnlyDesc: !this.state.showOnlyDesc})
+        label: this.props.s.showOnlyDesc ? 'Show Only Locations With Descriptions: On' : 'Show Only Locations With Descriptions: Off',
+        onClick: ()=>state.set({showOnlyDesc: !this.props.s.showOnlyDesc})
       },
       {
         id: 'showOnlyBases',
-        label: this.state.showOnlyBases ? 'Show Only Locations With Bases: On' : 'Show Only Locations With Bases: Off',
-        onClick: ()=>this.setState({showOnlyBases: !this.state.showOnlyBases})
+        label: this.props.s.showOnlyBases ? 'Show Only Locations With Bases: On' : 'Show Only Locations With Bases: Off',
+        onClick: ()=>state.set({showOnlyBases: !this.props.s.showOnlyBases})
       },
       {
         id: 'sortByDistance',
-        label: this.state.sortByDistance ? 'Sort by Distance to Center: On' : 'Sort by Distance to Center: Off',
-        onClick: ()=>this.setState({sortByDistance: !this.state.sortByDistance})
+        label: this.props.s.sortByDistance ? 'Sort by Distance to Center: On' : 'Sort by Distance to Center: Off',
+        onClick: ()=>state.set({sortByDistance: !this.props.s.sortByDistance})
       },
       {
         id: 'sortByModded',
-        label: this.state.sortByModded ? 'Sort by Least Modded: On' : 'Sort by Least Modded: Off',
-        onClick: ()=>this.setState({sortByModded: !this.state.sortByModded})
+        label: this.props.s.sortByModded ? 'Sort by Least Modded: On' : 'Sort by Least Modded: Off',
+        onClick: ()=>state.set({sortByModded: !this.props.s.sortByModded})
       }
     ];
     if (p.s.remoteLocations && p.s.remoteLocations.results && p.s.searchCache.results.length === 0 && p.s.remoteLength < p.s.remoteLocations.count - p.s.pageSize) {
@@ -876,41 +881,46 @@ class RemoteLocations extends React.Component {
     let criteria = p.s.offline ? 'Cached' : p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular';
     let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.s.remoteLocations.results;
-    if (this.state.showOnlyScreenshots) {
+    if (this.props.s.showOnlyScreenshots) {
       locations = _.filter(locations, (location)=>{
         return location.image.length > 0;
       });
     }
-    if (this.state.showOnlyNames) {
+    if (this.props.s.showOnlyNames) {
       locations = _.filter(locations, (location)=>{
         return location.data.name && location.data.name.length > 0;
       });
     }
-    if (this.state.showOnlyDesc) {
+    if (this.props.s.showOnlyDesc) {
       locations = _.filter(locations, (location)=>{
         return location.data.description && location.data.description.length > 0;
       });
     }
-    if (this.state.showOnlyGalaxy) {
+    if (this.props.s.showOnlyGalaxy) {
       locations = _.filter(locations, (location)=>{
         return location.data.galaxy === p.s.selectedGalaxy;
       });
     }
-    if (this.state.showOnlyBases) {
+    if (this.props.s.showOnlyBases) {
       locations = _.filter(locations, (location)=>{
         return location.data.base;
       });
     }
-    if (this.state.sortByDistance || this.state.sortByModded) {
+    if (this.props.s.showOnlyPC) {
+      locations = _.filter(locations, (location)=>{
+        return location.data.playerPosition && !location.data.manuallyEntered;
+      });
+    }
+    if (this.props.s.sortByDistance || this.state.sortByModded) {
       locations = _.orderBy(locations, (location)=>{
         if (!location.data.mods) {
           location.data.mods = [];
         }
-        if (this.state.sortByModded && this.state.sortByDistance) {
+        if (this.props.s.sortByModded && this.props.s.sortByDistance) {
           return location.data.mods.length + location.data.distanceToCenter;
-        } else if (this.state.sortByDistance) {
+        } else if (this.props.s.sortByDistance) {
           return location.data.distanceToCenter;
-        } else if (this.state.sortByModded) {
+        } else if (this.props.s.sortByModded) {
           return location.data.mods.length;
         }
       });
@@ -1039,7 +1049,7 @@ class StoredLocationItem extends React.Component {
         <p
         className={isMarquee ? 'marquee' : ''}
         style={{
-          color: this.props.location.playerPosition ? 'inherit' : '#7fa0ff',
+          color: this.props.location.playerPosition && !this.props.location.manuallyEntered ? 'inherit' : '#7fa0ff',
           maxWidth: `${isMarquee ? 200 : 177}px`,
           whiteSpace: 'nowrap',
           position: 'relative',
@@ -1236,7 +1246,7 @@ class Container extends React.PureComponent {
       if (refRemoteLocation !== -1) {
         _.assignIn(this.props.s.remoteLocations.results[refRemoteLocation].data, {
           score: res.data.score,
-          upvote: res.data.upvote,
+          upvote: upvote,
         });
       }
       if (upvote) {
@@ -1596,7 +1606,7 @@ class App extends Reflux.Component {
       machineId().then((id)=>{
         this.pollSaveData(this.state.mode, true, id);
       }).catch((err)=>{
-        console.log(err);
+        log.error(err.message);
         this.pollSaveData(this.state.mode, true, null);
       });
     };
@@ -1746,9 +1756,18 @@ class App extends Reflux.Component {
     this.syncRemoteOwned(()=>{
       let locations = [];
       each(this.state.storedLocations, (location)=>{
-        location = _.cloneDeep(location);
-        location.timeStamp = new Date(location.timeStamp);
-        locations.push(location);
+        let existsInRemoteLocations = false;
+        each(this.state.remoteLocations.results, (remoteLocation)=>{
+          if (remoteLocation.data.id === location.id) {
+            existsInRemoteLocations = true;
+            return false;
+          };
+        });
+        if (!existsInRemoteLocations) {
+          location = _.cloneDeep(location);
+          location.timeStamp = new Date(location.timeStamp);
+          locations.push(location);
+        }
       });
       window.ajaxWorker.postMessage({
         method: 'post',
@@ -1895,7 +1914,7 @@ class App extends Reflux.Component {
       if (process.platform !== 'win32') {
         log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?')
       }
-      console.log(e);
+      log.error(e.message);
     });
   }
   handleRestoreBase(base){
@@ -1958,7 +1977,7 @@ class App extends Reflux.Component {
 
       fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data)=>{
         if (err) {
-          console.log(err);
+          log.error(err);
           return;
         }
         this.signSaveData();
@@ -1976,8 +1995,8 @@ class App extends Reflux.Component {
           location = location.data;
         }
 
-        if (!location.playerPosition) {
-          _.assignIn(location, {
+        if (location.manuallyEntered || !location.playerPosition) {
+          _.assignIn(_location, {
             playerPosition: [
               233.02163696289063,
               6774.24560546875,
@@ -2029,7 +2048,7 @@ class App extends Reflux.Component {
 
         fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data)=>{
           if (err) {
-            console.log(err);
+            log.error(err);
           }
           this.signSaveData();
           let refStoredLocation = _.findIndex(this.state.storedLocations, {id: _location.id});
@@ -2060,19 +2079,19 @@ class App extends Reflux.Component {
           });
         });
       }).catch((err)=>{
-        console.log(err);
+        log.error(err.message);
         log.error(`Unable to teleport to location: ${err}`);
       });
     });
   }
-  pollSaveData(mode, init=false, machineId=this.state.machineId){
+  pollSaveData(mode=this.state.mode, init=false, machineId=this.state.machineId){
     if (this.state.ps4User && this.state.username === 'Explorer') {
       state.set({usernameOverride: true});
       return;
     }
 
     let getLastSave = (NMSRunning=false)=>{
-      let next = ()=>{
+      let next = (error=false)=>{
         if (init && !this.state.ps4User) {
           this.handleWallpaper();
           this.handleSync(1, this.state.sort, init);
@@ -2118,14 +2137,12 @@ class App extends Reflux.Component {
 
         username = _.isString(username) && username.length > 0 ? username : '';
 
-        console.log('SAVE DATA: ', saveData.result)
-
         let refFav = _.findIndex(this.state.favorites, (fav)=>{
           return fav === location.id;
         });
         let upvote = refFav !== -1;
 
-        screenshot(init || !NMSRunning || !this.state.autoCapture, (image)=>{
+        screenshot(!init && NMSRunning && this.state.autoCapture, (image)=>{
           if (refLocation === -1) {
             _.assignIn(location, {
               username: username,
@@ -2143,6 +2160,7 @@ class App extends Reflux.Component {
               upvote: upvote,
               image: image,
               mods: this.state.mods,
+              manuallyEntered: false,
               timeStamp: Date.now(),
             });
 
@@ -2151,13 +2169,15 @@ class App extends Reflux.Component {
             location.translatedId = `${utils.toHex(location.translatedX, 4)}:${utils.toHex(location.translatedY, 4)}:${utils.toHex(location.translatedZ, 4)}:${utils.toHex(location.SolarSystemIndex, 4)}`;
 
             if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
-              console.error(`translatedId formatting is NaN: ${location}`);
+              log.error(`translatedId formatting is NaN: ${location}`);
               state.set({username: location.username}, ()=>{
                 next();
               });
               return;
             }
-
+            if (!location.playerPosition) {
+              location.manuallyEntered = true;
+            }
             this.state.storedLocations.push(location);
           }
 
@@ -2173,6 +2193,9 @@ class App extends Reflux.Component {
           each(this.state.storedLocations, (storedLocation, i)=>{
             if (_.isString(storedLocation.timeStamp)) {
               this.state.storedLocations[i].timeStamp = new Date(storedLocation.timeStamp).getTime()
+            }
+            if (storedLocation.manuallyEntered === undefined && !storedLocation.playerPosition) { // For old locations
+              storedLocation.manuallyEntered = true;
             }
             if (baseFound) {
               let hasBase = (base.VoxelX === storedLocation.VoxelX
@@ -2217,33 +2240,36 @@ class App extends Reflux.Component {
                 image: image,
                 data: location
               }).then((res)=>{
-                next();
+                next(false);
               }).catch((err)=>{
-                next();
+                next([err, err.message, err.stack]);
               });
             } else {
-              next();
+              next('exists');
             }
           });
         });
       }
 
-      console.log(this.state.saveDirectory)
+      console.log('SAVE DIRECTORY: ', this.state.saveDirectory)
 
       utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
         let refLocation, location, username;
         if (!this.state.ps4User) {
           location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
-          console.log(location)
           refLocation = _.findIndex(this.state.storedLocations, {id: location.id});
           username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
         }
 
-        if (this.state.username.length > 0 && this.state.username !== username) {
+        if (username
+          && _.isString(username)
+          && username.length > 0
+          && this.state.username.length > 0
+          && this.state.username !== username) {
           username = this.state.username;
         }
 
-        console.log(username)
+        console.log('USERNAME: ', username)
 
         if (this.state.offline) {
           processData(saveData, location, refLocation, username);
@@ -2259,6 +2285,7 @@ class App extends Reflux.Component {
             }
             processData(saveData, location, refLocation, username, profile);
           }).catch((err)=>{
+            log.error(err)
             if (err.response && err.response.status === 403) {
               log.error(`Username protected: ${username}`);
               this.handleProtectedSession(username);
@@ -2269,7 +2296,7 @@ class App extends Reflux.Component {
         }
 
       }).catch((err)=>{
-        console.log(err, this.state.saveDirectory, this.state.saveFileName)
+        log.error(err);
         log.error(`Unable to retrieve NMS save file: ${err}`)
         log.error(`${this.state.saveDirectory}, ${this.state.saveFileName}`);
         try {

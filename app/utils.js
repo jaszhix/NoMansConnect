@@ -178,6 +178,7 @@ export var fromHex = (str, username, galaxy)=>{
       upvote: false,
       image: '',
       mods: [],
+      manuallyEntered: true,
       timeStamp: Date.now(),
     };
     if (isNaN(manualLocation.SolarSystemIndex)
@@ -486,7 +487,6 @@ var signInt = (x, byteLen)=>{
   console.log('signInt', x, byteLen)
   let y = parseInt(x, 16);
   if (y > 0.5 * Math.pow(16, byteLen)) {
-    console.log('y > 0.5 * (16 ^ byteLen)', y > 0.5 * (16 ^ byteLen), 'y - (16 ^ byteLen)', y - (16 ^ byteLen))
     return y - Math.pow(16, byteLen);
   } else {
     return y;
@@ -535,3 +535,10 @@ export function parseMeta (buffer, archiveNumber) {
 export function convertRange(value, r1, r2) {
   return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
 };
+
+export function uuidV4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
