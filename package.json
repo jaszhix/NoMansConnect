@@ -73,6 +73,10 @@
       {
         "from": "node_modules/is-buffer",
         "to": "node_modules/is-buffer"
+      },
+      {
+        "from": "./app/copy.js",
+        "to": "./app/copy.js"
       }
     ],
     "dmg": {

@@ -1418,7 +1418,7 @@ class App extends Reflux.Component {
         }
         window.location.reload();
       }
-    }, 200);
+    }, 1000);
   }
   handleMaximize(){
     state.set({maximized: !this.state.maximized}, ()=>{

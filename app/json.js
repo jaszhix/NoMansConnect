@@ -1,36 +1,67 @@
 const fs = require('fs');
+const copyFile = require('./copy');
 
 class Json {
   constructor(path, fileName, defaultObj, cb){
-    this.path = `${path}/${fileName}`;
+    this.shouldWrite = false;
+    this.fileName = fileName;
+    this.path = `${path}/${this.fileName}`;
+    this.backupPath = `${path}/__backup__${this.fileName}`;
     this.data = defaultObj ? defaultObj : {};
-    fs.readFile(this.path, (err, data=this.data)=>{
+    this.init(this.path, cb);
+  }
+  init(readPath, cb, fromFailure=null){
+    fs.readFile(readPath, (err, data=this.data)=>{
       if (err) {
         fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
           if (err) {
             console.log(err);
             return;
           }
-          cb(this.data);
+          this.callback(cb);
         });
       }
       try {
-        this.data = JSON.parse(data);
-        cb(this.data);
+        this.data = typeof data === 'string' ? JSON.parse(data) : data;
+        this.callback(cb);
       } catch (e) {
+        if (fs.existsSync(this.backupPath) && !fromFailure) {
+          this.init(this.backupPath, cb, true);
+          return;
+        }
         console.log(e)
-        cb(this.data);
+        this.callback(cb);
       }
     });
   }
-  set(key, value){
-    this.data[key] = value;
-    fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
+  callback(cb){
+    this.shouldWrite = true;
+    cb(this.data);
+  }
+  writeFile(cb){
+    if (!this.shouldWrite) {
+      cb(this.data);
+      return;
+    }
+    copyFile(this.path, this.backupPath, (err)=>{
       if (err) {
         console.log(err);
         return;
       }
+      fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
+        if (err) {
+          console.log(err);
+          return;
+        }
+        if (typeof cb === 'function') {
+          cb(this.data);
+        }
+      });
     });
+  }
+  set(key, value){
+    this.data[key] = value;
+    this.writeFile();
   }
   get(key){
     try {
@@ -41,12 +72,7 @@ class Json {
   }
   remove(key){
     delete this.data[key];
-    fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
-      if (err) {
-        console.log(err);
-        return;
-      }
-    });
+    this.writeFile();
   }
 }
 
