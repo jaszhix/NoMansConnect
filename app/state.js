@@ -19,7 +19,7 @@ var state = Reflux.createStore({
     this.galaxies = knownGalaxies;
     this.state = {
       // Core
-      version: '0.14.0',
+      version: '0.15.0',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -152,6 +152,7 @@ var state = Reflux.createStore({
     });
     this.handleSettingsWorker();
     this.settingsKeys = [
+      'maximized',
       'maintenanceTS',
       'wallpaper',
       'installDirectory',

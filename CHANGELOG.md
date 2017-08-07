@@ -1,3 +1,11 @@
+# 0.15.0
+
+  * Added username recovery via email. Set the email address to be associated with your username in the tool menu. When getting locked out of a profile with protection enabled on a different computer, recovery options will now appear.
+  * Settings are now backed up automatically. If the settings.json file becomes corrupt, the app will attempt to load the backup version.
+    * Fixed a server side bug preventing the profile from being restored when this happens.
+  * Fixed a bug preventing write access to save files when spaces are in the save directory path.
+  * Fixed unmaximizing the app shrinking the window into a tiny square.
+
 # 0.14.0
 
   * Rewrote the handling of the 2D map scatter points and tool tips, so they show all the planets at each sector on the map.

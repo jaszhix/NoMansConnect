@@ -38,30 +38,39 @@ class Json {
     this.shouldWrite = true;
     cb(this.data);
   }
-  writeFile(cb){
-    if (!this.shouldWrite) {
-      cb(this.data);
-      return;
-    }
-    copyFile(this.path, this.backupPath, (err)=>{
+  _writeFile(cb){
+    fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
       if (err) {
         console.log(err);
         return;
       }
-      fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
+      if (typeof cb === 'function') {
+        cb(this.data);
+      }
+    });
+  }
+  writeFile(cb, backup){
+    if (!this.shouldWrite) {
+      if (typeof cb === 'function') {
+        cb(this.data);
+      }
+      return;
+    }
+    if (backup) {
+      copyFile(this.path, this.backupPath, (err)=>{
         if (err) {
           console.log(err);
           return;
         }
-        if (typeof cb === 'function') {
-          cb(this.data);
-        }
+        this._writeFile(cb);
       });
-    });
+    } else {
+      this._writeFile(cb);
+    }
   }
   set(key, value){
     this.data[key] = value;
-    this.writeFile();
+    this.writeFile(null, this.data.hasOwnProperty('maintenanceTS'));
   }
   get(key){
     try {
