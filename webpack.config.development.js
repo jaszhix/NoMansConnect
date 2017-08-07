@@ -14,7 +14,7 @@ const publicPath = `http://localhost:${port}/dist`;
 
 process.traceDeprecation = true
 
-export default merge(baseConfig, {
+export default merge.smart(baseConfig, {
   devtool: 'inline-source-map',
 
   entry: [

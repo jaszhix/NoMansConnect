@@ -11,7 +11,7 @@ import BabiliPlugin from 'babili-webpack-plugin';
 //import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
 import baseConfig from './webpack.config.base';
 
-export default merge(baseConfig, {
+export default merge.smart(baseConfig, {
   devtool: 'cheap-module-source-map',
 
   entry: ['babel-polyfill', './app/index'],

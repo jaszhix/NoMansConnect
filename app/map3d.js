@@ -258,7 +258,7 @@ class Map3D extends React.Component {
       _this.controls.needsUpdate = true;
 
     }
-    let t = new TWEEN.Tween({x: _this.target.x, y: _this.target.y, z: _this.target.z})
+    new TWEEN.Tween({x: _this.target.x, y: _this.target.y, z: _this.target.z})
       .to({ x: vector3.x, y: vector3.y, z: vector3.z }, 2200)
       .easing(TWEEN.Easing.Quadratic.In)
       .onUpdate(function () {
