@@ -22,7 +22,7 @@ class Json {
         });
       }
       try {
-        this.data = typeof data === 'string' ? JSON.parse(data) : data;
+        this.data = JSON.parse(data);
         this.callback(cb);
       } catch (e) {
         if (fs.existsSync(this.backupPath) && !fromFailure) {

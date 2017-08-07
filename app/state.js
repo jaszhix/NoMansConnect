@@ -78,6 +78,8 @@ var state = Reflux.createStore({
       useGAFormat: false,
       usernameOverride: false,
       registerLocation: false,
+      setEmail: false,
+      recoveryToken: false,
       remoteLocationsColumns: 1,
       sortStoredByTime: false,
       showOnlyNames: false,

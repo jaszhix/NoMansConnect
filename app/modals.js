@@ -107,6 +107,121 @@ export class UsernameOverrideModal extends React.Component {
 
 UsernameOverrideModal = onClickOutside(UsernameOverrideModal);
 
+export class RecoveryModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: '',
+    };
+    this.modalStyle = {
+      padding: '8px',
+      textAlign: 'center',
+      zIndex: '1001',
+      WebkitTransformOrigin: '50% 25%',
+      boxShadow: 'none',
+      borderTop: '2px solid #95220E',
+      border: '1px solid #DA2600',
+      width: '400px',
+      height: '145px',
+      position: 'absolute',
+      left: '0px',
+      right: '0px',
+      top: '45%',
+      margin: '0px auto'
+    };
+    this.inputStyle = {
+      width: '300px',
+      position: 'relative',
+      top: '7px',
+      color: '#FFF',
+      background: 'rgb(23, 26, 22)',
+      padding: '0.67861429em',
+      borderRadius: '0px',
+      border: '1px solid #DA2600',
+      fontFamily: 'geosanslight-nmsregular',
+      fontSize: '15px',
+      letterSpacing: '2px'
+    };
+    this.errorStyle = {
+      fontFamily: 'geosanslight-nmsregular',
+      fontSize: '15px',
+      fontWeight: 600,
+      letterSpacing: '2px',
+      color: 'rgb(218, 38, 0)'
+    };
+    autoBind(this);
+  }
+  handleClickOutside(){
+    let obj = {};
+    obj[this.props.type] = false;
+    state.set(obj);
+  }
+  handleChange(e){
+    this.setState({value: e.target.value})
+  }
+  handleSave(){
+    let errorMessage, url, prop;
+
+    if (this.props.type === 'setEmail') {
+      errorMessage = 'There was an error associating your email address.';
+      url = '/nmssetemail/';
+      prop = 'email'
+      if (!utils.validateEmail(this.state.value)) {
+        this.setState({
+          address: '',
+          error: 'Invalid email address.'
+        });
+        return;
+      }
+    } else {
+      errorMessage = 'Invalid recovery token.';
+      url = '/nmsvalidaterecovery/';
+      prop = 'recovery_token';
+    }
+
+    let request = {
+      machineId: this.props.s.machineId,
+      username: this.props.s.username
+    };
+    request[prop] = this.state.value;
+    utils.ajax.post(url, request).then((res)=>{
+      if (this.props.type === 'recoveryToken') {
+        this.props.onSuccess();
+        return;
+      }
+      this.props.s.profile[prop] = this.state.value;
+      state.set({profile: this.props.s.profile}, this.handleClickOutside);
+    }).catch((err)=>{
+      console.log(err);
+      this.setState({
+        address: '',
+        error: errorMessage
+      });
+    });
+  }
+  render(){
+    return (
+      <div className="ui small modal active" style={this.modalStyle}>
+        <span className="close" />
+        {this.state.error ? <div style={this.errorStyle}>{this.state.error}</div> : null}
+        <div style={{position: 'absolute', top: '50px', left: '50px'}}>
+          <input
+          style={this.inputStyle}
+          type="text"
+          value={this.state.value}
+          onChange={this.handleChange}
+          placeholder={this.props.placeholder} />
+          <Button onClick={this.handleSave}>
+            Save
+          </Button>
+        </div>
+      </div>
+    );
+  }
+};
+
+RecoveryModal = onClickOutside(RecoveryModal);
+
 export class LocationRegistrationModal extends React.Component {
   constructor(props) {
     super(props);
@@ -169,9 +284,6 @@ export class LocationRegistrationModal extends React.Component {
     this.setState({galaxies: this.state.galaxies});
   }
   handleClickOutside(){
-    /*if (this.state.preventClose) {
-      return;
-    }*/
     state.set({registerLocation: false});
   }
   handleChange(e){

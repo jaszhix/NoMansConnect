@@ -28,7 +28,7 @@ import defaultWallpaper from './assets/images/default_wallpaper.png';
 import baseIcon from './assets/images/base_icon.png';
 
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu} from './dropdowns';
-import {ImageModal, UsernameOverrideModal, LocationRegistrationModal} from './modals';
+import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal} from './modals';
 import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
@@ -1167,15 +1167,30 @@ class App extends Reflux.Component {
       });
     }
   }
-  handleProtectedSession(username){
+  handleProtectedSession(username='Explorer'){
     dialog.showMessageBox({
       title: `Protection Enabled For ${username}`,
       message: 'This username was protected by another user. When you protect your username, the app will associate your computer with your username to prevent impersonation. If this is in error, please open an issue on the Github repository.',
-      buttons: ['OK', 'Open Issue']
+      buttons: ['OK', 'Send Recovery Email', 'Enter Recovery Token']
     }, result=>{
       if (result === 1) {
-        openExternal('https://github.com/jaszhix/NoMansConnect/issues');
-        window.close();
+        utils.ajax.post('/nmsrequestrecovery/', {
+          machineId: this.state.machineId,
+          username: this.state.username
+        }).then(()=>{
+          this.handleProtectedSession(username);
+        }).catch((err)=>{
+          if (err.response && err.response.status === 400) {
+            dialog.showMessageBox({
+              type: 'info',
+              buttons: [],
+              title: 'Email Not Found',
+              message: 'An email address associated with your profile could not be found.'
+            });
+          }
+        });
+      } else if (result === 2) {
+        state.set({recoveryToken: true});
       }
     });
   }
@@ -1555,8 +1570,19 @@ class App extends Reflux.Component {
           </div> : null}
         </div>
         {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} width={this.state.width} /> : null}
-        {this.state.usernameOverride ? <UsernameOverrideModal ps4User={this.state.ps4User} onSave={this.handleUsernameOverride} onRestart={this.handleRestart}/> : null}
+        {this.state.usernameOverride ? <UsernameOverrideModal ps4User={this.state.ps4User} onSave={this.handleUsernameOverride} onRestart={this.handleRestart} /> : null}
         {this.state.registerLocation ? <LocationRegistrationModal s={_.pick(this.state, ['machineId', 'username', 'height', 'storedLocations'])} /> : null}
+        {this.state.setEmail ?
+        <RecoveryModal
+        type="setEmail"
+        placeholder="Recovery Email Address"
+        s={_.pick(this.state, ['machineId', 'username', 'profile'])} /> : null}
+        {this.state.recoveryToken ?
+        <RecoveryModal
+        type="recoveryToken"
+        placeholder="Recovery Token"
+        onSuccess={this.handleRestart}
+        s={_.pick(this.state, ['machineId', 'username', 'profile'])} /> : null}
         {s.init ?
         <Loader />
         :

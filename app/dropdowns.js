@@ -312,6 +312,9 @@ export class DropdownMenu extends React.Component {
       }
     });
   }
+  handleSetEmail(){
+    state.set({setEmail: true});
+  }
   handlePlatformToggle(){
     state.set({ps4User: !this.props.s.ps4User}, this.props.onRestart);
   }
@@ -347,7 +350,7 @@ export class DropdownMenu extends React.Component {
   handleOfflineModeToggle(e){
     e.stopPropagation();
     state.set({
-      title: `NO MAN\'S ${!this.props.s.offline ? 'DIS' : ''}CONNECT`,
+      title: `NO MAN'S ${!this.props.s.offline ? 'DIS' : ''}CONNECT`,
       offline: !this.props.s.offline
     });
   }
@@ -378,15 +381,19 @@ export class DropdownMenu extends React.Component {
               </div>
             );
           }) : null}
-          {!p.s.ps4User ? <div className="divider"></div> : null}
+          {!p.s.ps4User ? <div className="divider" /> : null}
           {!p.s.ps4User && !p.s.offline ?
-          <div className="item" onClick={this.handleAutoCapture}
+          <div
+          className="item"
+          onClick={this.handleAutoCapture}
           data-place="left"
           data-tip={utils.tip('Automatically grabs your screen when NMS is running and the game is saved. Only works when NMS is in window mode.')}>
             Screenshots: {p.s.autoCapture ? 'Auto' : 'Manual'}
           </div> : null}
-          {!p.s.ps4User ? <div className="divider"></div> : null}
-          <div className="item" onClick={this.handlePlatformToggle}
+          {!p.s.ps4User ? <div className="divider" /> : null}
+          <div
+          className="item"
+          onClick={this.handlePlatformToggle}
           data-place="left"
           data-tip={utils.tip('Select which platform you play NMS.')}>
             {`Platform: ${p.s.ps4User ? 'PS4' : 'PC'}`}
@@ -431,10 +438,20 @@ export class DropdownMenu extends React.Component {
             {`Polling Rate: ${p.s.pollRate / 1000} Seconds`}
           </div> : null}
           {p.s.profile ?
-          <div className="item" onClick={this.handleUsernameProtection}
+          <div
+          className="item"
+          onClick={this.handleUsernameProtection}
           data-place="left"
           data-tip={utils.tip('Highly recommended! Anyone can claim your username and impersonate you if this is not enabled. This associates your username with your Windows installation\'s cryptographic signature, so be sure to disable this when switching computers, upgrading hardware, or reinstalling Windows.')}>
             {`Username Protection: ${p.s.profile.protected ? 'On' : 'Off'}`}
+          </div> : null}
+          {p.s.profile ?
+          <div
+          className="item"
+          onClick={this.handleSetEmail}
+          data-place="left"
+          data-tip={utils.tip(`Incase you get locked out of your profile, setting a recovery email can assist in unprotecting your username.${p.s.profile.email ? ' Current recovery email: ' + p.s.profile.email : ''}`)}>
+            Set Recovery Email
           </div> : null}
           {!p.s.offline ?
           <div
@@ -444,7 +461,9 @@ export class DropdownMenu extends React.Component {
           data-tip={utils.tip('Changes your username. This will update all of your locations. You must disable username protection before setting this.')}>
             Override Username
           </div> : null}
-          <div className="item" onClick={this.handleWallpaper}
+          <div
+          className="item"
+          onClick={this.handleWallpaper}
           data-place="left"
           data-tip={utils.tip('Changes the NMC background.')}>
             {p.s.wallpaper ? 'Reset Wallpaper' : 'Set Wallpaper'}
@@ -456,30 +475,39 @@ export class DropdownMenu extends React.Component {
           data-tip={utils.tip(`Prevents NMC from making network requests to the server, and attempts to keep most features in a functional state.`)}>
             {`Offline Mode: ${p.s.offline ? 'On' : 'Off'}`}
           </div>
-          <div className="divider"></div>
-          <div className="item" onClick={this.handleAbout}
+          <div className="divider" />
+          <div
+          className="item"
+          onClick={this.handleAbout}
           data-place="left"
           data-tip={utils.tip('NMC info.')}>
             About
           </div>
-          <div className="item" onClick={this.handleSupport}
+          <div
+          className="item"
+          onClick={this.handleSupport}
           data-place="left"
           data-tip={utils.tip('Help pay for server time. Total contributions as of this release: $125. Thanks a lot!')}>
             Support NMC
           </div>
-          <div className="item" onClick={this.handleBugReport}
+          <div
+          className="item"
+          onClick={this.handleBugReport}
           data-place="left"
           data-tip={utils.tip('Bug reports are an important part of this app\'s development.')}>
             Report Bug
           </div>
-          <div className="divider"></div>
-          <div className="item"
+          <div className="divider" />
+          <div
+          className="item"
           onClick={p.onRestart}
           data-place="left"
           data-tip={utils.tip('Restarts the NMC process.')}>
             Restart
           </div>
-          <div className="item" onClick={window.close}
+          <div
+          className="item"
+          onClick={window.close}
           data-place="left"
           data-tip={utils.tip('Exit NMC.')}>
             Quit
