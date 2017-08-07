@@ -1,5 +1,15 @@
 import React from 'react';
 
+const style = {
+  left: '9px',
+  letterSpacing: '3px',
+  fontFamily: 'geosanslight-nmsregular',
+  fontSize: '16px',
+  padding: '3px 3px',
+  textAlign: 'center',
+  cursor: 'pointer'
+};
+
 class Button extends React.Component {
   constructor(props) {
     super(props);
@@ -11,15 +21,7 @@ class Button extends React.Component {
     return (
       <div
       className="ui segment Button__div"
-      style={{
-        left: '9px',
-        letterSpacing: '3px',
-        fontFamily: 'geosanslight-nmsregular',
-        fontSize: '16px',
-        padding: '3px 3px',
-        textAlign: 'center',
-        cursor: 'pointer'
-      }}
+      style={style}
       onClick={this.props.onClick}>
         {this.props.children}
       </div>

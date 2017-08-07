@@ -19,6 +19,7 @@ import spaceStationIcon from './assets/images/spacestation_icon.png';
 
 import {BasicDropdown} from './dropdowns';
 import Item from './item';
+import Button from './buttons';
 import {locationItemStyle} from './constants';
 
 class LocationBox extends React.Component {
@@ -65,10 +66,10 @@ class LocationBox extends React.Component {
     }
   }
   componentWillReceiveProps(nextProps){
-    if (nextProps.selectType && !_.isEqual(nextProps.location, this.props.location) && this.refs.scrollBox
+    if (nextProps.selectType && !_.isEqual(nextProps.location, this.props.location) && this.scrollBox
       || nextProps.updating !== this.props.updating && nextProps.updating) {
-      if (this.refs.scrollBox) {
-        this.refs.scrollBox.scrollTop = 0;
+      if (this.scrollBox) {
+        this.scrollBox.scrollTop = 0;
       }
 
       this.setState({name: '', description: ''});
@@ -108,12 +109,15 @@ class LocationBox extends React.Component {
   handleDescriptionChange(e){
     this.setState({description: e.target.value})
   }
+  getRef(ref){
+    this.scrollBox = ref;
+  }
   renderDetails(){
     let p = this.props;
     let scrollBoxStyle = p.compactRemote ? {maxHeight: '500px'} : {};
     return (
       <div
-      ref="scrollBox"
+      ref={this.getRef}
       style={scrollBoxStyle}
       className="LocationBox__scrollBoxStyle">
         {p.image && p.image.length > 0 ?
@@ -247,7 +251,8 @@ class LocationBox extends React.Component {
       data-place="left"
       data-tip={this.props.isVisible && !p.selectType && p.compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
         {this.props.isVisible ?
-        <h3 style={{
+        <h3 
+        style={{
           textAlign: 'center',
           maxHeight: '23px',
           color:  p.location.playerPosition && !p.location.manuallyEntered ? 'inherit' : '#7fa0ff',
@@ -286,8 +291,7 @@ class LocationBox extends React.Component {
         {p.edit && this.props.isVisible ?
         <div>
           <div
-          className="ui segment"
-          className="LocationBox__uiSegmentEditStyle">
+          className="ui segment LocationBox__uiSegmentEditStyle">
             <div className="ui input" style={{width: '200px'}}>
               <div className="row">
                 <input

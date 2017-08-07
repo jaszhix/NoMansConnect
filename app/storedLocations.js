@@ -47,7 +47,9 @@ class StoredLocationItem extends React.Component {
       onMouseLeave={()=>this.setState({hover: false})}
       onClick={this.handleClick}>
         {this.props.location.base ?
-        <span data-tip={utils.tip('Base')} style={{position: 'absolute', left: `${this.props.location.upvote ? 31 : 4}px`, top: '4px'}}>
+        <span
+        data-tip={utils.tip('Base')}
+        style={{position: 'absolute', left: `${this.props.location.upvote ? 31 : 4}px`, top: '4px'}}>
           <img style={{width: '21px', height: '21px'}} src={baseIcon} />
         </span> : null}
         {isSpaceStation ?
@@ -101,9 +103,9 @@ class StoredLocations extends React.Component {
   }
   componentDidMount(){
     let checkStored = ()=>{
-      if (this.refs.storedLocations) {
-        $(this.refs.storedLocations).scrollEnd(this.scrollListener, 25);
-        this.setViewableRange(this.refs.storedLocations);
+      if (this.storedLocations) {
+        $(this.storedLocations).scrollEnd(this.scrollListener, 25);
+        this.setViewableRange(this.storedLocations);
       } else {
         _.delay(()=>checkStored(), 500);
       }
@@ -118,8 +120,8 @@ class StoredLocations extends React.Component {
       || nextProps.useGAFormat !== this.props.useGAFormat)
   }
   componentWillUnmount(){
-    if (this.refs.storedLocations) {
-      this.refs.storedLocations.removeEventListener('scroll', this.scrollListener);
+    if (this.storedLocations) {
+      this.storedLocations.removeEventListener('scroll', this.scrollListener);
     }
   }
   setViewableRange(node){
@@ -135,16 +137,19 @@ class StoredLocations extends React.Component {
     this.forceUpdate();
   }
   scrollListener(){
-    this.setViewableRange(this.refs.storedLocations);
+    this.setViewableRange(this.storedLocations);
   }
   handleSelect(location, i){
     let hasSelectedId = this.props.selectedLocationId;
     this.props.onSelect(location);
     _.defer(()=>{
       if (location.id === this.props.selectedLocationId && !hasSelectedId) {
-        this.refs.storedLocations.scrollTop = i * 29;
+        this.storedLocations.scrollTop = i * 29;
       }
     });
+  }
+  getRef(ref){
+    this.storedLocations = ref;
   }
   render(){
     let leftOptions = [
@@ -182,7 +187,7 @@ class StoredLocations extends React.Component {
             options={leftOptions} />
           </div>
           <div
-          ref="storedLocations"
+          ref={this.getRef}
           className="ui segments"
           style={{
             maxHeight: `${this.props.height - (this.props.selectedLocationId ? 404 : 125)}px`,
@@ -201,7 +206,7 @@ class StoredLocations extends React.Component {
                   onClick={this.handleSelect}
                   isSelected={this.props.selectedLocationId === location.id}
                   location={location}
-                  useGAFormat={this.props.useGAFormat}/>
+                  useGAFormat={this.props.useGAFormat} />
                 );
               } else {
                 return (

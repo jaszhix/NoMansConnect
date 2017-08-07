@@ -29,9 +29,9 @@ class RemoteLocations extends React.Component {
     };
     let checkRemote = ()=>{
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
-        $(this.refs.recentExplorations).scrollEnd(this.scrollListener, 25);
+        $(this.recentExplorations).scrollEnd(this.scrollListener, 25);
         this.setState({init: false});
-        this.setViewableRange(this.refs.recentExplorations);
+        this.setViewableRange(this.recentExplorations);
       } else {
         _.delay(()=>checkRemote(), 500);
       }
@@ -62,18 +62,17 @@ class RemoteLocations extends React.Component {
   }
   componentWillReceiveProps(nextProps){
     let searchChanged = nextProps.s.searchCache.results !== this.props.s.searchCache.results;
-    if (nextProps.s.sort !== this.props.s.sort && this.refs.recentExplorations || searchChanged) {
-      this.refs.recentExplorations.scrollTop = 0;
+    if (nextProps.s.sort !== this.props.s.sort && this.recentExplorations || searchChanged) {
+      this.recentExplorations.scrollTop = 0;
     }
 
-    if (nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
-      && this.refs.storedLocations) {
-      this.setViewableRange(this.refs.recentExplorations);
+    if (nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns) {
+      this.setViewableRange(this.recentExplorations);
     }
   }
   componentWillUnmount(){
-    if (this.refs.recentExplorations) {
-      this.refs.recentExplorations.removeEventListener('scroll', this.scrollListener);
+    if (this.recentExplorations) {
+      this.recentExplorations.removeEventListener('scroll', this.scrollListener);
     }
   }
   setViewableRange(node){
@@ -94,7 +93,7 @@ class RemoteLocations extends React.Component {
       return;
     }
 
-    let node = this.refs.recentExplorations;
+    let node = this.recentExplorations;
 
     this.setViewableRange(node);
 
@@ -105,12 +104,15 @@ class RemoteLocations extends React.Component {
     if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 180) {
       this.throttledPagination(this.props.s.page);
       _.delay(()=>{
-        this.refs.recentExplorations.scrollTop = Math.floor(node.scrollHeight - this.props.s.pageSize * 271);
+        this.recentExplorations.scrollTop = Math.floor(node.scrollHeight - this.props.s.pageSize * 271);
       }, 1500);
     }
   }
   handleFavorite(location, upvote){
     this.props.onFav(location, upvote);
+  }
+  getRef(ref){
+    this.recentExplorations = ref;
   }
   render(){
     let p = this.props;
@@ -272,7 +274,7 @@ class RemoteLocations extends React.Component {
             </div>
             <div
             style={innerContainerStyle}
-            ref="recentExplorations">
+            ref={this.getRef}>
               {_.map(locations, (location, i)=>{
                 location.data.teleports = location.teleports;
                 location.upvote = location.data.upvote;
@@ -282,7 +284,7 @@ class RemoteLocations extends React.Component {
                     <LocationBox
                     key={location.id}
                     i={i}
-                    scrollTop={this.refs.recentExplorations ? this.refs.recentExplorations.scrollTop : 0}
+                    scrollTop={this.recentExplorations ? this.recentExplorations.scrollTop : 0}
                     isVisible={true}
                     name={location.name}
                     description={location.description}
@@ -299,8 +301,7 @@ class RemoteLocations extends React.Component {
                     onCompactRemoteSwitch={this.setViewableRange}
                     ps4User={p.ps4User}
                     compactRemote={p.s.compactRemote}
-                    configDir={p.s.configDir}
-                    />
+                    configDir={p.s.configDir} />
                   );
                 } else {
                   return (

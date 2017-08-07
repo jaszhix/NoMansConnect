@@ -32,7 +32,7 @@ export class ImageModal extends React.Component {
   render(){
     return (
       <div className="ui fullscreen modal active" style={this.modalStyle}>
-        <span className="close"/>
+        <span className="close" />
         <img className="image content" src={this.props.image} />
       </div>
     );
@@ -89,7 +89,7 @@ export class UsernameOverrideModal extends React.Component {
   render(){
     return (
       <div className="ui small modal active" style={this.modalStyle}>
-        <span className="close"/>
+        <span className="close" />
         <input
         style={this.inputStyle}
         type="text"
@@ -224,7 +224,7 @@ export class LocationRegistrationModal extends React.Component {
   render(){
     return (
       <div className="ui small modal active" style={this.modalStyle}>
-        <span className="close"/>
+        <span className="close" />
         <div onClick={()=>this.setState({preventClose: true})}>
           <BasicDropdown
           height={this.props.s.height}

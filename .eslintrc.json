@@ -122,7 +122,7 @@
         "react/jsx-first-prop-new-line": [2, "multiline-multiprop"],
         "react/jsx-indent-props": [2, 0],
         "react/jsx-indent": 0,
-        "react/jsx-max-props-per-line": 1,
+        "react/jsx-max-props-per-line": [1, {"maximum": 2, "when": "multiline"}],
         "react/jsx-no-bind": [1, {
             "ignoreRefs": true,
             "allowArrowFunctions": true,
