@@ -738,7 +738,7 @@ class App extends Reflux.Component {
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
       let base = utils.formatBase(saveData, state.knownProducts);
       let refBase = _.findIndex(this.state.storedBases, {Name: base.Name});
-      if (refBase === -1) {
+      if (refBase === -1 && _.isArray(this.state.storedBases)) { // Snetry error, cause TBD
         this.state.storedBases.push(base);
       }
       state.set({storedBases: this.state.storedBases});
@@ -750,7 +750,7 @@ class App extends Reflux.Component {
     let absoluteSaveDir = this.state.saveFileName.split(this.dirSep);
     _.pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
     absoluteSaveDir = absoluteSaveDir.join(this.dirSep);
-    let command = `${process.platform !== 'win32' ? 'wine ' : ''}.${this.saveTool} encrypt -g ${this.state.mode} -i ${this.saveJSON} -s ${absoluteSaveDir}`;
+    let command = `${process.platform !== 'win32' ? 'wine ' : ''}.${this.saveTool} encrypt -g ${this.state.mode} -i ${this.saveJSON} -s "${absoluteSaveDir}"`;
     console.log(command);
     utils.exc(command, (res)=>{
       console.log(res);
@@ -968,6 +968,7 @@ class App extends Reflux.Component {
       }
 
       let processData = (saveData, location, refLocation, username, profile=null)=>{
+        console.log('SAVE DATA: ', saveData);
         if (this.state.ps4User) {
           state.set({
             machineId: machineId,
@@ -1439,6 +1440,13 @@ class App extends Reflux.Component {
     state.set({maximized: !this.state.maximized}, ()=>{
       if (this.state.maximized) {
         win.unmaximize();
+        let bounds = {
+          height: 1040,
+          width: 1421,
+          x: 600,
+          y: 5
+        };
+        win.setBounds(bounds);
       } else {
         win.maximize();
       }

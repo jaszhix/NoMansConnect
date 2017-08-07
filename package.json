@@ -1,7 +1,7 @@
 {
   "name": "no-mans-connect",
   "productName": "NoMansConnect",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
   "scripts": {
@@ -49,7 +49,8 @@
       "jsonWorker.js",
       "mapWorker.js",
       "json.js",
-      "each.js"
+      "each.js",
+      "copy.js"
     ],
     "extraFiles": [
       {
@@ -73,10 +74,6 @@
       {
         "from": "node_modules/is-buffer",
         "to": "node_modules/is-buffer"
-      },
-      {
-        "from": "./app/copy.js",
-        "to": "./app/copy.js"
       }
     ],
     "dmg": {
