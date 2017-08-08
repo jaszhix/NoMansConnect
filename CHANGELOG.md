@@ -1,5 +1,6 @@
 # 0.15.0
 
+  * Experimental macOS support. Like the Linux version, you will need Wine installed for full functionality.
   * Added username recovery via email. Set the email address to be associated with your username in the tool menu. When getting locked out of a profile with protection enabled on a different computer, recovery options will now appear.
   * Settings are now backed up automatically. If the settings.json file becomes corrupt, the app will attempt to load the backup version.
     * Fixed a server side bug preventing the profile from being restored when this happens.
