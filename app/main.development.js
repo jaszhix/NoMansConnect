@@ -59,7 +59,7 @@ app.on('ready', async () => {
     defaultHeight: 1040
   });
 
-  let aeroEnabled = process.platform === 'win32' ? systemPreferences.isAeroGlassEnabled() : process.platform === 'darwin';
+  let aeroEnabled = process.platform === 'win32' ? systemPreferences.isAeroGlassEnabled() : false;
 
   mainWindow = new BrowserWindow({
     show: false,

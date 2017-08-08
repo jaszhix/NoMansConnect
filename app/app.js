@@ -1427,7 +1427,11 @@ class App extends Reflux.Component {
     _.delay(()=>{
       if (process.env.NODE_ENV === 'production') {
         remote.app.relaunch();
-        window.close();
+        if (process.platform === 'darwin') {
+          remote.app.quit();
+        } else {
+          window.close();
+        }
       } else {
         if (this.monitor) {
           this.monitor.stop();
