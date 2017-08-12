@@ -251,21 +251,57 @@ class Container extends React.PureComponent {
       });
     });
   }
+  handleCompatibility() {
+    if (this.props.s.offline) {
+      state.set({error: `Unable to mark compatibility in offline mode.`});
+      return;
+    }
+    utils.ajax.post('/nmslocation/', {
+      machineId: this.props.s.machineId,
+      username: this.props.s.username,
+      version: this.props.s.saveVersion,
+      id: this.props.s.selectedLocation.id
+    }).then((res)=>{
+      let refLocation = _.findIndex(this.props.s.storedLocations, {id: this.props.s.selectedLocation.id});
+      if (refLocation !== -1) {
+        this.props.s.storedLocations[refLocation].version = res.data.version;
+      }
+      let refRemoteLocation = _.findIndex(this.props.s.remoteLocations.results, (location)=>{
+        return location.data.id === this.props.s.selectedLocation.id;
+      });
+      if (refRemoteLocation !== -1) {
+        this.props.s.remoteLocations.results[refRemoteLocation].version = res.data.version;
+        this.props.s.remoteLocations.results[refRemoteLocation].data.version = res.data.version;
+      }
+      this.props.s.selectedLocation.version = res.data.version;
+      state.set({
+        storedLocations: this.props.s.storedLocations,
+        remoteLocations: this.props.s.remoteLocations,
+        selectedLocation: this.props.s.selectedLocation
+      }, ()=>{
+        this.setState({
+          updating: false,
+          edit: false
+        });
+      });
+    });
+  }
   handleSelectLocation(location){
     location = _.cloneDeep(location);
     let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id;
+    let image = location.image;
+    let name = location.name;
+    let description = location.description;
     if (!deselected) {
       let refRemoteLocation = _.find(this.props.s.remoteLocations.results, (remoteLocation)=>{
         return remoteLocation.data.id === location.id;
       });
-
       if (refRemoteLocation !== undefined && refRemoteLocation) {
-        let name = location.name;
-        let description = location.description;
-
         refRemoteLocation.data.image = refRemoteLocation.image;
         _.assignIn(location, refRemoteLocation.data);
-
+        if (image) {
+          location.image = image;
+        }
         location.name = name;
         location.description = description;
       }
@@ -342,6 +378,7 @@ class Container extends React.PureComponent {
               edit={this.state.edit}
               favorites={p.s.favorites}
               image={p.s.selectedLocation.image}
+              version={p.s.selectedLocation.version === p.s.saveVersion}
               width={p.s.width}
               height={p.s.height}
               isSelectedLocationRemovable={isSelectedLocationRemovable}
@@ -349,6 +386,7 @@ class Container extends React.PureComponent {
               onDeleteScreen={this.handleDeleteScreen}
               onFav={this.handleFavorite}
               onEdit={()=>this.setState({edit: !this.state.edit})}
+              onMarkCompatible={this.handleCompatibility}
               onRemoveStoredLocation={p.onRemoveStoredLocation}
               onTeleport={p.onTeleport}
               onSubmit={this.handleUpdate}
@@ -969,6 +1007,7 @@ class App extends Reflux.Component {
 
       let processData = (saveData, location, refLocation, username, profile=null)=>{
         console.log('SAVE DATA: ', saveData);
+        log.error(`Finished reading No Man's Sky v${saveData.result.Version} save file.`);
         if (this.state.ps4User) {
           state.set({
             machineId: machineId,
@@ -1008,6 +1047,7 @@ class App extends Reflux.Component {
               mods: this.state.mods,
               manuallyEntered: false,
               timeStamp: Date.now(),
+              version: saveData.result.Version
             });
 
             location.jumps = Math.ceil(location.distanceToCenter / 400);
@@ -1064,6 +1104,7 @@ class App extends Reflux.Component {
             username: username,
             saveDirectory: this.state.saveDirectory,
             saveFileName: saveData.path,
+            saveVersion: saveData.result.Version,
             machineId: machineId
           };
 
@@ -1084,6 +1125,7 @@ class App extends Reflux.Component {
                 username: location.username,
                 mode: this.state.mode,
                 image: image,
+                version: location.version,
                 data: location
               }).then((res)=>{
                 next(false);

@@ -187,6 +187,11 @@ class RemoteLocations extends React.Component {
         onClick: ()=>state.set({showOnlyBases: !this.props.s.showOnlyBases})
       },
       {
+        id: 'showOnlyCompatible',
+        label: this.props.s.showOnlyCompatible ? 'Show Only Version Compatible Locations: On' : 'Show Only Version Compatible Locations: Off',
+        onClick: ()=>state.set({showOnlyCompatible: !this.props.s.showOnlyCompatible})
+      },
+      {
         id: 'sortByDistance',
         label: this.props.s.sortByDistance ? 'Sort by Distance to Center: On' : 'Sort by Distance to Center: Off',
         onClick: ()=>state.set({sortByDistance: !this.props.s.sortByDistance})
@@ -231,6 +236,11 @@ class RemoteLocations extends React.Component {
     if (this.props.s.showOnlyBases) {
       locations = _.filter(locations, (location)=>{
         return location.data.base;
+      });
+    }
+    if (this.props.s.showOnlyCompatible && this.props.s.saveVersion) {
+      locations = _.filter(locations, (location)=>{
+        return location.version === this.props.s.saveVersion || location.data.version === this.props.s.saveVersion;
       });
     }
     if (this.props.s.showOnlyPC) {
@@ -295,6 +305,7 @@ class RemoteLocations extends React.Component {
                     updating={p.updating}
                     favorites={p.s.favorites}
                     image={location.image}
+                    version={p.s.saveVersion ? location.version === p.s.saveVersion || location.data.version === p.s.saveVersion : null}
                     onFav={this.handleFavorite}
                     onTeleport={p.onTeleport}
                     onSaveBase={p.onSaveBase}

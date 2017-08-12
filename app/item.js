@@ -4,6 +4,11 @@ import openExternal from 'open-external';
 import _ from 'lodash';
 import {locationItemStyle} from './constants';
 
+const iconStyle = {
+  position: 'relative',
+  top: '-2px'
+};
+
 class Item extends React.Component {
   constructor(props) {
     super(props);
@@ -15,24 +20,26 @@ class Item extends React.Component {
   componentDidMount(){
     if (this.props.label === 'Description') {
       _.defer(()=>{
-        if (this.refs.desc) {
-          this.refs.desc.addEventListener('click', this.handleDescClick);
+        if (this.descriptionRef) {
+          this.descriptionRef.addEventListener('click', this.handleDescClick);
         }
       });
     }
   }
   componentWillUnmount(){
     window.removeEventListener('resize', this.onWindowResize);
-    if (this.refs.desc) {
-      this.refs.desc.removeEventListener('click', this.handleDescClick);
+    if (this.descriptionRef) {
+      this.descriptionRef.removeEventListener('click', this.handleDescClick);
     }
+  }
+  getRef = (ref) => {
+    this.descriptionRef = ref;
   }
   render(){
     if (this.props.label === 'Description') {
       return (
-
         <div
-        ref="desc"
+        ref={this.getRef}
         className="Item__wrapperStyle"
         style={locationItemStyle}>
           <ReactMarkdown className="md-p" source={this.props.value} />
@@ -43,7 +50,15 @@ class Item extends React.Component {
         <div
         className="Item__wrapperStyle"
         style={locationItemStyle}>
-          <span className="Item__labelStyle">{`${this.props.label}`}</span> <span className="Item__valueStyle">{this.props.value}</span>
+          <span className="Item__labelStyle">{`${this.props.label}`}</span>
+          <span className="Item__valueStyle">
+            {this.props.value ? this.props.value
+            : this.props.icon ?
+            <i
+            style={iconStyle}
+            className={`${this.props.icon} icon`} />
+            : null}
+          </span>
         </div>
       );
     }

@@ -130,7 +130,7 @@ class LocationBox extends React.Component {
         </div> : null}
         {p.location.description ? <Item label="Description" value={p.location.description} /> : null }
         <Item label="Galactic Address" value={p.location.translatedId} />
-        <Item label="Voxel Address" value={p.location.id} />
+        <Item label="Universe Address" value={p.location.id} />
         {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
         {p.location.distanceToCenter ? <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(3)} LY`} /> : null}
         <Item label="Jumps" value={p.location.jumps} />
@@ -139,6 +139,7 @@ class LocationBox extends React.Component {
         {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
         {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
         <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
+        {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
         {p.location.mods && p.location.mods.length > 0 && !p.compactRemote ?
         <div
         className="ui segment"
@@ -188,14 +189,19 @@ class LocationBox extends React.Component {
         onClick: ()=>p.onSaveBase(p.location.baseData)
       });
     }
-    if (p.isOwnLocation && p.selectType && p.location.username === p.username) {
+    if (isOwnLocation) {
       leftOptions.push({
         id: 'edit',
         label: p.edit ? 'Cancel' : 'Edit Details',
         onClick: ()=>p.onEdit()
       });
-    }
-    if (isOwnLocation) {
+      if (!p.version) {
+        leftOptions.push({
+          id: 'markCompatibility',
+          label: 'Mark as Compatible',
+          onClick: ()=>p.onMarkCompatible()
+        });
+      }
       leftOptions.push({
         id: 'uploadScreen',
         label: 'Upload Screenshot',

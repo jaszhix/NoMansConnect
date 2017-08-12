@@ -165,7 +165,7 @@ class StoredLocations extends React.Component {
       },
       {
         id: 'useGAFormat',
-        label: this.props.useGAFormat ? 'Show Voxel Addresses' : 'Show Galactic Addresses',
+        label: this.props.useGAFormat ? 'Show Universe Addresses' : 'Show Galactic Addresses',
         onClick: ()=>state.set({useGAFormat: !this.props.useGAFormat})
       }
     ];
@@ -191,7 +191,6 @@ class StoredLocations extends React.Component {
           className="ui segments"
           style={{
             maxHeight: `${this.props.height - (this.props.selectedLocationId ? 404 : 125)}px`,
-            //maxHeight: `${this.props.height - 125}px`,
             WebkitTransition: 'max-height 0.1s',
             overflowY: 'auto',
             overflowX: 'hidden'}}>

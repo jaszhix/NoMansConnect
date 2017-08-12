@@ -1,7 +1,6 @@
 import React from 'react'
 import autoBind from 'react-autobind'
 import * as THREE from 'three';
-import {WebGLRenderer, Mesh, SpotLight} from 'threact';
 import state from './state';
 import each from './each';
 import path from 'path'
@@ -75,9 +74,15 @@ function toScreenPosition(obj, camera, controls, div){
   }
   return result;
 }
-
+let WebGLRenderer = null;
+let Mesh = null;
+let SpotLight = null;
 class Map3D extends React.Component {
   constructor (props) {
+    let threact = require('threact');
+    WebGLRenderer = threact.WebGLRenderer;
+    Mesh = threact.Mesh;
+    SpotLight = threact.SpotLight;
     super(props);
     autoBind(this);
     this.state = {

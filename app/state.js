@@ -19,7 +19,7 @@ var state = Reflux.createStore({
     this.galaxies = knownGalaxies;
     this.state = {
       // Core
-      version: '0.15.0',
+      version: '0.15.1',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -34,6 +34,7 @@ var state = Reflux.createStore({
       installDirectory: null,
       saveDirectory: null,
       saveFileName: '',
+      saveVersion: null,
       mode: 'normal',
       storedBases: [],
       storedLocations: [],
@@ -88,6 +89,7 @@ var state = Reflux.createStore({
       showOnlyGalaxy: false,
       showOnlyBases: false,
       showOnlyPC: false,
+      showOnlyCompatible: false,
       sortByDistance: false,
       sortByModded: false,
       show: {
@@ -181,6 +183,7 @@ var state = Reflux.createStore({
       'showOnlyGalaxy',
       'showOnlyBases',
       'showOnlyPC',
+      'showOnlyCompatible',
       'sortByDistance',
       'sortByModded'
     ];

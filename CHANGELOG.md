@@ -1,3 +1,11 @@
+# 0.15.1
+
+  * Added game version metadata to locations. This will appear as "Version Compatibility" in each location's details list.
+    * Added ability to sort by compatible locations in the remote locations list.
+    * If an old location works with the current version of the game, you can mark it as compatible by selecting it from the stored locations list.
+  * Changed "Voxel Address" labeling to "Universe Address".
+  * Fixed screenshots not appearing when selecting a stored location.
+
 # 0.15.0
 
   * Experimental macOS support. Like the Linux version, you will need Wine installed for full functionality.
