@@ -46,6 +46,15 @@ $.fn.scrollEnd = function(callback, timeout) {
 
 const {dialog} = remote;
 
+const containerStyle = {
+  paddingTop: '51px',
+  float: 'left',
+  position: 'absolute',
+  margin: '0px auto',
+  left: '0px',
+  right: '0px'
+};
+
 class Container extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -55,7 +64,6 @@ class Container extends React.PureComponent {
       edit: false,
       mapRender: '<div />'
     };
-    this.remotePollingFailures = 0;
     autoBind(this);
   }
   componentWillReceiveProps(nextProps) {
@@ -212,7 +220,7 @@ class Container extends React.PureComponent {
           }
         };
         sourceImage.src = reader.result;
-        this.refs.uploadScreenshot.value = '';
+        this.screenshotRef.value = '';
       };
       reader.readAsDataURL(e.target.files[0]);
     });
@@ -311,9 +319,19 @@ class Container extends React.PureComponent {
       selectedGalaxy: deselected ? 0 : location.galaxy
     });
   }
+  toggleEdit(){
+    this.setState({edit: !this.state.edit});
+  }
+  screenshotRefClick(){
+    this.screenshotRef.click();
+  }
+  getScreenshotRef(ref){
+    this.screenshotRef = ref;
+  }
   render(){
     let p = this.props;
     let isOwnLocation = _.findIndex(p.s.storedLocations, {id: p.s.selectedLocation ? p.s.selectedLocation.id : null}) !== -1;
+    let remoteLocationsLoaded = p.s.remoteLocations && p.s.remoteLocations.results || p.s.searchCache.results.length > 0;
     let storedLocations = _.orderBy(p.s.storedLocations, (location)=>{
       return location.upvote !== undefined && location.upvote;
     }, 'desc');
@@ -331,8 +349,8 @@ class Container extends React.PureComponent {
       isSelectedLocationRemovable = refLocation !== -1;
     }
     return (
-      <div className="ui grid row" style={{paddingTop: '51px', float: 'left', position: 'absolute', margin: '0px auto', left: '0px', right: '0px'}}>
-        <input ref="uploadScreenshot" onChange={this.handleUploadScreen} style={{display: 'none'}} type="file" accept="image/*" multiple={false} />
+      <div className="ui grid row" style={containerStyle}>
+        <input ref={this.getScreenshotRef} onChange={this.handleUploadScreen} style={{display: 'none'}} type="file" accept="image/*" multiple={false} />
         <div className="columns">
           <div className="ui segments stackable grid container" style={{maxWidth: '800px !important'}}>
             <StoredLocations
@@ -343,9 +361,9 @@ class Container extends React.PureComponent {
             filterOthers={p.s.filterOthers}
             sortStoredByTime={p.s.sortStoredByTime}
             useGAFormat={p.s.useGAFormat}
-            username={p.s.username}/>
+            username={p.s.username} />
             <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
-              {p.s.remoteLocations && p.s.remoteLocations.results || p.s.searchCache.results.length > 0 ?
+              {remoteLocationsLoaded ?
               <GalacticMap
               map3d={p.s.map3d}
               mapDrawDistance={p.s.mapDrawDistance}
@@ -362,7 +380,7 @@ class Container extends React.PureComponent {
               username={p.s.username}
               show={p.s.show}
               onRestart={p.onRestart}
-              onSearch={p.onSearch} /> : <Loader />}
+              onSearch={p.onSearch} /> : null}
               {p.s.selectedLocation ?
               <LocationBox
               name={p.s.selectedLocation.name}
@@ -382,22 +400,21 @@ class Container extends React.PureComponent {
               width={p.s.width}
               height={p.s.height}
               isSelectedLocationRemovable={isSelectedLocationRemovable}
-              onUploadScreen={()=>this.refs.uploadScreenshot.click()}
+              onUploadScreen={this.screenshotRefClick}
               onDeleteScreen={this.handleDeleteScreen}
               onFav={this.handleFavorite}
-              onEdit={()=>this.setState({edit: !this.state.edit})}
+              onEdit={this.toggleEdit}
               onMarkCompatible={this.handleCompatibility}
               onRemoveStoredLocation={p.onRemoveStoredLocation}
               onTeleport={p.onTeleport}
               onSubmit={this.handleUpdate}
               onSaveBase={p.onSaveBase}
               ps4User={p.s.ps4User}
-              configDir={p.s.configDir}
-               /> : null}
+              configDir={p.s.configDir} /> : null}
             </div>
           </div>
         </div>
-        {p.s.remoteLocations && p.s.remoteLocations.results || p.s.searchCache.results.length > 0 ?
+        {remoteLocationsLoaded ?
         <RemoteLocations
         s={p.s}
         currentLocation={p.s.currentLocation}
@@ -407,7 +424,7 @@ class Container extends React.PureComponent {
         onTeleport={p.onTeleport}
         onFav={this.handleFavorite}
         onSaveBase={p.onSaveBase}
-        ps4User={p.s.ps4User} /> : <Loader />}
+        ps4User={p.s.ps4User} /> : null}
       </div>
     );
   }
@@ -498,11 +515,16 @@ class App extends Reflux.Component {
       let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
       let indexModsInUse = (_path, modPath)=>{
         fs.readFile(`${_path}\\Binaries\\SETTINGS\\TKGRAPHICSSETTINGS.MXML`, (err, data)=>{
-          if (!err) {
-            let fullscreen = data.toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
-            if (fullscreen === 'true') {
-              state.set({autoCapture: false});
-            }
+          let fullscreen = null;
+          if (data) {
+            fullscreen = data.toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
+          }
+          if (fullscreen === 'true' || err) {
+            state.set({autoCapture: false, loading: 'Checking for mods...'});
+          }
+          if (!fs.existsSync(`${_path}${modPath}`)) {
+            initialize();
+            return;
           }
           fs.readdir(`${_path}${modPath}`, (err, list)=>{
             if (err) {
@@ -589,7 +611,7 @@ class App extends Reflux.Component {
           e.data.data.results[i] = location;
         });
         this.state.storedLocations = _.chain(this.state.storedLocations).concat(_.map(e.data.data.results, 'data')).uniqBy('id').orderBy('timeStamp', 'desc').value();
-        state.set({storedLocations: this.state.storedLocations});
+        state.set({storedLocations: this.state.storedLocations, loading: 'Syncing locations...'});
       } else if (e.data.func === 'handleSync') {
         this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true, true);
       } else if (e.data.func === 'fetchRemoteLocations') {
@@ -636,6 +658,10 @@ class App extends Reflux.Component {
     if (this.state.offline) {
       return;
     }
+    if (!this.state.remoteLength === 0) {
+      _.delay(()=>this.handleSync(page, sort, init), 500);
+      return;
+    }
     this.syncRemoteOwned(()=>{
       let locations = [];
       each(this.state.storedLocations, (location)=>{
@@ -647,7 +673,7 @@ class App extends Reflux.Component {
           };
         });
         if (!existsInRemoteLocations) {
-          location = _.cloneDeep(location);
+          location = _.cloneDeep(_.pick(location, []));
           location.timeStamp = new Date(location.timeStamp);
           locations.push(location);
         }
@@ -688,7 +714,8 @@ class App extends Reflux.Component {
         sort: this.state.sort,
         favorites: this.state.favorites,
         storedLocations: this.state.storedLocations,
-        pageSize: this.state.pageSize
+        pageSize: this.state.pageSize,
+        loading: 'Loading remote locations...'
       }
     });
 
@@ -1105,7 +1132,8 @@ class App extends Reflux.Component {
             saveDirectory: this.state.saveDirectory,
             saveFileName: saveData.path,
             saveVersion: saveData.result.Version,
-            machineId: machineId
+            machineId: machineId,
+            loading: 'Loading save data...'
           };
 
           if (profile) {
@@ -1598,26 +1626,26 @@ class App extends Reflux.Component {
             <div className="titlebar-controls">
               <div className="titlebar-minimize" onClick={this.handleMinimize}>
                 <svg x="0px" y="0px" viewBox="0 0 10 1">
-                  <rect fill="#FFFFFF" width="10" height="1"></rect>
+                  <rect fill="#FFFFFF" width="10" height="1" />
                 </svg>
               </div>
               <div className="titlebar-resize" onClick={this.handleMaximize}>
                 {s.maximized ?
                 <svg className="fullscreen-svg" x="0px" y="0px" viewBox="0 0 10 10">
-                  <path fill="#FFFFFF" d="M 0 0 L 0 10 L 10 10 L 10 0 L 0 0 z M 1 1 L 9 1 L 9 9 L 1 9 L 1 1 z "/>
+                  <path fill="#FFFFFF" d="M 0 0 L 0 10 L 10 10 L 10 0 L 0 0 z M 1 1 L 9 1 L 9 9 L 1 9 L 1 1 z " />
                 </svg>
                 :
                 <svg className="maximize-svg" x="0px" y="0px" viewBox="0 0 10 10">
                   <mask id="Mask">
-                    <path fill="#FFFFFF" d="M 3 1 L 9 1 L 9 7 L 8 7 L 8 2 L 3 2 L 3 1 z"/>
-                    <path fill="#FFFFFF" d="M 1 3 L 7 3 L 7 9 L 1 9 L 1 3 z"/>
+                    <path fill="#FFFFFF" d="M 3 1 L 9 1 L 9 7 L 8 7 L 8 2 L 3 2 L 3 1 z" />
+                    <path fill="#FFFFFF" d="M 1 3 L 7 3 L 7 9 L 1 9 L 1 3 z" />
                   </mask>
-                  <path fill="#FFFFFF" d="M 2 0 L 10 0 L 10 8 L 8 8 L 8 10 L 0 10 L 0 2 L 2 2 L 2 0 z" mask="url(#Mask)"/>
+                  <path fill="#FFFFFF" d="M 2 0 L 10 0 L 10 8 L 8 8 L 8 10 L 0 10 L 0 2 L 2 2 L 2 0 z" mask="url(#Mask)" />
                 </svg>}
               </div>
               <div className="titlebar-close" onClick={this.handleClose}>
                 <svg x="0px" y="0px" viewBox="0 0 10 10">
-                  <polygon fill="#FFFFFF" points="10,1 9,0 5,4 1,0 0,1 4,5 0,9 1,10 5,6 9,10 10,9 6,5"></polygon>
+                  <polygon fill="#FFFFFF" points="10,1 9,0 5,4 1,0 0,1 4,5 0,9 1,10 5,6 9,10 10,9 6,5" />
                 </svg>
               </div>
             </div>
@@ -1638,7 +1666,7 @@ class App extends Reflux.Component {
         onSuccess={this.handleRestart}
         s={_.pick(this.state, ['machineId', 'username', 'profile'])} /> : null}
         {s.init ?
-        <Loader />
+        <Loader loading={this.state.loading} />
         :
         <Container
         s={s}

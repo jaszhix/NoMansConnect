@@ -2959,9 +2959,9 @@ electron-window-state@^4.1.1:
     jsonfile "^2.2.3"
     mkdirp "^0.5.1"
 
-electron@1.7.6:
-  version "1.7.6"
-  resolved "https://registry.yarnpkg.com/electron/-/electron-1.7.6.tgz#fb69ea31bd03df0eff247f26f0b538bd29b6ee72"
+electron@1.7.5:
+  version "1.7.5"
+  resolved "https://registry.yarnpkg.com/electron/-/electron-1.7.5.tgz#065a3102bf8b87102df50c50985fefe6c569045b"
   dependencies:
     "@types/node" "^7.0.18"
     electron-download "^3.0.1"
@@ -5512,9 +5512,9 @@ math-expression-evaluator@^1.2.14:
   version "1.2.17"
   resolved "https://registry.yarnpkg.com/math-expression-evaluator/-/math-expression-evaluator-1.2.17.tgz#de819fdbcd84dccd8fae59c6aeb79615b9d266ac"
 
-mathjs@^3.16.0:
-  version "3.16.0"
-  resolved "https://registry.yarnpkg.com/mathjs/-/mathjs-3.16.0.tgz#0e659bac855693e8f539cd16e110f2cc12dc7edd"
+mathjs@3.16.1:
+  version "3.16.1"
+  resolved "https://registry.yarnpkg.com/mathjs/-/mathjs-3.16.1.tgz#ba69b6344ed10b19c17af568a4b718a85eee9900"
   dependencies:
     complex.js "2.0.4"
     decimal.js "7.2.3"
@@ -7067,9 +7067,9 @@ recharts-scale@0.3.1:
   version "0.3.1"
   resolved "https://registry.yarnpkg.com/recharts-scale/-/recharts-scale-0.3.1.tgz#635f14c998b151d63f2e8fff1fcbe46faf0423a6"
 
-recharts@^1.0.0-alpha.2:
-  version "1.0.0-alpha.2"
-  resolved "https://registry.yarnpkg.com/recharts/-/recharts-1.0.0-alpha.2.tgz#fc99fefc4c6fee150f1c1f516145ac1e77f2e3e7"
+recharts@^1.0.0-alpha.3:
+  version "1.0.0-alpha.3"
+  resolved "https://registry.yarnpkg.com/recharts/-/recharts-1.0.0-alpha.3.tgz#0b9d1adb3656fe93417fbc8e3fd31a8e54882c1a"
   dependencies:
     classnames "2.2.5"
     core-js "2.4.1"

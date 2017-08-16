@@ -419,39 +419,10 @@ export var stockInventory = (saveData)=>{
   return saveData.result;
 };
 
-export var writeCurrentSaveFile = (fileName, json, cb)=>{
-  json = JSON.stringify(json) + '\0';
-  fs.writeFile(fileName, json, {flag: 'w'}, (err, data)=>{
-    if (err) {
-      cb(err);
-      return;
-    }
-    cb(null);
-  });
-};
-
 export var modifyUnits = (saveData, n=100000)=>{
   saveData.result.PlayerStateData.Units += n;
   return saveData.result;
 };
-
-export var css = (styleObject, newObject)=>{
-  return _.assignIn(_.clone(styleObject), _.clone(newObject));
-};
-
-export var tip = (content)=>{
-  if (content.length === 0) {
-    return null;
-  }
-  return `<div style="font-family:'geosanslight-nmsregular';font-size:14px;border-radius:0px; max-width: 200px;">${content}</div>`
-}
-
-export var ajax = axios.create({
-  //baseURL: 'http://z.npff.co:8000/api/',
-  baseURL: 'https://neuropuff.com/api/',
-  timeout: 15000,
-  xsrfCookieName: 'csrftoken'
-});
 
 export var formatBase = (saveData, knownProducts)=>{
   let base = _.cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[0]);
@@ -520,18 +491,6 @@ export function whichToShow ({outerHeight, itemHeight, scrollTop, columns}) {
   }
 }
 
-/*export function rotateLeft(value, bits) {
-  return (value << bits) | (value >> (32 - bits));
-}
-
-export function parseMeta (buffer, archiveNumber) {
-  archiveNumber += 2;
-
-  // Murmurhash-like
-  var k1 = 0 ^ 0x1422cb8c;
-  var h1 = rotateLeft(k1, 13) * 5 + 0xe6546b64;
-}*/
-
 export function convertRange(value, r1, r2) {
   return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
 };
@@ -547,3 +506,21 @@ export var validateEmail = (email) => {
   let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
   return re.test(email);
 }
+
+export var css = (styleObject, newObject)=>{
+  return _.assignIn(_.clone(styleObject), _.clone(newObject));
+};
+
+export var tip = (content)=>{
+  if (content.length === 0) {
+    return null;
+  }
+  return `<div style="font-family:'geosanslight-nmsregular';font-size:14px;border-radius:0px; max-width: 200px;">${content}</div>`
+}
+
+export var ajax = axios.create({
+  //baseURL: 'http://z.npff.co:8000/api/',
+  baseURL: 'https://neuropuff.com/api/',
+  timeout: 60000,
+  xsrfCookieName: 'csrftoken'
+});

@@ -2,7 +2,7 @@ import {remote} from 'electron';
 import os from 'os';
 import fs from 'graceful-fs';
 import Reflux from 'reflux';
-Reflux.setEventEmitter(require('events').EventEmitter);
+//Reflux.setEventEmitter(require('events').EventEmitter);
 import _ from 'lodash';
 import each from './each';
 import * as utils from './utils';
@@ -69,7 +69,7 @@ var state = Reflux.createStore({
       page: 1,
       pageSize: 60,
       paginationEnabled: true,
-      loading: false,
+      loading: 'Loading...',
       maximized: false,
       mapLines: false,
       map3d: false,

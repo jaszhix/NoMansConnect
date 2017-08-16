@@ -29,7 +29,8 @@ class RemoteLocations extends React.Component {
     };
     let checkRemote = ()=>{
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
-        $(this.recentExplorations).scrollEnd(this.scrollListener, 25);
+        this.recentExplorations.addEventListener('scroll', this.handleScroll);
+        //$(this.recentExplorations).scrollEnd(this.scrollListener, 25);
         this.setState({init: false});
         this.setViewableRange(this.recentExplorations);
       } else {
@@ -87,6 +88,12 @@ class RemoteLocations extends React.Component {
       columns: this.props.s.remoteLocationsColumns
     });
     this.forceUpdate();
+  }
+  handleScroll(){
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    this.scrollTimeout = setTimeout(this.scrollListener, 25);
   }
   scrollListener(){
     if (this.props.s.remoteLength >= this.props.s.remoteLocations.count - this.props.s.pageSize) {
