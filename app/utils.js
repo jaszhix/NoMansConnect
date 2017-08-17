@@ -524,3 +524,13 @@ export var ajax = axios.create({
   timeout: 60000,
   xsrfCookieName: 'csrftoken'
 });
+
+// Cleans up the left over object references after a component unmounts, helps with garbage collection
+export const cleanUp = (obj)=>{
+  _.defer(()=>{
+    let contextProps = Object.keys(obj);
+    each(contextProps, (key)=>{
+      obj[key] = undefined;
+    })
+  });
+}

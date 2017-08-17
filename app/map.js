@@ -7,7 +7,7 @@ import v from 'vquery';
 import each from './each';
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
-import * as utils from './utils';
+import {uuidV4, cleanUp} from './utils';
 
 const toolTipHeaderStyle = {
   padding: '3px 5px',
@@ -32,6 +32,9 @@ const toolTipContainerStyle = {
 class TooltipChild extends React.Component {
   constructor(props) {
     super(props);
+  }
+  componentWillReceiveProps() {
+    cleanUp(this);
   }
   render(){
     if (this.props.active || this.props.isSelected) {
@@ -269,7 +272,7 @@ class ThreeDimScatterChart extends React.Component {
         location = location.data ? location : {
           data: _.cloneDeep(location),
           teleports: location.teleports ? location.teleports : 0,
-          id: utils.uuidV4(),
+          id: uuidV4(),
           image: location.image ? location.image : '',
           name: location.name ? location.name : '',
           description: location.description ? location.description : ''
@@ -530,7 +533,9 @@ class GalacticMap extends React.Component {
     size = size > maxSize ? maxSize : size < 260 ? 260 : size;
 
     return (
-      <div className="ui segment" style={{
+      <div
+      className="ui segment"
+      style={{
         background: 'rgba(23, 26, 22, 0.9)',
         display: 'inline-table',
         borderTop: '2px solid #95220E',

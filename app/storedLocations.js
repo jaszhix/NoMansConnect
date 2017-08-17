@@ -2,9 +2,8 @@ import state from './state';
 import React from 'react';
 import autoBind from 'react-autobind';
 import _ from 'lodash';
-import $ from 'jquery';
-import * as utils from './utils';
-
+import {tip, whichToShow, cleanUp} from './utils';
+import each from './each';
 import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
 
@@ -17,6 +16,9 @@ class StoredLocationItem extends React.Component {
       hover: false
     };
     autoBind(this);
+  }
+  componentWillUnmount(){
+    cleanUp(this);
   }
   handleClick(){
     this.props.onClick(this.props.location, this.props.i);
@@ -48,12 +50,12 @@ class StoredLocationItem extends React.Component {
       onClick={this.handleClick}>
         {this.props.location.base ?
         <span
-        data-tip={utils.tip('Base')}
+        data-tip={tip('Base')}
         style={{position: 'absolute', left: `${this.props.location.upvote ? 31 : 4}px`, top: '4px'}}>
           <img style={{width: '21px', height: '21px'}} src={baseIcon} />
         </span> : null}
         {isSpaceStation ?
-        <span data-tip={utils.tip('Space Station')} style={{position: 'absolute', left: `${this.props.location.upvote ? 31 : 4}px`, top: '3px'}}>
+        <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${this.props.location.upvote ? 31 : 4}px`, top: '3px'}}>
           <img style={{width: '21px', height: '21px'}} src={spaceStationIcon} />
         </span> : null}
         {this.props.location.upvote ?
@@ -104,7 +106,7 @@ class StoredLocations extends React.Component {
   componentDidMount(){
     let checkStored = ()=>{
       if (this.storedLocations) {
-        $(this.storedLocations).scrollEnd(this.scrollListener, 25);
+        this.storedLocations.addEventListener('scroll', this.handleScroll);
         this.setViewableRange(this.storedLocations);
       } else {
         _.delay(()=>checkStored(), 500);
@@ -121,20 +123,26 @@ class StoredLocations extends React.Component {
   }
   componentWillUnmount(){
     if (this.storedLocations) {
-      this.storedLocations.removeEventListener('scroll', this.scrollListener);
+      this.storedLocations.removeEventListener('scroll', this.handleScroll);
     }
   }
   setViewableRange(node){
     if (!node) {
       return;
     }
-    this.range = utils.whichToShow({
+    this.range = whichToShow({
       outerHeight: node.clientHeight,
       scrollTop: node.scrollTop,
       itemHeight: 29,
       columns: 1
     });
     this.forceUpdate();
+  }
+  handleScroll(){
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    this.scrollTimeout = setTimeout(this.scrollListener, 25);
   }
   scrollListener(){
     this.setViewableRange(this.storedLocations);

@@ -11,8 +11,8 @@ import ReactTooltip from 'react-tooltip';
 import _ from 'lodash';
 import moment from 'moment';
 
-import * as utils from './utils';
-window.utils = utils
+import {css, tip, cleanUp} from './utils';
+import each from './each';
 
 import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
@@ -43,27 +43,7 @@ class LocationBox extends React.Component {
     this.props.onEdit();
   }
   componentDidMount(){
-    if (this.props.image) {
-      let img = this.props.image
-        .replace(/:/g, '~')
-        .replace(/NMSLocation-/, '');
-      let file = path.resolve(`${this.props.configDir}${img}`)
-      if (!fs.existsSync(file)) {
-        axios.get(`https://neuropuff.com/${this.props.image}`, {
-          responseType: 'arraybuffer'
-        }).then((res)=>{
-          fs.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data)=>{
-            if (!err) {
-              this.setState({image: `${file}`});
-            } else {
-              log.error(err)
-            }
-          });
-        }).catch(()=>{});
-      } else {
-        this.setState({image: `${file}`});
-      }
-    }
+    this.getImage(this.props);
   }
   componentWillReceiveProps(nextProps){
     if (nextProps.selectType && !_.isEqual(nextProps.location, this.props.location) && this.scrollBox
@@ -72,7 +52,7 @@ class LocationBox extends React.Component {
         this.scrollBox.scrollTop = 0;
       }
 
-      this.setState({name: '', description: ''});
+      this.setState({name: '', description: '', image: ''});
     }
 
     if (nextProps.name !== this.props.name) {
@@ -81,6 +61,10 @@ class LocationBox extends React.Component {
 
     if (nextProps.description !== this.props.description) {
       this.setState({description: nextProps.description});
+    }
+
+    if (nextProps.image !== this.props.image) {
+      this.getImage(nextProps);
     }
 
     if (nextProps.compactRemote !== this.props.compactRemote && !nextProps.selectType) {
@@ -96,12 +80,39 @@ class LocationBox extends React.Component {
       || nextProps.selectType === true
       || nextProps.isVisible !== this.props.isVisible
       || nextProps.scrollTop !== this.props.scrollTop
-      || nextProps.compactRemote !== this.props.compactRemote && nextState.isVisible
+      || nextProps.compactRemote !== this.props.compactRemote && nextProps.isVisible
       || nextState.image !== this.state.image);
     if (!_.isBoolean(bool)) { // TBD
       return true;
     }
     return bool;
+  }
+  componentWillUnmount(){
+    this.willUnmount = true;
+    cleanUp(this);
+  }
+  getImage(p){
+    if (p.image) {
+      let img = p.image
+        .replace(/:/g, '~')
+        .replace(/NMSLocation-/, '');
+      let file = path.resolve(`${this.props.configDir}${img}`)
+      if (!fs.existsSync(file)) {
+        axios.get(`https://neuropuff.com/${this.props.image}`, {
+          responseType: 'arraybuffer'
+        }).then((res)=>{
+          fs.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data)=>{
+            if (!err && !this.willUnmount) {
+              this.setState({image: `${file}`});
+            } else {
+              log.error(err)
+            }
+          });
+        }).catch(()=>{});
+      } else {
+        this.setState({image: `${file}`});
+      }
+    }
   }
   handleNameChange(e){
     this.setState({name: e.target.value})
@@ -143,14 +154,14 @@ class LocationBox extends React.Component {
         {p.location.mods && p.location.mods.length > 0 && !p.compactRemote ?
         <div
         className="ui segment"
-        style={utils.css(locationItemStyle)}>
+        style={css(locationItemStyle)}>
           <span style={{fontWeight: '600'}}>Mods Used ({p.location.mods.length})</span>:
           {_.map(p.location.mods, (mod, i)=>{
             return (
               <div
               key={i}
               className="ui segment"
-              style={utils.css(locationItemStyle, {
+              style={css(locationItemStyle, {
                 marginTop: i === 0 ? '14px' : '0px',
                 marginBottom: '0px',
                 fontSize: '14px'
@@ -174,6 +185,7 @@ class LocationBox extends React.Component {
     let compact = p.width && p.width <= 1212;
     let isSpaceStation = p.location.id[p.location.id.length - 1] === '0';
     let leftOptions = [];
+    let name = p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected';
 
     if (p.location.id !== p.currentLocation && !p.ps4User) {
       leftOptions.push({
@@ -259,13 +271,14 @@ class LocationBox extends React.Component {
         {this.props.isVisible ?
         <h3 
         style={{
+          fontSize: name.length > 28 ? '14px' : '17.92px',
           textAlign: 'center',
           maxHeight: '23px',
           color:  p.location.playerPosition && !p.location.manuallyEntered ? 'inherit' : '#7fa0ff',
           cursor: p.selectType ? 'default' : 'pointer'
         }}
         onClick={()=>state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
-          {p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected'}
+          {name}
         </h3> : null}
 
         {this.props.isVisible ?
@@ -286,11 +299,11 @@ class LocationBox extends React.Component {
           persist={p.edit}
           options={leftOptions} /> : null}
           {p.location.base ?
-          <span data-tip={utils.tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+          <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
             <img className="LocationBox__baseStyle" src={baseIcon} />
           </span> : null}
           {isSpaceStation ?
-          <span data-tip={utils.tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+          <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
             <img className="LocationBox__baseStyle" src={spaceStationIcon} />
           </span> : null}
         </div> : null}

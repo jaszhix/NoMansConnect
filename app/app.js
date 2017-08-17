@@ -15,7 +15,6 @@ import Reflux from 'reflux';
 import ReactTooltip from 'react-tooltip';
 import openExternal from 'open-external';
 import _ from 'lodash';
-import $ from 'jquery';
 import v from 'vquery';
 import math from 'mathjs';
 
@@ -33,16 +32,6 @@ import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
 import RemoteLocations from './remoteLocations';
-
-$.fn.scrollEnd = function(callback, timeout) {
-  $(this).scroll(function(){
-    var $this = $(this);
-    if ($this.data('scrollTimeout')) {
-      clearTimeout($this.data('scrollTimeout'));
-    }
-    $this.data('scrollTimeout', setTimeout(callback, timeout));
-  });
-};
 
 const {dialog} = remote;
 
@@ -297,26 +286,25 @@ class Container extends React.PureComponent {
   handleSelectLocation(location){
     location = _.cloneDeep(location);
     let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id;
-    let image = location.image;
-    let name = location.name;
-    let description = location.description;
+    let _location = null;
     if (!deselected) {
       let refRemoteLocation = _.find(this.props.s.remoteLocations.results, (remoteLocation)=>{
         return remoteLocation.data.id === location.id;
       });
+      console.log('SELECTED: ', location.id, refRemoteLocation.data.id);
       if (refRemoteLocation !== undefined && refRemoteLocation) {
         refRemoteLocation.data.image = refRemoteLocation.image;
-        _.assignIn(location, refRemoteLocation.data);
-        if (image) {
-          location.image = image;
-        }
-        location.name = name;
-        location.description = description;
+        refRemoteLocation.data.name = refRemoteLocation.name;
+        refRemoteLocation.data.description = refRemoteLocation.description;
+        _location = refRemoteLocation.data;
+      } else {
+        _location = location;
       }
     }
+    location = undefined;
     state.set({
-      selectedLocation: deselected ? null : location,
-      selectedGalaxy: deselected ? 0 : location.galaxy
+      selectedLocation: deselected ? null : _location,
+      selectedGalaxy: deselected ? 0 : _location.galaxy
     });
   }
   toggleEdit(){
@@ -611,7 +599,10 @@ class App extends Reflux.Component {
           e.data.data.results[i] = location;
         });
         this.state.storedLocations = _.chain(this.state.storedLocations).concat(_.map(e.data.data.results, 'data')).uniqBy('id').orderBy('timeStamp', 'desc').value();
-        state.set({storedLocations: this.state.storedLocations, loading: 'Syncing locations...'});
+        state.set({
+          storedLocations: this.state.storedLocations,
+          loading: 'Syncing locations...'
+        }, ()=>this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, false, false));
       } else if (e.data.func === 'handleSync') {
         this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true, true);
       } else if (e.data.func === 'fetchRemoteLocations') {
@@ -658,8 +649,8 @@ class App extends Reflux.Component {
     if (this.state.offline) {
       return;
     }
-    if (!this.state.remoteLength === 0) {
-      _.delay(()=>this.handleSync(page, sort, init), 500);
+
+    if (!this.state.remoteLocations) {
       return;
     }
     this.syncRemoteOwned(()=>{
@@ -673,7 +664,7 @@ class App extends Reflux.Component {
           };
         });
         if (!existsInRemoteLocations) {
-          location = _.cloneDeep(_.pick(location, []));
+          location = _.cloneDeep(location);
           location.timeStamp = new Date(location.timeStamp);
           locations.push(location);
         }

@@ -23,6 +23,7 @@ onmessage = function(e) {
     postMessage({
       func: e.data.func,
       params: e.data.params,
-      err: 'err'});
+      err: 'err'
+    });
   });
 }

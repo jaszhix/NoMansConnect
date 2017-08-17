@@ -5,7 +5,7 @@ import autoBind from 'react-autobind';
 import onClickOutside from 'react-onclickoutside';
 import _ from 'lodash';
 
-import * as utils from './utils';
+import {validateEmail, ajax, fromHex, cleanUp} from './utils';
 
 import {BasicDropdown} from './dropdowns';
 import Button from './buttons';
@@ -28,6 +28,9 @@ export class ImageModal extends React.Component {
   }
   handleClickOutside(){
     state.set({selectedImage: null});
+  }
+  componentWillUnmount(){
+    cleanUp(this);
   }
   render(){
     return (
@@ -85,6 +88,9 @@ export class UsernameOverrideModal extends React.Component {
       return;
     }
     this.props.onSave(this.state.name)
+  }
+  componentWillUnmount(){
+    cleanUp(this);
   }
   render(){
     return (
@@ -166,7 +172,7 @@ export class RecoveryModal extends React.Component {
       errorMessage = 'There was an error associating your email address.';
       url = '/nmssetemail/';
       prop = 'email'
-      if (!utils.validateEmail(this.state.value)) {
+      if (!validateEmail(this.state.value)) {
         this.setState({
           address: '',
           error: 'Invalid email address.'
@@ -184,7 +190,7 @@ export class RecoveryModal extends React.Component {
       username: this.props.s.username
     };
     request[prop] = this.state.value;
-    utils.ajax.post(url, request).then((res)=>{
+    ajax.post(url, request).then((res)=>{
       if (this.props.type === 'recoveryToken') {
         this.props.onSuccess();
         return;
@@ -290,7 +296,7 @@ export class LocationRegistrationModal extends React.Component {
     this.setState({address: e.target.value})
   }
   handleSave(){
-    let location = utils.fromHex(this.state.address, this.props.s.username, this.state.galaxy);
+    let location = fromHex(this.state.address, this.props.s.username, this.state.galaxy);
     if (!location) {
       this.setState({
         address: '',
@@ -318,7 +324,7 @@ export class LocationRegistrationModal extends React.Component {
     this.props.s.storedLocations = _.orderBy(this.props.s.storedLocations, 'timeStamp', 'desc');
 
     state.set({storedLocations: this.props.s.storedLocations}, ()=>{
-      utils.ajax.post('/nmslocation/', {
+      ajax.post('/nmslocation/', {
         machineId: this.props.s.machineId,
         username: location.username,
         data: location

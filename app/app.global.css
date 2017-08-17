@@ -38735,6 +38735,7 @@ LocationBox
 }
 .LocationBox__scrollBoxStyle {
   max-height: 177px;
+  min-height: 162px;
   overflow-y: auto;
   overflow-x: hidden;
   width: 363px;

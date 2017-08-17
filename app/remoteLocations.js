@@ -2,10 +2,9 @@ import state from './state';
 import React from 'react';
 import autoBind from 'react-autobind';
 import _ from 'lodash';
-import $ from 'jquery';
 
-import * as utils from './utils';
-
+import {whichToShow} from './utils';
+import each from './each';
 import {BasicDropdown} from './dropdowns';
 import LocationBox from './locationBox';
 
@@ -30,7 +29,6 @@ class RemoteLocations extends React.Component {
     let checkRemote = ()=>{
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
         this.recentExplorations.addEventListener('scroll', this.handleScroll);
-        //$(this.recentExplorations).scrollEnd(this.scrollListener, 25);
         this.setState({init: false});
         this.setViewableRange(this.recentExplorations);
       } else {
@@ -49,7 +47,7 @@ class RemoteLocations extends React.Component {
       || nextProps.s.installing !== this.props.s.installing
       || nextProps.s.width !== this.props.s.width
       || nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
-      || nextProps.s.compactRemote !== this.props.compactRemote
+      || nextProps.s.compactRemote !== this.props.s.compactRemote
       || nextProps.s.showOnlyScreenshots !== this.props.s.showOnlyScreenshots
       || nextProps.s.showOnlyNames !== this.props.s.showOnlyNames
       || nextProps.s.showOnlyDesc !== this.props.s.showOnlyDesc
@@ -67,13 +65,14 @@ class RemoteLocations extends React.Component {
       this.recentExplorations.scrollTop = 0;
     }
 
-    if (nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns) {
-      this.setViewableRange(this.recentExplorations);
+    if (nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
+      || nextProps.s.compactRemote !== this.props.s.compactRemote) {
+      _.defer(()=>this.setViewableRange(this.recentExplorations));
     }
   }
   componentWillUnmount(){
     if (this.recentExplorations) {
-      this.recentExplorations.removeEventListener('scroll', this.scrollListener);
+      this.recentExplorations.removeEventListener('scroll', this.handleScroll);
     }
   }
   setViewableRange(node){
@@ -81,7 +80,7 @@ class RemoteLocations extends React.Component {
       return;
     }
     let itemHeight = this.props.s.compactRemote ? 68 : 245;
-    this.range = utils.whichToShow({
+    this.range = whichToShow({
       outerHeight: node.clientHeight,
       scrollTop: node.scrollTop,
       itemHeight: itemHeight + 26,
@@ -96,22 +95,20 @@ class RemoteLocations extends React.Component {
     this.scrollTimeout = setTimeout(this.scrollListener, 25);
   }
   scrollListener(){
-    if (this.props.s.remoteLength >= this.props.s.remoteLocations.count - this.props.s.pageSize) {
-      return;
-    }
-
-    let node = this.recentExplorations;
-
-    this.setViewableRange(node);
+    this.setViewableRange(this.recentExplorations);
 
     if (this.props.s.searchCache.results.length > 0) {
       return;
     }
 
-    if (node.scrollTop + window.innerHeight >= node.scrollHeight + node.offsetTop - 180) {
+    if (this.props.s.remoteLength >= this.props.s.remoteLocations.count - this.props.s.pageSize) {
+      return;
+    }
+
+    if (this.recentExplorations.scrollTop + window.innerHeight >= this.recentExplorations.scrollHeight + this.recentExplorations.offsetTop - 180) {
       this.throttledPagination(this.props.s.page);
       _.delay(()=>{
-        this.recentExplorations.scrollTop = Math.floor(node.scrollHeight - this.props.s.pageSize * 271);
+        this.recentExplorations.scrollTop = Math.floor(this.recentExplorations.scrollHeight - this.props.s.pageSize * 271);
       }, 1500);
     }
   }
@@ -272,7 +269,45 @@ class RemoteLocations extends React.Component {
     let invisibleStyle = {
       height: `${(p.s.compactRemote ? 68 : 245) + 26}px`
     };
-
+    let _locations = Array(locations.length);
+    each(locations, (location, i)=>{
+      location.data.teleports = location.teleports;
+      location.upvote = location.data.upvote;
+      let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
+      if (isVisible) {
+        _locations[i] = (
+          <LocationBox
+          key={location.id}
+          i={i}
+          scrollTop={this.recentExplorations ? this.recentExplorations.scrollTop : 0}
+          isVisible={true}
+          name={location.name}
+          description={location.description}
+          username={p.s.username}
+          isOwnLocation={p.isOwnLocation}
+          location={location.data}
+          installing={p.s.installing}
+          updating={p.updating}
+          favorites={p.s.favorites}
+          image={location.image}
+          version={p.s.saveVersion ? location.version === p.s.saveVersion || location.data.version === p.s.saveVersion : null}
+          onFav={this.handleFavorite}
+          onTeleport={p.onTeleport}
+          onSaveBase={p.onSaveBase}
+          onCompactRemoteSwitch={this.setViewableRange}
+          ps4User={p.ps4User}
+          compactRemote={p.s.compactRemote}
+          configDir={p.s.configDir} />
+        );
+      } else {
+        _locations[i] = (
+          <div
+          key={location.id}
+          style={invisibleStyle} />
+        );
+      }
+    });
+    locations = undefined;
     return (
       <div className="columns" style={containerStyle}>
         <div className="ui segments" style={uiSegmentsStyle}>
@@ -292,43 +327,7 @@ class RemoteLocations extends React.Component {
             <div
             style={innerContainerStyle}
             ref={this.getRef}>
-              {_.map(locations, (location, i)=>{
-                location.data.teleports = location.teleports;
-                location.upvote = location.data.upvote;
-                let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
-                if (isVisible) {
-                  return (
-                    <LocationBox
-                    key={location.id}
-                    i={i}
-                    scrollTop={this.recentExplorations ? this.recentExplorations.scrollTop : 0}
-                    isVisible={true}
-                    name={location.name}
-                    description={location.description}
-                    username={p.s.username}
-                    isOwnLocation={p.isOwnLocation}
-                    location={location.data}
-                    installing={p.s.installing}
-                    updating={p.updating}
-                    favorites={p.s.favorites}
-                    image={location.image}
-                    version={p.s.saveVersion ? location.version === p.s.saveVersion || location.data.version === p.s.saveVersion : null}
-                    onFav={this.handleFavorite}
-                    onTeleport={p.onTeleport}
-                    onSaveBase={p.onSaveBase}
-                    onCompactRemoteSwitch={this.setViewableRange}
-                    ps4User={p.ps4User}
-                    compactRemote={p.s.compactRemote}
-                    configDir={p.s.configDir} />
-                  );
-                } else {
-                  return (
-                    <div
-                    key={location.id}
-                    style={invisibleStyle} />
-                  );
-                }
-              })}
+              {_locations}
             </div>
           </div>
         </div>

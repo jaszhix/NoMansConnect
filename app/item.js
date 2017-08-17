@@ -2,6 +2,8 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import openExternal from 'open-external';
 import _ from 'lodash';
+import each from './each';
+import {cleanUp} from './utils';
 import {locationItemStyle} from './constants';
 
 const iconStyle = {
@@ -31,6 +33,7 @@ class Item extends React.Component {
     if (this.descriptionRef) {
       this.descriptionRef.removeEventListener('click', this.handleDescClick);
     }
+    cleanUp(this);
   }
   getRef = (ref) => {
     this.descriptionRef = ref;
