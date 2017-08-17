@@ -1,3 +1,11 @@
+# 0.16.0
+
+  * Fixed screenshots not changing when selecting different locations in the stored list.
+  * Fixed the app not loading when the mods directory isn't created in some scenarios.
+  * Added progress information when the app is loading.
+  * Optimized the location syncing process.
+  * Improved performance.
+
 # 0.15.1
 
   * Added game version metadata to locations. This will appear as "Version Compatibility" in each location's details list.
