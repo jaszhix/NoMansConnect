@@ -22,4 +22,4 @@ class log {
   }
 }
 
-module.exports = log;
+module.exports = new log();

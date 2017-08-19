@@ -1,7 +1,7 @@
 import {clipboard} from 'electron';
 import fs from 'graceful-fs';
 import path from 'path';
-import {log} from './app';
+import log from './log';
 import state from './state';
 import axios from 'axios';
 import React from 'react';
@@ -11,7 +11,7 @@ import ReactTooltip from 'react-tooltip';
 import _ from 'lodash';
 import moment from 'moment';
 
-import {css, tip, cleanUp} from './utils';
+import {css, tip, cleanUp, formatForGlyphs} from './utils';
 import each from './each';
 
 import baseIcon from './assets/images/base_icon.png';
@@ -21,6 +21,17 @@ import {BasicDropdown} from './dropdowns';
 import Item from './item';
 import Button from './buttons';
 import {locationItemStyle} from './constants';
+
+const glyphs = {};
+const glyphsChars = ['A', 'B', 'C', 'D', 'E', 'F', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const glyphStyle = {
+  height: '16px',
+  width: '16px'
+};
+
+each(glyphsChars, (character)=>{
+  glyphs[character] = require(`./assets/images/glyphs/${character}.png`);
+});
 
 class LocationBox extends React.Component {
   static defaultProps = {
@@ -142,6 +153,22 @@ class LocationBox extends React.Component {
         {p.location.description ? <Item label="Description" value={p.location.description} /> : null }
         <Item label="Galactic Address" value={p.location.translatedId} />
         <Item label="Universe Address" value={p.location.id} />
+        <Item label="Portal Address">
+          {_.map(formatForGlyphs(p.location.translatedId), (glyph, i)=>{
+            if (glyph === ':') {
+              return (
+                <span key={i}>&nbsp;&nbsp;</span>
+              );
+            } else {
+              return (
+                <img 
+                key={i} 
+                src={glyphs[glyph]}
+                style={glyphStyle} />
+              );
+            }
+          })}
+        </Item>
         {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
         {p.location.distanceToCenter ? <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(3)} LY`} /> : null}
         <Item label="Jumps" value={p.location.jumps} />

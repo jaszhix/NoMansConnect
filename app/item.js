@@ -54,6 +54,11 @@ class Item extends React.Component {
         className="Item__wrapperStyle"
         style={locationItemStyle}>
           <span className="Item__labelStyle">{`${this.props.label}`}</span>
+          {this.props.label === 'Portal Address' ?
+          <span className="Item__valueStyle Item__portal">
+            {this.props.children}
+          </span>
+          :
           <span className="Item__valueStyle">
             {this.props.value ? this.props.value
             : this.props.icon ?
@@ -61,7 +66,7 @@ class Item extends React.Component {
             style={iconStyle}
             className={`${this.props.icon} icon`} />
             : null}
-          </span>
+          </span>}
         </div>
       );
     }

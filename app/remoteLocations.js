@@ -95,6 +95,9 @@ class RemoteLocations extends React.Component {
     this.scrollTimeout = setTimeout(this.scrollListener, 25);
   }
   scrollListener(){
+    if (!this.recentExplorations) {
+      return;
+    }
     this.setViewableRange(this.recentExplorations);
 
     if (this.props.s.searchCache.results.length > 0) {

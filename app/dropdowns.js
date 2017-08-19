@@ -1,6 +1,5 @@
 import {remote} from 'electron';
-import Log from './log';
-const log = new Log();
+import log from './log';
 import state from './state';
 import React from 'react';
 import autoBind from 'react-autobind';
