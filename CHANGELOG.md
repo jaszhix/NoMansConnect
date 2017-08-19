@@ -1,3 +1,9 @@
+# 0.17.0
+
+  * Added portal glyph addresses to locations.
+  * Addressed some issues affecting stability.
+  * The mods list in each location can now be seen by hovering over the mods item.
+
 # 0.16.0
 
   * Fixed screenshots not changing when selecting different locations in the stored list.
