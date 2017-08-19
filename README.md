@@ -8,7 +8,7 @@ This is currently needing more testing, so please back up your save files!
 
 If you don't see other people's coordinates you will need to run the app as an administrator for now.
 
-This includes a binary of Matthew Humphrey's [nmssavetool](https://github.com/matthew-humphrey/nmssavetool) for decrypting save files.
+NMC uses Matthew Humphrey's [nmssavetool](https://github.com/matthew-humphrey/nmssavetool) for signing the save data, and the cheat menu functionality was ported to JS from it as well.
 
 ## Features
 
