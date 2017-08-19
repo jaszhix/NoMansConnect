@@ -8,8 +8,6 @@ This is currently needing more testing, so please back up your save files!
 
 If you don't see other people's coordinates you will need to run the app as an administrator for now.
 
-NMC uses Matthew Humphrey's [nmssavetool](https://github.com/matthew-humphrey/nmssavetool) for signing the save data, and the cheat menu functionality was ported to JS from it as well.
-
 ## Features
 
 * Works without an NMS installation.
@@ -38,6 +36,14 @@ NMC uses Matthew Humphrey's [nmssavetool](https://github.com/matthew-humphrey/nm
 * Backup and restore your base and move it to new locations
 * Download other people's bases and import them into your game
 * Support for Windows 7, 8.1, 10, and most Linux distributions
+
+## Attribution
+
+NMC uses Matthew Humphrey's [nmssavetool](https://github.com/matthew-humphrey/nmssavetool) for signing the save data, and the cheat menu functionality was ported to JS from it as well.
+
+[monkeyman192](https://github.com/monkeyman192) provided the formula for transferring base data to different locations.
+
+Thanks to both of them, the supporters that have helped out with server maintenance, and bug reporters! A list of contributors can be found in the app's About dialog.
 
 ## Support
 
