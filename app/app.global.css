@@ -38642,7 +38642,10 @@ body {
 }
 
 .nmcTip {
-  border-radius:0px;
+  border-radius: 0px !important;
+  background-color: rgb(23, 26, 22) !important;
+  display: inline !important;
+  padding: 2px 4px !important;
 }
 
 .ui.input.focus input, .ui.input input:focus {
@@ -38735,7 +38738,7 @@ LocationBox
 }
 .LocationBox__scrollBoxStyle {
   max-height: 177px;
-  min-height: 162px;
+  min-height: 185px;
   overflow-y: auto;
   overflow-x: hidden;
   width: 363px;

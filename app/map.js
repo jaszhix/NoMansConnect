@@ -451,7 +451,7 @@ class GalacticMap extends React.Component {
     let leftOptions = [
       {
         id: 'map3d',
-        label: `3D Map: ${p.map3d ? 'On' : 'Off'}`,
+        label: `3D Map (BETA): ${p.map3d ? 'On' : 'Off'}`,
         onClick: ()=>state.set({map3d: !p.map3d}, p.onRestart)
       }
     ];

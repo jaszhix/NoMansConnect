@@ -2,14 +2,19 @@
 import { app, BrowserWindow, Menu, globalShortcut, systemPreferences } from 'electron';
 import windowStateKeeper from 'electron-window-state';
 import fs from 'graceful-fs';
-import os from 'os';
+import log from './log';
 
 const userData = app.getPath('userData');
-const mediaDir = `${userData}/media`;
-if (!fs.existsSync(mediaDir)) {
-  fs.mkdirSync(mediaDir);
-}
 const dirSep = process.platform === 'win32' ? '\\' : '/';
+const mediaDir = `${userData}${dirSep}media`;
+if (!fs.existsSync(mediaDir)) {
+  try {
+    fs.mkdirSync(mediaDir);
+  } catch (e) {
+    log.error(`Could not create media folder on first time start up: ${e}`);
+  }
+}
+
 let mainWindow = null;
 
 if (process.env.NODE_ENV === 'production') {
@@ -90,18 +95,17 @@ app.on('ready', async () => {
   });
 
   mainWindow.on('closed', () => {
-    //mainWindow = null;
+    mainWindow = null;
     app.quit();
   });
 
-/*  const handleExceptionState = () => {
-    app.relaunch();
-    mainWindow.close();
+  const handleExceptionState = () => {
+    mainWindow.webContents.executeJavascript('window.location.reload()');
   };
 
   mainWindow.webContents.on('crashed', handleExceptionState);
   mainWindow.webContents.on('unresponsive', handleExceptionState);
-  mainWindow.webContents.on('uncaughtException', handleExceptionState);*/
+  mainWindow.webContents.on('uncaughtException', handleExceptionState);
 
   Menu.setApplicationMenu(null);
   globalShortcut.register('Insert', ()=>{

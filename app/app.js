@@ -1671,7 +1671,7 @@ class App extends Reflux.Component {
         globalEventOff="click mouseleave"
         effect="solid"
         place="bottom"
-        multiline={true}
+        multiline={false}
         html={true}
         offset={{top: 0, left: 6}}  />
       </div>

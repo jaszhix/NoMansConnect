@@ -33,6 +33,13 @@ each(glyphsChars, (character)=>{
   glyphs[character] = require(`./assets/images/glyphs/${character}.png`);
 });
 
+const compactRemoteScrollBoxStyle = {
+  maxHeight: '500px',
+  overflowY: 'hidden',
+  paddingTop: '2px',
+  paddingBottom: '2px'
+}
+
 class LocationBox extends React.Component {
   static defaultProps = {
     selectType: false,
@@ -131,12 +138,29 @@ class LocationBox extends React.Component {
   handleDescriptionChange(e){
     this.setState({description: e.target.value})
   }
+  getModMarkup(mods){
+    return ReactDOMServer.renderToString(
+      _.map(mods, (mod, i)=>{
+        return (
+          <div
+          key={i}
+          style={css(locationItemStyle, {
+            marginBottom: '0px',
+            fontSize: '14px',
+            width: '300px'
+          })}>
+            {_.truncate(mod, {length: 43})}
+          </div>
+        );
+      })
+    );
+  }
   getRef(ref){
     this.scrollBox = ref;
   }
   renderDetails(){
     let p = this.props;
-    let scrollBoxStyle = p.compactRemote ? {maxHeight: '500px'} : {};
+    let scrollBoxStyle = p.compactRemote ? compactRemoteScrollBoxStyle : {};
     return (
       <div
       ref={this.getRef}
@@ -161,8 +185,8 @@ class LocationBox extends React.Component {
               );
             } else {
               return (
-                <img 
-                key={i} 
+                <img
+                key={i}
                 src={glyphs[glyph]}
                 style={glyphStyle} />
               );
@@ -170,8 +194,7 @@ class LocationBox extends React.Component {
           })}
         </Item>
         {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
-        {p.location.distanceToCenter ? <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(3)} LY`} /> : null}
-        <Item label="Jumps" value={p.location.jumps} />
+        {p.location.distanceToCenter ? <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(0)} LY / ${p.location.jumps} Jumps`} /> : null}
         {p.location.mode ? <Item label="Mode" value={_.upperFirst(p.location.mode)} /> : null}
         {p.location.teleports ? <Item label="Teleports" value={p.location.teleports} /> : null}
         {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
@@ -179,25 +202,10 @@ class LocationBox extends React.Component {
         <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
         {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
         {p.location.mods && p.location.mods.length > 0 && !p.compactRemote ?
-        <div
-        className="ui segment"
-        style={css(locationItemStyle)}>
-          <span style={{fontWeight: '600'}}>Mods Used ({p.location.mods.length})</span>:
-          {_.map(p.location.mods, (mod, i)=>{
-            return (
-              <div
-              key={i}
-              className="ui segment"
-              style={css(locationItemStyle, {
-                marginTop: i === 0 ? '14px' : '0px',
-                marginBottom: '0px',
-                fontSize: '14px'
-              })}>
-                {_.truncate(mod, {length: 43})}
-              </div>
-            );
-          })}
-        </div> : null}
+        <Item
+        label={`Mods Used (${p.location.mods.length})`}
+        dataPlace="top"
+        dataTip={utils.tip(this.getModMarkup(p.location.mods))} /> : null}
       </div>
     );
   }
@@ -270,7 +278,7 @@ class LocationBox extends React.Component {
     });
 
     let visibleStyle = {
-      background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
+      background: p.selectType  ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
       display: 'inline-table',
       opacity: '1',
       borderTop: '2px solid #95220E',
@@ -296,7 +304,7 @@ class LocationBox extends React.Component {
       data-place="left"
       data-tip={this.props.isVisible && !p.selectType && p.compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
         {this.props.isVisible ?
-        <h3 
+        <h3
         style={{
           fontSize: name.length > 28 ? '14px' : '17.92px',
           textAlign: 'center',

@@ -12,6 +12,9 @@ const iconStyle = {
 };
 
 class Item extends React.Component {
+  static defaultProps = {
+    dataTip: null
+  };
   constructor(props) {
     super(props);
   }
@@ -52,7 +55,9 @@ class Item extends React.Component {
       return (
         <div
         className="Item__wrapperStyle"
-        style={locationItemStyle}>
+        style={locationItemStyle}
+        data-place="top"
+        data-tip={this.props.dataTip}>
           <span className="Item__labelStyle">{`${this.props.label}`}</span>
           {this.props.label === 'Portal Address' ?
           <span className="Item__valueStyle Item__portal">
