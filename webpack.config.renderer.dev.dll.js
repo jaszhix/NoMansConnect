@@ -1,82 +1,99 @@
 /**
- * Build config for electron 'Renderer Process' file
+ * Builds the DLL for development electron renderer process
  */
 
-import path from 'path';
 import webpack from 'webpack';
-import ExtractTextPlugin from 'extract-text-webpack-plugin';
-import {BundleAnalyzerPlugin} from 'webpack-bundle-analyzer';
+import path from 'path';
 import merge from 'webpack-merge';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import BabiliPlugin from 'babili-webpack-plugin';
-//import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
 import baseConfig from './webpack.config.base';
+import {dependencies} from './package.json';
+
+const dist = path.resolve(process.cwd(), 'dll');
 
 export default merge.smart(baseConfig, {
-  devtool: 'source-map',
+  context: process.cwd(),
 
-  entry: ['babel-polyfill', './app/index'],
+  devtool: 'eval',
 
-  output: {
-    path: path.join(__dirname, 'app/dist'),
-    publicPath: '../dist/'
-  },
+  target: 'electron-renderer',
 
+  externals: ['fsevents', 'crypto-browserify'],
+
+  /**
+   * @HACK: Copy and pasted from renderer dev config. Consider merging these
+   *        rules into the base config. May cause breaking changes.
+   */
   module: {
     rules: [
-      // Extract all .global.css to style.css as is
       {
         test: /\.global\.css$/,
-        use: ExtractTextPlugin.extract({
-          use: 'css-loader',
-          fallback: 'style-loader',
-        })
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader',
+            options: {
+              sourceMap: true,
+            },
+          }
+        ]
       },
-      // Pipe other styles through css modules and append to style.css
       {
         test: /^((?!\.global).)*\.css$/,
-        use: ExtractTextPlugin.extract({
-          use: {
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
             loader: 'css-loader',
             options: {
               modules: true,
+              sourceMap: true,
               importLoaders: 1,
               localIdentName: '[name]__[local]__[hash:base64:5]',
             }
-          }
-        }),
+          },
+        ]
       },
       // Add SASS support  - compile all .global.scss files and pipe it to style.css
       {
         test: /\.global\.scss$/,
-        use: ExtractTextPlugin.extract({
-          use: [
-            {
-              loader: 'css-loader'
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader',
+            options: {
+              sourceMap: true,
             },
-            {
-              loader: 'sass-loader'
-            }
-          ],
-          fallback: 'style-loader',
-        })
+          },
+          {
+            loader: 'sass-loader'
+          }
+        ]
       },
       // Add SASS support  - compile all other .scss files and pipe it to style.css
       {
         test: /^((?!\.global).)*\.scss$/,
-        use: ExtractTextPlugin.extract({
-          use: [{
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
             loader: 'css-loader',
             options: {
               modules: true,
+              sourceMap: true,
               importLoaders: 1,
               localIdentName: '[name]__[local]__[hash:base64:5]',
             }
           },
           {
             loader: 'sass-loader'
-          }]
-        }),
+          }
+        ]
       },
       // WOFF Font
       {
@@ -135,7 +152,33 @@ export default merge.smart(baseConfig, {
     ]
   },
 
+  resolve: {
+    modules: [
+      'app',
+    ],
+  },
+
+  entry: {
+    vendor: [
+      'babel-polyfill',
+      ...Object.keys(dependencies || {})
+    ]
+    .filter(dependency => dependency !== 'font-awesome'),
+  },
+
+  output: {
+    library: 'vendor',
+    path: dist,
+    filename: '[name].dll.js',
+    libraryTarget: 'var'
+  },
+
   plugins: [
+    new webpack.DllPlugin({
+      path: path.join(dist, '[name].json'),
+      name: '[name]',
+    }),
+
     /**
      * Create global constants which can be configured at compile time.
      *
@@ -146,57 +189,17 @@ export default merge.smart(baseConfig, {
      * development checks
      */
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify('production')
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
     }),
 
-    /**
-     * Babli is an ES6+ aware minifier based on the Babel toolchain (beta)
-     */
-    new BabiliPlugin({
-      removeConsole: true,
-      mangle: false
-    }),
-    /*new UglifyJSPlugin({
-      sourceMap: true,
-      mangle: false,
-      compress: {
-        warnings: false,
-        drop_console: true,
-        dead_code: true,
-        unused: true,
-        booleans: true,
-        join_vars: true,
-        negate_iife: true,
-        sequences: true,
-        properties: true,
-        evaluate: true,
-        loops: true,
-        if_return: true,
-        cascade: true,
-        unsafe: false
+    new webpack.LoaderOptionsPlugin({
+      debug: true,
+      options: {
+        context: path.resolve(process.cwd(), 'app'),
+        output: {
+          path: path.resolve(process.cwd(), 'dll'),
+        },
       },
-      output: {
-        comments: false
-      }
-    }),*/
-
-    new ExtractTextPlugin('style.css'),
-
-    /**
-     * Dynamically generate index.html page
-     */
-    new HtmlWebpackPlugin({
-      filename: '../app.html',
-      template: 'app/app.html',
-      inject: false
-    }),
-
-    new BundleAnalyzerPlugin({
-      analyzerMode: process.env.OPEN_ANALYZER === 'true' ? 'server' : 'disabled',
-      openAnalyzer: process.env.OPEN_ANALYZER === 'true'
-    }),
+    })
   ],
-
-  // https://github.com/chentsulin/webpack-target-electron-renderer#how-this-module-works
-  target: 'electron-renderer'
 });

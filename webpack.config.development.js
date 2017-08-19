@@ -3,22 +3,34 @@
  * Build config for development process that uses Hot-Module-Replacement
  * https://webpack.js.org/concepts/hot-module-replacement/
  */
+import fs from 'fs';
 import path from 'path';
+import chalk from 'chalk';
 import webpack from 'webpack';
 import merge from 'webpack-merge';
-import { spawn } from 'child_process';
+import ExtractTextPlugin from 'extract-text-webpack-plugin';
+import {spawn, execSync} from 'child_process';
 import baseConfig from './webpack.config.base';
 
 const port = process.env.PORT || 3000;
 const publicPath = `http://localhost:${port}/dist`;
+const dll = path.resolve(process.cwd(), 'dll');
+const manifest = path.resolve(dll, 'vendor.json');
 
 process.traceDeprecation = true
+
+if (!(fs.existsSync(dll) && fs.existsSync(manifest))) {
+  console.log(chalk.black.bgYellow.bold(
+    'Building DLL files...'
+  ));
+  execSync('npm run build-dll');
+}
 
 export default merge.smart(baseConfig, {
   devtool: 'inline-source-map',
 
   entry: [
-    'babel-polyfill',
+    //'babel-polyfill',
     'react-hot-loader/patch',
     `webpack-dev-server/client?http://localhost:${port}/`,
     'webpack/hot/only-dev-server',
@@ -34,7 +46,9 @@ export default merge.smart(baseConfig, {
       {
         test: /\.global\.css$/,
         use: [
-          { loader: 'style-loader' },
+          {
+            loader: 'style-loader'
+          },
           {
             loader: 'css-loader',
             options: {
@@ -46,7 +60,9 @@ export default merge.smart(baseConfig, {
       {
         test: /^((?!\.global).)*\.css$/,
         use: [
-          { loader: 'style-loader' },
+          {
+            loader: 'style-loader'
+          },
           {
             loader: 'css-loader',
             options: {
@@ -58,6 +74,46 @@ export default merge.smart(baseConfig, {
           },
         ]
       },
+      // Add SASS support  - compile all .global.scss files and pipe it to style.css
+      {
+        test: /\.global\.scss$/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader',
+            options: {
+              sourceMap: true,
+            },
+          },
+          {
+            loader: 'sass-loader'
+          }
+        ]
+      },
+      // Add SASS support  - compile all other .scss files and pipe it to style.css
+      {
+        test: /^((?!\.global).)*\.scss$/,
+        use: [
+          {
+            loader: 'style-loader'
+          },
+          {
+            loader: 'css-loader',
+            options: {
+              modules: true,
+              sourceMap: true,
+              importLoaders: 1,
+              localIdentName: '[name]__[local]__[hash:base64:5]',
+            }
+          },
+          {
+            loader: 'sass-loader'
+          }
+        ]
+      },
+      // WOFF Font
       {
         test: /\.woff(\?v=\d+\.\d+\.\d+)?$/,
         use: {
@@ -68,6 +124,7 @@ export default merge.smart(baseConfig, {
           }
         },
       },
+      // WOFF2 Font
       {
         test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/,
         use: {
@@ -78,6 +135,7 @@ export default merge.smart(baseConfig, {
           }
         }
       },
+      // TTF Font
       {
         test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/,
         use: {
@@ -88,10 +146,12 @@ export default merge.smart(baseConfig, {
           }
         }
       },
+      // EOT Font
       {
         test: /\.eot(\?v=\d+\.\d+\.\d+)?$/,
         use: 'file-loader',
       },
+      // SVG Font
       {
         test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,
         use: {
@@ -102,6 +162,7 @@ export default merge.smart(baseConfig, {
           }
         }
       },
+      // Common Image Formats
       {
         test: /\.(?:ico|gif|png|jpg|jpeg|webp)$/,
         use: 'url-loader',
@@ -110,6 +171,11 @@ export default merge.smart(baseConfig, {
   },
 
   plugins: [
+    new webpack.DllReferencePlugin({
+      context: process.cwd(),
+      manifest: require(manifest),
+      sourceType: 'var',
+    }),
     // https://webpack.js.org/concepts/hot-module-replacement/
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),
@@ -128,6 +194,9 @@ export default merge.smart(baseConfig, {
     // turn debug mode on.
     new webpack.LoaderOptionsPlugin({
       debug: true
+    }),
+    new ExtractTextPlugin({
+      filename: '[name].css'
     }),
   ],
 

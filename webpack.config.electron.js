@@ -5,7 +5,7 @@
 import webpack from 'webpack';
 import merge from 'webpack-merge';
 import BabiliPlugin from 'babili-webpack-plugin';
-//import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
+import {BundleAnalyzerPlugin} from 'webpack-bundle-analyzer';
 import baseConfig from './webpack.config.base';
 
 export default merge.smart(baseConfig, {
@@ -24,29 +24,11 @@ export default merge.smart(baseConfig, {
      * Babli is an ES6+ aware minifier based on the Babel toolchain (beta)
      */
     new BabiliPlugin(),
-    /*new UglifyJSPlugin({
-      sourceMap: false,
-      mangle: false,
-      compress: {
-        warnings: false,
-        drop_console: true,
-        dead_code: true,
-        unused: true,
-        booleans: true,
-        join_vars: true,
-        negate_iife: true,
-        sequences: true,
-        properties: true,
-        evaluate: true,
-        loops: true,
-        if_return: true,
-        cascade: true,
-        unsafe: true
-      },
-      output: {
-        comments: false
-      }
-    }),*/
+
+    new BundleAnalyzerPlugin({
+      analyzerMode: process.env.OPEN_ANALYZER === 'true' ? 'server' : 'disabled',
+      openAnalyzer: process.env.OPEN_ANALYZER === 'true'
+    }),
 
     /**
      * Create global constants which can be configured at compile time.
@@ -58,7 +40,8 @@ export default merge.smart(baseConfig, {
      * development checks
      */
     new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify('production')
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
+      'process.env.DEBUG_PROD': JSON.stringify(process.env.DEBUG_PROD || 'false')
     })
   ],
 

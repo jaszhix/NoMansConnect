@@ -50,3 +50,4 @@ npm-debug.log.*
 /.vscode/settings.json
 /.sync
 /._.DS_Store
+dll

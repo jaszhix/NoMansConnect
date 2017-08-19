@@ -1,11 +1,3 @@
-Array.prototype.forEach = function (cb, _this) {
-  _this = _this ? _this : this;
-  let len = this.length;
-  for (let i = 0; i < len && this[i] !== undefined; i++) {
-    cb.call(_this, this[i], i, this);
-  }
-};
-
 import React from 'react';
 import { render } from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
