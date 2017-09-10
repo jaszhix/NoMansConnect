@@ -1,3 +1,8 @@
+# 0.17.1
+
+  * Corrected the portal calculation.
+  * Updated dependencies.
+
 # 0.17.0
 
   * Added portal glyph addresses to locations.

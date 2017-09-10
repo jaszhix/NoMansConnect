@@ -256,6 +256,7 @@ Please back up your save files.
 
 Special Thanks
 
+- Bbsoto
 - Matthew Humphrey
 - temp-999
 - ukmerlin

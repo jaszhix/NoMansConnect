@@ -5,7 +5,7 @@ import log from './log';
 import state from './state';
 import axios from 'axios';
 import React from 'react';
-import ReactDOMServer from 'react-dom/server'
+import ReactDOMServer from 'react-dom/server';
 import autoBind from 'react-autobind';
 import ReactTooltip from 'react-tooltip';
 import _ from 'lodash';
@@ -29,7 +29,7 @@ const glyphStyle = {
   width: '16px'
 };
 
-each(glyphsChars, (character)=>{
+each(glyphsChars, character => {
   glyphs[character] = require(`./assets/images/glyphs/${character}.png`);
 });
 
@@ -38,7 +38,7 @@ const compactRemoteScrollBoxStyle = {
   overflowY: 'hidden',
   paddingTop: '2px',
   paddingBottom: '2px'
-}
+};
 
 class LocationBox extends React.Component {
   static defaultProps = {
@@ -57,15 +57,14 @@ class LocationBox extends React.Component {
     };
     autoBind(this);
   }
-  handleCancel(){
+  handleCancel() {
     this.props.onEdit();
   }
-  componentDidMount(){
+  componentDidMount() {
     this.getImage(this.props);
   }
-  componentWillReceiveProps(nextProps){
-    if (nextProps.selectType && !_.isEqual(nextProps.location, this.props.location) && this.scrollBox
-      || nextProps.updating !== this.props.updating && nextProps.updating) {
+  componentWillReceiveProps(nextProps) {
+    if ((nextProps.selectType && !_.isEqual(nextProps.location, this.props.location) && this.scrollBox) || (nextProps.updating !== this.props.updating && nextProps.updating)) {
       if (this.scrollBox) {
         this.scrollBox.scrollTop = 0;
       }
@@ -90,107 +89,93 @@ class LocationBox extends React.Component {
       this.setState({compactRemote: nextProps.compactRemote}, this.props.onCompactRemoteSwitch);
     }
   }
-  shouldComponentUpdate(nextProps, nextState){
-    let bool = (!_.isEqual(nextProps.location, this.props.location)
-      || nextProps.favorites !== this.props.favorites
-      || nextProps.updating !== this.props.updating
-      || nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck
-      || nextProps.selectType === true
-      || nextProps.isVisible !== this.props.isVisible
-      || nextProps.scrollTop !== this.props.scrollTop
-      || nextProps.compactRemote !== this.props.compactRemote && nextProps.isVisible
-      || nextState.image !== this.state.image);
-    if (!_.isBoolean(bool)) { // TBD
+  shouldComponentUpdate(nextProps, nextState) {
+    let bool =
+      !_.isEqual(nextProps.location, this.props.location) ||
+      nextProps.favorites !== this.props.favorites ||
+      nextProps.updating !== this.props.updating ||
+      nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck ||
+      nextProps.selectType === true ||
+      nextProps.isVisible !== this.props.isVisible ||
+      nextProps.scrollTop !== this.props.scrollTop ||
+      (nextProps.compactRemote !== this.props.compactRemote && nextProps.isVisible) ||
+      nextState.image !== this.state.image;
+    if (!_.isBoolean(bool)) {
+      // TBD
       return true;
     }
     return bool;
   }
-  componentWillUnmount(){
+  componentWillUnmount() {
     this.willUnmount = true;
     cleanUp(this);
   }
-  getImage(p){
+  getImage(p) {
     if (p.image) {
-      let img = p.image
-        .replace(/:/g, '~')
-        .replace(/NMSLocation-/, '');
-      let file = path.resolve(`${this.props.configDir}${img}`)
+      let img = p.image.replace(/:/g, '~').replace(/NMSLocation-/, '');
+      let file = path.resolve(`${this.props.configDir}${img}`);
       if (!fs.existsSync(file)) {
-        axios.get(`https://neuropuff.com/${this.props.image}`, {
-          responseType: 'arraybuffer'
-        }).then((res)=>{
-          fs.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data)=>{
-            if (!err && !this.willUnmount) {
-              this.setState({image: `${file}`});
-            } else {
-              log.error(err)
-            }
-          });
-        }).catch(()=>{});
+        axios
+          .get(`https://neuropuff.com/${this.props.image}`, {
+            responseType: 'arraybuffer'
+          })
+          .then(res => {
+            fs.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
+              if (!err && !this.willUnmount) {
+                this.setState({image: `${file}`});
+              } else {
+                log.error(err);
+              }
+            });
+          })
+          .catch(() => {});
       } else {
         this.setState({image: `${file}`});
       }
     }
   }
-  handleNameChange(e){
-    this.setState({name: e.target.value})
+  handleNameChange(e) {
+    this.setState({name: e.target.value});
   }
-  handleDescriptionChange(e){
-    this.setState({description: e.target.value})
+  handleDescriptionChange(e) {
+    this.setState({description: e.target.value});
   }
-  getModMarkup(mods){
+  getModMarkup(mods) {
     return ReactDOMServer.renderToString(
-      _.map(mods, (mod, i)=>{
+      _.map(mods, (mod, i) => {
         return (
           <div
           key={i}
           style={css(locationItemStyle, {
-            marginBottom: '0px',
-            fontSize: '14px',
-            width: '300px'
-          })}>
+              marginBottom: '0px',
+              fontSize: '14px',
+              width: '300px'
+            })}>
             {_.truncate(mod, {length: 43})}
           </div>
         );
       })
     );
   }
-  getRef(ref){
+  getRef(ref) {
     this.scrollBox = ref;
   }
-  renderDetails(){
+  renderDetails() {
     let p = this.props;
     let scrollBoxStyle = p.compactRemote ? compactRemoteScrollBoxStyle : {};
     return (
-      <div
-      ref={this.getRef}
-      style={scrollBoxStyle}
-      className="LocationBox__scrollBoxStyle">
-        {p.image && p.image.length > 0 ?
-        <div style={{textAlign: 'center'}}>
-          {this.state.image ?
-          <img
-          className="LocationBox__imageStyle"
-          src={this.state.image}
-          onClick={()=>state.set({selectedImage: this.state.image})} /> : null}
-        </div> : null}
-        {p.location.description ? <Item label="Description" value={p.location.description} /> : null }
+      <div ref={this.getRef} style={scrollBoxStyle} className="LocationBox__scrollBoxStyle">
+        {p.image && p.image.length > 0 ? (
+          <div style={{textAlign: 'center'}}>
+            {this.state.image ? <img className="LocationBox__imageStyle" src={this.state.image} onClick={() => state.set({selectedImage: this.state.image})} /> : null}
+          </div>
+        ) : null}
+        {p.location.description ? <Item label="Description" value={p.location.description} /> : null}
         <Item label="Galactic Address" value={p.location.translatedId} />
         <Item label="Universe Address" value={p.location.id} />
         <Item label="Portal Address">
-          {_.map(formatForGlyphs(p.location.translatedId), (glyph, i)=>{
-            if (glyph === ':') {
-              return (
-                <span key={i}>&nbsp;&nbsp;</span>
-              );
-            } else {
-              return (
-                <img
-                key={i}
-                src={glyphs[glyph]}
-                style={glyphStyle} />
-              );
-            }
+          {_.map(formatForGlyphs(p.location.translatedId), (glyph, i) => {
+              return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
           })}
         </Item>
         {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
@@ -201,17 +186,15 @@ class LocationBox extends React.Component {
         {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
         <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
         {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
-        {p.location.mods && p.location.mods.length > 0 && !p.compactRemote ?
-        <Item
-        label={`Mods Used (${p.location.mods.length})`}
-        dataPlace="top"
-        dataTip={utils.tip(this.getModMarkup(p.location.mods))} /> : null}
+        {p.location.mods && p.location.mods.length > 0 && !p.compactRemote ? (
+          <Item label={`Mods Used (${p.location.mods.length})`} dataPlace="top" dataTip={utils.tip(this.getModMarkup(p.location.mods))} />
+        ) : null}
       </div>
     );
   }
-  render(){
+  render() {
     let p = this.props;
-    let refFav = _.findIndex(p.favorites, (fav)=>{
+    let refFav = _.findIndex(p.favorites, fav => {
       return fav === p.location.id;
     });
     let upvote = refFav !== -1 || location.update;
@@ -220,45 +203,45 @@ class LocationBox extends React.Component {
     let compact = p.width && p.width <= 1212;
     let isSpaceStation = p.location.id[p.location.id.length - 1] === '0';
     let leftOptions = [];
-    let name = p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? p.name.length > 0 ? p.name : `${p.location.username} explored` : 'Selected';
+    let name = p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? (p.name.length > 0 ? p.name : `${p.location.username} explored`) : 'Selected';
 
     if (p.location.id !== p.currentLocation && !p.ps4User) {
       leftOptions.push({
         id: 'teleport',
-        label: p.selectType && p.installing && p.installing === `tselected` || p.i && p.installing === `t${p.i}` ? 'Working...' : 'Teleport Here',
-        onClick: ()=>p.onTeleport(p.location, p.selectType ? 'selected' : p.i)
+        label: (p.selectType && p.installing && p.installing === `tselected`) || (p.i && p.installing === `t${p.i}`) ? 'Working...' : 'Teleport Here',
+        onClick: () => p.onTeleport(p.location, p.selectType ? 'selected' : p.i)
       });
     }
     if (p.location.base && p.location.baseData) {
       leftOptions.push({
         id: 'storeBase',
         label: 'Store Base',
-        onClick: ()=>p.onSaveBase(p.location.baseData)
+        onClick: () => p.onSaveBase(p.location.baseData)
       });
     }
     if (isOwnLocation) {
       leftOptions.push({
         id: 'edit',
         label: p.edit ? 'Cancel' : 'Edit Details',
-        onClick: ()=>p.onEdit()
+        onClick: () => p.onEdit()
       });
       if (!p.version) {
         leftOptions.push({
           id: 'markCompatibility',
           label: 'Mark as Compatible',
-          onClick: ()=>p.onMarkCompatible()
+          onClick: () => p.onMarkCompatible()
         });
       }
       leftOptions.push({
         id: 'uploadScreen',
         label: 'Upload Screenshot',
-        onClick: ()=>p.onUploadScreen()
+        onClick: () => p.onUploadScreen()
       });
       if (deleteArg) {
         leftOptions.push({
           id: 'deleteScreen',
           label: 'Delete Screenshot',
-          onClick: ()=>p.onDeleteScreen()
+          onClick: () => p.onDeleteScreen()
         });
       } else {
         let refLeftOption = _.findIndex(leftOptions, {id: 'deleteScreen'});
@@ -268,17 +251,17 @@ class LocationBox extends React.Component {
       leftOptions.push({
         id: 'removeStored',
         label: 'Remove From Storage',
-        onClick: ()=>p.onRemoveStoredLocation()
+        onClick: () => p.onRemoveStoredLocation()
       });
     }
     leftOptions.push({
       id: 'copyAddress',
       label: 'Copy Address to Clipboard',
-      onClick: ()=>clipboard.writeText(p.location.translatedId)
+      onClick: () => clipboard.writeText(p.location.translatedId)
     });
 
     let visibleStyle = {
-      background: p.selectType  ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
+      background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
       display: 'inline-table',
       opacity: '1',
       borderTop: '2px solid #95220E',
@@ -303,88 +286,76 @@ class LocationBox extends React.Component {
       style={visibleStyle}
       data-place="left"
       data-tip={this.props.isVisible && !p.selectType && p.compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
-        {this.props.isVisible ?
-        <h3
-        style={{
-          fontSize: name.length > 28 ? '14px' : '17.92px',
-          textAlign: 'center',
-          maxHeight: '23px',
-          color:  p.location.playerPosition && !p.location.manuallyEntered ? 'inherit' : '#7fa0ff',
-          cursor: p.selectType ? 'default' : 'pointer'
-        }}
-        onClick={()=>state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
-          {name}
-        </h3> : null}
+        {this.props.isVisible ? (
+          <h3
+          style={{
+              fontSize: name.length > 28 ? '14px' : '17.92px',
+              textAlign: 'center',
+              maxHeight: '23px',
+              color: p.location.playerPosition && !p.location.manuallyEntered ? 'inherit' : '#7fa0ff',
+              cursor: p.selectType ? 'default' : 'pointer'
+            }}
+          onClick={() => state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
+            {name}
+          </h3>
+        ) : null}
 
-        {this.props.isVisible ?
-        <i
-        className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`}
-        onClick={()=>p.onFav(p.location)} /> : null}
-        {this.props.isVisible ?
-        <div style={{
-          position: 'absolute',
-          left: '17px',
-          right: compact ? '143px' : 'initial',
-          top: '16px'
-        }}>
-          {leftOptions.length > 0 ?
-          <BasicDropdown
-          icon="ellipsis horizontal"
-          showValue={null}
-          persist={p.edit}
-          options={leftOptions} /> : null}
-          {p.location.base ?
-          <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
-            <img className="LocationBox__baseStyle" src={baseIcon} />
-          </span> : null}
-          {isSpaceStation ?
-          <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
-            <img className="LocationBox__baseStyle" src={spaceStationIcon} />
-          </span> : null}
-        </div> : null}
-        {p.edit && this.props.isVisible ?
-        <div>
+        {this.props.isVisible ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => p.onFav(p.location)} /> : null}
+        {this.props.isVisible ? (
           <div
-          className="ui segment LocationBox__uiSegmentEditStyle">
-            <div className="ui input" style={{width: '200px'}}>
-              <div className="row">
-                <input
-                className="LocationBox__inputStyle"
-                type="text"
-                value={this.state.name}
-                onChange={this.handleNameChange}
-                maxLength={30}
-                placeholder="Name" />
+          style={{
+              position: 'absolute',
+              left: '17px',
+              right: compact ? '143px' : 'initial',
+              top: '16px'
+            }}>
+            {leftOptions.length > 0 ? <BasicDropdown icon="ellipsis horizontal" showValue={null} persist={p.edit} options={leftOptions} /> : null}
+            {p.location.base ? (
+              <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+                <img className="LocationBox__baseStyle" src={baseIcon} />
+              </span>
+            ) : null}
+            {isSpaceStation ? (
+              <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+                <img className="LocationBox__baseStyle" src={spaceStationIcon} />
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+        {p.edit && this.props.isVisible ? (
+          <div>
+            <div className="ui segment LocationBox__uiSegmentEditStyle">
+              <div className="ui input" style={{width: '200px'}}>
+                <div className="row">
+                  <input className="LocationBox__inputStyle" type="text" value={this.state.name} onChange={this.handleNameChange} maxLength={30} placeholder="Name" />
+                </div>
+              </div>
+              <div className="ui input" style={{width: '200px'}}>
+                <div className="row">
+                  <textarea
+                  className="LocationBox__textareaStyle"
+                  type="text"
+                  value={this.state.description}
+                  onChange={this.handleDescriptionChange}
+                  maxLength={200}
+                  placeholder="Description... (200 character limit)" />
+                </div>
               </div>
             </div>
-            <div className="ui input" style={{width: '200px'}}>
-              <div className="row">
-                <textarea
-                className="LocationBox__textareaStyle"
-                type="text"
-                value={this.state.description}
-                onChange={this.handleDescriptionChange}
-                maxLength={200}
-                placeholder="Description... (200 character limit)" />
+            <div className="row">
+              <div className="col-xs-6">
+                <Button onClick={() => p.onSubmit(this.state.name, this.state.description)}>
+                  {p.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
+                </Button>
               </div>
             </div>
           </div>
-          <div className="row">
-            <div className="col-xs-6">
-              <Button onClick={()=>p.onSubmit(this.state.name, this.state.description)}>
-                {p.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
-              </Button>
-            </div>
-          </div>
-        </div>
-        : p.selectType || this.props.isVisible && !p.compactRemote ?
-        <div>
-          {this.renderDetails()}
-        </div> : null}
+        ) : p.selectType || (this.props.isVisible && !p.compactRemote) ? (
+          <div>{this.renderDetails()}</div>
+        ) : null}
       </div>
-
     );
   }
-};
+}
 
 export default LocationBox;

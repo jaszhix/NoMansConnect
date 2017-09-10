@@ -495,10 +495,44 @@ export function convertRange(value, r1, r2) {
   return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
 };
 
-export const formatForGlyphs = (galacticAddress) => {
-  return galacticAddress
-    .substr(0, 12)
-    .split('');
+export const formatForGlyphs = function(translatedId) {
+  // Based on
+  // https://github.com/nmsportals/nmsportals.github.io/blob/47f52a729ed38bb5ce4224e7fe52575b5c8329ec/js/glyphs.js#L378
+  let [A, B, C, D] = translatedId.split(':');
+  A = parseInt(A, 16);
+  A = +A + 2049;
+  A = Math.abs(+A % 4096);
+  A = A.toString(16).toUpperCase();
+  if (A.length === 2) {
+    A = '0' + A;
+  }
+  if (A.length === 1) {
+    A = '00' + A;
+  }
+  B = parseInt(B, 16);
+  B = +B + 129;
+  B = +B % 256;
+  B = Math.abs(B);
+  B = B.toString(16).toUpperCase();
+  if (B.length === 1) {
+    B = '0' + B;
+  } else {
+    B = B;
+  }
+  C = parseInt(C, 16);
+  C = +C + 2049;
+  C = +C % 4096;
+  C = Math.abs(C);
+  C = C.toString(16).toUpperCase();
+  if (C.length === 1) {
+    C = '00' + C;
+  }
+  if (C.length === 2) {
+    C = '0' + C;
+  }
+  D = D.slice(1);
+  let result = [0, D, B, C, A].join('').split('');
+  return result;
 };
 
 export function uuidV4() {
