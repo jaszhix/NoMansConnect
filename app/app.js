@@ -474,7 +474,6 @@ class App extends Reflux.Component {
     this.dirSep = process.platform === 'win32' ? '\\' : '/';
     this.saveJSON = process.env.NODE_ENV === 'production' ? `.${this.dirSep}nmssavetool${this.dirSep}saveCache.json` : `.${this.dirSep}app${this.dirSep}nmssavetool${this.dirSep}saveCache.json`;
     this.saveTool = process.env.NODE_ENV === 'production' ? `${this.dirSep}nmssavetool${this.dirSep}nmssavetool.exe` : `${this.dirSep}app${this.dirSep}nmssavetool${this.dirSep}nmssavetool.exe`;
-    this.whichCmd = `.${this.saveTool} decrypt -g ${this.state.mode} -o ${this.saveJSON}`;
 
     if (!this.state.offline) {
       window.ajaxWorker.postMessage({
@@ -790,7 +789,7 @@ class App extends Reflux.Component {
       state.set({storedBases: this.state.storedBases});
       return;
     }
-    utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
+    utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData)=>{
       let base = utils.formatBase(saveData, state.knownProducts);
       let refBase = _.findIndex(this.state.storedBases, {Name: base.Name});
       if (refBase === -1 && _.isArray(this.state.storedBases)) { // Snetry error, cause TBD
@@ -818,7 +817,7 @@ class App extends Reflux.Component {
     });
   }
   handleRestoreBase(base){
-    utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
+    utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData)=>{
       if (saveData.result.PlayerStateData.PersistentPlayerBases.length === 0) {
         this.baseError();
         return;
@@ -889,7 +888,7 @@ class App extends Reflux.Component {
   handleTeleport(location, i, action=null, n=null){
     const _location = _.cloneDeep(location);
     state.set({installing: `t${i}`}, ()=>{
-      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
+      utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData)=>{
 
         if (location.data) {
           location = location.data;
@@ -1159,7 +1158,7 @@ class App extends Reflux.Component {
 
       console.log('SAVE DIRECTORY: ', this.state.saveDirectory)
 
-      utils.getLastGameModeSave(this.state.saveDirectory, this.state.mode, this.state.ps4User, log).then((saveData)=>{
+      utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData)=>{
         let refLocation, location, username;
         if (!this.state.ps4User) {
           location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);

@@ -19,7 +19,7 @@ var state = Reflux.createStore({
     this.galaxies = knownGalaxies;
     this.state = {
       // Core
-      version: '0.17.1',
+      version: '0.17.2',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,

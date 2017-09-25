@@ -247,7 +247,7 @@ export var walk = (dir, done)=>{
   });
 };
 
-export var getLastGameModeSave = (saveDirectory, mode, ps4User, log)=>{
+export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
   return new Promise((resolve, reject)=>{
     if (ps4User) {
       resolve();
@@ -258,22 +258,23 @@ export var getLastGameModeSave = (saveDirectory, mode, ps4User, log)=>{
         console.log(err)
         reject(err);
       }
-      results = _.filter(results, (result)=>{
-        return (result != null
-          && (result.indexOf('st_') !== -1 || result.indexOf('DefaultUser') !== -1)
-          && result.indexOf('\\cache\\') === -1
-          && result.indexOf('.hg') !== -1
-          && result.indexOf('mf_') === -1);
+
+      let filterResults = [];
+      each(results, (result) => {
+        if (result != null
+          && result.indexOf('SlotRestructureBackup') < 0
+          && (result.indexOf('st_') > -1 || result.indexOf('DefaultUser') > -1)
+          && result.indexOf('\\cache\\') < 0
+          && result.substr(-3) === '.hg'
+          && result.indexOf('mf_') < 0) {
+          filterResults.push(result);
+        }
       });
 
-      let obj = {
-        normal: [0, 1, 2],
-        survival: [3, 4, 5],
-        creative: [6, 7, 8],
-        permadeath: [9, 10, 11]
-      };
+      results = filterResults;
+
       let saves = [];
-      let saveInts = obj[mode];
+      let saveInts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
       each(saveInts, (int)=>{
         each(results, (result)=>{
           let fileName = _.last(result.split('\\'));
