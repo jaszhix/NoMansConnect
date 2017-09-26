@@ -265,7 +265,7 @@
     "resolve-dir": "^1.0.1",
     "rng-js": "^1.0.1",
     "source-map-support": "^0.4.18",
-    "threact": "^0.4.3",
+    "threact": "^0.4.4",
     "three": "^0.86.0",
     "tween.js": "^16.6.0",
     "vquery": "^5.0.1",

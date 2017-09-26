@@ -411,6 +411,10 @@ class Map3D extends React.Component {
     each(dupePositions, (child)=>{
       let pos = ['x', 'y', 'z']
 
+      if (!child.userData.data) {
+        return;
+      }
+
       each(pos, (key, i)=>{
         let div = key === 'y' ? 1 : 2;
         let rng = new RNG((child.position[key] * child.userData.data.SolarSystemIndex) / div);
@@ -525,7 +529,7 @@ class Map3D extends React.Component {
             c.instance.rotation.y += 0.02;
           }}  />
           {_.map(this.state.locations, (location) => {
-            let position = [location.data.VoxelX * 8, location.data.VoxelY * 348, location.data.VoxelZ * 8]
+            let position = [location.data.VoxelX * 4, location.data.VoxelY * 174, location.data.VoxelZ * 4]
             return (
               <Mesh
               key={location.data.id}

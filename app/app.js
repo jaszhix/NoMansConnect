@@ -804,7 +804,7 @@ class App extends Reflux.Component {
     let absoluteSaveDir = this.state.saveFileName.split(this.dirSep);
     _.pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
     absoluteSaveDir = absoluteSaveDir.join(this.dirSep);
-    let command = `${process.platform !== 'win32' ? 'wine ' : ''}.${this.saveTool} encrypt -g ${this.state.mode} -i ${this.saveJSON} -s "${absoluteSaveDir}"`;
+    let command = `${process.platform !== 'win32' ? 'wine ' : ''}.${this.saveTool} encrypt -g ${this.state.mode} -f ${this.saveJSON} --save-dir "${absoluteSaveDir}"`;
     console.log(command);
     utils.exc(command, (res)=>{
       console.log(res);

@@ -377,6 +377,11 @@ class GalacticMap extends React.Component {
       || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.buildGalaxyOptions(nextProps, false);
     }
+    if (this.props.map3d
+      && nextProps.selectedGalaxy !== this.props.selectedGalaxy
+      && _.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
+      this.travelToCenter();
+    }
   }
   shouldComponentUpdate(nextProps, nextState){
     return (nextProps.mapLines !== this.props.mapLines
@@ -427,23 +432,26 @@ class GalacticMap extends React.Component {
     window.travelTo = [0, 2, 0];
   }
   travelCurrentLocation(){
+    let currentLocation = _.find(this.props.storedLocations, {id: this.props.currentLocation})
+    if (currentLocation) {
+      state.set({
+        selectedLocation: currentLocation,
+        selectedGalaxy: currentLocation.galaxy
+      });
+    }
     window.travelToCurrent = true;
   }
   travelToGalacticHub(){
     this.props.onSearch();
-    window.travelTo = [-7344, 700, 11120];
+    window.travelTo = [-3474, 865, 5516];
   }
   travelToAGT(){
     this.props.onSearch();
-    window.travelTo = [6288, 700, -10400];
+    window.travelTo = [2934, 71, -5277];
   }
   travelToPilgrimStar(){
     this.props.onSearch();
-    window.travelTo = [-3496, 1050, -12848];
-  }
-  travelToPathFinderHub(){
-    this.props.onSearch();
-    window.travelTo = [-14160, -1400, 1992];
+    window.travelTo = [-1770, 492, -6420];
   }
   render(){
     let p = this.props;
@@ -499,16 +507,6 @@ class GalacticMap extends React.Component {
             selectedGalaxy: 0,
             search: '0B11:0081:02EB:01F2'
           }, this.travelToAGT);
-        }
-      });
-      leftOptions.push({
-        id: 'travelTo',
-        label: `Travel to Pathfinder Hub`,
-        onClick: ()=>{
-          state.set({
-            selectedGalaxy: 0,
-            search: '0115:0083:08F8:0030'
-          }, this.travelToPathFinderHub);
         }
       });
     } else {
@@ -580,8 +578,7 @@ class GalacticMap extends React.Component {
           remoteLocations={p.remoteLocations}
           selectedLocation={p.selectedLocation}
           currentLocation={p.currentLocation}
-          mapDrawDistance={p.mapDrawDistance}
-          />
+          mapDrawDistance={p.mapDrawDistance} />
           :
           <ThreeDimScatterChart
           size={size}
