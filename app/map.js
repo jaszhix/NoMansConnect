@@ -376,8 +376,7 @@ class GalacticMap extends React.Component {
       || nextProps.remoteLocations !== this.props.remoteLocations
       || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.buildGalaxyOptions(nextProps, false);
-    }
-    if (this.props.map3d
+    } else if (this.props.map3d
       && nextProps.selectedGalaxy !== this.props.selectedGalaxy
       && _.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.travelToCenter();
@@ -423,6 +422,10 @@ class GalacticMap extends React.Component {
     state.set({
       galaxyOptions: options,
       selectedGalaxy: init ? currentGalaxy : p.selectedGalaxy
+    }, () => {
+      if (init) {
+        this.travelCurrentLocation();
+      }
     });
   }
   handleInit(){
@@ -432,13 +435,6 @@ class GalacticMap extends React.Component {
     window.travelTo = [0, 2, 0];
   }
   travelCurrentLocation(){
-    let currentLocation = _.find(this.props.storedLocations, {id: this.props.currentLocation})
-    if (currentLocation) {
-      state.set({
-        selectedLocation: currentLocation,
-        selectedGalaxy: currentLocation.galaxy
-      });
-    }
     window.travelToCurrent = true;
   }
   travelToGalacticHub(){
@@ -577,6 +573,7 @@ class GalacticMap extends React.Component {
           remoteLocationsColumns={p.remoteLocationsColumns}
           remoteLocations={p.remoteLocations}
           selectedLocation={p.selectedLocation}
+          searchCache={p.searchCache}
           currentLocation={p.currentLocation}
           mapDrawDistance={p.mapDrawDistance} />
           :

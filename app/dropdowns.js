@@ -328,7 +328,7 @@ You should have received a copy of the GNU General Public License along with thi
     state.set({ps4User: !this.props.s.ps4User}, this.props.onRestart);
   }
   handleModeSwitch(mode){
-    state.set({mode: mode}, this.props.onRestart);
+    state.set({mode: mode});
   }
   handlePollRate(e){
     e.stopPropagation();
@@ -574,7 +574,7 @@ export class BasicDropdown extends React.Component {
           borderRadius: '0px',
           background: 'rgb(23, 26, 22)',
           maxHeight: `${height / 2}px`,
-          minWidth: '132.469px',
+          minWidth: `${this.props.width || '132.469'}px`,
           overflowY: 'auto'
         }}
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
@@ -591,6 +591,9 @@ export class BasicDropdown extends React.Component {
               data-place="left"
               data-tip={utils.tip(tooltip)}>
                 {option.label}
+                {option.hasOwnProperty('toggle') ?
+                <span className="BasicDropdown__alignRight"><i className={`${option.toggle ? 'checkmark' : 'remove'} icon`} /></span>
+                : null}
               </div>
             );
           }) : null}

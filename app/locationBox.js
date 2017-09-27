@@ -115,7 +115,8 @@ class LocationBox extends React.Component {
       let img = p.image.replace(/:/g, '~').replace(/NMSLocation-/, '');
       let file = path.resolve(`${this.props.configDir}${img}`);
       if (!fs.existsSync(file)) {
-        axios
+        _.defer(() => {
+          axios
           .get(`https://neuropuff.com/${this.props.image}`, {
             responseType: 'arraybuffer'
           })
@@ -129,6 +130,7 @@ class LocationBox extends React.Component {
             });
           })
           .catch(() => {});
+        });
       } else {
         this.setState({image: `${file}`});
       }

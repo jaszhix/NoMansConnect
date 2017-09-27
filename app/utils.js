@@ -274,15 +274,16 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
       results = filterResults;
 
       let saves = [];
-      let saveInts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+      let saveInts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
       each(saveInts, (int)=>{
         each(results, (result)=>{
           let fileName = _.last(result.split('\\'));
-          if (int === 0 && fileName.indexOf('storage.hg') > -1 || result.indexOf(`storage${int + 1}.hg`) > -1) {
+          if ((int === 0 && fileName.indexOf('storage.hg') > -1) || result.indexOf(`storage${int + 1}.hg`) > -1) {
             saves.push({
               fileName: fileName,
               result: result,
-              mtime: fs.statSync(result).mtime
+              mtime: fs.statSync(result).mtime,
+              int: int
             });
           }
         });
@@ -317,6 +318,12 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
       }
       try {
         lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
+        let {int} = lastModifiedSave;
+        if (lastModifiedSave.result.version <= 4104) {
+          lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
+        } else {
+          lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
+        }
       } catch (e) {
         lastModifiedSave.result = null;
         log.error(`There was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`);

@@ -57,6 +57,7 @@ class RemoteLocations extends React.Component {
       || nextProps.s.selectedGalaxy !== this.props.s.selectedGalaxy
       || nextProps.s.sortByDistance !== this.props.s.sortByDistance
       || nextProps.s.sortByModded !== this.props.s.sortByModded
+      || nextProps.s.showOnlyCompatible !== this.props.s.showOnlyCompatible
       || this.state.init)
   }
   componentWillReceiveProps(nextProps){
@@ -160,52 +161,62 @@ class RemoteLocations extends React.Component {
       },
       {
         id: 'compactRemote',
-        label: `Compact View: ${p.s.compactRemote ? 'On' : 'Off'}`,
+        label: 'Compact View',
+        toggle: this.props.s.compactRemote,
         onClick: ()=>state.set({compactRemote: !p.s.compactRemote})
       },
       {
         id: 'showOnlyGalaxy',
-        label: this.props.s.showOnlyGalaxy ? 'Show Locations From All Galaxies' : `Show Only Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
+        label: `Show Only Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
+        toggle: this.props.s.showOnlyGalaxy,
         onClick: ()=>state.set({showOnlyGalaxy: !this.props.s.showOnlyGalaxy})
       },
       {
         id: 'showOnlyPC',
-        label: this.props.s.showOnlyPC ? 'Show Only PC Locations: On' : 'Show Only PC Locations: Off',
+        label: 'Show Only PC Locations',
+        toggle: this.props.s.showOnlyPC,
         onClick: ()=>state.set({showOnlyPC: !this.props.s.showOnlyPC})
       },
       {
         id: 'showOnlyScreenshots',
-        label: this.props.s.showOnlyScreenshots ? 'Show Only Locations With Screenshots: On' : 'Show Only Locations With Screenshots: Off',
+        label: 'Show Only Locations With Screenshots',
+        toggle: this.props.s.showOnlyScreenshots,
         onClick: ()=>state.set({showOnlyScreenshots: !this.props.s.showOnlyScreenshots})
       },
       {
         id: 'showOnlyNames',
-        label: this.props.s.showOnlyNames ? 'Show Only Locations With Names: On' : 'Show Only Locations With Names: Off',
+        label: 'Show Only Locations With Names',
+        toggle: this.props.s.showOnlyNames,
         onClick: ()=>state.set({showOnlyNames: !this.props.s.showOnlyNames})
       },
       {
         id: 'showOnlyDesc',
-        label: this.props.s.showOnlyDesc ? 'Show Only Locations With Descriptions: On' : 'Show Only Locations With Descriptions: Off',
+        label: 'Show Only Locations With Descriptions',
+        toggle: this.props.s.showOnlyDesc,
         onClick: ()=>state.set({showOnlyDesc: !this.props.s.showOnlyDesc})
       },
       {
         id: 'showOnlyBases',
-        label: this.props.s.showOnlyBases ? 'Show Only Locations With Bases: On' : 'Show Only Locations With Bases: Off',
+        label: 'Show Only Locations With Bases: On',
+        toggle: this.props.s.showOnlyBases,
         onClick: ()=>state.set({showOnlyBases: !this.props.s.showOnlyBases})
       },
       {
         id: 'showOnlyCompatible',
-        label: this.props.s.showOnlyCompatible ? 'Show Only Version Compatible Locations: On' : 'Show Only Version Compatible Locations: Off',
+        label: 'Show Only Version Compatible Locations',
+        toggle: this.props.s.showOnlyCompatible,
         onClick: ()=>state.set({showOnlyCompatible: !this.props.s.showOnlyCompatible})
       },
       {
         id: 'sortByDistance',
-        label: this.props.s.sortByDistance ? 'Sort by Distance to Center: On' : 'Sort by Distance to Center: Off',
+        label: 'Sort by Distance to Center',
+        toggle: this.props.s.sortByDistance,
         onClick: ()=>state.set({sortByDistance: !this.props.s.sortByDistance})
       },
       {
         id: 'sortByModded',
-        label: this.props.s.sortByModded ? 'Sort by Least Modded: On' : 'Sort by Least Modded: Off',
+        label: 'Sort by Least Modded: On',
+        toggle: this.props.s.sortByModded,
         onClick: ()=>state.set({sortByModded: !this.props.s.sortByModded})
       }
     ];
@@ -322,6 +333,7 @@ class RemoteLocations extends React.Component {
               top: '16px'
             }}>
               <BasicDropdown
+              width={350}
               icon="ellipsis horizontal"
               showValue={null}
               persist={true}

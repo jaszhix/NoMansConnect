@@ -799,6 +799,10 @@ Set player units to 2 billion.
 ---
 ## Changelog
 
+### 2017-09-25 2.0.1.0-alpha
+
+* Initial changes to support NMS 1.38 new save slot scheme.
+
 ### 2017-09-17 2.0.0.0
 
 * Every feature anyone has ever requested, except for a GUI :)

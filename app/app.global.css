@@ -38771,3 +38771,8 @@ Item
 .Item__descriptionStyle {
   margin-bottom: 8px;
 }
+
+.BasicDropdown__alignRight {
+  position: absolute;
+  right: 8px;
+}

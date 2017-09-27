@@ -19,7 +19,7 @@ var state = Reflux.createStore({
     this.galaxies = knownGalaxies;
     this.state = {
       // Core
-      version: '0.17.2',
+      version: '0.18.0',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -237,16 +237,31 @@ var state = Reflux.createStore({
       this.set(stateUpdate);
     }
   },
-  handleMaintenance(obj){
+  handleMaintenance(obj, objRemoteLen){
+    // This function will purge 25% of cached remote loccations after 4000 are
+    // stored, so performance isn't compromised in the interim of a better solution.
+    // Favorites will always stay in the list.
+    let duration;
+    if (objRemoteLen > 10000) {
+      duration = 86400000; // 1 day
+    } else if (objRemoteLen > 7000) {
+      duration = 172800000; // 2 days
+    } else {
+      duration = 259200000; // 3 days
+    }
     return new Promise((resolve, reject)=>{
-      if (this.state.maintenanceTS + 6.048e+8 < Date.now()) {
-        // Maintenance task set to run once a week
+      if (this.state.maintenanceTS + duration < Date.now()) {
         let locations = [];
+        let remoteLength = obj.remoteLocations.results.length;
+        let lengthLimit = remoteLength - Math.ceil(remoteLength * 0.25);
         _.each(obj.remoteLocations.results, (location, i)=>{
           // Remove locations with invalid coordinates
           if (location.data.VoxelY > -128 && location.data.VoxelY < 127
             && location.data.VoxelZ > -2048 && location.data.VoxelZ < 2047
-            && location.data.VoxelX > -2048 && location.data.VoxelX < 2047) {
+            && location.data.VoxelX > -2048 && location.data.VoxelX < 2047
+            && (remoteLength <= 4000
+              || location.data.upvote
+              || i < lengthLimit)) {
             locations.push(location)
           }
         });
@@ -294,7 +309,7 @@ var state = Reflux.createStore({
       && this.state.remoteLocations
       && this.state.remoteLocations.results
       && this.state.remoteLocations.results.length > 0) {
-      this.handleMaintenance(obj).then((newObj)=>{
+      this.handleMaintenance(obj, objRemoteLen).then((newObj)=>{
         window.jsonWorker.postMessage({
           method: 'set',
           key: 'remoteLocations',

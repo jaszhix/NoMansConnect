@@ -97,7 +97,7 @@ class Map3D extends React.Component {
     this.starGreen = this.loader.load(path.resolve('app/textures/star_green.jpg'));
     this.starPurple = this.loader.load(path.resolve('app/textures/star_purple.jpg'));
 
-    this.sphere = new THREE.SphereGeometry(3, 9, 9);
+    this.sphere = new THREE.SphereGeometry(5, 9, 9);
     this.sphereVs = document.getElementById('surface-vertexShader').textContent;
     this.sphereFs = document.getElementById('surface-fragmentShader').textContent;
 
@@ -114,7 +114,7 @@ class Map3D extends React.Component {
         },
         vertexShader: this.sphereVs,
         fragmentShader: this.sphereFs,
-        shading: THREE.SmoothShading,
+        flatShading: THREE.SmoothShading,
         side: THREE.FrontSide,
         transparent: true
       };
@@ -127,7 +127,7 @@ class Map3D extends React.Component {
     this.greenMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starGreen));
     this.redMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starRed));
     this.purpleMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starPurple));
-    /*this.skybox = [ // Threact bug TBD
+/*    this.skybox = [ // Threact bug TBD
       path.resolve('app/textures/s1.png'),
       path.resolve('app/textures/s2.png'),
       path.resolve('app/textures/s3.png'),
@@ -145,9 +145,11 @@ class Map3D extends React.Component {
     this.hovered = '';
   }
   componentWillReceiveProps(nextProps) {
-    if (nextProps.remoteLocations && nextProps.remoteLocations.results !== this.props.remoteLocations.results) {
+    if (nextProps.remoteLocations && nextProps.remoteLocations.results !== this.props.remoteLocations.results
+      || nextProps.searchCache !== this.props.searchCache) {
       this.updateLocations(nextProps);
     }
+
     if (!_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.selected = true;
     }
@@ -156,16 +158,16 @@ class Map3D extends React.Component {
     }
   }
   updateLocations(props){
-    console.log('>>>> updating map3d locations')
+    console.log('>>>> updating map3d locations', props.searchCache)
     let storedLocations = [];
-    each(this.props.storedLocations, (location)=>{
+    each(props.storedLocations, (location)=>{
       storedLocations.push({data: location});
     });
     let locations = _.chain(props.remoteLocations.results)
       .concat(storedLocations)
+      .concat(props.searchCache)
       .cloneDeep()
       .value();
-
 
     let systems = _.uniqBy(locations, (location)=>{
       return location.data.translatedId;
@@ -231,17 +233,24 @@ class Map3D extends React.Component {
     if (window.travelTo) {
       let coords = window.travelTo;
       let vector3 = new THREE.Vector3(...coords);
-      console.log('travel to', coords)
-      this.handleTravel(vector3);
+      if (!_.isEqual(vector3, this.lastTraveled)) {
+        this.handleTravel(vector3);
+      }
     }
 
     if (window.travelToCurrent) {
       window.travelToCurrent = null;
-      let refMesh = _.findIndex(this.scene.children, (child)=>{
-        return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.id === this.props.currentLocation;
-      });
-      if (refMesh > -1) {
-        this.handleTravel(this.scene.children[refMesh].position);
+      let currentLocation = _.find(this.props.storedLocations, {id: this.props.currentLocation});
+      if (currentLocation) {
+        if (this.props.selectedGalaxy !== currentLocation.galaxy) {
+          state.set({selectedGalaxy: currentLocation.galaxy});
+        }
+        let refMesh = _.findIndex(this.scene.children, (child)=>{
+          return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === currentLocation.translatedId;
+        });
+        if (refMesh > -1) {
+          this.handleTravel(this.scene.children[refMesh].position);
+        }
       }
     }
 
@@ -250,12 +259,13 @@ class Map3D extends React.Component {
         return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === this.travelTo.data.translatedId;
       });
       this.travelTo = false;
-      if (refMesh > -1) {
+      if (refMesh > -1 && !_.isEqual(this.scene.children[refMesh].position, this.lastTraveled)) {
         this.handleTravel(this.scene.children[refMesh].position);
       }
     }
   }
   handleTravel(vector3){
+    this.lastTraveled = vector3;
     const _this = this;
 
     let onComplete = function () {
@@ -444,7 +454,7 @@ class Map3D extends React.Component {
       return;
     }
     let distance = distanceVector(c.camera.position, c.instance.position)
-    if (distance > 3000) {
+    if (distance > 2000) {
       if (c.material) {
         c.instance.material = this.blueMaterial;
       }
@@ -471,7 +481,9 @@ class Map3D extends React.Component {
       c.instance.material = c.material;
       c.instance.material.uniforms.time = { type: 'f', value: time }
     }
-    if (distance < 100 && this.props.selectedLocation && c.instance.userData.data.translatedId === this.props.selectedLocation.translatedId) {
+    if (distance < 76
+      && this.props.selectedLocation
+      && c.instance.userData.data.translatedId === this.props.selectedLocation.translatedId) {
       let screen = toScreenPosition(c.instance, c.camera, c.controls, this.renderer.domElement)
       let rect = this.renderer.domElement.getBoundingClientRect();
       if (screen.x < rect.left || screen.y + 250 < rect.left || screen.x < rect.top || screen.x - 50 > rect.bottom) {
@@ -483,8 +495,8 @@ class Map3D extends React.Component {
       }
 
       if (!c.instance.el && c.instance.type === 'Mesh') {
-        c.instance.el = this.getHUDElement(c.instance, screen);
-        c.instance.el.insertAfter('#app');
+          c.instance.el = this.getHUDElement(c.instance, screen);
+          c.instance.el.insertAfter('#app');
       } else if (!c.instance.hovered) {
         c.instance.el.css({left: `${screen.x}px`, bottom: `${screen.y}px`})
       }
@@ -510,7 +522,7 @@ class Map3D extends React.Component {
         height={this.props.size}
         setSize={[this.props.size, this.props.size]}
         logarithmicDepthBuffer={false}
-        camera={new THREE.PerspectiveCamera(75, this.props.size / this.props.size, 10, 100000)}
+        camera={new THREE.PerspectiveCamera(85, this.props.size / this.props.size, 10, 100000)}
         scene={new THREE.Scene()}
         onMouseMove={this.handleMouseMove}
         onMouseDown={this.handleMouseDown}
@@ -518,15 +530,15 @@ class Map3D extends React.Component {
         onAnimate={this.handleAnimation}>
           <Mesh
           name="Center"
-          geometry={new THREE.SphereGeometry( 20, 12, 12 )}
+          geometry={new THREE.SphereGeometry( 20, 9, 9 )}
           material={this.redMaterial}
           position={[0, 2, 0]}
           onMount={(c)=>{
             c.instance.parent.intensity / Math.pow( 0.02, 2.0 );
           }}
           onAnimate={(c)=>{
-            c.instance.rotation.x += 0.02;
-            c.instance.rotation.y += 0.02;
+            c.instance.rotation.x += 0.0002;
+            c.instance.rotation.y += 0.0002;
           }}  />
           {_.map(this.state.locations, (location) => {
             let position = [location.data.VoxelX * 4, location.data.VoxelY * 174, location.data.VoxelZ * 4]

@@ -41,6 +41,7 @@ class StoredLocationItem extends React.Component {
     let isMarquee = (this.state.hover || this.props.isSelected) && name.length >= 25;
     name = isMarquee ? name : _.truncate(name, {length: 23});
     let isSpaceStation = this.props.location.id[this.props.location.id.length - 1] === '0';
+    let iconShown = this.props.location.upvote || this.props.isCurrent;
     return (
       <div
       className="ui segment"
@@ -51,14 +52,14 @@ class StoredLocationItem extends React.Component {
         {this.props.location.base ?
         <span
         data-tip={tip('Base')}
-        style={{position: 'absolute', left: `${this.props.location.upvote ? 31 : 4}px`, top: '4px'}}>
+        style={{position: 'absolute', left: `${iconShown ? 31 : 4}px`, top: '4px'}}>
           <img style={{width: '21px', height: '21px'}} src={baseIcon} />
         </span> : null}
         {isSpaceStation ?
-        <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${this.props.location.upvote ? 31 : 4}px`, top: '3px'}}>
+        <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${iconShown ? 31 : 4}px`, top: '3px'}}>
           <img style={{width: '21px', height: '21px'}} src={spaceStationIcon} />
         </span> : null}
-        {this.props.location.upvote ?
+        {iconShown ?
         <i
         style={{
           position: 'absolute',
@@ -66,7 +67,7 @@ class StoredLocationItem extends React.Component {
           left: '6px',
           cursor: 'pointer'
         }}
-        className="star icon" /> : null}
+        className={`${this.props.isCurrent ? 'marker' : 'star'} icon`} /> : null}
         <p
         className={isMarquee ? 'marquee' : ''}
         style={{
@@ -212,6 +213,7 @@ class StoredLocations extends React.Component {
                   i={i}
                   onClick={this.handleSelect}
                   isSelected={this.props.selectedLocationId === location.id}
+                  isCurrent={this.props.currentLocation === location.id}
                   location={location}
                   useGAFormat={this.props.useGAFormat} />
                 );

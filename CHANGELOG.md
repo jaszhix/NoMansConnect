@@ -1,3 +1,13 @@
+# 0.18.0
+
+  * Updated location syncing and teleporting for NMS 1.38 with help from nmssavetool author Matthew Humphrey.
+  * Added several QOL enhancements for the 3D map.
+  * Added an indicator for the current location in the stored location list.
+  * Added toggle icons to the location filtering menu.
+  * Added periodic purging of 25% of the remote location cache every 1-3 days depending on the amount of locations cached. Locations that are favorited will not be purged. This needs to be done until a better solution is in place for the performance issues caused by loading thousands of data points on the map.
+  * Fixed images not being cached correctly after they're uploaded manually.
+  * Fixed a false positive username protection error when users with NMS save data use PS4 mode.
+
 # 0.17.1
 
   * Corrected the portal calculation.
