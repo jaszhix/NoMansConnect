@@ -277,8 +277,9 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
       let saveInts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
       each(saveInts, (int)=>{
         each(results, (result)=>{
-          let fileName = _.last(result.split('\\'));
-          if ((int === 0 && fileName.indexOf('storage.hg') > -1) || result.indexOf(`storage${int + 1}.hg`) > -1) {
+          let fileName = last(result.split('\\'));
+          if (((int === 0 && fileName.indexOf('save.hg') > -1) || result.indexOf(`save${int + 1}.hg`) > -1)
+          || ((int === 0 && fileName.indexOf('storage.hg') > -1) || result.indexOf(`storage${int + 1}.hg`) > -1)) {
             saves.push({
               fileName: fileName,
               result: result,
