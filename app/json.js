@@ -1,5 +1,6 @@
 const fs = require('fs');
 const copyFile = require('./copy');
+const {tryFn} = require('./lang');
 
 class Json {
   constructor(path, fileName, defaultObj, cb){
@@ -21,17 +22,17 @@ class Json {
           this.callback(cb);
         });
       }
-      try {
+      tryFn(() => {
         this.data = JSON.parse(data);
         this.callback(cb);
-      } catch (e) {
+      }, () => {
         if (fs.existsSync(this.backupPath) && !fromFailure) {
           this.init(this.backupPath, cb, true);
           return;
         }
         console.log(e)
         this.callback(cb);
-      }
+      });
     });
   }
   callback(cb){
@@ -73,11 +74,7 @@ class Json {
     this.writeFile(null, this.data.hasOwnProperty('maintenanceTS'));
   }
   get(key){
-    try {
-      return this.data;
-    } catch (e) {
-      return null;
-    }
+    return tryFn(() => this.data, () => null);
   }
   remove(key){
     delete this.data[key];

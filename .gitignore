@@ -51,3 +51,6 @@ npm-debug.log.*
 /.sync
 /._.DS_Store
 dll
+/.vscode/launch.json
+/app/package-lock.json
+/app/threact

@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import openExternal from 'open-external';
-import _ from 'lodash';
-import each from './each';
+import {defer} from 'lodash';
+import {each} from './lang';
 import {cleanUp} from './utils';
 import {locationItemStyle} from './constants';
 

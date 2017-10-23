@@ -8,11 +8,11 @@ import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import autoBind from 'react-autobind';
 import ReactTooltip from 'react-tooltip';
-import _ from 'lodash';
+import {isEqual, isBoolean, defer, truncate, upperFirst, pullAt} from 'lodash';
 import moment from 'moment';
 
 import {css, tip, cleanUp, formatForGlyphs} from './utils';
-import each from './each';
+import {each, findIndex, map, tryFn} from './lang';
 
 import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
@@ -64,7 +64,7 @@ class LocationBox extends React.Component {
     this.getImage(this.props);
   }
   componentWillReceiveProps(nextProps) {
-    if ((nextProps.selectType && !_.isEqual(nextProps.location, this.props.location) && this.scrollBox) || (nextProps.updating !== this.props.updating && nextProps.updating)) {
+    if ((nextProps.selectType && !isEqual(nextProps.location, this.props.location) && this.scrollBox) || (nextProps.updating !== this.props.updating && nextProps.updating)) {
       if (this.scrollBox) {
         this.scrollBox.scrollTop = 0;
       }
@@ -91,7 +91,7 @@ class LocationBox extends React.Component {
   }
   shouldComponentUpdate(nextProps, nextState) {
     let bool =
-      !_.isEqual(nextProps.location, this.props.location) ||
+      !isEqual(nextProps.location, this.props.location) ||
       nextProps.favorites !== this.props.favorites ||
       nextProps.updating !== this.props.updating ||
       nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck ||
@@ -100,7 +100,7 @@ class LocationBox extends React.Component {
       nextProps.scrollTop !== this.props.scrollTop ||
       (nextProps.compactRemote !== this.props.compactRemote && nextProps.isVisible) ||
       nextState.image !== this.state.image;
-    if (!_.isBoolean(bool)) {
+    if (!isBoolean(bool)) {
       // TBD
       return true;
     }
@@ -115,15 +115,15 @@ class LocationBox extends React.Component {
       let img = p.image.replace(/:/g, '~').replace(/NMSLocation-/, '');
       let file = path.resolve(`${this.props.configDir}${img}`);
       if (!fs.existsSync(file)) {
-        _.defer(() => {
+        defer(() => {
           axios
           .get(`https://neuropuff.com/${this.props.image}`, {
             responseType: 'arraybuffer'
           })
           .then(res => {
             fs.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
-              if (!err && !this.willUnmount) {
-                this.setState({image: `${file}`});
+              if (!err && !this.willUnmount && this.scrollBox) {
+                tryFn(() => this.setState({image: `${file}`}));
               } else {
                 log.error(err);
               }
@@ -144,7 +144,7 @@ class LocationBox extends React.Component {
   }
   getModMarkup(mods) {
     return ReactDOMServer.renderToString(
-      _.map(mods, (mod, i) => {
+      map(mods, (mod, i) => {
         return (
           <div
           key={i}
@@ -153,7 +153,7 @@ class LocationBox extends React.Component {
               fontSize: '14px',
               width: '300px'
             })}>
-            {_.truncate(mod, {length: 43})}
+            {truncate(mod, {length: 43})}
           </div>
         );
       })
@@ -176,13 +176,13 @@ class LocationBox extends React.Component {
         <Item label="Galactic Address" value={p.location.translatedId} />
         <Item label="Universe Address" value={p.location.id} />
         <Item label="Portal Address">
-          {_.map(formatForGlyphs(p.location.translatedId), (glyph, i) => {
+          {map(formatForGlyphs(p.location.translatedId), (glyph, i) => {
               return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
           })}
         </Item>
         {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
         {p.location.distanceToCenter ? <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(0)} LY / ${p.location.jumps} Jumps`} /> : null}
-        {p.location.mode ? <Item label="Mode" value={_.upperFirst(p.location.mode)} /> : null}
+        {p.location.mode ? <Item label="Mode" value={upperFirst(p.location.mode)} /> : null}
         {p.location.teleports ? <Item label="Teleports" value={p.location.teleports} /> : null}
         {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
         {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
@@ -196,7 +196,7 @@ class LocationBox extends React.Component {
   }
   render() {
     let p = this.props;
-    let refFav = _.findIndex(p.favorites, fav => {
+    let refFav = findIndex(p.favorites, fav => {
       return fav === p.location.id;
     });
     let upvote = refFav !== -1 || location.update;
@@ -246,8 +246,8 @@ class LocationBox extends React.Component {
           onClick: () => p.onDeleteScreen()
         });
       } else {
-        let refLeftOption = _.findIndex(leftOptions, {id: 'deleteScreen'});
-        _.pullAt(leftOptions, refLeftOption);
+        let refLeftOption = findIndex(leftOptions, opt => opt.id === 'deleteScreen');
+        pullAt(leftOptions, refLeftOption);
       }
     } else if (p.selectType && p.location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
       leftOptions.push({

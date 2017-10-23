@@ -3,9 +3,9 @@ import path from 'path';
 import {StringDecoder} from 'string_decoder';
 const decoder = new StringDecoder('utf8');
 import axios from 'axios';
-import _ from 'lodash';
+import {clone, cloneDeep, assignIn, pullAt, last, orderBy, isString, defer} from 'lodash';
 import state from './state';
-import each from './each';
+import {each, findIndex} from './lang';
 
 var exec = require('child_process').exec;
 export var msToTime = (s)=>{
@@ -67,7 +67,7 @@ export var store = {
 
 export var formatID = (location)=>{
   location.GalacticAddress.id = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
-  return _.cloneDeep(location.GalacticAddress);
+  return cloneDeep(location.GalacticAddress);
 };
 
 export var parseID = (id)=>{
@@ -191,7 +191,7 @@ export var fromHex = (str, username, galaxy)=>{
       || manualLocation.SolarSystemIndex > 600) {
       return null;
     }
-    _.assignIn(manualLocation, {
+    assignIn(manualLocation, {
       jumps: Math.ceil(manualLocation.distanceToCenter / 400),
       translatedId: `${toHex(manualLocation.translatedX, 4)}:${toHex(manualLocation.translatedY, 4)}:${toHex(manualLocation.translatedZ, 4)}:${toHex(manualLocation.SolarSystemIndex, 4)}`,
       GalacticAddress: {
@@ -209,7 +209,7 @@ export var fromHex = (str, username, galaxy)=>{
     delete manualLocation.GalacticAddress;
     delete manualLocation.RealityIndex;
 
-    _.assignIn(manualLocation, _manualLocation)
+    assignIn(manualLocation, _manualLocation)
     return manualLocation;
   } catch (e) {
     return null;
@@ -290,7 +290,7 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
         });
       });
 
-      let lastModifiedSave = _.chain(saves).orderBy('mtime', 'asc').last().value();
+      let lastModifiedSave = last(orderBy(saves, 'mtime', 'asc'));
       if (!lastModifiedSave) {
         reject();
         return;
@@ -314,7 +314,7 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
         } else {
           lastModifiedSave.result = decodedJson;
         }
-      } else if (_.isString(json)) {
+      } else if (isString(json)) {
         lastModifiedSave.result = json;
       }
       try {
@@ -331,7 +331,7 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
         reject();
         return;
       }
-      resolve(_.cloneDeep(lastModifiedSave));
+      resolve(cloneDeep(lastModifiedSave));
     });
   });
 };
@@ -434,17 +434,17 @@ export var modifyUnits = (saveData, n=100000)=>{
 };
 
 export var formatBase = (saveData, knownProducts)=>{
-  let base = _.cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[0]);
+  let base = cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[0]);
   // Check for modded objects and remove them
   let moddedObjectKeys = [];
   each(base.Objects, (object, key)=>{
-    let refProduct = _.findIndex(knownProducts, (product)=>product === object.ObjectID);
+    let refProduct = findIndex(knownProducts, product => product === object.ObjectID);
     if (refProduct === -1) {
       moddedObjectKeys.push(key);
     }
   });
   each(moddedObjectKeys, (key)=>{
-    _.pullAt(base.Objects, key);
+    pullAt(base.Objects, key);
   });
   let cachedBase = {
     Objects: base.Objects,
@@ -452,7 +452,7 @@ export var formatBase = (saveData, knownProducts)=>{
     Position: base.Position,
     Name: base.Name
   };
-  return _.cloneDeep(cachedBase);
+  return cloneDeep(cachedBase);
 };
 
 var flip = (string)=>{
@@ -557,7 +557,7 @@ export var validateEmail = (email) => {
 }
 
 export var css = (styleObject, newObject)=>{
-  return _.assignIn(_.clone(styleObject), _.clone(newObject));
+  return assignIn(clone(styleObject), clone(newObject));
 };
 
 export var tip = (content)=>{
@@ -576,7 +576,7 @@ export var ajax = axios.create({
 
 // Cleans up the left over object references after a component unmounts, helps with garbage collection
 export const cleanUp = (obj)=>{
-  _.defer(()=>{
+  defer(()=>{
     let contextProps = Object.keys(obj);
     each(contextProps, (key)=>{
       obj[key] = undefined;

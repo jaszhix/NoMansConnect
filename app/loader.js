@@ -1,4 +1,5 @@
 import React from 'react';
+import {map} from './lang';
 
 const textStyle = {
   position: 'relative',
@@ -12,7 +13,7 @@ class Loader extends React.Component {
   render(){
     return (
       <div className="loader">
-        {fill.map((v, i)=>{
+        {map(fill, (v, i)=>{
           return (
             <span key={i} />
           );

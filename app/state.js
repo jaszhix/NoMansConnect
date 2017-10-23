@@ -2,9 +2,8 @@ import {remote} from 'electron';
 import os from 'os';
 import fs from 'graceful-fs';
 import Reflux from 'reflux';
-//Reflux.setEventEmitter(require('events').EventEmitter);
-import _ from 'lodash';
-import each from './each';
+import {assignIn, pick, uniqBy, defer, delay, clone} from 'lodash';
+import {each, tryFn} from './lang';
 import * as utils from './utils';
 import knownGalaxies from './static/galaxies.json';
 import knownProducts from './static/knownProducts.json';
@@ -19,7 +18,7 @@ var state = Reflux.createStore({
     this.galaxies = knownGalaxies;
     this.state = {
       // Core
-      version: '0.18.0',
+      version: '0.19.0',
       apiBase: 'https://neuropuff.com/api/',
       winVersion: os.release(),
       machineId: null,
@@ -114,7 +113,7 @@ var state = Reflux.createStore({
           environment: process.env.NODE_ENV,
           release: this.state.version,
           dataCallback: (data)=>{
-            _.assignIn(data.user, {
+            assignIn(data.user, {
               username: this.state.username,
               resourceUsage: remote.app.getAppMetrics(),
               winVersion: this.state.winVersion,
@@ -188,7 +187,7 @@ var state = Reflux.createStore({
       'sortByModded'
     ];
     this.handleSettingsMigration();
-    const settings = _.pick(this.state, this.settingsKeys);
+    const settings = pick(this.state, this.settingsKeys);
     window.settingsWorker.postMessage({
       method: 'new',
       default: settings,
@@ -254,7 +253,7 @@ var state = Reflux.createStore({
         let locations = [];
         let remoteLength = obj.remoteLocations.results.length;
         let lengthLimit = remoteLength - Math.ceil(remoteLength * 0.25);
-        _.each(obj.remoteLocations.results, (location, i)=>{
+        each(obj.remoteLocations.results, (location, i)=>{
           // Remove locations with invalid coordinates
           if (location.data.VoxelY > -128 && location.data.VoxelY < 127
             && location.data.VoxelZ > -2048 && location.data.VoxelZ < 2047
@@ -265,13 +264,13 @@ var state = Reflux.createStore({
             locations.push(location)
           }
         });
-        locations = _.uniqBy(locations, (location)=>{
+        locations = uniqBy(locations, (location)=>{
           return location.data.id;
         });
         obj.remoteLocations.results = locations;
         obj.remoteLocations.count = locations.length;
 
-        _.defer(()=>{
+        defer(()=>{
           obj.maintenanceTS = Date.now();
           resolve(obj)
         });
@@ -282,14 +281,14 @@ var state = Reflux.createStore({
   },
   set(obj, cb=null){
     if (process.env.NODE_ENV === 'development') {
-      try {
-        throw new Error('STATE STACK')
-      } catch (e) {
+      tryFn(() => {
+        throw new Error('STATE STACK');
+      }, (e) => {
         let stackParts = e.stack.split('\n');
         console.log('STATE CALLEE: ', stackParts[2].trim());
-      }
+      });
     }
-    obj = _.clone(obj);
+    obj = clone(obj);
     console.log('STATE INPUT: ', obj);
     if (obj.selectedLocation) {
       this.state.selectedLocation = null;
@@ -331,12 +330,12 @@ var state = Reflux.createStore({
       obj.error = '';
     }
 
-    _.assignIn(this.state, obj);
+    assignIn(this.state, obj);
     console.log('STATE: ', this.state);
     this.trigger(this.state);
 
     each(obj, (value, key)=>{
-      _.delay(()=>{
+      delay(()=>{
         if (this.settingsKeys.indexOf(key) > -1) {
           window.settingsWorker.postMessage({
             method: 'set',
@@ -348,7 +347,7 @@ var state = Reflux.createStore({
     });
 
     if (cb) {
-      _.defer(cb);
+      defer(cb);
     }
   },
   get(){

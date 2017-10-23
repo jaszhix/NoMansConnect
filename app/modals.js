@@ -1,11 +1,11 @@
-import each from './each';
 import state from './state';
 import React from 'react';
 import autoBind from 'react-autobind';
 import onClickOutside from 'react-onclickoutside';
-import _ from 'lodash';
+import {assignIn, pick, isString, orderBy} from 'lodash';
 
 import {validateEmail, ajax, fromHex, cleanUp} from './utils';
+import {each, findIndex} from './lang';
 
 import {BasicDropdown} from './dropdowns';
 import Button from './buttons';
@@ -50,7 +50,7 @@ export class UsernameOverrideModal extends React.Component {
     this.state = {
       name: ''
     };
-    _.assignIn(this.state, _.pick(state.get(), ['ps4User']))
+    assignIn(this.state, pick(state.get(), ['ps4User']))
     this.modalStyle = {
       padding: '8px',
       textAlign: 'center',
@@ -305,7 +305,7 @@ export class LocationRegistrationModal extends React.Component {
       return;
     }
 
-    let refLocation = _.findIndex(this.props.s.storedLocations, {translatedId: this.state.address});
+    let refLocation = findIndex(this.props.s.storedLocations, location => location.translatedId === this.state.address);
 
     if (refLocation > -1) {
       this.setState({
@@ -317,11 +317,11 @@ export class LocationRegistrationModal extends React.Component {
 
     this.props.s.storedLocations.push(location);
     each(this.props.s.storedLocations, (storedLocation, i)=>{
-      if (_.isString(storedLocation.timeStamp)) {
+      if (isString(storedLocation.timeStamp)) {
         this.props.s.storedLocations[i].timeStamp = new Date(storedLocation.timeStamp).getTime()
       }
     });
-    this.props.s.storedLocations = _.orderBy(this.props.s.storedLocations, 'timeStamp', 'desc');
+    this.props.s.storedLocations = orderBy(this.props.s.storedLocations, 'timeStamp', 'desc');
 
     state.set({storedLocations: this.props.s.storedLocations}, ()=>{
       ajax.post('/nmslocation/', {

@@ -1,22 +1,21 @@
-const _ = require('lodash');
-
-const each = require('./each');
+const {isArray, uniqBy, assignIn} = require('lodash');
+const {each, findIndex, filter} = require('./lang');
 
 const getLocationsByTranslatedId = (locations)=>{
   if (!locations) {
     return null;
   }
-  if (_.isArray(locations)) {
+  if (isArray(locations)) {
     locations = {results: locations}
   }
-  let systems = _.uniqBy(locations.results, (location)=>{
+  let systems = uniqBy(locations.results, (location)=>{
     location = location.data ? location : {data: location};
     return location.data.translatedX && location.data.translatedY && location.data.translatedZ;
   });
   each(systems, (location, i)=>{
     systems[i] = location.data ? location : {data: location};
     location = systems[i];
-    let planets = _.filter(locations.results, (planet)=>{
+    let planets = filter(locations.results, (planet)=>{
       planet = planet.data ? planet : {data: planet};
       return (location.data.translatedX === planet.data.translatedX
         && location.data.translatedY === planet.data.translatedY
@@ -29,9 +28,9 @@ const getLocationsByTranslatedId = (locations)=>{
         planetData[planet.data.username] = [];
       }
       let label = planet.data.name ? planet.data.name : planet.data.id;
-      let refPlanetData = _.findIndex(planetData, {username: planet.data.username});
+      let refPlanetData = findIndex(planetData, item => item.username === planet.data.username);
       if (refPlanetData > -1) {
-        let refEntry = _.findIndex(planetData[refPlanetData].entries, label);
+        let refEntry = planetData[refPlanetData].entries.indexOf(label);
         if (refEntry === -1) {
           planetData[refPlanetData].entries.push(label);
         }
@@ -97,7 +96,7 @@ onmessage = function(e) {
         }
       });
     }
-    _.assignIn(stateUpdate, {
+    assignIn(stateUpdate, {
       selectedLocation: selectedLocation
     });
   }
@@ -159,7 +158,7 @@ onmessage = function(e) {
       });
     }
 
-    _.assignIn(stateUpdate, {
+    assignIn(stateUpdate, {
       currentLocation: currentLocation,
       locations: locations,
       remoteLocations: remoteLocations,
@@ -186,7 +185,7 @@ onmessage = function(e) {
     let maxSize = eData.p.height - 105;
     size = size > maxSize ? maxSize : size < 260 ? 260 : size;
 
-    _.assignIn(stateUpdate, {
+    assignIn(stateUpdate, {
       size: size,
       center: center,
       zRange: zRange,

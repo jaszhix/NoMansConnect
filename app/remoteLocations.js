@@ -1,10 +1,10 @@
 import state from './state';
 import React from 'react';
 import autoBind from 'react-autobind';
-import _ from 'lodash';
+import {delay, defer, throttle, orderBy} from 'lodash';
 
 import {whichToShow} from './utils';
-import each from './each';
+import {each, filter} from './lang';
 import {BasicDropdown} from './dropdowns';
 import LocationBox from './locationBox';
 
@@ -32,11 +32,11 @@ class RemoteLocations extends React.Component {
         this.setState({init: false});
         this.setViewableRange(this.recentExplorations);
       } else {
-        _.delay(()=>checkRemote(), 500);
+        delay(()=>checkRemote(), 500);
       }
     };
     checkRemote();
-    this.throttledPagination = _.throttle(this.props.onPagination, 1000, {leading: true});
+    this.throttledPagination = throttle(this.props.onPagination, 1000, {leading: true});
   }
   shouldComponentUpdate(nextProps) {
     return (nextProps.s.remoteLocations.results !== this.props.s.remoteLocations.results
@@ -68,7 +68,7 @@ class RemoteLocations extends React.Component {
 
     if (nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
       || nextProps.s.compactRemote !== this.props.s.compactRemote) {
-      _.defer(()=>this.setViewableRange(this.recentExplorations));
+      defer(()=>this.setViewableRange(this.recentExplorations));
     }
   }
   componentWillUnmount(){
@@ -111,7 +111,7 @@ class RemoteLocations extends React.Component {
 
     if (this.recentExplorations.scrollTop + window.innerHeight >= this.recentExplorations.scrollHeight + this.recentExplorations.offsetTop - 180) {
       this.throttledPagination(this.props.s.page);
-      _.delay(()=>{
+      delay(()=>{
         this.recentExplorations.scrollTop = Math.floor(this.recentExplorations.scrollHeight - this.props.s.pageSize * 271);
       }, 1500);
     }
@@ -232,42 +232,42 @@ class RemoteLocations extends React.Component {
     let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.s.remoteLocations.results;
     if (this.props.s.showOnlyScreenshots) {
-      locations = _.filter(locations, (location)=>{
+      locations = filter(locations, (location)=>{
         return location.image.length > 0;
       });
     }
     if (this.props.s.showOnlyNames) {
-      locations = _.filter(locations, (location)=>{
+      locations = filter(locations, (location)=>{
         return location.data.name && location.data.name.length > 0;
       });
     }
     if (this.props.s.showOnlyDesc) {
-      locations = _.filter(locations, (location)=>{
+      locations = filter(locations, (location)=>{
         return location.data.description && location.data.description.length > 0;
       });
     }
     if (this.props.s.showOnlyGalaxy) {
-      locations = _.filter(locations, (location)=>{
+      locations = filter(locations, (location)=>{
         return location.data.galaxy === p.s.selectedGalaxy;
       });
     }
     if (this.props.s.showOnlyBases) {
-      locations = _.filter(locations, (location)=>{
+      locations = filter(locations, (location)=>{
         return location.data.base;
       });
     }
     if (this.props.s.showOnlyCompatible && this.props.s.saveVersion) {
-      locations = _.filter(locations, (location)=>{
+      locations = filter(locations, (location)=>{
         return location.version === this.props.s.saveVersion || location.data.version === this.props.s.saveVersion;
       });
     }
     if (this.props.s.showOnlyPC) {
-      locations = _.filter(locations, (location)=>{
+      locations = filter(locations, (location)=>{
         return location.data.playerPosition && !location.data.manuallyEntered;
       });
     }
     if (this.props.s.sortByDistance || this.state.sortByModded) {
-      locations = _.orderBy(locations, (location)=>{
+      locations = orderBy(locations, (location)=>{
         if (!location.data.mods) {
           location.data.mods = [];
         }

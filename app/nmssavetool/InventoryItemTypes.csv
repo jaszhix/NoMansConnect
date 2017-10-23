@@ -23,7 +23,7 @@ Id,Name,Category,IsRechargeable,DefaultAmount,MaxAmount
 ^ATLAS_SEED_7,State Phasure,PRODUCT,FALSE,0,0
 ^ATLAS_SEED_8,Novae Reclaiment,PRODUCT,FALSE,0,0
 ^ATLAS_SEED_9,Modified Quanta,PRODUCT,FALSE,0,0
-^CAVECUBE,Votex Cube,PRODUCT,FALSE,0,0
+^CAVECUBE,Vortex Cube,PRODUCT,FALSE,0,0
 ^COM1,Iron,SUBSTANCE,FALSE,0,0
 ^COMMODITY1,Carite Sheet,PRODUCT,FALSE,0,0
 ^COMMODITY2,Night Crystals,PRODUCT,FALSE,0,0
@@ -219,7 +219,7 @@ Id,Name,Category,IsRechargeable,DefaultAmount,MaxAmount
 ^HOT1,Coolant Network Sigma,SUITTECH,TRUE,80,80
 ^HOT2,Coolant Network Tau,SUITTECH,TRUE,80,80
 ^HOT3,Coolant Network Theta,SUITTECH,TRUE,80,80
-^HYPERDRIVE,Hyperdrive,SHIPTECH,FALSE,5,5
+^HYPERDRIVE,Hyperdrive,SHIPTECH,TRUE,5,5
 ^JET1,Jetpack,SUITTECH,FALSE,1,1
 ^JETBOOST1,Jetpack Boost Sigma,SUITTECH,FALSE,-1,100
 ^JETBOOST2,Jetpack Boost Tau,SUITTECH,FALSE,-1,100

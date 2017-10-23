@@ -16,11 +16,13 @@ Run "nmssavetool help" for help.
 ```
 > nmssavetool help
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   addinv       Adds an inventory item.
 
-  backup       Back up the latest game save.
+  backup       Back up the latest game save for the specified game slot.
+
+  backupall    Back up all game saves.
 
   decrypt      Decrypt the latest game save slot and write it to a formatted JSON file.
 
@@ -73,7 +75,7 @@ moving left and up as necessary until an available slot is found.
 ```
 >nmssavetool.exe help addinv
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -i, --item               Required. Specifies the inventory item to add. You may specify a portion of the name
                            and the program will try and match with one of the valid items. Surround the name in
@@ -90,7 +92,7 @@ nmssavetool 2.0.0.0
   --full-backup            If provided (along with -b/--backup-dir), will archive the full game-save directory
                            in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode          Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot          Required. Use saves for which game slot (1-5)
 
   --save-dir               Path to game save folder (optional - determined automatically if not provided)
 
@@ -102,14 +104,14 @@ nmssavetool 2.0.0.0
 ```
 #### Examples:
 ```
-  > nmssavetool.exe addinv -g normal -c ship_general -i "^HYPERFUEL"
+  > nmssavetool.exe addinv -g 1 -c ship_general -i "^HYPERFUEL"
 ```
-  Adds a warp cell to any available slot in the Ship general inventory.
+  Adds a warp cell to any available slot in the Ship general inventory, for game save slot 1.
 
 ```
-  > nmssavetool.exe addinv -g normal -c exosuit_cargo -i dagger
+  > nmssavetool.exe addinv -g 2 -c exosuit_cargo -i dagger
 ```
-  Adds a Vy'keen Dagger to any available slot in the Exosuit cargo inventory.
+  Adds a Vy'keen Dagger to any available slot in the Exosuit cargo inventory, for game save slot 2.
 
 ---
 ### backup
@@ -117,21 +119,16 @@ nmssavetool 2.0.0.0
 Backs up the current game save for the specified game mode to a file in the provided directory.
 The directory must already exist. Normally, the program writes out the game save as a decrypted,
 formatted JSON file, that can be edited, or provided as input to the encrypt or restore commands.
-If desired, the entire game-save directory can also be backed up, as a zip file, by providing the 
---full-backup option.
 
 ```
 >nmssavetool.exe help backup
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -b, --backup-dir    Required. If provided, will write the selected game-save to a decrypted JSON file in the
                       specified directory.
 
-  --full-backup       If provided (along with -b/--backup-dir), will archive the full game-save directory in
-                      addition to the decrypted JSON game-save file.
-
-  -g, --game-mode     Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot     Required. Use saves for which game slot (1-5)
 
   --save-dir          Path to game save folder (optional - determined automatically if not provided)
 
@@ -143,17 +140,47 @@ nmssavetool 2.0.0.0
 ```
 #### Examples:
 ```
-  > nmssavetool backup -g permadeath -b C:\nms_backups
+  > nmssavetool backup -g 1 -b C:\nms_backups
 ```
-  Backs up the latest permadeath mode game save to `C:\nms_backups`. The back-up consists of the decrypted, JSON, 
+  Backs up the latest slot 1 game save to `C:\nms_backups`. The back-up consists of the decrypted, JSON, 
   save file.
 
 ```
-  > nmssavetool backup -g survival -b C:\nms_backups --full-backup
+  > nmssavetool backup -g 3 -b C:\nms_backups --full-backup
 ```
 
-  Backs up the latest survival mode game save to `C:\nms_backups`. The back-up consists of the decrypted, JSON, 
+  Backs up the latest slot 3 game save to `C:\nms_backups`. The back-up consists of the decrypted, JSON, 
   save file plus a zip file containing the full game-save folder.
+
+---
+### backupall
+
+Backups up all game save slots to a zip file with the specified name or in the specified directory. 
+If an existing directory name is supplied for the -b/--backup-to option, the zip file will be given
+a descriptive name containing the most recent game save date and time. Otherwise, the supplied value
+is assumed to be the filename for the created archive.
+
+```
+  > nmssavetool.exe help backupall
+
+nmssavetool
+
+  -b, --backup-to    Required. Specifies the directory or file to which the backup will be written. The backup 
+                     will be saved as a zip archive.
+
+  --save-dir         Path to game save folder (optional - determined automatically if not provided)
+
+  -v, --verbose      Displays additional information during execution.
+
+  --help             Display this help screen.
+
+  --version          Display version information.
+```
+#### Examples:
+```
+  > nmssavetool backupall -b C:\nms_backups\all_saves.zip
+```
+  Backs up all game saves to `C:\nms_backups\all_saves.zip`.
 
 ---
 ### decrypt
@@ -165,12 +192,12 @@ by this program, and then provided as input to the encrypt command.
 ```
 >nmssavetool.exe help decrypt
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -f, --output-file    Required. Specifies the file to which the decrypted, formatted game save will be
                        written.
 
-  -g, --game-mode      Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot      Required. Use saves for which game slot (1-5)
 
   --save-dir           Path to game save folder (optional - determined automatically if not provided)
 
@@ -182,9 +209,9 @@ nmssavetool 2.0.0.0
 ```
 #### Examples:
 ```
-  > nmssavetool decrypt -g normal -f C:\my_save_game.json
+  > nmssavetool decrypt -g 1 -f C:\my_save_game.json
 ```
-  Decrypts latest normal mode game save and writes it to the file, `C:\my_save_game.json`
+  Decrypts latest slot 1 game save and writes it to the file, `C:\my_save_game.json`
 
 ---
 ### delinv
@@ -193,7 +220,7 @@ Deletes an item (product, substance, or technology) from an inventory.
 ```
 >nmssavetool.exe help delinv
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -s, --position           Required. Specifies the position, as row,col, of the inventory item which will be
                            deleted. Valid row and column value start at 1.
@@ -208,7 +235,7 @@ nmssavetool 2.0.0.0
   --full-backup            If provided (along with -b/--backup-dir), will archive the full game-save directory
                            in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode          Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot          Required. Use saves for which game slot (1-5)
 
   --save-dir               Path to game save folder (optional - determined automatically if not provided)
 
@@ -221,10 +248,10 @@ nmssavetool 2.0.0.0
 *Use with caution!*
 #### Examples:
 ```
-  > nmssavetool delinv -g normal -s 3,4 -c ship_general -b D:\nms_backups
+  > nmssavetool delinv -g 1 -s 3,4 -c ship_general -b D:\nms_backups
 ```
   Deletes the inventory item at row 3, column 4 in the ship general inventory. Before updating the game
-  save file, the existing game save is backed up to a file in D:\nms_backups.
+  save file, the existing game save is backed up to a file in D:\nms_backups. The slot 1 game save is used.
 
 ---
 ### encrypt
@@ -235,7 +262,7 @@ specified game mode.
 ```
 >nmssavetool help encrypt
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -f, --input-file    Required. Specifies the JSON input file which will be encrypted and written to the latest
                       game save slot.
@@ -246,7 +273,7 @@ nmssavetool 2.0.0.0
   --full-backup       If provided (along with -b/--backup-dir), will archive the full game-save directory in
                       addition to the decrypted JSON game-save file.
 
-  -g, --game-mode     Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot     Required. Use saves for which game slot (1-5)
 
   --save-dir          Path to game save folder (optional - determined automatically if not provided)
 
@@ -258,27 +285,28 @@ nmssavetool 2.0.0.0
 ```
 #### Examples:
 ```
-  > nmssavetool encrypt -g normal C:\my_save_game.json
+  > nmssavetool encrypt -g 1 C:\my_save_game.json
 ```
-  Encrypts the file, `C:\my_save_game.json` and writes it to the latest save game slot for game mode 'normal'.
+  Encrypts the file, `C:\my_save_game.json` and writes it to game slot 1.
 
 ```
-  > nmssavetool encrypt -g normal C:\my_save_game.json -b D:\nms_backups
+  > nmssavetool encrypt -g 2 C:\my_save_game.json -b D:\nms_backups
 ```
-  Encrypts the file, `C:\my_save_game.json` and writes it to the latest save game slot for game mode 'normal'.
-  Before overwriting the current save game, backd up the save game file to the directory D:\nms_backups.
+  Encrypts the file, `C:\my_save_game.json` and writes it to game slot 2.
+  Before overwriting the existing game save it is backed up to the directory D:\nms_backups.
 
 ---
 ### info
 
-Outputs information about the latest game save for the specified game mode. Information includes various player 
+Outputs information about the latest game save for the specified game slot. Information includes various player 
 stats, the player position, and (optionally) inventory contents. When outputting inventory contents, by default
-the contents of all non-empty inventory slots are displayed. To see the empty slots as well, or to restrict furhter restrict what inventory types are displayed, use the -t/--types option.
+the contents of all non-empty inventory slots are displayed. To see the empty slots as well, or to restrict 
+further restrict what inventory types are displayed, use the -t/--types option.
 
 ```
 >nmssavetool help info
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   --no-basic                (Default: false) Omits display of basic game-save information such as player stats
                             and position.
@@ -290,7 +318,7 @@ nmssavetool 2.0.0.0
   -t, --types               (Default: all_but_empty) Which inventory types to include
                             (all,all_but_empty,product,substance,tech,non_tech,empty).
 
-  -g, --game-mode           Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot           Required. Use saves for which game slot (1-5)
 
   --save-dir                Path to game save folder (optional - determined automatically if not provided)
 
@@ -302,26 +330,26 @@ nmssavetool 2.0.0.0
 ```
 #### Examples:
 ```
-  > nmssavetool info -g normal
+  > nmssavetool info -g 1
 ```
-  Displays player stats and position for the latest normal mode game save.
+  Displays player stats and position for the slot 1 game save.
 
 ```
-  > nmssavetool info -g normal -i -c ship_general -t tech
+  > nmssavetool info -g 2 -i -c ship_general -t tech
 ```
-  Displays a list of technology items in the ship_general inventory of the latest normal-mode game save. 
+  Displays a list of technology items in the ship_general inventory of the slot 1 game save. 
   The basic player stats are also displayed.
 
 ```
-  > nmssavetool info -g survival -i -c ship -t tech --no-basic
+  > nmssavetool info -g 3 -i -c ship -t tech --no-basic
 ```
-  Displays a list of technology in all ship inventories of the latest survival-mode game save. The 
+  Displays a list of technology in all ship inventories of the slot 3 game save. The 
   display of basic player stats is omitted.
 
 ```
-  > nmssavetool.exe info -g normal -i -c exosuit_cargo -t all
+  > nmssavetool.exe info -g 1 -i -c exosuit_cargo -t all
 ```
-Shows the contents of the Exosuit Cargo inventory, including empty slots.
+Shows the contents of the Exosuit Cargo inventory, including empty slots, of the slot 1 game save.
 
 ---
 ### maxslots
@@ -334,7 +362,7 @@ but it is possible that Hello Games may change this in the future.
 ```
 >nmssavetool help maxslots
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -c, --inventory-groups    (Default: all) The inventory groups whose slots will be maximized
 
@@ -344,7 +372,7 @@ nmssavetool 2.0.0.0
   --full-backup             If provided (along with -b/--backup-dir), will archive the full game-save directory
                             in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode           Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot           Required. Use saves for which game slot (1-5)
 
   --save-dir                Path to game save folder (optional - determined automatically if not provided)
 
@@ -356,9 +384,9 @@ nmssavetool 2.0.0.0
 ```
 #### Examples:
 ```
-  > nmssavetool -c ship_general -g normal
+  > nmssavetool -c ship_general -g 1
 ```
-  Maximizes the number of slots for the ship_general inventory (instant 48-slot ship).
+  Maximizes the number of slots for the ship_general inventory (instant 48-slot ship) for game slot 1.
 
 ---
 ### moveinv
@@ -370,7 +398,7 @@ source slot will be left valid, but empty. To swap the contents of inventory slo
 ```
 >nmssavetool help moveinv
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -p, --position           Required. Specifies the from- and to-position as, "from_row,from_col:to_row,to_col",
                            of the item which will be moved. Valid row and column values start at '1'
@@ -385,7 +413,7 @@ nmssavetool 2.0.0.0
   --full-backup            If provided (along with -b/--backup-dir), will archive the full game-save directory
                            in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode          Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot          Required. Use saves for which game slot (1-5)
 
   --save-dir               Path to game save folder (optional - determined automatically if not provided)
 
@@ -398,7 +426,7 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-  > nmssavetool.exe moveinv -g normal -c exosuit_cargo -p 6,4:6,5
+  > nmssavetool.exe moveinv -g 1 -c exosuit_cargo -p 6,4:6,5
 ```
 Moves the contents of the Exosuit Cargo inventory slot at row 6, column 4 to row 6, column 5. Anything in
 the destination is overwritten (use "info -i -c exosuit_cargo -t all" to check contents before moving, or
@@ -417,9 +445,9 @@ This command will "recharge" these items back to their full capacity.
 ```
   > nmssavetool help recharge 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
-  -c, --inventory-groups    (Default: exosuit ship freighter vehicle container) What inventories to recharge.
+  -c, --inventory-groups    (Default: exosuit ship multitool freighter vehicle) Which inventories to recharge.
 
   -b, --backup-dir          If provided, will write the selected game-save to a decrypted JSON file in the
                             specified directory.
@@ -427,7 +455,7 @@ nmssavetool 2.0.0.0
   --full-backup             If provided (along with -b/--backup-dir), will archive the full game-save directory
                             in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode           Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot           Required. Use saves for which game slot (1-5)
 
   --save-dir                Path to game save folder (optional - determined automatically if not provided)
 
@@ -440,9 +468,9 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-  > nmssavetool recharge -g normal -c ship+exosuit
+  > nmssavetool recharge -g 1 -c ship+exosuit
 ```
-Recharges exosuit and ship technologies for the latest normal-mode game save.
+Recharges technologies in default inventories for game save slot 1.
 
 ---
 ### refill
@@ -453,9 +481,9 @@ This command has no effect on technology items.
 ```
   > nmssavetool help refill 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
-  -c, --inventory-groups    (Default: exosuit ship freighter vehicle container) What inventories to refill.
+  -c, --inventory-groups    (Default: exosuit ship freighter vehicle container) Which inventories to refill.
 
   -b, --backup-dir          If provided, will write the selected game-save to a decrypted JSON file in the
                             specified directory.
@@ -463,7 +491,7 @@ nmssavetool 2.0.0.0
   --full-backup             If provided (along with -b/--backup-dir), will archive the full game-save directory
                             in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode           Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot           Required. Use saves for which game slot (1-5)
 
   --save-dir                Path to game save folder (optional - determined automatically if not provided)
 
@@ -476,9 +504,9 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-  > nmssavetool refill -g normal -c container
+  > nmssavetool refill -g 1 -c container
 ```
-Maximizes inventory quantities in all base containers for the latest normal-mode game save.
+Maximizes inventory quantities in all base containers for the game save slot 1.
 
 ---
 ### refurbish
@@ -487,9 +515,9 @@ Refurbish is equivalent to running the recharge, refill, and repair commands ind
 ```
   > nmssavetool help refurbish 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
-  -c, --inventory-groups    (Default: exosuit ship multitool freighter vehicle container) What inventories to
+  -c, --inventory-groups    (Default: exosuit ship multitool freighter vehicle container) Which inventories to
                             refurbish.
 
   -b, --backup-dir          If provided, will write the selected game-save to a decrypted JSON file in the
@@ -498,7 +526,7 @@ nmssavetool 2.0.0.0
   --full-backup             If provided (along with -b/--backup-dir), will archive the full game-save directory
                             in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode           Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot           Required. Use saves for which game slot (1-5)
 
   --save-dir                Path to game save folder (optional - determined automatically if not provided)
 
@@ -511,9 +539,9 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-  > nmssavetool refurbish -g normal -c ship
+  > nmssavetool refurbish -g 1 -c ship
 ```
-Refurbishes all ship inventories for the latest normal-mode game save. 
+Refurbishes all ship inventories for the game save slot 1.
 
 ---
 ### relocate
@@ -538,7 +566,7 @@ flags.
 ```
   > nmssavetool help relocate 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -c, --galactic-coordinates    Set the player position using the galactic coordinates displayed by signal
                                 scanners.
@@ -567,7 +595,7 @@ nmssavetool 2.0.0.0
   --full-backup                 If provided (along with -b/--backup-dir), will archive the full game-save
                                 directory in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode               Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot               Required. Use saves for which game slot (1-5)
 
   --save-dir                    Path to game save folder (optional - determined automatically if not provided)
 
@@ -580,21 +608,18 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-  > nmssavetool recolocate -g normal -c 0C93:0080:02B1:0202
+  > nmssavetool recolocate -g 1 -c 0C93:0080:02B1:0202
 ```
 Relocate the player, within the current galaxy, to the position at the signal-scanner coordinates,
 0C93:0080:02B1:0202. The player will be placed within his ship and reset on or near the first planet 
 (planet 0).
 
 ```
-  > nmssavetool recolocate -g normal -p 020201AB2494 --no-reset-planet --no-reset-to-ship
+  > nmssavetool recolocate -g 1 -p 020201AB2494 --no-reset-planet --no-reset-to-ship
 ```
 Relocate the player, within the current galaxy, to the position at portal cooredinates, 020201AB2494.
 The player planet and last known player state will be left unmodified (use with caution).
 
-```
-  > nmssavetool relocate --voxel-coordinates 
-```
 ---
 ### repair
 
@@ -603,7 +628,7 @@ Repairs damaged technology items.
 ```
   > nmssavetool help repair 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -c, --inventory-groups    (Default: exosuit multitool ship) What inventories to repair.
 
@@ -613,7 +638,7 @@ nmssavetool 2.0.0.0
   --full-backup             If provided (along with -b/--backup-dir), will archive the full game-save directory
                             in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode           Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot           Required. Use saves for which game slot (1-5)
 
   --save-dir                Path to game save folder (optional - determined automatically if not provided)
 
@@ -626,12 +651,12 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-  > nmssavetool repair -g normal -c ship
+  > nmssavetool repair -g 1 -c ship
 ```
 Repair all damaged technology items in the ship, for example to repair damage created by a warp through a black hole.
 
 ```
-  > nmssavetool repair -g normal -c exosuit
+  > nmssavetool repair -g 1 -c exosuit
 ```
 Repair all damaged technology items in the exosuit, for example to repair damage created after passing through
 the galatic core.
@@ -644,12 +669,12 @@ Restore a previously decrypted / backed-up game save.
 ```
   > nmssavetool help restore 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -f, --restore-from    Required. Specifies the full path to a back-up file to restore from. The back-up file
                         should be a decrypted JSON file created by this program.
 
-  -g, --game-mode       Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot       Required. Use saves for which game slot (1-5)
 
   --save-dir            Path to game save folder (optional - determined automatically if not provided)
 
@@ -662,10 +687,10 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-nmssavetool restore -g normal -f C:\nms_backups\nmssavetool-backup-normal-20170903-202134.json
+nmssavetool restore -g 1 -f C:\nms_backups\nmssavetool-backup-normal-20170903-202134.json
 ```
 
-Restore a normal-mode game save backup created on 2017-09-03, at 8:31:34 PM.
+Restore slot 1 game save backup created on 2017-09-03, at 8:31:34 PM.
 
 ---
 ### seed
@@ -676,7 +701,7 @@ You may set the seed explicitly, or have the program generate another random val
 ```
   > nmssavetool help seed 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -c, --apply-to               Specifies which object whose RNG seed will be changed: ship, multitool, or
                                freighter
@@ -691,7 +716,7 @@ nmssavetool 2.0.0.0
   --full-backup                If provided (along with -b/--backup-dir), will archive the full game-save
                                directory in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode              Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot              Required. Use saves for which game slot (1-5)
 
   --save-dir                   Path to game save folder (optional - determined automatically if not provided)
 
@@ -704,13 +729,13 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-  > nmssavetool seed -g normal -c ship -r
+  > nmssavetool seed -g 1 -c ship -r
 ```
 
 Generate a new seed for the ship, changing its appearance.
 
 ```
-  > nmssavetool seed -g normal -c freighter -s 0x12AC41FE98157A9C
+  > nmssavetool seed -g 1 -c freighter -s 0x12AC41FE98157A9C
 ```
 
 Set the RNG seed for the freighter to 0x12AC41FE98157A9C. 
@@ -723,7 +748,7 @@ Swap the contents of two inventory slots.
 ```
   > nmssavetool help swapinv 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -p, --position           Required. Specifies the positions as, "row1,col1:row2,col2", of the items which will
                            be swapped. Valid row and column values start at '1'
@@ -738,7 +763,7 @@ nmssavetool 2.0.0.0
   --full-backup            If provided (along with -b/--backup-dir), will archive the full game-save directory
                            in addition to the decrypted JSON game-save file.
 
-  -g, --game-mode          Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot          Required. Use saves for which game slot (1-5)
 
   --save-dir               Path to game save folder (optional - determined automatically if not provided)
 
@@ -751,7 +776,7 @@ nmssavetool 2.0.0.0
 
 #### Examples:
 ```
-  > nmssavetool swapinv -g normal -c exosuit_general -p 1:2,3:4
+  > nmssavetool swapinv -g 1 -c exosuit_general -p 1:2,3:4
 ```
 Swap the contents of exosuit general inventory items at row 1, column 2, and row 3, column 4.
 
@@ -763,7 +788,7 @@ Change the player's amount of units (in-game currency).
 ```
   > nmssavetool help units 
 
-nmssavetool 2.0.0.0
+nmssavetool
 
   -s, --set-units     Set the player Units.
 
@@ -775,7 +800,7 @@ nmssavetool 2.0.0.0
   --full-backup       If provided (along with -b/--backup-dir), will archive the full game-save directory in
                       addition to the decrypted JSON game-save file.
 
-  -g, --game-mode     Required. Use saves for which game mode (normal|survival|creative|permadeath)
+  -g, --game-slot     Required. Use saves for which game slot (1-5)
 
   --save-dir          Path to game save folder (optional - determined automatically if not provided)
 
@@ -787,19 +812,51 @@ nmssavetool 2.0.0.0
 ```
 #### Examples:
 ```
-  > nmssavetool units -g normal -a 1000000
+  > nmssavetool units -g 1 -a 1000000
 ```
 Add one million units to the player's total.
 
 ```
-  > nmssavetool units -g normal -s 2000000000
+  > nmssavetool units -g 1 -s 2000000000
 ```
 Set player units to 2 billion.
 
 ---
 ## Changelog
 
-### 2017-09-25 2.0.1.0-alpha
+### 2017-10-16 2.0.1.6 (beta-4)
+* Fixed bug in inventory selection for refill, recharge, and refurbish commands. Program also 
+  now detects if there were any changes to the selected inventories or not, and if not skips
+  update of game save.
+* Fixed incorrect IsRechargeable attribute for HyperDrive in InventoryItemTypes.csv. This was
+  preventing the program from recharging the hyperdrive.
+* Fixed typo in "Vortex Cube" in inventory item CSV file, InventoryItemTypes.csv (H/T Github user jgreely)
+
+### 2017-10-15 2.0.1.5 (beta-3)
+* Fixed bug preventing correct location of save directory for GoG
+
+### 2017-10-15 2.0.1.4 (beta-2)
+* Fixed bug in seed command that would cause invalid display of seed
+* Added display of seeds to Info command
+* Added display of current value when no change is made, to "units", "seed", and "relocate" commands.
+
+### 2017-10-13 2.0.1.3 (beta-1)
+* Updated game save file naming to match NMS 1.38 release
+* Updated game save archive select logic to always pick the latest save file and to create
+  one on save if less than two exist.
+* Added display of game mode to Info command
+
+### 2017-10-08 2.0.1.2 (alpha-2)
+
+* Split out backup of all saves into a separate command, "backupall".
+* Full backup now only backs up the game save archive and metadata files - no cache directory.
+* Add verbose logging to GameSaveManager
+
+### 2017-09-25 2.0.1.1 (alpha-1)
+
+* Fix missing implementation of "seed" command.
+
+### 2017-09-25 2.0.1.0 (alpha)
 
 * Initial changes to support NMS 1.38 new save slot scheme.
 

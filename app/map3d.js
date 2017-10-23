@@ -1,12 +1,13 @@
 import React from 'react'
 import autoBind from 'react-autobind'
 import * as THREE from 'three';
+import {defer, delay, isEqual, cloneDeep, uniq, uniqBy, concat} from 'lodash';
 import state from './state';
-import each from './each';
 import path from 'path'
 import TWEEN from 'tween.js'
 import v from 'vquery';
 import RNG from './RNG';
+import {each, find, findIndex, map, filter} from './lang';
 
 function distanceVector (v1, v2) {
   var dx = v1.x - v2.x
@@ -163,17 +164,14 @@ class Map3D extends React.Component {
     each(props.storedLocations, (location)=>{
       storedLocations.push({data: location});
     });
-    let locations = _.chain(props.remoteLocations.results)
-      .concat(storedLocations)
-      .concat(props.searchCache)
-      .cloneDeep()
-      .value();
+
+    let locations = cloneDeep(props.remoteLocations.results.concat(storedLocations).concat(props.searchCache));
 
     let systems = _.uniqBy(locations, (location)=>{
       return location.data.translatedId;
     });
     each(systems, (location)=>{
-      let planets = _.filter(locations, (planet)=>{
+      let planets = filter(locations, (planet)=>{
         return planet.data.translatedId === location.data.translatedId;
       });
       let planetData = {};
@@ -182,10 +180,7 @@ class Map3D extends React.Component {
           planetData[planet.data.username] = [];
         }
         let label = planet.data.name ? planet.data.name : planet.data.id;
-        planetData[planet.data.username] = _.chain(planetData[planet.data.username])
-          .concat([label])
-          .uniq()
-          .value();
+        planetData[planet.data.username] = uniq(concat(planetData[planet.data.username], [label]));
       });
       location.data.planetData = planetData;
     });
@@ -240,12 +235,12 @@ class Map3D extends React.Component {
 
     if (window.travelToCurrent) {
       window.travelToCurrent = null;
-      let currentLocation = _.find(this.props.storedLocations, {id: this.props.currentLocation});
+      let currentLocation = find(this.props.storedLocations, location => location.id === this.props.currentLocation);
       if (currentLocation) {
         if (this.props.selectedGalaxy !== currentLocation.galaxy) {
           state.set({selectedGalaxy: currentLocation.galaxy});
         }
-        let refMesh = _.findIndex(this.scene.children, (child)=>{
+        let refMesh = findIndex(this.scene.children, (child)=>{
           return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === currentLocation.translatedId;
         });
         if (refMesh > -1) {
@@ -255,7 +250,7 @@ class Map3D extends React.Component {
     }
 
     if (this.travelTo) {
-      let refMesh = _.findIndex(this.scene.children, (child)=>{
+      let refMesh = findIndex(this.scene.children, (child)=>{
         return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === this.travelTo.data.translatedId;
       });
       this.travelTo = false;
@@ -341,7 +336,7 @@ class Map3D extends React.Component {
     var intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
     let removeHovered = ()=>{
-      let refInstance = _.findIndex(this.scene.children, {uuid: this.hovered});
+      let refInstance = findIndex(this.scene.children, child => child.uuid === this.hovered);
       if (refInstance > -1 && this.scene.children[refInstance]) {
         let el = v(`#${this.hovered}`);
         if (el) {
@@ -393,7 +388,7 @@ class Map3D extends React.Component {
     });
     each(el.find('.planetLabel').ns, (label)=>{
       label.addEventListener('click', ()=>{
-        let refLocation = _.find(this.props.remoteLocations.results, (location)=>{
+        let refLocation = find(this.props.remoteLocations.results, (location)=>{
           return location.name === label.innerText || location.data.id === label.innerText;
         });
         if (refLocation) {
@@ -412,7 +407,7 @@ class Map3D extends React.Component {
   handleMeshMount (c, location) {
     c.instance.userData = location;
 
-    let dupePositions = _.filter(c.scene.children, (child)=>{
+    let dupePositions = filter(c.scene.children, (child)=>{
       return child.position.equals(c.instance.position);
     });
 
@@ -460,10 +455,10 @@ class Map3D extends React.Component {
       }
     } else {
       if (!c.material) {
-        let refSelected = _.findIndex(this.props.storedLocations, (location)=>{
+        let refSelected = findIndex(this.props.storedLocations, (location)=>{
           return c.instance.userData.data.id === location.id;
         });
-        let refCurrent = _.findIndex(this.props.storedLocations, (location)=>{
+        let refCurrent = findIndex(this.props.storedLocations, (location)=>{
           return c.instance.userData.data.id === this.props.currentLocation;
         });
         if (refCurrent > -1) {
@@ -540,7 +535,7 @@ class Map3D extends React.Component {
             c.instance.rotation.x += 0.0002;
             c.instance.rotation.y += 0.0002;
           }}  />
-          {_.map(this.state.locations, (location) => {
+          {map(this.state.locations, (location) => {
             let position = [location.data.VoxelX * 4, location.data.VoxelY * 174, location.data.VoxelZ * 4]
             return (
               <Mesh

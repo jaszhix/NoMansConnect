@@ -1,3 +1,8 @@
+# 0.19.0
+
+  * Fixed a bug preventing NMC from reading the correct save file name because Hello Games changed the save file naming scheme after the last experimental build. I was busy travelling and didn't have a working Windows installation for a couple weeks, so I apologize for the delay.
+  * Added some optimizations.
+
 # 0.18.0
 
   * Updated location syncing and teleporting for NMS 1.38 with help from nmssavetool author Matthew Humphrey.

@@ -2,12 +2,12 @@ import state from './state';
 import React from 'react';
 import autoBind from 'react-autobind';
 import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
-import _ from 'lodash';
+import {isEqual, isArray, cloneDeep, uniqBy, orderBy, filter, defer} from 'lodash';
 import v from 'vquery';
-import each from './each';
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
 import {uuidV4, cleanUp} from './utils';
+import {each, map, findIndex} from './lang';
 
 const toolTipHeaderStyle = {
   padding: '3px 5px',
@@ -46,14 +46,14 @@ class TooltipChild extends React.Component {
           style={toolTipHeaderStyle}>
             {`${this.props.payload[0].payload.user}`}
           </div> : null}
-          {this.props.payload[0].payload.planetData ? _.map(this.props.payload[0].payload.planetData, (sector, i)=>{
+          {this.props.payload[0].payload.planetData ? map(this.props.payload[0].payload.planetData, (sector, i) => {
             return (
               <div
               key={i}
               className="ui segment"
               style={toolTipHeaderStyle}>
                 {sector.username}
-                {_.map(sector.entries, (id, z)=>{
+                {map(sector.entries, (id, z) => {
                   return (
                     <div
                     style={toolTipChildStyle}
@@ -64,7 +64,7 @@ class TooltipChild extends React.Component {
                 })}
               </div>
             );
-          }) : _.map(this.props.payload, (item, i)=>{
+          }) : map(this.props.payload, (item, i) => {
             return (
               <div
               key={i}
@@ -130,41 +130,41 @@ class ThreeDimScatterChart extends React.Component {
       || nextProps.storedLocations !== this.props.storedLocations
       || nextProps.remoteLocations !== this.props.remoteLocations) {
       this.handlePostMessage(nextProps);
-    } else if (!_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
+    } else if (!isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.handlePostMessageSelect(nextProps);
     }
   }
   shouldComponentUpdate(nextProps, nextState){
-    return !_.isEqual(this.state, nextState) || !_.isEqual(this.props, nextProps)
+    return !isEqual(this.state, nextState) || !isEqual(this.props, nextProps)
   }
   getLocationsByTranslatedId(locations){
-    if (_.isArray(locations)) {
+    if (isArray(locations)) {
       locations = {results: locations}
     }
-    let _locations = _.cloneDeep(locations);
-    let systems = _.uniqBy(_locations.results, (location)=>{
+    let _locations = cloneDeep(locations);
+    let systems = uniqBy(_locations.results, (location) => {
       location = location.data ? location : {data: location};
       return location.data.translatedX && location.data.translatedY && location.data.translatedZ;
     });
-    each(systems, (location, i)=>{
+    each(systems, (location, i) => {
       systems[i] = location.data ? location : {data: location};
       location = systems[i];
-      let planets = _.filter(_locations.results, (planet)=>{
+      let planets = filter(_locations.results, (planet) => {
         planet = planet.data ? planet : {data: planet};
         return (location.data.translatedX === planet.data.translatedX
           && location.data.translatedY === planet.data.translatedY
           && location.data.translatedZ === planet.data.translatedZ);
       });
       let planetData = [];
-      each(planets, (planet)=>{
+      each(planets, (planet) => {
         planet = planet.data ? planet : {data: planet};
         if (!planetData[planet.data.username]) {
           planetData[planet.data.username] = [];
         }
         let label = planet.data.name ? planet.data.name : planet.data.id;
-        let refPlanetData = _.findIndex(planetData, {username: planet.data.username});
+        let refPlanetData = findIndex(planetData, item => item.username === planet.data.username);
         if (refPlanetData > -1) {
-          let refEntry = _.findIndex(planetData[refPlanetData].entries, label);
+          let refEntry = planetData[refPlanetData].entries.indexOf(label);
           if (refEntry === -1) {
             planetData[refPlanetData].entries.push(label);
           }
@@ -229,13 +229,13 @@ class ThreeDimScatterChart extends React.Component {
     }));
   }
   handleMapWorker(){
-    window.mapWorker.onmessage = (e)=>{
-      let setState = (data)=>{
-        this.setState(data, ()=>{
+    window.mapWorker.onmessage = (e) => {
+      let setState = (data) => {
+        this.setState(data, () => {
           if (this.props.init) {
-            _.defer(()=>{
+            defer(() => {
               v('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
-              each(this.props.show, (type, key)=>{
+              each(this.props.show, (type, key) => {
                 v('.recharts-legend-item').each(function(el){
                   let _el = v(el);
                   if (_el.text()[0] === key) {
@@ -264,13 +264,13 @@ class ThreeDimScatterChart extends React.Component {
   handleSelect(symbol){
     let stateUpdate = {};
 
-    let findSelected = (locations)=>{
+    let findSelected = (locations) => {
       let sector;
       let hexSector;
       let results = [];
-      each(locations, (location)=>{
+      each(locations, (location) => {
         location = location.data ? location : {
-          data: _.cloneDeep(location),
+          data: cloneDeep(location),
           teleports: location.teleports ? location.teleports : 0,
           id: uuidV4(),
           image: location.image ? location.image : '',
@@ -298,8 +298,8 @@ class ThreeDimScatterChart extends React.Component {
           search: `Sector ${hexSector}`
         };
       }
-      state.set(stateUpdate, ()=>{
-        _.defer(()=>this.handlePostMessageSelect(this.props));
+      state.set(stateUpdate, () => {
+        defer(()=>this.handlePostMessageSelect(this.props));
       });
     };
 
@@ -310,7 +310,7 @@ class ThreeDimScatterChart extends React.Component {
     }
   }
   handleUpdateLegend(){
-    each(this.props.show, (bool, name)=>{
+    each(this.props.show, (bool, name) => {
       v(`.${name}`).css({
         opacity: bool ? '1' : '0.5'
       });
@@ -318,7 +318,7 @@ class ThreeDimScatterChart extends React.Component {
   }
   handleLegendClick(e){
     this.props.show[e.payload.name] = !this.props.show[e.payload.name];
-    state.set({show: this.props.show}, ()=>{
+    state.set({show: this.props.show}, () => {
       if (e.payload.name === 'Center') {
         this.handlePostMessageSize(this.props);
       } else if (e.payload.name.indexOf('Selected') > -1) {
@@ -374,11 +374,11 @@ class GalacticMap extends React.Component {
   componentWillReceiveProps(nextProps){
     if (nextProps.storedLocations !== this.props.storedLocations
       || nextProps.remoteLocations !== this.props.remoteLocations
-      || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
+      || !isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.buildGalaxyOptions(nextProps, false);
     } else if (this.props.map3d
       && nextProps.selectedGalaxy !== this.props.selectedGalaxy
-      && _.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
+      && isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
       this.travelToCenter();
     }
   }
@@ -391,21 +391,21 @@ class GalacticMap extends React.Component {
       || nextProps.height !== this.props.height
       || nextProps.remoteLocationsColumns !== this.props.remoteLocationsColumns
       || (nextProps.remoteLocations && this.props.remoteLocations && nextProps.remoteLocations.results !== this.props.remoteLocations.results)
-      || !_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)
+      || !isEqual(nextProps.selectedLocation, this.props.selectedLocation)
       || nextProps.currentLocation !== this.props.currentLocation
       || nextState.init !== this.state.init)
   }
   buildGalaxyOptions(p, init){
     let options = [];
     let currentGalaxy = 0;
-    each(p.storedLocations, (location)=>{
+    each(p.storedLocations, (location) => {
       if (location.id === p.currentLocation && location.galaxy) {
         currentGalaxy = location.galaxy;
       }
       options.push({id: location.galaxy});
     });
     if (p.remoteLocations && p.remoteLocations.results) {
-      each(p.remoteLocations.results, (location)=>{
+      each(p.remoteLocations.results, (location) => {
         if (location.data.galaxy) {
           options.push({id: location.data.galaxy});
         }
@@ -414,8 +414,8 @@ class GalacticMap extends React.Component {
     if (p.selectedLocation && p.selectedLocation.galaxy) {
       options.push({id: p.selectedLocation.galaxy});
     }
-    options = _.chain(options).uniqBy('id').orderBy('id', 'asc').value();
-    each(options, (option, i)=>{
+    options = orderBy(uniqBy(options, 'id'), 'id', 'asc');
+    each(options, (option, i) => {
       options[i].label = state.galaxies[option.id];
       options[i].onClick = (id)=>state.set({selectedGalaxy: id});
     });
@@ -478,7 +478,7 @@ class GalacticMap extends React.Component {
       leftOptions.push({
         id: 'travelTo',
         label: `Travel to Galactic Hub`,
-        onClick: ()=>{
+        onClick: () => {
           state.set({
             selectedGalaxy: 0,
             search: '0469:0081:0D6D:0211'
@@ -488,7 +488,7 @@ class GalacticMap extends React.Component {
       leftOptions.push({
         id: 'travelTo',
         label: `Travel to Pilgrim Star`,
-        onClick: ()=>{
+        onClick: () => {
           state.set({
             selectedGalaxy: 0,
             search: '064A:0082:01B9:009A'
@@ -498,7 +498,7 @@ class GalacticMap extends React.Component {
       leftOptions.push({
         id: 'travelTo',
         label: `Travel to Alliance of Galactic Travellers HQ`,
-        onClick: ()=>{
+        onClick: () => {
           state.set({
             selectedGalaxy: 0,
             search: '0B11:0081:02EB:01F2'

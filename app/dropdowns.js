@@ -6,9 +6,10 @@ import autoBind from 'react-autobind';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
-import _ from 'lodash';
+import {assignIn, clone, defer, pullAt, upperFirst} from 'lodash';
 
 import * as utils from './utils';
+import {findIndex, map} from './lang';
 
 const {dialog} = remote;
 
@@ -43,12 +44,12 @@ export class BaseDropdownMenu extends React.Component {
     this.baseItemStyle = {
       height: '36px'
     };
-    this.menuContainerStyle = _.assignIn(_.clone(menuContainerStyle), {
+    this.menuContainerStyle = assignIn(clone(menuContainerStyle), {
       width: '260px'
     });
   }
   componentDidMount(){
-    _.defer(ReactTooltip.rebuild);
+    defer(ReactTooltip.rebuild);
   }
   handleClickOutside(){
     if (this.props.baseOpen) {
@@ -61,9 +62,9 @@ export class BaseDropdownMenu extends React.Component {
   }
   handleDelete(e, base){
     e.stopPropagation();
-    let refBase = _.findIndex(this.props.storedBases, {Name: base.Name});
+    let refBase = findIndex(this.props.storedBases, _base => _base.Name === base.Name);
     if (refBase !== -1) {
-      _.pullAt(this.props.storedBases, refBase);
+      pullAt(this.props.storedBases, refBase);
       state.set({storedBases: this.props.storedBases});
     }
   }
@@ -104,7 +105,7 @@ export class BaseDropdownMenu extends React.Component {
             Save Base
           </div>
           {p.storedBases && p.storedBases.length > 0 ? <div className="divider" /> : null}
-          {p.storedBases && p.storedBases.length > 0 ? _.map(p.storedBases, (base, i)=>{
+          {p.storedBases && p.storedBases.length > 0 ? map(p.storedBases, (base, i)=>{
             let baseName = base.Name;
             if (baseName.indexOf(' Base') !== -1) {
               baseName = baseName.split(' Base')[0];
@@ -147,7 +148,7 @@ export class SaveEditorDropdownMenu extends React.Component {
     autoBind(this);
   }
   componentDidMount(){
-    _.defer(ReactTooltip.rebuild);
+    defer(ReactTooltip.rebuild);
   }
   handleClickOutside(){
     if (this.props.editorOpen) {
@@ -378,7 +379,7 @@ You should have received a copy of the GNU General Public License along with thi
         <div
         style={menuContainerStyle}
         className={`menu transition ${p.s.settingsOpen ? 'visible' : 'hidden'}`}>
-          {!p.s.ps4User ? _.map(modes, (mode, i)=>{
+          {!p.s.ps4User ? map(modes, (mode, i)=>{
             return (
               <div
               key={i}
@@ -386,7 +387,7 @@ You should have received a copy of the GNU General Public License along with thi
               onClick={()=>this.handleModeSwitch(mode)}
               data-place="left"
               data-tip={utils.tip('Controls which save file is loaded and saved.')}>
-                {_.upperFirst(mode)}
+                {upperFirst(mode)}
               </div>
             );
           }) : null}
@@ -539,7 +540,7 @@ export class BasicDropdown extends React.Component {
 
   }
   componentDidMount(){
-    _.defer(ReactTooltip.rebuild);
+    defer(ReactTooltip.rebuild);
   }
   componentWillUnmount(){
     this.willUnmount = true;
@@ -578,7 +579,7 @@ export class BasicDropdown extends React.Component {
           overflowY: 'auto'
         }}
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
-          {this.props.options.length > 0 ? _.map(this.props.options, (option, i)=>{
+          {this.props.options.length > 0 ? map(this.props.options, (option, i)=>{
             let tooltip = '';
             if (option.id === 'teleport') {
               tooltip = 'Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.'

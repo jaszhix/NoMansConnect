@@ -1,9 +1,9 @@
 import state from './state';
 import React from 'react';
 import autoBind from 'react-autobind';
-import _ from 'lodash';
+import {truncate, delay, defer} from 'lodash';
+import {each, map} from './lang';
 import {tip, whichToShow, cleanUp} from './utils';
-import each from './each';
 import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
 
@@ -39,7 +39,7 @@ class StoredLocationItem extends React.Component {
     let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.id}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
     let name = usesName ? this.props.location.name : idFormat;
     let isMarquee = (this.state.hover || this.props.isSelected) && name.length >= 25;
-    name = isMarquee ? name : _.truncate(name, {length: 23});
+    name = isMarquee ? name : truncate(name, {length: 23});
     let isSpaceStation = this.props.location.id[this.props.location.id.length - 1] === '0';
     let iconShown = this.props.location.upvote || this.props.isCurrent;
     return (
@@ -110,7 +110,7 @@ class StoredLocations extends React.Component {
         this.storedLocations.addEventListener('scroll', this.handleScroll);
         this.setViewableRange(this.storedLocations);
       } else {
-        _.delay(()=>checkStored(), 500);
+        delay(()=>checkStored(), 500);
       }
     };
     checkStored();
@@ -151,7 +151,7 @@ class StoredLocations extends React.Component {
   handleSelect(location, i){
     let hasSelectedId = this.props.selectedLocationId;
     this.props.onSelect(location);
-    _.defer(()=>{
+    defer(()=>{
       if (location.id === this.props.selectedLocationId && !hasSelectedId) {
         this.storedLocations.scrollTop = i * 29;
       }
@@ -203,7 +203,7 @@ class StoredLocations extends React.Component {
             WebkitTransition: 'max-height 0.1s',
             overflowY: 'auto',
             overflowX: 'hidden'}}>
-            {_.map(this.props.storedLocations, (location, i)=>{
+            {map(this.props.storedLocations, (location, i)=>{
               let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
               if (isVisible) {
                 return (

@@ -1,5 +1,5 @@
-const _ = require('lodash');
-const each = require('./each');
+const {orderBy} = require('lodash');
+const {each, findIndex, tryFn} = require('./lang');
 
 onmessage = function(e) {
   let stateUpdate = {};
@@ -11,7 +11,7 @@ onmessage = function(e) {
       e.data.res.data.results[key].image = '';
     }
 
-    let refFav = _.findIndex(e.data.state.favorites, (fav)=>{
+    let refFav = findIndex(e.data.state.favorites, (fav)=>{
       return fav === remoteLocation.data.id;
     });
     let upvote = refFav !== -1;
@@ -22,20 +22,17 @@ onmessage = function(e) {
     e.data.res.data.results[key].data.score = e.data.res.data.results[key].score;
     e.data.res.data.results[key].data.upvote = upvote;
 
-    try {
-      e.data.res.data.results[key].data.image = e.data.res.data.results[key].image
-    } catch (e) {
-      console.error(e, e.stack)
-    }
+    tryFn(() => e.data.res.data.results[key].data.image = e.data.res.data.results[key].image)
+
     if (shouldMerge) {
-      let refNewLocation = _.findIndex(e.data.state.remoteLocations.results, {id: remoteLocation.id});
+      let refNewLocation = findIndex(e.data.state.remoteLocations.results, location => location.id === remoteLocation.id);
       if (refNewLocation !== -1) {
         e.data.state.remoteLocations.results[refNewLocation] = e.data.res.data.results[key];
       } else {
         e.data.state.remoteLocations.results.push(remoteLocation);
       }
     }
-    let refStoredLocation = _.findIndex(e.data.state.storedLocations, {id: remoteLocation.data.id});
+    let refStoredLocation = findIndex(e.data.state.storedLocations, location => location.id === remoteLocation.data.id);
     if (refStoredLocation !== -1) {
       e.data.state.storedLocations[refStoredLocation].image = e.data.res.data.results[key].image;
       e.data.state.storedLocations[refStoredLocation].username = e.data.res.data.results[key].username;
@@ -56,7 +53,7 @@ onmessage = function(e) {
     stateUpdate.searchCache = e.data.res.data;
     delete stateUpdate.remoteLocations;
   } else {
-    stateUpdate.remoteLocations.results = _.orderBy(stateUpdate.remoteLocations.results, order, 'desc');
+    stateUpdate.remoteLocations.results = orderBy(stateUpdate.remoteLocations.results, order, 'desc');
     if (e.data.res.data.count >= 60) {
       stateUpdate.remoteLocations.count = e.data.res.data.count;
       stateUpdate.remoteLocations.next = e.data.res.data.next;

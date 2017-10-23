@@ -1,4 +1,4 @@
-const axios = require('axios')
+const axios = require('axios/dist/axios')
 
 const ajax = axios.create({
   //baseURL: 'http://z.npff.co:8000/api/',
