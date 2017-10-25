@@ -28,7 +28,7 @@ const getLocationsByTranslatedId = (locations)=>{
         planetData[planet.data.username] = [];
       }
       let label = planet.data.name ? planet.data.name : planet.data.id;
-      let refPlanetData = findIndex(planetData, item => item.username === planet.data.username);
+      let refPlanetData = findIndex(planetData, item => item && item.username === planet.data.username);
       if (refPlanetData > -1) {
         let refEntry = planetData[refPlanetData].entries.indexOf(label);
         if (refEntry === -1) {
