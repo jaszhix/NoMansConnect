@@ -2,14 +2,13 @@ import {remote} from 'electron';
 import log from './log';
 import state from './state';
 import React from 'react';
-import autoBind from 'react-autobind';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
-import {assignIn, clone, defer, pullAt, upperFirst} from 'lodash';
+import {assignIn, clone, defer, pullAt, upperFirst, last} from 'lodash';
 
 import * as utils from './utils';
-import {findIndex, map} from './lang';
+import {findIndex, map, tryFn} from './lang';
 
 const {dialog} = remote;
 
@@ -31,9 +30,9 @@ export class BaseDropdownMenu extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      hover: -1
+      hover: -1,
+      open: false
     };
-    autoBind(this);
     this.trashIconContainerStyle = {
       position: 'relative',
       left: '92%',
@@ -48,19 +47,19 @@ export class BaseDropdownMenu extends React.Component {
       width: '260px'
     });
   }
-  componentDidMount(){
+  componentDidMount() {
     defer(ReactTooltip.rebuild);
   }
-  handleClickOutside(){
-    if (this.props.baseOpen) {
-      state.set({baseOpen: false});
+  handleClickOutside = () => {
+    if (this.state.open) {
+      this.setState({open: false});
     }
   }
-  handleSave(e){
+  handleSave = (e) => {
     e.stopPropagation();
     this.props.onSaveBase();
   }
-  handleDelete(e, base){
+  handleDelete = (e, base) => {
     e.stopPropagation();
     let refBase = findIndex(this.props.storedBases, _base => _base.Name === base.Name);
     if (refBase !== -1) {
@@ -68,26 +67,22 @@ export class BaseDropdownMenu extends React.Component {
       state.set({storedBases: this.props.storedBases});
     }
   }
-  handleToggleOpen(){
+  handleToggleOpen = () => {
     ReactTooltip.hide();
-    state.set({
-      baseOpen: !this.props.baseOpen,
-      editorOpen: false,
-      settingsOpen: false
-    })
+    this.setState({open: !this.state.open});
   }
-  handleOnMouseEnter(e){
+  handleOnMouseEnter = (e) => {
     this.setState({hover: parseInt(e.target.id)});
   }
-  handleOnMouseLeave(){
+  handleOnMouseLeave = () => {
     this.setState({hover: -1});
   }
-  render(){
+  render() {
     var p = this.props;
     return (
       <div
       style={noDragStyle}
-      className={`ui dropdown icon item${p.baseOpen ? ' visible' : ''}`}
+      className={`ui dropdown icon item${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
       data-tip={utils.tip('Save/Restore Bases')}>
@@ -96,7 +91,7 @@ export class BaseDropdownMenu extends React.Component {
         src={p.baseIcon} />
         <div
         style={this.menuContainerStyle}
-        className={`menu transition ${p.baseOpen ? 'visible' : 'hidden'}`}>
+        className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
           <div
           className="item"
           onClick={this.handleSave}
@@ -145,17 +140,19 @@ BaseDropdownMenu = onClickOutside(BaseDropdownMenu);
 export class SaveEditorDropdownMenu extends React.Component {
   constructor(props) {
     super(props);
-    autoBind(this);
+    this.state = {
+      open: false
+    };
   }
-  componentDidMount(){
+  componentDidMount() {
     defer(ReactTooltip.rebuild);
   }
-  handleClickOutside(){
-    if (this.props.editorOpen) {
-      state.set({editorOpen: false});
+  handleClickOutside = () => {
+    if (this.state.open) {
+      this.setState({open: false});
     }
   }
-  handleClick(e){
+  handleClick = (e) => {
     let id = e.target.id;
     let requirement;
     if (e.target.id.indexOf('|') !== -1) {
@@ -172,27 +169,23 @@ export class SaveEditorDropdownMenu extends React.Component {
       this.props.onCheat(...args);
     }
   }
-  handleToggleOpen(){
+  handleToggleOpen = () => {
     ReactTooltip.hide();
-    state.set({
-      editorOpen: !this.props.editorOpen,
-      baseOpen: false,
-      settingsOpen: false
-    });
+    this.setState({open: !this.state.open});
   }
-  render(){
+  render() {
     var p = this.props;
     return (
       <div
       style={noDragStyle}
-      className={`ui dropdown icon item${p.editorOpen ? ' visible' : ''}`}
+      className={`ui dropdown icon item${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
       data-tip={utils.tip('Save Editor')}>
         <i className="database icon" />
         <div
         style={menuContainerStyle}
-        className={`menu transition ${p.editorOpen ? 'visible' : 'hidden'}`}>
+        className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
           <div
           id="repairInventory|50"
           style={{opacity: p.profile.exp >= 50 ? '1' : '0.5'}}
@@ -239,14 +232,16 @@ SaveEditorDropdownMenu = onClickOutside(SaveEditorDropdownMenu);
 export class DropdownMenu extends React.Component {
   constructor(props) {
     super(props);
-    autoBind(this);
-  }
-  handleClickOutside(){
-    if (this.props.s.settingsOpen) {
-      state.set({settingsOpen: false});
+    this.state = {
+      open: false
     }
   }
-  handleAbout(){
+  handleClickOutside = () => {
+    if (this.state.open) {
+      this.setState({open: false});
+    }
+  }
+  handleAbout = () => {
     dialog.showMessageBox({
       type: 'info',
       buttons: [],
@@ -257,6 +252,7 @@ Please back up your save files.
 
 Special Thanks
 
+- Artimec_w
 - Bbsoto
 - Matthew Humphrey
 - temp-999
@@ -278,17 +274,17 @@ You should have received a copy of the GNU General Public License along with thi
       `
     });
   }
-  handleSync(){
+  handleSync = () => {
     this.props.onSync();
   }
-  handleWallpaper(){
+  handleWallpaper = () => {
     this.props.onSetWallpaper()
   }
-  handleAutoCapture(e){
+  handleAutoCapture = (e) => {
     e.stopPropagation();
     state.set({autoCapture: !this.props.s.autoCapture});
   }
-  handleResetRemoteCache(){
+  handleResetRemoteCache = () => {
     window.jsonWorker.postMessage({
       method: 'remove',
       key: 'remoteLocations'
@@ -296,7 +292,7 @@ You should have received a copy of the GNU General Public License along with thi
 
     this.props.onRestart();
   }
-  handleUsernameProtection(){
+  handleUsernameProtection = () => {
     let helpMessage = 'When you protect your username, the app will associate your computer with your username to prevent impersonation. If you plan on using the app on another computer, you will need to disable protection before switching.';
     if (this.props.s.profile.protected) {
       helpMessage = 'Are you sure you want to unprotect your username?'
@@ -322,16 +318,16 @@ You should have received a copy of the GNU General Public License along with thi
       }
     });
   }
-  handleSetEmail(){
+  handleSetEmail = () => {
     state.set({setEmail: true});
   }
-  handlePlatformToggle(){
+  handlePlatformToggle = () => {
     state.set({ps4User: !this.props.s.ps4User}, this.props.onRestart);
   }
-  handleModeSwitch(mode){
+  handleModeSwitch = (mode) => {
     state.set({mode: mode});
   }
-  handlePollRate(e){
+  handlePollRate = (e) => {
     e.stopPropagation();
     let rate;
     if (this.props.s.pollRate === 45000) {
@@ -343,34 +339,30 @@ You should have received a copy of the GNU General Public License along with thi
     }
     state.set({pollRate: rate});
   }
-  handleSupport(){
+  handleSupport = () => {
     openExternal('https://neuropuff.com/static/donate.html');
   }
-  handleBugReport(){
+  handleBugReport = () => {
     openExternal('https://github.com/jaszhix/NoMansConnect/issues');
   }
-  handleToggleOpen(){
+  handleToggleOpen = () => {
     ReactTooltip.hide();
-    state.set({
-      settingsOpen: !this.props.s.settingsOpen,
-      baseOpen: false,
-      editorOpen: false
-    });
+    this.setState({open: !this.state.open});
   }
-  handleOfflineModeToggle(e){
+  handleOfflineModeToggle = (e) => {
     e.stopPropagation();
     state.set({
-      title: `NO MAN'S ${!this.props.s.offline ? 'DIS' : ''}CONNECT`,
+      title: `${state.updateAvailable ? 'OLD' : 'NO'} MAN'S ${!this.props.s.offline ? 'DIS' : ''}CONNECT`,
       offline: !this.props.s.offline
     });
   }
-  render(){
+  render() {
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
     return (
       <div
       style={noDragStyle}
-      className={`ui dropdown icon item${p.s.settingsOpen ? ' visible' : ''}`}
+      className={`ui dropdown icon item${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
       data-tip={utils.tip('Options')}>
@@ -378,7 +370,7 @@ You should have received a copy of the GNU General Public License along with thi
         {p.s.username.length > 0 ? <span style={{paddingLeft: '12px'}}>{p.s.username}</span> : null}
         <div
         style={menuContainerStyle}
-        className={`menu transition ${p.s.settingsOpen ? 'visible' : 'hidden'}`}>
+        className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
           {!p.s.ps4User ? map(modes, (mode, i)=>{
             return (
               <div
@@ -531,36 +523,45 @@ You should have received a copy of the GNU General Public License along with thi
 DropdownMenu = onClickOutside(DropdownMenu);
 
 export class BasicDropdown extends React.Component {
+  static defaultProps = {
+    options: [],
+    selectedGalaxy: 0,
+    icon: 'dropdown',
+    showValue: true,
+    persist: false
+  };
   constructor(props) {
     super(props);
     this.state = {
       open: false
     };
-    autoBind(this);
-
   }
-  componentDidMount(){
+  componentDidMount() {
     defer(ReactTooltip.rebuild);
   }
-  componentWillUnmount(){
+  componentWillUnmount = () => {
     this.willUnmount = true;
   }
-  handleOptionClick(e, option){
+  handleOptionClick = (e, option) => {
     if (this.props.persist) {
       e.stopPropagation();
     }
-    option.onClick(option.id);
+    if (typeof option.id === 'number') {
+      state.set({selectedGalaxy: option.id});
+    } else {
+      option.onClick(option.id);
+    }
     this.setState({open: this.props.persist});
   }
-  handleClickOutside(){
+  handleClickOutside = () => {
     if (this.state.open && !this.willUnmount) {
       this.setState({open: false});
     }
   }
-  handleToggleOpen(){
+  handleToggleOpen = () => {
     this.setState({open: !this.state.open});
   }
-  render(){
+  render() {
     let height = this.props.height ? this.props.height : window.innerHeight;
     return (
       <div
@@ -582,12 +583,12 @@ export class BasicDropdown extends React.Component {
           {this.props.options.length > 0 ? map(this.props.options, (option, i)=>{
             let tooltip = '';
             if (option.id === 'teleport') {
-              tooltip = 'Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.'
+              tooltip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.`;
             }
             return (
               <div
               key={i}
-              className="item"
+              className={`item${option.disabled ? ' disabled' : ''}`}
               onClick={(e)=>this.handleOptionClick(e, option)}
               data-place="left"
               data-tip={utils.tip(tooltip)}>
@@ -604,11 +605,4 @@ export class BasicDropdown extends React.Component {
   }
 };
 
-BasicDropdown.defaultProps = {
-  options: [],
-  selectedGalaxy: 0,
-  icon: 'dropdown',
-  showValue: true,
-  persist: false
-};
 BasicDropdown = onClickOutside(BasicDropdown);

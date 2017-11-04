@@ -1,29 +1,27 @@
 import state from './state';
 import React from 'react';
-import autoBind from 'react-autobind';
 import {truncate, delay, defer} from 'lodash';
-import {each, map} from './lang';
-import {tip, whichToShow, cleanUp} from './utils';
+import {map} from './lang';
+import {whichToShow, cleanUp} from './utils';
 import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
 
 import {BasicDropdown} from './dropdowns';
 
 class StoredLocationItem extends React.Component {
-  constructor(props){
+  constructor(props) {
     super(props);
     this.state = {
       hover: false
     };
-    autoBind(this);
   }
-  componentWillUnmount(){
+  componentWillUnmount() {
     cleanUp(this);
   }
-  handleClick(){
+  handleClick = () => {
     this.props.onClick(this.props.location, this.props.i);
   }
-  render(){
+  render() {
     let uiSegmentStyle = {
       fontFamily: 'geosanslight-nmsregular',
       fontSize: '16px',
@@ -33,7 +31,8 @@ class StoredLocationItem extends React.Component {
       background: this.state.hover || this.props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'inherit',
       textAlign: 'right',
       minHeight: '29px',
-      maxHeight: '29px'
+      maxHeight: '29px',
+      opacity: this.props.location.isHidden ? '0.5' : '1'
     };
     let usesName = this.props.location.name && this.props.location.name.length > 0;
     let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.id}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
@@ -41,7 +40,7 @@ class StoredLocationItem extends React.Component {
     let isMarquee = (this.state.hover || this.props.isSelected) && name.length >= 25;
     name = isMarquee ? name : truncate(name, {length: 23});
     let isSpaceStation = this.props.location.id[this.props.location.id.length - 1] === '0';
-    let iconShown = this.props.location.upvote || this.props.isCurrent;
+    let iconShown = this.props.location.upvote || this.props.isCurrent || this.props.location.isHidden;
     return (
       <div
       className="ui segment"
@@ -51,23 +50,24 @@ class StoredLocationItem extends React.Component {
       onClick={this.handleClick}>
         {this.props.location.base ?
         <span
-        data-tip={tip('Base')}
+        title={`${this.props.location.username === state.username ? 'Your' : this.props.location.username + '\'s'} Base`}
         style={{position: 'absolute', left: `${iconShown ? 31 : 4}px`, top: '4px'}}>
           <img style={{width: '21px', height: '21px'}} src={baseIcon} />
         </span> : null}
         {isSpaceStation ?
-        <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${iconShown ? 31 : 4}px`, top: '3px'}}>
+        <span title="Space Station" style={{position: 'absolute', left: `${iconShown ? 31 : 4}px`, top: '3px'}}>
           <img style={{width: '21px', height: '21px'}} src={spaceStationIcon} />
         </span> : null}
         {iconShown ?
         <i
+        title={this.props.location.isHidden ? 'Hidden Location' : this.props.isCurrent ? 'Current Location' : 'Favorite Location'}
         style={{
           position: 'absolute',
           top: '2px',
           left: '6px',
           cursor: 'pointer'
         }}
-        className={`${this.props.isCurrent ? 'marker' : 'star'} icon`} /> : null}
+        className={`${this.props.location.isHidden ? 'hide' : this.props.isCurrent ? 'marker' : 'star'} icon`} /> : null}
         <p
         className={isMarquee ? 'marquee' : ''}
         style={{
@@ -85,9 +85,8 @@ class StoredLocationItem extends React.Component {
 }
 
 class StoredLocations extends React.Component {
-  constructor(props){
+  constructor(props) {
     super(props);
-    autoBind(this);
     this.invisibleStyle = {
       height: '29px'
     };
@@ -104,30 +103,30 @@ class StoredLocations extends React.Component {
     };
     this.range = {start: 0, length: 0};
   }
-  componentDidMount(){
-    let checkStored = ()=>{
+  componentDidMount() {
+    let checkStored = () => {
       if (this.storedLocations) {
         this.storedLocations.addEventListener('scroll', this.handleScroll);
         this.setViewableRange(this.storedLocations);
       } else {
-        delay(()=>checkStored(), 500);
+        delay(() => checkStored(), 500);
       }
     };
     checkStored();
   }
-  shouldComponentUpdate(nextProps){
+  shouldComponentUpdate(nextProps) {
     return (nextProps.storedLocations !== this.props.storedLocations
       || nextProps.selectedLocationId !== this.props.selectedLocationId
       || nextProps.height !== this.props.height
       || nextProps.filterOthers !== this.props.filterOthers
       || nextProps.useGAFormat !== this.props.useGAFormat)
   }
-  componentWillUnmount(){
+  componentWillUnmount() {
     if (this.storedLocations) {
       this.storedLocations.removeEventListener('scroll', this.handleScroll);
     }
   }
-  setViewableRange(node){
+  setViewableRange = (node) => {
     if (!node) {
       return;
     }
@@ -139,43 +138,52 @@ class StoredLocations extends React.Component {
     });
     this.forceUpdate();
   }
-  handleScroll(){
+  handleScroll = () => {
     if (this.scrollTimeout) {
       clearTimeout(this.scrollTimeout);
     }
     this.scrollTimeout = setTimeout(this.scrollListener, 25);
   }
-  scrollListener(){
+  scrollListener = () => {
     this.setViewableRange(this.storedLocations);
   }
-  handleSelect(location, i){
+  handleSelect = (location, i) => {
     let hasSelectedId = this.props.selectedLocationId;
     this.props.onSelect(location);
-    defer(()=>{
+    defer(() => {
       if (location.id === this.props.selectedLocationId && !hasSelectedId) {
         this.storedLocations.scrollTop = i * 29;
       }
     });
   }
-  getRef(ref){
+  getRef = (ref) => {
     this.storedLocations = ref;
   }
-  render(){
+  render() {
     let leftOptions = [
       {
         id: 'hideOthers',
-        label: this.props.filterOthers ? 'Show All Locations' : 'Hide Others\' Locations',
-        onClick: ()=>state.set({filterOthers: !this.props.filterOthers})
+        label: 'Show All Locations',
+        toggle: !this.props.filterOthers,
+        onClick: () => state.set({filterOthers: !this.props.filterOthers})
+      },
+      {
+        id: 'showHidden',
+        label: 'Show Hidden Locations',
+        toggle: this.props.showHidden,
+        onClick: () => state.set({showHidden: !this.props.showHidden})
       },
       {
         id: 'sortTime',
-        label: this.props.sortStoredByTime ? 'Sort by Favorites' : 'Sort Chronologically',
-        onClick: ()=>state.set({sortStoredByTime: !this.props.sortStoredByTime})
+        label: 'Sort by Favorites',
+        toggle: !this.props.sortStoredByTime,
+        onClick: () => state.set({sortStoredByTime: !this.props.sortStoredByTime})
       },
       {
         id: 'useGAFormat',
-        label: this.props.useGAFormat ? 'Show Universe Addresses' : 'Show Galactic Addresses',
-        onClick: ()=>state.set({useGAFormat: !this.props.useGAFormat})
+        label: 'Show Universe Addresses',
+        toggle: !this.props.useGAFormat,
+        onClick: () => state.set({useGAFormat: !this.props.useGAFormat})
       }
     ];
     return (
@@ -190,6 +198,7 @@ class StoredLocations extends React.Component {
             top: '16px'
           }}>
             <BasicDropdown
+            width={250}
             icon="ellipsis horizontal"
             showValue={null}
             persist={true}
@@ -203,7 +212,7 @@ class StoredLocations extends React.Component {
             WebkitTransition: 'max-height 0.1s',
             overflowY: 'auto',
             overflowX: 'hidden'}}>
-            {map(this.props.storedLocations, (location, i)=>{
+            {map(this.props.storedLocations, (location, i) => {
               let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
               if (isVisible) {
                 return (

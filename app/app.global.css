@@ -21112,7 +21112,6 @@ ol.ui.horizontal.list li:before,
 .ui.menu .item.disabled:hover {
   cursor: default;
   background-color: transparent !important;
-  color: rgba(40, 40, 40, 0.3);
 }
 
 /*******************************

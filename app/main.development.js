@@ -99,8 +99,8 @@ app.on('ready', async () => {
     app.quit();
   });
 
-  const handleExceptionState = () => {
-    mainWindow.webContents.executeJavaScript('window.location.reload()');
+  const handleExceptionState = (e, killed) => {
+    mainWindow.webContents.reload();
   };
 
   mainWindow.webContents.on('crashed', handleExceptionState);

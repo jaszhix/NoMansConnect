@@ -19,11 +19,11 @@ onmessage = function(e) {
       params: params
     });
   }).catch((err)=>{
-    console.log(err)
     postMessage({
       func: e.data.func,
       params: e.data.params,
-      err: 'err'
+      err: 'err',
+      status: err.response.status
     });
   });
 }

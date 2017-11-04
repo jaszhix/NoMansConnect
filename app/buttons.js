@@ -17,7 +17,7 @@ class Button extends React.Component {
       hover: false,
     };
   }
-  render(){
+  render() {
     return (
       <div
       className="ui segment Button__div"

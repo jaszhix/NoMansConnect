@@ -1,7 +1,21 @@
+# 1.0.0
+
+  * Fixed a bug preventing the 2D map from displaying scatter points in some situations.
+  * Fixed the Load More Locations button not always loading more locations.
+  * Added a loading status indicator to the top navigation pane.
+  * Added the ability to hide one's own locations from the stored location list.
+  * Added an option to copy the Universe Address to the clipboard.
+  * The info tooltip that shows when overing over the Teleport option now lists the currently detected save file. If this is incorrect, you need to save the file you want NMC to modify in the game. NMC looks for the last modified save file.
+  * Performance improvements.
+  * Improved validation of manually entered coordinates, and added more thorough checks of locations periodically.
+  * NMC will now attempt to gracefully wind down its file I/O before terminating, which should prevent settings/cache JSON files from getting corrupt.
+  * Reverted to the one-click installer due to complaints over Windows permissions confusion.
+
 # 0.19.0
 
-  * Fixed a bug preventing NMC from reading the correct save file name because Hello Games changed the save file naming scheme after the last experimental build. I was busy travelling and didn't have a working Windows installation for a couple weeks, so I apologize for the delay.
+  * Fixed a bug preventing NMC from reading the correct save file name because Hello Games changed the save file naming scheme a day before releasing from experimental. I was busy travelling and didn't have a working Windows installation for a couple weeks, so I apologize for the delay.
   * Added some optimizations.
+  * Side note: macOS builds are discontinued as I no longer have a Macbook.
 
 # 0.18.0
 

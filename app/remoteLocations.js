@@ -1,6 +1,5 @@
 import state from './state';
 import React from 'react';
-import autoBind from 'react-autobind';
 import {delay, defer, throttle, orderBy} from 'lodash';
 
 import {whichToShow} from './utils';
@@ -14,10 +13,11 @@ class RemoteLocations extends React.Component {
     this.state = {
       init: true
     };
-    autoBind(this);
+    state.connect(['searchCache', 'sort'], () => this.recentExplorations.scrollTop = 0);
+    state.connect(['remoteLocationsColumns', 'compactRemote'], () => defer(() => this.setViewableRange(this.recentExplorations)));
     this.range = {start: 0, length: 0};
   }
-  componentDidMount(){
+  componentDidMount() {
     this.uiSegmentStyle = {
       background: 'rgba(23, 26, 22, 0.9)',
       display: 'inline-table',
@@ -38,45 +38,12 @@ class RemoteLocations extends React.Component {
     checkRemote();
     this.throttledPagination = throttle(this.props.onPagination, 1000, {leading: true});
   }
-  shouldComponentUpdate(nextProps) {
-    return (nextProps.s.remoteLocations.results !== this.props.s.remoteLocations.results
-      || this.props.s.search.length > 0
-      || nextProps.s.searchCache.results !== this.props.s.searchCache.results
-      || nextProps.s.favorites !== this.props.s.favorites
-      || nextProps.updating !== this.props.updating
-      || nextProps.s.installing !== this.props.s.installing
-      || nextProps.s.width !== this.props.s.width
-      || nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
-      || nextProps.s.compactRemote !== this.props.s.compactRemote
-      || nextProps.s.showOnlyScreenshots !== this.props.s.showOnlyScreenshots
-      || nextProps.s.showOnlyNames !== this.props.s.showOnlyNames
-      || nextProps.s.showOnlyDesc !== this.props.s.showOnlyDesc
-      || nextProps.s.showOnlyGalaxy !== this.props.s.showOnlyGalaxy
-      || nextProps.s.showOnlyBases !== this.props.s.showOnlyBases
-      || nextProps.s.showOnlyPC !== this.props.s.showOnlyPC
-      || nextProps.s.selectedGalaxy !== this.props.s.selectedGalaxy
-      || nextProps.s.sortByDistance !== this.props.s.sortByDistance
-      || nextProps.s.sortByModded !== this.props.s.sortByModded
-      || nextProps.s.showOnlyCompatible !== this.props.s.showOnlyCompatible
-      || this.state.init)
-  }
-  componentWillReceiveProps(nextProps){
-    let searchChanged = nextProps.s.searchCache.results !== this.props.s.searchCache.results;
-    if (nextProps.s.sort !== this.props.s.sort && this.recentExplorations || searchChanged) {
-      this.recentExplorations.scrollTop = 0;
-    }
-
-    if (nextProps.s.remoteLocationsColumns !== this.props.s.remoteLocationsColumns
-      || nextProps.s.compactRemote !== this.props.s.compactRemote) {
-      defer(()=>this.setViewableRange(this.recentExplorations));
-    }
-  }
-  componentWillUnmount(){
+  componentWillUnmount() {
     if (this.recentExplorations) {
       this.recentExplorations.removeEventListener('scroll', this.handleScroll);
     }
   }
-  setViewableRange(node){
+  setViewableRange = (node) => {
     if (!node) {
       return;
     }
@@ -89,13 +56,13 @@ class RemoteLocations extends React.Component {
     });
     this.forceUpdate();
   }
-  handleScroll(){
+  handleScroll = () => {
     if (this.scrollTimeout) {
       clearTimeout(this.scrollTimeout);
     }
     this.scrollTimeout = setTimeout(this.scrollListener, 25);
   }
-  scrollListener(){
+  scrollListener = () => {
     if (!this.recentExplorations) {
       return;
     }
@@ -116,13 +83,13 @@ class RemoteLocations extends React.Component {
       }, 1500);
     }
   }
-  handleFavorite(location, upvote){
+  handleFavorite = (location, upvote) => {
     this.props.onFav(location, upvote);
   }
-  getRef(ref){
+  getRef = (ref) => {
     this.recentExplorations = ref;
   }
-  render(){
+  render() {
     let p = this.props;
     let remoteLocationsWidth;
     if (p.s.remoteLocationsColumns === 1) {
@@ -220,16 +187,19 @@ class RemoteLocations extends React.Component {
         onClick: ()=>state.set({sortByModded: !this.props.s.sortByModded})
       }
     ];
-    if (p.s.remoteLocations && p.s.remoteLocations.results && p.s.searchCache.results.length === 0 && p.s.remoteLength < p.s.remoteLocations.count - p.s.pageSize) {
+    if (state.remoteLocations
+      && !state.searchInProgress
+      && state.remoteLocations.next) {
       leftOptions.push({
         id: 'loadMore',
-        label: `Load ${p.s.pageSize} More Locations`,
+        disabled: state.navLoad || state.pagination,
+        label: state.pagination ? 'Catching up with the server, please wait...' : `Load More Locations`,
         onClick: ()=>this.throttledPagination(p.s.page)
       });
     }
     let parenthesis = p.s.offline || p.s.remoteLength === 0 ? '' : `(${p.s.remoteLength})`;
     let criteria = p.s.offline ? 'Cached' : p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular';
-    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
+    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count > 200 ? 200 : p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.s.remoteLocations.results;
     if (this.props.s.showOnlyScreenshots) {
       locations = filter(locations, (location)=>{
@@ -322,6 +292,7 @@ class RemoteLocations extends React.Component {
       }
     });
     locations = undefined;
+
     return (
       <div className="columns" style={containerStyle}>
         <div className="ui segments" style={uiSegmentsStyle}>

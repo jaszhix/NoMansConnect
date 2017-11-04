@@ -1,6 +1,5 @@
 import state from './state';
 import React from 'react';
-import autoBind from 'react-autobind';
 import onClickOutside from 'react-onclickoutside';
 import {assignIn, pick, isString, orderBy} from 'lodash';
 
@@ -26,13 +25,13 @@ export class ImageModal extends React.Component {
       maxWidth: '75%'
     };
   }
-  handleClickOutside(){
+  handleClickOutside = () => {
     state.set({selectedImage: null});
   }
-  componentWillUnmount(){
+  componentWillUnmount = () => {
     cleanUp(this);
   }
-  render(){
+  render() {
     return (
       <div className="ui fullscreen modal active" style={this.modalStyle}>
         <span className="close" />
@@ -74,25 +73,24 @@ export class UsernameOverrideModal extends React.Component {
       fontSize: '15px',
       letterSpacing: '2px'
     };
-    autoBind(this);
   }
-  handleClickOutside(){
+  handleClickOutside = () => {
     state.set({usernameOverride: false});
   }
-  handleChange(e){
+  handleChange = (e) => {
     this.setState({name: e.target.value})
   }
-  handleSave(){
+  handleSave = () => {
     if (this.props.ps4User) {
       state.set({username: this.state.name}, this.props.onRestart);
       return;
     }
     this.props.onSave(this.state.name)
   }
-  componentWillUnmount(){
+  componentWillUnmount = () => {
     cleanUp(this);
   }
-  render(){
+  render() {
     return (
       <div className="ui small modal active" style={this.modalStyle}>
         <span className="close" />
@@ -155,17 +153,16 @@ export class RecoveryModal extends React.Component {
       letterSpacing: '2px',
       color: 'rgb(218, 38, 0)'
     };
-    autoBind(this);
   }
-  handleClickOutside(){
+  handleClickOutside = () => {
     let obj = {};
     obj[this.props.type] = false;
     state.set(obj);
   }
-  handleChange(e){
+  handleChange = (e) => {
     this.setState({value: e.target.value})
   }
-  handleSave(){
+  handleSave = () => {
     let errorMessage, url, prop;
 
     if (this.props.type === 'setEmail') {
@@ -205,7 +202,7 @@ export class RecoveryModal extends React.Component {
       });
     });
   }
-  render(){
+  render() {
     return (
       <div className="ui small modal active" style={this.modalStyle}>
         <span className="close" />
@@ -274,9 +271,8 @@ export class LocationRegistrationModal extends React.Component {
       letterSpacing: '2px',
       color: 'rgb(218, 38, 0)'
     };
-    autoBind(this);
   }
-  componentDidMount(){
+  componentDidMount() {
     each(state.galaxies, (galaxy, i)=>{
       this.state.galaxies.push({
         id: galaxy,
@@ -289,13 +285,13 @@ export class LocationRegistrationModal extends React.Component {
     });
     this.setState({galaxies: this.state.galaxies});
   }
-  handleClickOutside(){
+  handleClickOutside = () => {
     state.set({registerLocation: false});
   }
-  handleChange(e){
+  handleChange = (e) => {
     this.setState({address: e.target.value})
   }
-  handleSave(){
+  handleSave = () => {
     let location = fromHex(this.state.address, this.props.s.username, this.state.galaxy);
     if (!location) {
       this.setState({
@@ -339,7 +335,7 @@ export class LocationRegistrationModal extends React.Component {
       });
     });
   }
-  render(){
+  render() {
     return (
       <div className="ui small modal active" style={this.modalStyle}>
         <span className="close" />

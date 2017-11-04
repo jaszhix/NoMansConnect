@@ -1,5 +1,4 @@
 import React from 'react'
-import autoBind from 'react-autobind'
 import * as THREE from 'three';
 import {defer, delay, isEqual, cloneDeep, uniq, uniqBy, concat} from 'lodash';
 import state from './state';
@@ -7,6 +6,7 @@ import path from 'path'
 import TWEEN from 'tween.js'
 import v from 'vquery';
 import RNG from './RNG';
+import {cleanUp} from './utils';
 import {each, find, findIndex, map, filter} from './lang';
 
 function distanceVector (v1, v2) {
@@ -79,13 +79,12 @@ let WebGLRenderer = null;
 let Mesh = null;
 let SpotLight = null;
 class Map3D extends React.Component {
-  constructor (props) {
-    let threact = require('threact');
+  constructor(props) {
+    let threact = require('./threact');
     WebGLRenderer = threact.WebGLRenderer;
     Mesh = threact.Mesh;
     SpotLight = threact.SpotLight;
     super(props);
-    autoBind(this);
     this.state = {
       locations: null
     };
@@ -136,57 +135,43 @@ class Map3D extends React.Component {
       path.resolve('app/textures/s5.png'),
       path.resolve('app/textures/s6.png')
     ];*/
+    this.connections = [
+      state.connect(['remoteLocations', 'searchCache'], (partial) => this.updateLocations(partial)),
+      state.connect({
+        selectedLocation: () => this.selected = true,
+        selectedGalaxy: () => this.galaxyChanged = true
+      })
+    ];
   }
-  componentDidMount () {
-    _.defer(()=>{
-      this.updateLocations(this.props);
-    });
+  componentDidMount() {
+    window.map3DWorker.onmessage = (e) => {
+      this.setState({locations: e.data.locations});
+    };
+    this.updateLocations(this.props, true);
 
     this.lights = 0;
     this.hovered = '';
   }
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.remoteLocations && nextProps.remoteLocations.results !== this.props.remoteLocations.results
-      || nextProps.searchCache !== this.props.searchCache) {
-      this.updateLocations(nextProps);
-    }
-
-    if (!_.isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
-      this.selected = true;
-    }
-    if (nextProps.selectedGalaxy !== this.props.selectedGalaxy) {
-      this.galaxyChanged = true;
-    }
+  componentWillUnmount() {
+    this.willUnmount = true;
+    each(this.connections, (connection) => {
+      state.disconnect(connection);
+    });
+    cleanUp(this);
   }
-  updateLocations(props){
-    console.log('>>>> updating map3d locations', props.searchCache)
-    let storedLocations = [];
-    each(props.storedLocations, (location)=>{
-      storedLocations.push({data: location});
+  updateLocations = (partial, init = false) => {
+    if (!init && partial.searchCache && partial.searchCache.results.length === 0) {
+      return;
+    }
+    window.map3DWorker.postMessage({
+      props: {
+        searchCache: state.searchCache,
+        storedLocations: state.storedLocations,
+        remoteLocations: state.remoteLocations
+      }
     });
-
-    let locations = cloneDeep(props.remoteLocations.results.concat(storedLocations).concat(props.searchCache));
-
-    let systems = _.uniqBy(locations, (location)=>{
-      return location.data.translatedId;
-    });
-    each(systems, (location)=>{
-      let planets = filter(locations, (planet)=>{
-        return planet.data.translatedId === location.data.translatedId;
-      });
-      let planetData = {};
-      each(planets, (planet)=>{
-        if (!planetData[planet.data.username]) {
-          planetData[planet.data.username] = [];
-        }
-        let label = planet.data.name ? planet.data.name : planet.data.id;
-        planetData[planet.data.username] = uniq(concat(planetData[planet.data.username], [label]));
-      });
-      location.data.planetData = planetData;
-    });
-    this.setState({locations: systems});
   }
-  handleMount (c) {
+  handleMount = (c) => {
     console.log('Renderer: ', c)
     c.camera.position.z = 50;
     this.renderer = c.instance;
@@ -201,10 +186,13 @@ class Map3D extends React.Component {
     this.mouse = new THREE.Vector3();
     console.log(this);
     if (!this.mounted) {
-      _.delay(()=>this.mounted = true, 3000);
+      delay(() => this.mounted = true, 3000);
     }
   }
-  handleAnimation (c, time) {
+  handleAnimation = (c, time) => {
+    if (this.willUnmount) {
+      return;
+    }
     TWEEN.update(time)
 
     if (this.props.selectedLocation && this.selected) {
@@ -216,7 +204,7 @@ class Map3D extends React.Component {
       this.galaxyChanged = false;
       each(this.scene.children, (child)=>{
         if (child.type === 'Mesh' && child.name !== 'Center') {
-          child.visible = child.userData.data.galaxy === this.props.selectedGalaxy;
+          child.visible = child.userData.data.galaxy === state.selectedGalaxy;
           if (!child.visible && child.el) {
             child.el.remove();
             child.el = null;
@@ -228,7 +216,7 @@ class Map3D extends React.Component {
     if (window.travelTo) {
       let coords = window.travelTo;
       let vector3 = new THREE.Vector3(...coords);
-      if (!_.isEqual(vector3, this.lastTraveled)) {
+      if (!isEqual(vector3, this.lastTraveled)) {
         this.handleTravel(vector3);
       }
     }
@@ -237,7 +225,7 @@ class Map3D extends React.Component {
       window.travelToCurrent = null;
       let currentLocation = find(this.props.storedLocations, location => location.id === this.props.currentLocation);
       if (currentLocation) {
-        if (this.props.selectedGalaxy !== currentLocation.galaxy) {
+        if (state.selectedGalaxy !== currentLocation.galaxy) {
           state.set({selectedGalaxy: currentLocation.galaxy});
         }
         let refMesh = findIndex(this.scene.children, (child)=>{
@@ -254,12 +242,12 @@ class Map3D extends React.Component {
         return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === this.travelTo.data.translatedId;
       });
       this.travelTo = false;
-      if (refMesh > -1 && !_.isEqual(this.scene.children[refMesh].position, this.lastTraveled)) {
+      if (refMesh > -1 && !isEqual(this.scene.children[refMesh].position, this.lastTraveled)) {
         this.handleTravel(this.scene.children[refMesh].position);
       }
     }
   }
-  handleTravel(vector3){
+  handleTravel = (vector3) => {
     this.lastTraveled = vector3;
     const _this = this;
 
@@ -297,7 +285,7 @@ class Map3D extends React.Component {
         window.travelTo = null;
       }
   }
-  handleMouseDown (e) {
+  handleMouseDown = (e) => {
     e.preventDefault()
 
     let rect = this.renderer.domElement.getBoundingClientRect();
@@ -323,7 +311,7 @@ class Map3D extends React.Component {
       });
     }
   }
-  handleMouseMove (e) {
+  handleMouseMove = (e) => {
     e.preventDefault()
     let rect = this.renderer.domElement.getBoundingClientRect();
     let x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -366,7 +354,7 @@ class Map3D extends React.Component {
       removeHovered();
     }
   }
-  getHUDElement(instance, screen){
+  getHUDElement = (instance, screen) => {
     let planets = '';
     each(instance.userData.data.planetData, (array, key)=>{
       planets += `<div style="border-bottom: 1px solid rgb(149, 34, 14);">${key}</div>`
@@ -404,7 +392,8 @@ class Map3D extends React.Component {
     })
     return el;
   }
-  handleMeshMount (c, location) {
+  handleMeshMount = (c, location) => {
+
     c.instance.userData = location;
 
     let dupePositions = filter(c.scene.children, (child)=>{
@@ -444,8 +433,8 @@ class Map3D extends React.Component {
       this.handleTravel(c.instance.position);
     }
   }
-  handleMeshAnimation (c, time) {
-    if (!c.instance.visible || c.instance.name === 'Center') {
+  handleMeshAnimation = (c, time) => {
+    if (this.willUnmount || !c.instance.visible || c.instance.name === 'Center') {
       return;
     }
     let distance = distanceVector(c.camera.position, c.instance.position)
@@ -502,7 +491,7 @@ class Map3D extends React.Component {
       }
     }
   }
-  render () {
+  render() {
     if (this.state.locations) {
       return (
         <WebGLRenderer
@@ -543,7 +532,7 @@ class Map3D extends React.Component {
               geometry={this.sphere}
               material={this.blueMaterial}
               position={position}
-              onMount={(c)=>this.handleMeshMount(c, location)}
+              onMount={(c) => this.handleMeshMount(c, location)}
               onAnimate={this.handleMeshAnimation} />
             )
           })}

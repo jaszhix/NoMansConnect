@@ -718,6 +718,13 @@ babel-plugin-jest-hoist@^21.2.0:
   version "21.2.0"
   resolved "https://registry.yarnpkg.com/babel-plugin-jest-hoist/-/babel-plugin-jest-hoist-21.2.0.tgz#2cef637259bd4b628a6cace039de5fcd14dbb006"
 
+babel-plugin-lodash@^3.2.11:
+  version "3.2.11"
+  resolved "https://registry.yarnpkg.com/babel-plugin-lodash/-/babel-plugin-lodash-3.2.11.tgz#21c8fdec9fe1835efaa737873e3902bdd66d5701"
+  dependencies:
+    glob "^7.1.1"
+    lodash "^4.17.2"
+
 babel-plugin-minify-builtins@^0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/babel-plugin-minify-builtins/-/babel-plugin-minify-builtins-0.1.3.tgz#4f21a7dcb51f91a04ea71d47ff0e8e3b05fec021"
@@ -5536,6 +5543,10 @@ lodash.isarray@^3.0.0:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/lodash.isarray/-/lodash.isarray-3.0.4.tgz#79e4eb88c36a8122af86f844aa9bcd851b5fbb55"
 
+lodash.isequal@^4.5.0:
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/lodash.isequal/-/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
+
 lodash.isplainobject@^4.0.6:
   version "4.0.6"
   resolved "https://registry.yarnpkg.com/lodash.isplainobject/-/lodash.isplainobject-4.0.6.tgz#7c526a52d89b45c45cc690b88163be0497f550cb"
@@ -7078,9 +7089,9 @@ react-deep-force-update@^2.1.1:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/react-deep-force-update/-/react-deep-force-update-2.1.1.tgz#8ea4263cd6455a050b37445b3f08fd839d86e909"
 
-react-dom@^16.0.0:
-  version "16.0.0"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.0.0.tgz#9cc3079c3dcd70d4c6e01b84aab2a7e34c303f58"
+react-dom@16.1.0-beta:
+  version "16.1.0-beta"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.1.0-beta.tgz#15a1f9d021fc19d7dfa23e627f89994d7e7c7514"
   dependencies:
     fbjs "^0.8.16"
     loose-envify "^1.1.0"
@@ -7169,12 +7180,13 @@ react-smooth@0.3.0:
     raf "^3.2.0"
     react-transition-group "^1.1.1"
 
-react-test-renderer@^16.0.0:
-  version "16.0.0"
-  resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-16.0.0.tgz#9fe7b8308f2f71f29fc356d4102086f131c9cb15"
+react-test-renderer@16.1.0-beta:
+  version "16.1.0-beta"
+  resolved "https://registry.yarnpkg.com/react-test-renderer/-/react-test-renderer-16.1.0-beta.tgz#7f09142d0c1d0c341b8457e2e92dcd862e75b2a7"
   dependencies:
     fbjs "^0.8.16"
     object-assign "^4.1.1"
+    prop-types "^15.6.0"
 
 react-tooltip@^3.4.0:
   version "3.4.0"
@@ -7215,9 +7227,9 @@ react-visibility-sensor@^3.11.0:
     create-react-class "^15.5.1"
     prop-types "^15.5.4"
 
-react@^16.0.0:
-  version "16.0.0"
-  resolved "https://registry.yarnpkg.com/react/-/react-16.0.0.tgz#ce7df8f1941b036f02b2cca9dbd0cb1f0e855e2d"
+react@16.1.0-beta:
+  version "16.1.0-beta"
+  resolved "https://registry.yarnpkg.com/react/-/react-16.1.0-beta.tgz#4cfbf9d98b3394bcadbdcf6fc7c7a2f5c5dc8203"
   dependencies:
     fbjs "^0.8.16"
     loose-envify "^1.1.0"
@@ -8350,23 +8362,22 @@ text-table@~0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
 
-threact@^0.4.4:
-  version "0.4.4"
-  resolved "https://registry.yarnpkg.com/threact/-/threact-0.4.4.tgz#fecefa3b5692e96bd1d746a6c405b41248351626"
+threact@0.4.6:
+  version "0.4.6"
+  resolved "https://registry.yarnpkg.com/threact/-/threact-0.4.6.tgz#03ee4182ca3caa61c2a036356161b032de2fb221"
   dependencies:
-    lodash "^4.17.4"
+    lodash.isequal "^4.5.0"
     orbit-controls "^1.1.3"
-    react-autobind "^1.0.6"
     stats.js "^0.17.0"
-    three "^0.85.2"
-
-three@^0.85.2:
-  version "0.85.2"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.85.2.tgz#8936f89c3668f7bf12f9b085ddf5dd409916ea27"
+    three "^0.88.0 || ^0.85.0"
 
 three@^0.87.1:
   version "0.87.1"
   resolved "https://registry.yarnpkg.com/three/-/three-0.87.1.tgz#466a34edc4543459ced9b9d7d276b65216fe2ba8"
+
+"three@^0.88.0 || ^0.85.0":
+  version "0.88.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.88.0.tgz#4256c2fc38e4fb23a0d23eba2b6cce4df8e466d5"
 
 throat@^4.0.0:
   version "4.1.0"

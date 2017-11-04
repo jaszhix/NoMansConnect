@@ -2,7 +2,6 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import openExternal from 'open-external';
 import {defer} from 'lodash';
-import {each} from './lang';
 import {cleanUp} from './utils';
 import {locationItemStyle} from './constants';
 
@@ -18,13 +17,13 @@ class Item extends React.Component {
   constructor(props) {
     super(props);
   }
-  handleDescClick(e){
+  handleDescClick = (e) => {
     e.preventDefault();
     openExternal(e.target.href);
   }
   componentDidMount(){
     if (this.props.label === 'Description') {
-      _.defer(()=>{
+      defer(()=>{
         if (this.descriptionRef) {
           this.descriptionRef.addEventListener('click', this.handleDescClick);
         }

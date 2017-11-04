@@ -6,9 +6,8 @@ import state from './state';
 import axios from 'axios';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
-import autoBind from 'react-autobind';
 import ReactTooltip from 'react-tooltip';
-import {isEqual, isBoolean, defer, truncate, upperFirst, pullAt} from 'lodash';
+import {defer, truncate, upperFirst, pullAt} from 'lodash';
 import moment from 'moment';
 
 import {css, tip, cleanUp, formatForGlyphs} from './utils';
@@ -55,62 +54,42 @@ class LocationBox extends React.Component {
       description: this.props.description,
       image: null
     };
-    autoBind(this);
-  }
-  handleCancel() {
-    this.props.onEdit();
+    this.connections = [
+      state.connect(['location', 'updating'], () => {
+        if (this.scrollBox) {
+          this.scrollBox.scrollTop = 0;
+        }
+        if (this.scrollBox || props.updating) {
+          this.setState({name: '', description: '', image: ''});
+        }
+      }),
+      state.connect({
+        name: () => this.setState({name: props.name}),
+        description: () => this.setState({description: props.description}),
+        image: () => this.getImage(props),
+        compactRemote: () => {
+          if (!props.selectType && !this.willUnmount) {
+            ReactTooltip.rebuild();
+            this.setState({compactRemote: props.compactRemote}, props.onCompactRemoteSwitch);
+          }
+        }
+      })
+    ];
   }
   componentDidMount() {
     this.getImage(this.props);
   }
-  componentWillReceiveProps(nextProps) {
-    if ((nextProps.selectType && !isEqual(nextProps.location, this.props.location) && this.scrollBox) || (nextProps.updating !== this.props.updating && nextProps.updating)) {
-      if (this.scrollBox) {
-        this.scrollBox.scrollTop = 0;
-      }
-
-      this.setState({name: '', description: '', image: ''});
-    }
-
-    if (nextProps.name !== this.props.name) {
-      this.setState({name: nextProps.name});
-    }
-
-    if (nextProps.description !== this.props.description) {
-      this.setState({description: nextProps.description});
-    }
-
-    if (nextProps.image !== this.props.image) {
-      this.getImage(nextProps);
-    }
-
-    if (nextProps.compactRemote !== this.props.compactRemote && !nextProps.selectType) {
-      ReactTooltip.rebuild();
-      this.setState({compactRemote: nextProps.compactRemote}, this.props.onCompactRemoteSwitch);
-    }
-  }
-  shouldComponentUpdate(nextProps, nextState) {
-    let bool =
-      !isEqual(nextProps.location, this.props.location) ||
-      nextProps.favorites !== this.props.favorites ||
-      nextProps.updating !== this.props.updating ||
-      nextProps.enableVisibilityCheck !== this.props.enableVisibilityCheck ||
-      nextProps.selectType === true ||
-      nextProps.isVisible !== this.props.isVisible ||
-      nextProps.scrollTop !== this.props.scrollTop ||
-      (nextProps.compactRemote !== this.props.compactRemote && nextProps.isVisible) ||
-      nextState.image !== this.state.image;
-    if (!isBoolean(bool)) {
-      // TBD
-      return true;
-    }
-    return bool;
-  }
-  componentWillUnmount() {
+  componentWillUnmount = () => {
     this.willUnmount = true;
+    each(this.connections, (connection) => {
+      state.disconnect(connection);
+    });
     cleanUp(this);
   }
-  getImage(p) {
+  handleCancel = () => {
+    this.props.onEdit();
+  }
+  getImage = (p) => {
     if (p.image) {
       let img = p.image.replace(/:/g, '~').replace(/NMSLocation-/, '');
       let file = path.resolve(`${this.props.configDir}${img}`);
@@ -136,13 +115,13 @@ class LocationBox extends React.Component {
       }
     }
   }
-  handleNameChange(e) {
+  handleNameChange = (e) => {
     this.setState({name: e.target.value});
   }
-  handleDescriptionChange(e) {
+  handleDescriptionChange = (e) => {
     this.setState({description: e.target.value});
   }
-  getModMarkup(mods) {
+  getModMarkup = (mods) => {
     return ReactDOMServer.renderToString(
       map(mods, (mod, i) => {
         return (
@@ -159,10 +138,10 @@ class LocationBox extends React.Component {
       })
     );
   }
-  getRef(ref) {
+  getRef = (ref) => {
     this.scrollBox = ref;
   }
-  renderDetails() {
+  renderDetails = () => {
     let p = this.props;
     let scrollBoxStyle = p.compactRemote ? compactRemoteScrollBoxStyle : {};
     return (
@@ -183,11 +162,11 @@ class LocationBox extends React.Component {
         {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
         {p.location.distanceToCenter ? <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(0)} LY / ${p.location.jumps} Jumps`} /> : null}
         {p.location.mode ? <Item label="Mode" value={upperFirst(p.location.mode)} /> : null}
+        {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
         {p.location.teleports ? <Item label="Teleports" value={p.location.teleports} /> : null}
         {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
-        {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
-        <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
         {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
+        <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
         {p.location.mods && p.location.mods.length > 0 && !p.compactRemote ? (
           <Item label={`Mods Used (${p.location.mods.length})`} dataPlace="top" dataTip={utils.tip(this.getModMarkup(p.location.mods))} />
         ) : null}
@@ -249,17 +228,23 @@ class LocationBox extends React.Component {
         let refLeftOption = findIndex(leftOptions, opt => opt.id === 'deleteScreen');
         pullAt(leftOptions, refLeftOption);
       }
-    } else if (p.selectType && p.location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
+    }
+    if (p.selectType && p.location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
       leftOptions.push({
         id: 'removeStored',
-        label: 'Remove From Storage',
+        label: `${isOwnLocation ? p.location.isHidden ? 'Show In' : 'Hide From' : 'Remove From'} Storage`,
         onClick: () => p.onRemoveStoredLocation()
       });
     }
     leftOptions.push({
       id: 'copyAddress',
-      label: 'Copy Address to Clipboard',
+      label: 'Copy Galactic Address to Clipboard',
       onClick: () => clipboard.writeText(p.location.translatedId)
+    });
+    leftOptions.push({
+      id: 'copyAddress',
+      label: 'Copy Universe Address to Clipboard',
+      onClick: () => clipboard.writeText(p.location.id)
     });
 
     let visibleStyle = {

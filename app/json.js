@@ -25,7 +25,7 @@ class Json {
       tryFn(() => {
         this.data = JSON.parse(data);
         this.callback(cb);
-      }, () => {
+      }, (e) => {
         if (fs.existsSync(this.backupPath) && !fromFailure) {
           this.init(this.backupPath, cb, true);
           return;

@@ -8,11 +8,9 @@ const ps = require('win-ps');
 import {machineId} from 'node-machine-id';
 import state from './state';
 import React from 'react';
-import autoBind from 'react-autobind';
-import Reflux from 'reflux';
 import ReactTooltip from 'react-tooltip';
 import openExternal from 'open-external';
-import {isEqual, assignIn, cloneDeep, clone, orderBy, uniq, uniqBy, defer, delay, concat, first, last, isArray, isString, pullAt, throttle, pick} from 'lodash';
+import {assignIn, cloneDeep, clone, orderBy, uniq, uniqBy, defer, delay, concat, first, last, isArray, isString, pullAt, throttle, pick} from 'lodash';
 import v from 'vquery';
 import math from 'mathjs';
 
@@ -43,7 +41,67 @@ const containerStyle = {
   right: '0px'
 };
 
-class Container extends React.PureComponent {
+const transparentIconInputStyle = {
+  width: '250px',
+  WebkitUserSelect: 'initial',
+  WebkitAppRegion: 'no-drag',
+  fontSize: '15px'
+};
+const searchIconStyle = {
+  cursor: 'default',
+  padding: '0px'
+};
+const letterSpacingStyle = {
+  letterSpacing: '2px'
+};
+
+class Search extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      search: ''
+    }
+  }
+  setValue = (e) => {
+    let search = e.target.value;
+    this.setState({search}, () => {
+      if (search.length === 0 && state.searchInProgress) {
+        state.set({search}, () => this.props.onClick());
+      }
+    });
+  }
+  handleEnter = (e) => {
+    if (e.keyCode === 13) {
+      state.set({search: this.state.search}, () => this.props.onKeyDown(e));
+    }
+  }
+  handleSearchIconClick = () => {
+    state.set({search: this.state.search}, () => this.props.onClick());
+  }
+  render() {
+    return (
+      <div className="item">
+        <div
+        className={`ui transparent icon input${state.navLoad ? ' disabled' : ''}`}
+        style={transparentIconInputStyle}>
+          <input
+          type="text"
+          style={letterSpacingStyle}
+          placeholder="Search..."
+          value={this.state.search}
+          onChange={this.setValue}
+          onKeyDown={this.handleEnter} />
+          <i
+          className={state.searchInProgress ? 'remove link icon' : 'search link icon'}
+          style={searchIconStyle}
+          onClick={this.props.onClick} />
+        </div>
+      </div>
+    );
+  }
+}
+
+class Container extends React.Component {
   constructor(props) {
     super(props);
 
@@ -52,14 +110,9 @@ class Container extends React.PureComponent {
       edit: false,
       mapRender: '<div />'
     };
-    autoBind(this);
+    state.connect({selectedLocation: () => this.setState({edit: false})})
   }
-  componentWillReceiveProps(nextProps) {
-    if (!isEqual(nextProps.s.selectedLocation, this.props.s.selectedLocation)) {
-      this.setState({edit: false});
-    }
-  }
-  handleFavorite(location) {
+  handleFavorite = (location) => {
     if (this.props.s.offline) {
       state.set({error: `Unable to favorite location in offline mode.`});
       return;
@@ -104,7 +157,7 @@ class Container extends React.PureComponent {
       log.error(`Failed to favorite remote location: ${err}`);
     });
   }
-  handleUpdate(name, description) {
+  handleUpdate = (name, description) => {
     this.setState({updating: true}, () => {
       if (description.length > 200) {
         this.setState({limit: true});
@@ -156,7 +209,7 @@ class Container extends React.PureComponent {
       });
     });
   }
-  handleUploadScreen(e) {
+  handleUploadScreen = (e) => {
     e.persist();
     if (this.props.s.offline) {
       state.set({error: `Unable to upload screenshot in offline mode.`});
@@ -213,7 +266,7 @@ class Container extends React.PureComponent {
       reader.readAsDataURL(e.target.files[0]);
     });
   }
-  handleDeleteScreen() {
+  handleDeleteScreen = () => {
     if (this.props.s.offline) {
       state.set({error: `Unable to delete screenshot in offline mode.`});
       return;
@@ -247,7 +300,7 @@ class Container extends React.PureComponent {
       });
     });
   }
-  handleCompatibility() {
+  handleCompatibility = () => {
     if (this.props.s.offline) {
       state.set({error: `Unable to mark compatibility in offline mode.`});
       return;
@@ -282,7 +335,7 @@ class Container extends React.PureComponent {
       });
     });
   }
-  handleSelectLocation(location) {
+  handleSelectLocation = (location) => {
     location = cloneDeep(location);
     let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id;
     let _location = null;
@@ -295,6 +348,7 @@ class Container extends React.PureComponent {
         refRemoteLocation.data.image = refRemoteLocation.image;
         refRemoteLocation.data.name = refRemoteLocation.name;
         refRemoteLocation.data.description = refRemoteLocation.description;
+        refRemoteLocation.data.isHidden = location.isHidden;
         _location = refRemoteLocation.data;
       } else {
         _location = location;
@@ -306,13 +360,13 @@ class Container extends React.PureComponent {
       selectedGalaxy: deselected ? 0 : _location.galaxy
     });
   }
-  toggleEdit() {
+  toggleEdit = () => {
     this.setState({edit: !this.state.edit});
   }
-  screenshotRefClick() {
+  screenshotRefClick = () => {
     this.screenshotRef.click();
   }
-  getScreenshotRef(ref) {
+  getScreenshotRef = (ref) => {
     this.screenshotRef = ref;
   }
   render() {
@@ -325,6 +379,11 @@ class Container extends React.PureComponent {
     if (p.s.filterOthers) {
       storedLocations = filter(storedLocations, (location) => {
         return location.username === p.s.username;
+      });
+    }
+    if (!p.s.showHidden) {
+      storedLocations = filter(storedLocations, (location) => {
+        return !location.isHidden;
       });
     }
     if (p.s.sortStoredByTime) {
@@ -347,12 +406,14 @@ class Container extends React.PureComponent {
             currentLocation={p.s.currentLocation}
             height={p.s.height}
             filterOthers={p.s.filterOthers}
+            showHidden={p.s.showHidden}
             sortStoredByTime={p.s.sortStoredByTime}
             useGAFormat={p.s.useGAFormat}
             username={p.s.username} />
             <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
               {remoteLocationsLoaded ?
               <GalacticMap
+              mapLoading={p.s.mapLoading}
               map3d={p.s.map3d}
               mapDrawDistance={p.s.mapDrawDistance}
               mapLines={p.s.mapLines}
@@ -419,13 +480,52 @@ class Container extends React.PureComponent {
   }
 };
 
-class App extends Reflux.Component {
+class App extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {};
-    this.store = state;
-    autoBind(this);
+    this.state = state.get();
+    state
+      .setMergeKeys(['remoteLocations'])
+      .connect('*', (obj) => {
+      if (process.env.NODE_ENV === 'development') {
+        tryFn(() => {
+          throw new Error('STATE STACK');
+        }, (e) => {
+          let stackParts = e.stack.split('\n');
+          console.log('STATE CALLEE: ', stackParts[6].trim());
+        });
+      }
+      console.log('STATE INPUT: ', obj);
+
+      if (obj.error) {
+        state.displayErrorDialog(obj.error);
+        state.error = '';
+      }
+
+      if (!obj.search
+        && obj.remoteLocations
+        && obj.remoteLength > 0
+        && state.search.length === 0
+        && state.remoteLocations
+        && state.remoteLocations.results
+        && state.remoteLocations.results.length > 0
+        && !state.closing) {
+        state.handleMaintenance(obj, (nextObject) => {
+          window.jsonWorker.postMessage({
+            method: 'set',
+            key: 'remoteLocations',
+            value: nextObject.remoteLocations,
+          });
+          this.setState(nextObject, () => state.handleState(obj));
+        });
+        return;
+      }
+      this.setState(obj, () => {
+        state.handleState(obj);
+      });
+      console.log(`STATE: `, this.state);
+    });
 
     this.topAttachedMenuStyle = {
       position: 'absolute',
@@ -442,25 +542,12 @@ class App extends Reflux.Component {
       WebkitTransition: 'left 0.1s',
       textTransform: 'uppercase'
     };
-    this.transparentIconInputStyle = {
-      width: '250px',
-      WebkitUserSelect: 'initial',
-      WebkitAppRegion: 'no-drag',
-      fontSize: '15px'
-    };
-    this.searchIconStyle = {
-      cursor: 'default',
-      padding: '0px'
-    };
     this.titleBarControlsStyle = {
       WebkitAppRegion: 'no-drag',
       paddingRight: '0px'
     };
     this.noDragStyle = {
       WebkitAppRegion: 'no-drag'
-    };
-    this.letterSpacingStyle = {
-      letterSpacing: '2px'
     };
     this.headerItemClasses = 'ui dropdown icon item';
   }
@@ -473,9 +560,8 @@ class App extends Reflux.Component {
     }
     this.handleWorkers();
     window.handleWallpaper = this.handleWallpaper;
-    this.dirSep = process.platform === 'win32' ? '\\' : '/';
-    this.saveJSON = process.env.NODE_ENV === 'production' ? `.${this.dirSep}nmssavetool${this.dirSep}saveCache.json` : `.${this.dirSep}app${this.dirSep}nmssavetool${this.dirSep}saveCache.json`;
-    this.saveTool = process.env.NODE_ENV === 'production' ? `${this.dirSep}nmssavetool${this.dirSep}nmssavetool.exe` : `${this.dirSep}app${this.dirSep}nmssavetool${this.dirSep}nmssavetool.exe`;
+    this.saveJSON = process.env.NODE_ENV === 'production' ? `.${utils.dirSep}nmssavetool${utils.dirSep}saveCache.json` : `.${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}saveCache.json`;
+    this.saveTool = process.env.NODE_ENV === 'production' ? `${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe` : `${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
 
     if (!this.state.offline) {
       window.ajaxWorker.postMessage({
@@ -489,8 +575,12 @@ class App extends Reflux.Component {
         }
       });
     }
-
+    let initialized = false;
     let initialize = () => {
+      if (initialized) {
+        return;
+      }
+      initialized = true;
       machineId().then((id) => {
         this.pollSaveData(this.state.mode, true, id);
       }).catch((err) => {
@@ -524,7 +614,7 @@ class App extends Reflux.Component {
             });
             state.set({mods: list}, () => {
               initialize();
-            });
+            }, true);
           });
         });
       };
@@ -563,29 +653,32 @@ class App extends Reflux.Component {
     };
     defer(indexMods);
   }
-  componentDidUpdate(pP, pS) {
-    if (pS.search.length > 0 && this.state.search.length === 0 && this.state.searchInProgress) {
-      this.handleClearSearch();
-    }
-  }
-  handleWorkers() {
+  handleWorkers = () => {
     window.ajaxWorker.onmessage = (e) => {
+      if (this.state.closing) {
+        return;
+      }
       if (e.data.err) {
-        state.set({init: false});
         if (!this.state.offline) {
           log.error(`AJAX Worker failure: ${e.data.func}`);
         }
         if (e.data.func === 'handleSync') {
-          this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true);
+          this.fetchRemoteLocations(state.page, state.sort, state.init, false);
         } else if (e.data.func === 'pollRemoteLocations') {
-          this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
+          this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
+        } else if (e.data.func === 'fetchRemoteLocations' && e.data.status === 404) {
+          state.remoteLocations.next = null;
+          state.set({
+            remoteLocations: state.remoteLocations,
+            navLoad: false
+          });
         }
         return;
       }
       console.log('AJAX WORKER: ', e.data);
       if (e.data.func === 'version') {
         if (e.data.data.version !== this.state.version) {
-          this.handleUpgrade();
+          this.handleUpgrade(e.data.data.version);
         }
       } else if (e.data.func === 'syncRemoteOwned') {
         each(e.data.results, (location, i) => {
@@ -602,18 +695,24 @@ class App extends Reflux.Component {
         state.set({
           storedLocations: this.state.storedLocations,
           loading: 'Syncing locations...'
-        }, ()=>this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, false, false));
+        }, () => {
+          this.formatRemoteLocations(e.data, state.page, state.sort, state.init, false);
+        });
       } else if (e.data.func === 'handleSync') {
-        this.fetchRemoteLocations(e.data.params[0], e.data.params[1], e.data.params[2], true, true);
+        if (!e.data.params) {
+          e.data.params = [state.page, state.sort, state.init, false];
+        }
+        this.fetchRemoteLocations(...e.data.params);
       } else if (e.data.func === 'fetchRemoteLocations') {
-        this.formatRemoteLocations(e.data, e.data.params[0], e.data.params[1], e.data.params[2], e.data.params[2], e.data.params[3], () => {
-          if (e.data.params[2]) { // init
+        this.formatRemoteLocations(e.data, ...e.data.params, () => {
+          if (state.init) {
+            state.set({init: false}, true);
             this.pollRemoteLocations(e.data.params[2]);
           }
         });
       } else if (e.data.func === 'pollRemoteLocations') {
         if (e.data.data.results.length > 0 && this.state.search.length === 0) {
-          this.formatRemoteLocations(e.data, this.state.page, this.state.sort, false, false, false, () => {
+          this.formatRemoteLocations(e.data, ...e.data.params, () => {
             this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
           });
         } else {
@@ -623,11 +722,16 @@ class App extends Reflux.Component {
     }
     window.formatWorker.onmessage = (e) => {
       console.log('FORMAT WORKER: ', e.data);
-      state.set(e.data.stateUpdate); // Sets init
+      if (e.data.stateUpdate.pagination) {
+        this.handlePagination();
+      } else if (state.init) {
+        this.handleSync(1, state.sort, state.init);
+      }
+      state.set(e.data.stateUpdate);
     };
   }
-  syncRemoteOwned(cb=null) {
-    if (this.state.offline) {
+  syncRemoteOwned = () => {
+    if (this.state.offline || this.state.closing) {
       return;
     }
     window.ajaxWorker.postMessage({
@@ -641,49 +745,44 @@ class App extends Reflux.Component {
         }
       }
     });
-    if (cb) {
-      defer(cb);
-    }
   }
-  handleSync(page=1, sort=this.state.sort, init=false) {
-    if (this.state.offline) {
+  handleSync = (page=1, sort=this.state.sort, init=false) => {
+    if (this.state.offline || this.state.closing) {
       return;
     }
 
-    if (!this.state.remoteLocations) {
+    if (!state.remoteLocations || !state.remoteLength === 0) {
       return;
     }
-    this.syncRemoteOwned(() => {
-      let locations = [];
-      each(this.state.storedLocations, (location) => {
-        let existsInRemoteLocations = false;
-        each(this.state.remoteLocations.results, (remoteLocation) => {
-          if (remoteLocation.data.id === location.id) {
-            existsInRemoteLocations = true;
-            return false;
-          };
-        });
-        if (!existsInRemoteLocations) {
-          location = cloneDeep(location);
-          location.timeStamp = new Date(location.timeStamp);
-          locations.push(location);
-        }
+    let locations = [];
+    each(state.storedLocations, (location) => {
+      let existsInRemoteLocations = false;
+      each(state.remoteLocations.results, (remoteLocation) => {
+        if (remoteLocation.data.id === location.id) {
+          existsInRemoteLocations = true;
+          return false;
+        };
       });
-      window.ajaxWorker.postMessage({
-        method: 'post',
-        func: 'handleSync',
-        url: '/nmslocationremotesync/',
-        obj: {
-          locations: locations,
-          mode: this.state.mode,
-          username: this.state.username,
-        },
-        params: [page, sort, init]
-      });
+      if (!existsInRemoteLocations) {
+        location = cloneDeep(location);
+        location.timeStamp = new Date(location.timeStamp);
+        locations.push(location);
+      }
+    });
+    window.ajaxWorker.postMessage({
+      method: 'post',
+      func: 'handleSync',
+      url: '/nmslocationremotesync/',
+      obj: {
+        locations: locations,
+        mode: state.mode,
+        username: state.username,
+      },
+      params: [page, sort, init, true, false]
     });
   }
-  formatRemoteLocations(res, page, sort, init, partial, sync, cb=null) {
-    if (this.state.offline) {
+  formatRemoteLocations = (res, page, sort, init, partial, pagination, cb=null) => {
+    if (this.state.offline || this.state.closing) {
       return;
     }
     if (!this.state.remoteLocations || this.state.remoteLocations.length === 0) {
@@ -693,16 +792,16 @@ class App extends Reflux.Component {
     }
 
     window.formatWorker.postMessage({
-      res: res,
-      page: page,
-      sort: sort,
-      init: init,
-      partial: partial,
-      sync: sync,
+      res,
+      page,
+      sort,
+      init,
+      partial,
+      pagination,
       state: {
         remoteLocations: this.state.remoteLocations,
+        remoteLength: this.state.remoteLength,
         search: this.state.search,
-        sort: this.state.sort,
         favorites: this.state.favorites,
         storedLocations: this.state.storedLocations,
         pageSize: this.state.pageSize,
@@ -714,16 +813,16 @@ class App extends Reflux.Component {
       defer(cb);
     }
   }
-  pollRemoteLocations(init=false) {
+  pollRemoteLocations = (init=false) => {
     if (this.timeout)  {
       clearTimeout(this.timeout);
     }
 
-    if (this.state.offline) {
+    if (this.state.offline || this.state.closing) {
       return;
     }
 
-    if (this.state.sort !== '-created' || this.state.remoteLocations.results.length === 0 || init) {
+    if (this.state.sort !== '-created' || (this.state.remoteLocations.results && this.state.remoteLocations.results.length === 0) || init) {
       this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
       return;
     }
@@ -744,40 +843,47 @@ class App extends Reflux.Component {
           id: lastRemoteLocation.data.id
         }
       },
-      params: [this.state.page, this.state.sort]
+      params: [state.page, state.sort, false, true, state.pagination]
     });
   }
-  fetchRemoteLocations(page=this.state.page, sort=this.state.sort, init=false, sync=false) {
-    if (this.state.offline) {
+  fetchRemoteLocations = (page = this.state.page, sort = this.state.sort, init = false, pagination = false) => {
+    if (this.state.offline || this.state.closing) {
       return;
     }
-    let q = this.state.search.length > 0 ? this.state.search : null;
+    if (!state.navLoad) {
+      state.set({navLoad: true});
+    }
+    let q = state.search.length > 0 ? state.search : null;
     let path = q ? '/nmslocationsearch' : '/nmslocation';
     sort = sort === 'search' ? '-created' : sort;
 
-    let workerParams = {
+    let params = {
+      page: page,
+      sort: sort,
+      q: q
+    };
+
+    if (q) {
+      params.page_size = 200;
+    }
+
+    window.ajaxWorker.postMessage({
       method: 'get',
       func: 'fetchRemoteLocations',
       url: path,
       obj: {
-        params: {
-          page: page,
-          sort: sort,
-          q: q
-        }
+        params
       },
-      params: [page, sort, init, sync]
-    };
-
-    window.ajaxWorker.postMessage(workerParams);
+      params: [page, sort, init, false, pagination]
+    });
   }
-  handleCheat(id, n) {
+  handleCheat = (id, n) => {
     let currentLocation = find(this.state.storedLocations, location => location.id === this.state.currentLocation);
     if (currentLocation) {
       this.handleTeleport(currentLocation, 0, id, n);
     }
   }
-  baseError() {
+  baseError = () => {
     dialog.showMessageBox({
       type: 'info',
       buttons: [],
@@ -785,7 +891,7 @@ class App extends Reflux.Component {
       message: 'Unable to save your base. Have you claimed a base yet?'
     });
   }
-  handleSaveBase(baseData=null) {
+  handleSaveBase = (baseData=null) => {
     if (baseData) {
       this.state.storedBases.push(cloneDeep(baseData));
       state.set({storedBases: this.state.storedBases});
@@ -802,10 +908,10 @@ class App extends Reflux.Component {
       this.baseError();
     });
   }
-  signSaveData(slot) {
-    let absoluteSaveDir = this.state.saveFileName.split(this.dirSep);
+  signSaveData = (slot) => {
+    let absoluteSaveDir = this.state.saveFileName.split(utils.dirSep);
     pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
-    absoluteSaveDir = absoluteSaveDir.join(this.dirSep);
+    absoluteSaveDir = absoluteSaveDir.join(utils.dirSep);
     let command = `${process.platform !== 'win32' ? 'wine ' : ''}.${this.saveTool} encrypt -g ${slot} -f ${this.saveJSON} --save-dir "${absoluteSaveDir}"`;
     console.log(command);
     utils.exc(command, (res) => {
@@ -818,7 +924,7 @@ class App extends Reflux.Component {
       log.error(e.message);
     });
   }
-  handleRestoreBase(base) {
+  handleRestoreBase = (base) => {
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
       if (saveData.result.PlayerStateData.PersistentPlayerBases.length === 0) {
         this.baseError();
@@ -887,7 +993,7 @@ class App extends Reflux.Component {
       log.error(err);
     });
   }
-  handleTeleport(location, i, action=null, n=null) {
+  handleTeleport = (location, i, action=null, n=null) => {
     const _location = cloneDeep(location);
     state.set({installing: `t${i}`}, () => {
       utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
@@ -985,18 +1091,19 @@ class App extends Reflux.Component {
       });
     });
   }
-  pollSaveData(mode=this.state.mode, init=false, machineId=this.state.machineId) {
+  pollSaveData = (mode=this.state.mode, init=false, machineId=this.state.machineId) => {
+    if (this.state.closing) {
+      return;
+    }
     if (this.state.ps4User && this.state.username === 'Explorer') {
       state.set({usernameOverride: true});
       return;
     }
-
     let getLastSave = (NMSRunning=false) => {
       let next = (error=false) => {
         if (init && !this.state.ps4User) {
           this.handleWallpaper();
-          this.handleSync(1, this.state.sort, init);
-
+          this.syncRemoteOwned();
           watch.createMonitor(this.state.saveDirectory, {
             ignoreDotFiles: true,
             ignoreNotPermitted: true,
@@ -1119,6 +1226,7 @@ class App extends Reflux.Component {
           let stateUpdate = {
             storedLocations: this.state.storedLocations,
             currentLocation: location.id,
+            selectedGalaxy: tryFn(() => parseInt(location.id.split(':')[3])),
             username: username,
             saveDirectory: this.state.saveDirectory,
             saveFileName: saveData.path,
@@ -1223,7 +1331,7 @@ class App extends Reflux.Component {
       });
     }
   }
-  handleProtectedSession(username='Explorer') {
+  handleProtectedSession = (username='Explorer') => {
     dialog.showMessageBox({
       title: `Protection Enabled For ${username}`,
       message: 'This username was protected by another user. When you protect your username, the app will associate your computer with your username to prevent impersonation. If this is in error, please open an issue on the Github repository.',
@@ -1250,7 +1358,7 @@ class App extends Reflux.Component {
       }
     });
   }
-  handleUsernameOverride(username) {
+  handleUsernameOverride = (username) => {
     if (username.length === 0) {
       dialog.showMessageBox({
         type: 'info',
@@ -1291,28 +1399,34 @@ class App extends Reflux.Component {
       }
     });
   }
-  handleRemoveStoredLocation() {
+  handleRemoveStoredLocation = () => {
     if (this.state.selectedLocation.id === this.state.currentLocation) {
       log.error('Failed to remove stored location: cannot remove the player\'s current location.');
       return;
     }
-    let refStoredLocation = findIndex(this.state.storedLocations, location => location.id === this.state.selectedLocation.id);
-    pullAt(this.state.storedLocations, refStoredLocation);
+    let refStoredLocation = findIndex(state.storedLocations, location => location.id === state.selectedLocation.id);
+    let isOwnLocation = state.storedLocations[refStoredLocation].username === state.username;
+    if (isOwnLocation) {
+      state.storedLocations[refStoredLocation].isHidden = !state.storedLocations[refStoredLocation].isHidden;
+      state.selectedLocation.isHidden = state.storedLocations[refStoredLocation].isHidden;
+    } else {
+      pullAt(state.storedLocations, refStoredLocation);
+    }
     state.set({
-      storedLocations: this.state.storedLocations,
-      selectedLocation: null
+      storedLocations: state.storedLocations,
+      selectedLocation: state.selectedLocation.isHidden || !isOwnLocation ? null : state.selectedLocation
     });
   }
-  stateChange(e) {
+  stateChange = (e) => {
     this.setState(e);
   }
-  onWindowResize() {
+  onWindowResize = () => {
     state.set({
       width: window.innerWidth,
       height: window.innerHeight
     });
   }
-  handleSaveDataFailure(mode=this.state.mode, init=false, cb) {
+  handleSaveDataFailure = (mode=this.state.mode, init=false, cb) => {
     dialog.showMessageBox({
       title: 'Which platform do you use?',
       message: 'Save data not found. Select PS4 to skip this step, and disable PC specific features.',
@@ -1321,22 +1435,23 @@ class App extends Reflux.Component {
       state.set({ps4User: result === 1}, () => {
         if (result === 0) {
           this.handleSelectSaveDirectory();
-        } else if (this.state.username === 'Explorer') {
-          state.set({usernameOverride: true});
+        } else {
+          this.handleRestart();
         }
       });
     });
   }
-  handleUpgrade() {
-    log.error(`Newer version of NMC found.`);
+  handleUpgrade = (nextVersion) => {
+    state.set({updateAvailable: true, title: `OLD MAN'S ${state.offline ? 'DIS' : ''}CONNECT`});
+    let upgradeMessage = `No Man's Connect v${nextVersion} is available.`;
+    log.error(upgradeMessage);
     var infoUrl = 'https://github.com/jaszhix/NoMansConnect/releases';
-    var helpMessage = 'A newer version of No Man\'s Connect was found.';
 
     defer(() => {
       dialog.showMessageBox({
         title: 'No Man\'s Connect Upgrade',
-        message: helpMessage,
-        buttons: ['OK', 'Check releases']
+        message: upgradeMessage,
+        buttons: ['OK', 'Teleport to the Github releases page']
       }, result=>{
         if (result === 1) {
           openExternal(infoUrl);
@@ -1346,18 +1461,13 @@ class App extends Reflux.Component {
       });
     });
   }
-  handleEnter(e) {
-    if (e.keyCode === 13) {
-      this.handleSearch();
-    }
-  }
-  handleSort(e, sort) {
+  handleSort = (e, sort) => {
     sort = typeof sort === 'string' ? sort : '-created';
-    state.set({sort: sort}, () => {
+    state.set({sort: sort, navLoad: true}, () => {
       this.fetchRemoteLocations(1, sort);
     });
   }
-  handleSearch() {
+  handleSearch = () => {
     if (this.state.offline) {
       let searchCache = filter(this.state.remoteLocations.results, (location) => {
         return (location.data.id === this.state.search
@@ -1379,7 +1489,7 @@ class App extends Reflux.Component {
       this.fetchRemoteLocations(1);
     }
   }
-  handleClearSearch() {
+  handleClearSearch = () => {
     if (!this.state.offline) {
       let diff = [];
       each(this.state.searchCache.results, (location) => {
@@ -1404,24 +1514,15 @@ class App extends Reflux.Component {
       remoteLocations: this.state.remoteLocations,
       searchInProgress: false,
       sort: '-created'
-    }, () => {
-      if (this.state.offline) {
-        return;
-      }
-
-      window.jsonWorker.postMessage({
-        method: 'get',
-        key: 'remoteLocations'
-      });
-    })
-  }
-  handlePagination() {
-    let page = this.state.page === 1 ? 2 : this.state.page + 1;
-    state.set({page: page}, () => {
-      this.fetchRemoteLocations(this.state.page);
     });
   }
-  handleWallpaper() {
+  handlePagination = () => {
+    let page = state.page === 1 ? 2 : state.page + 1;
+    state.set({page: page, navLoad: true}, () => {
+      this.fetchRemoteLocations(state.page, state.sort, false, true);
+    });
+  }
+  handleWallpaper = () => {
     let wallpaper = defaultWallpaper;
     if (this.state.wallpaper) {
       tryFn(
@@ -1435,7 +1536,7 @@ class App extends Reflux.Component {
       backgroundRepeat: 'no-repeat'
     });
   }
-  handleSetWallpaper() {
+  handleSetWallpaper = () => {
     if (this.state.wallpaper) {
       state.set({wallpaper: null}, () => {
         this.handleWallpaper();
@@ -1455,7 +1556,7 @@ class App extends Reflux.Component {
       }
     });
   }
-  handleSelectInstallDirectory() {
+  handleSelectInstallDirectory = () => {
     dialog.showOpenDialog({properties: ['openDirectory']}, (cb) => {
       if (cb && cb[0]) {
         state.set({
@@ -1464,7 +1565,7 @@ class App extends Reflux.Component {
       }
     });
   }
-  handleSelectSaveDirectory() {
+  handleSelectSaveDirectory = () => {
     dialog.showOpenDialog({properties: ['openDirectory']}, (cb) => {
       if (cb && cb[0]) {
         state.set({
@@ -1474,7 +1575,8 @@ class App extends Reflux.Component {
       }
     });
   }
-  handleRestart() {
+  handleRestart = () => {
+    state.set({closing: true});
     delay(() => {
       if (process.env.NODE_ENV === 'production') {
         remote.app.relaunch();
@@ -1491,7 +1593,7 @@ class App extends Reflux.Component {
       }
     }, 1000);
   }
-  handleMaximize() {
+  handleMaximize = () => {
     state.set({maximized: !this.state.maximized}, () => {
       if (this.state.maximized) {
         win.unmaximize();
@@ -1507,26 +1609,27 @@ class App extends Reflux.Component {
       }
     });
   }
-  handleMinimize() {
+  handleMinimize = () => {
     win.minimize();
   }
-  handleClose() {
-    win.close();
+  handleClose = () => {
+    this.monitor.stop();
+    state.set({closing: true});
+    defer(() => {
+      win.close();
+    });
   }
-  handleSetSearchValue(e) {
-    state.set({search: e.target.value});
-  }
-  handleSearchIconClick() {
+  handleSearchIconClick = () => {
     if (this.state.searchInProgress) {
       this.handleClearSearch();
     } else {
       this.handleSearch();
     }
   }
-  handleSetUsernameOverride() {
+  handleSetUsernameOverride = () => {
     state.set({usernameOverride: true})
   }
-  handleLocationRegistrationToggle() {
+  handleLocationRegistrationToggle = () => {
     state.set({registerLocation: !this.state.registerLocation});
   }
   render() {
@@ -1536,41 +1639,34 @@ class App extends Reflux.Component {
         <div className="ui top attached menu" style={this.topAttachedMenuStyle}>
           <h2 style={this.titleStyle}>{s.title}</h2>
           <div className="right menu">
+            {!s.init && s.navLoad ? <Loader loading={null} /> : null}
             {!s.init && !s.offline ?
             <div
             style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-created' ? ' selected' : ''}`}
+            className={`${this.headerItemClasses}${s.sort === '-created' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
             onClick={this.handleSort}>
               Recent
             </div> : null}
             {!s.init && !s.offline ?
             <div
             style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-teleports' ? ' selected' : ''}`}
+            className={`${this.headerItemClasses}${s.sort === '-teleports' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
             onClick={(e)=>this.handleSort(e, '-teleports')}>
               Popular
             </div> : null}
             {!s.init  && !s.offline ?
             <div
             style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-score' ? ' selected' : ''}`}
+            className={`${this.headerItemClasses}${s.sort === '-score' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
             onClick={(e)=>this.handleSort(e, '-score')}>
               Favorites
             </div> : null}
             {!s.init ?
-            <div className="item">
-              <div
-              className="ui transparent icon input"
-              style={this.transparentIconInputStyle}>
-                <input type="text" style={this.letterSpacingStyle} placeholder="Search..." value={s.search} onChange={this.handleSetSearchValue} onKeyDown={this.handleEnter}/>
-                <i className={s.searchInProgress ? 'remove link icon' : 'search link icon'} style={this.searchIconStyle} onClick={this.handleSearchIconClick}/>
-              </div>
-            </div> : null}
+            <Search onKeyDown={this.handleSearch} style={this.searchIconStyle} onClick={this.handleSearchIconClick} /> : null}
             {!s.ps4User ?
             <BaseDropdownMenu
             onSaveBase={this.handleSaveBase}
             onRestoreBase={this.handleRestoreBase}
-            baseOpen={s.baseOpen}
             baseIcon={baseIcon}
             storedBases={this.state.storedBases}
             /> : null}
@@ -1579,7 +1675,6 @@ class App extends Reflux.Component {
             onSaveBase={this.handleSaveBase}
             onRestoreBase={this.handleRestoreBase}
             profile={s.profile}
-            editorOpen={s.editorOpen}
             onCheat={this.handleCheat}
             /> : null}
             <a

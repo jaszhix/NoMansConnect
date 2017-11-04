@@ -1,126 +1,161 @@
 import {remote} from 'electron';
 import os from 'os';
 import fs from 'graceful-fs';
-import Reflux from 'reflux';
-import {assignIn, pick, uniqBy, defer, delay, clone} from 'lodash';
-import {each, tryFn} from './lang';
-import * as utils from './utils';
-import knownGalaxies from './static/galaxies.json';
+import {assignIn, pick, uniqBy, take, defer} from 'lodash';
+import {each, filter} from './lang';
+import initStore from './store';
+import galaxies from './static/galaxies.json';
 import knownProducts from './static/knownProducts.json';
 import Raven from 'raven-js';
 
 const {dialog} = remote;
 
-var state = Reflux.createStore({
-  init(){
-    this.completedMigration = false;
-    this.knownProducts = knownProducts;
-    this.galaxies = knownGalaxies;
-    this.state = {
-      // Core
-      version: '0.19.0',
-      apiBase: 'https://neuropuff.com/api/',
-      winVersion: os.release(),
-      machineId: null,
-      protected: false,
-      init: true,
-      homedir: remote.app.getPath('home'),
-      configDir: remote.app.getPath('userData'),
-      width: window.innerWidth,
-      height: window.innerHeight,
-      tableData: [],
-      title: 'NO MAN\'S CONNECT',
-      installDirectory: null,
-      saveDirectory: null,
-      saveFileName: '',
-      saveVersion: null,
-      mode: 'normal',
-      storedBases: [],
-      storedLocations: [],
-      remoteLocations: [],
-      remoteLength: 0,
-      currentLocation: null,
-      selectedLocation: null,
-      username: 'Explorer',
-      profile: null,
-      favorites: [],
-      mods: [],
-      selectedImage: null,
-      autoCapture: false,
-      selectedGalaxy: 0,
-      galaxyOptions: [],
-      pollRate: 60000,
-      ps4User: process.platform === 'darwin',
-      // UI
-      settingsOpen: false,
-      editorOpen: false,
-      baseOpen: false,
-      view: 'index',
-      sort: '-created',
-      search: '',
-      searchInProgress: false,
-      searchCache: {
-        results: [],
-        count: 0,
-        next: null,
-        prev: null
-      },
-      page: 1,
-      pageSize: 60,
-      paginationEnabled: true,
-      loading: 'Loading...',
-      maximized: false,
-      mapLines: false,
-      map3d: false,
-      mapDrawDistance: false,
-      wallpaper: null,
-      filterOthers: false,
-      useGAFormat: false,
-      usernameOverride: false,
-      registerLocation: false,
-      setEmail: false,
-      recoveryToken: false,
-      remoteLocationsColumns: 1,
-      sortStoredByTime: false,
-      showOnlyNames: false,
-      showOnlyDesc: false,
-      showOnlyScreenshots: false,
-      showOnlyGalaxy: false,
-      showOnlyBases: false,
-      showOnlyPC: false,
-      showOnlyCompatible: false,
-      sortByDistance: false,
-      sortByModded: false,
-      show: {
-        Shared: true,
-        PS4: true,
-        Explored: true,
-        Center: true,
-        Favorite: true,
-        Current: true,
-        Selected: true,
-        Base: true
-      },
-      compactRemote: false,
-      maintenanceTS: Date.now(),
-      offline: false,
-      error: ''
-    };
+const state = initStore({
+  // Core
+  knownProducts,
+  galaxies,
+  completedMigration: false,
+  version: '1.0.0',
+  apiBase: 'https://neuropuff.com/api/',
+  winVersion: os.release(),
+  machineId: null,
+  protected: false,
+  init: true,
+  homedir: remote.app.getPath('home'),
+  configDir: remote.app.getPath('userData'),
+  width: window.innerWidth,
+  height: window.innerHeight,
+  tableData: [],
+  title: 'NO MAN\'S CONNECT',
+  installDirectory: null,
+  saveDirectory: null,
+  saveFileName: '',
+  saveVersion: null,
+  mode: 'normal',
+  storedBases: [],
+  storedLocations: [],
+  remoteLocations: [],
+  remoteLength: 0,
+  currentLocation: null,
+  selectedLocation: null,
+  username: 'Explorer',
+  profile: null,
+  favorites: [],
+  mods: [],
+  selectedImage: null,
+  autoCapture: false,
+  selectedGalaxy: 0,
+  galaxyOptions: [],
+  pollRate: 60000,
+  ps4User: process.platform === 'darwin',
+  // UI
+  updateAvailable: false,
+  view: 'index',
+  sort: '-created',
+  search: '',
+  searchInProgress: false,
+  searchCache: {
+    results: [],
+    count: 0,
+    next: null,
+    prev: null
+  },
+  pagination: false,
+  page: 1,
+  pageSize: 60,
+  paginationEnabled: true,
+  loading: 'Loading...',
+  maximized: false,
+  mapLines: false,
+  map3d: false,
+  mapDrawDistance: false,
+  wallpaper: null,
+  filterOthers: false,
+  useGAFormat: false,
+  usernameOverride: false,
+  registerLocation: false,
+  setEmail: false,
+  recoveryToken: false,
+  remoteLocationsColumns: 1,
+  sortStoredByTime: false,
+  showHidden: false,
+  showOnlyNames: false,
+  showOnlyDesc: false,
+  showOnlyScreenshots: false,
+  showOnlyGalaxy: false,
+  showOnlyBases: false,
+  showOnlyPC: false,
+  showOnlyCompatible: false,
+  sortByDistance: false,
+  sortByModded: false,
+  show: {
+    Shared: true,
+    PS4: true,
+    Explored: true,
+    Center: true,
+    Favorite: true,
+    Current: true,
+    Selected: true,
+    Base: true
+  },
+  compactRemote: false,
+  maintenanceTS: Date.now(),
+  offline: false,
+  error: '',
+  closing: false,
+  navLoad: false,
+  installing: false,
+  settingsKeys: [
+    'maximized',
+    'maintenanceTS',
+    'wallpaper',
+    'installDirectory',
+    'saveDirectory',
+    'username',
+    'mapLines',
+    'map3d',
+    'mapDrawDistance',
+    'show',
+    'filterOthers',
+    'useGAFormat',
+    'remoteLocationsColumns',
+    'sortStoredByTime',
+    'showHidden',
+    'pollRate',
+    'mode',
+    'storedBases',
+    'storedLocations',
+    'favorites',
+    'autoCapture',
+    'ps4User',
+    'compactRemote',
+    'offline',
+    'showOnlyNames',
+    'showOnlyDesc',
+    'showOnlyScreenshots',
+    'showOnlyGalaxy',
+    'showOnlyBases',
+    'showOnlyPC',
+    'showOnlyCompatible',
+    'sortByDistance',
+    'sortByModded'
+  ],
+  _init: () => {
 
     if (process.env.NODE_ENV === 'production') {
       Raven
         .config('https://9729d511f78f40d0ae5ebdeabc9217fc@sentry.io/180778', {
           environment: process.env.NODE_ENV,
-          release: this.state.version,
-          dataCallback: (data)=>{
+          release: state.version,
+          dataCallback: (data) => {
             assignIn(data.user, {
-              username: this.state.username,
+              username: state.username,
               resourceUsage: remote.app.getAppMetrics(),
-              winVersion: this.state.winVersion,
-              remoteLength: this.state.remoteLength,
-              map3d: this.state.map3d,
-              mapDrawDistance: this.state.mapDrawDistance,
-              pollRate: this.state.pollRate
+              winVersion: state.winVersion,
+              remoteLength: state.remoteLength,
+              map3d: state.map3d,
+              mapDrawDistance: state.mapDrawDistance,
+              pollRate: state.pollRate
             });
             return data;
           }
@@ -129,7 +164,7 @@ var state = Reflux.createStore({
     }
 
     let saveDirPath;
-    let basePath = this.state.configDir.split('\\AppData')[0];
+    let basePath = state.configDir.split('\\AppData')[0];
     let steamPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS`;
     let gogPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS\\DefaultUser`;
     if (fs.existsSync(steamPath)) {
@@ -140,301 +175,106 @@ var state = Reflux.createStore({
 
     console.log(saveDirPath);
 
-    this.state.saveDirectory = saveDirPath;
+    state.saveDirectory = saveDirPath;
 
-    this.handleJsonWorker();
+    state.handleJsonWorker();
     window.jsonWorker.postMessage({
       method: 'new',
       default: {
         remoteLocations: []
       },
       fileName: 'cache.json',
-      configDir: this.state.configDir,
+      configDir: state.configDir,
+      pageSize: state.pageSize
     });
-    this.handleSettingsWorker();
-    this.settingsKeys = [
-      'maximized',
-      'maintenanceTS',
-      'wallpaper',
-      'installDirectory',
-      'saveDirectory',
-      'username',
-      'mapLines',
-      'map3d',
-      'mapDrawDistance',
-      'show',
-      'filterOthers',
-      'useGAFormat',
-      'remoteLocationsColumns',
-      'sortStoredByTime',
-      'pollRate',
-      'mode',
-      'storedBases',
-      'storedLocations',
-      'favorites',
-      'autoCapture',
-      'ps4User',
-      'compactRemote',
-      'offline',
-      'showOnlyNames',
-      'showOnlyDesc',
-      'showOnlyScreenshots',
-      'showOnlyGalaxy',
-      'showOnlyBases',
-      'showOnlyPC',
-      'showOnlyCompatible',
-      'sortByDistance',
-      'sortByModded'
-    ];
-    this.handleSettingsMigration();
-    const settings = pick(this.state, this.settingsKeys);
+    state.handleSettingsWorker();
+    const settings = pick(state, state.settingsKeys);
     window.settingsWorker.postMessage({
       method: 'new',
       default: settings,
       fileName: 'settings.json',
-      configDir: this.state.configDir,
+      configDir: state.configDir,
     });
 
   },
-  handleJsonWorker(){
-    window.jsonWorker.onmessage = (e)=>{
-      this.state.remoteLocations = JSON.parse(e.data).remoteLocations;
-
-      if (!this.state.remoteLocations || this.state.remoteLocations && this.state.remoteLocations.results === undefined) {
-        this.state.remoteLocations = {
-          results: [],
-          count: 0,
-          next: null,
-          prev: null
-        };
-      } else {
-        this.state.page = Math.floor(this.state.remoteLocations.results.length / this.state.pageSize) + 1;
-      }
-      this.trigger(this.state);
+  handleJsonWorker: () => {
+    window.jsonWorker.onmessage = (e) => {
+      state.set(e.data, true);
     }
   },
-  handleSettingsWorker(){
-    window.settingsWorker.onmessage = (e)=>{
-      let data = JSON.parse(e.data);
+  handleSettingsWorker: () => {
+    window.settingsWorker.onmessage = (e) => {
       let stateUpdate = {};
-      if (!data.maintenanceTS) {
-        stateUpdate.maintenanceTS = this.state.maintenanceTS - 6.048e+8;
+      if (!e.data.maintenanceTS) {
+        stateUpdate.maintenanceTS = state.maintenanceTS - 6.048e+8;
       }
-      if (data.offline) {
-        stateUpdate.title = 'NO MAN\'S DISCONNECT';
+
+      if (e.data.offline) {
+        stateUpdate.title = `${state.updateAvailable ? 'OLD' : 'NO'} MAN'S DISCONNECT`;
         stateUpdate.init = false;
       }
-      each(data, (value, key)=>{
-        if (this.settingsKeys.indexOf(key) > -1) {
+
+      each(e.data, (value, key) => {
+        if (state.settingsKeys.indexOf(key) > -1) {
           stateUpdate[key] = value;
         }
       });
-      if (this.completedMigration) {
-        utils.store.clear();
-      }
 
-      this.set(stateUpdate);
+      state.set(stateUpdate, true);
     }
   },
-  handleMaintenance(obj, objRemoteLen){
+  handleMaintenance: (obj, cb) => {
     // This function will purge 25% of cached remote loccations after 4000 are
     // stored, so performance isn't compromised in the interim of a better solution.
     // Favorites will always stay in the list.
-    let duration;
-    if (objRemoteLen > 10000) {
-      duration = 86400000; // 1 day
-    } else if (objRemoteLen > 7000) {
-      duration = 172800000; // 2 days
-    } else {
-      duration = 259200000; // 3 days
-    }
-    return new Promise((resolve, reject)=>{
-      if (this.state.maintenanceTS + duration < Date.now()) {
-        let locations = [];
-        let remoteLength = obj.remoteLocations.results.length;
-        let lengthLimit = remoteLength - Math.ceil(remoteLength * 0.25);
-        each(obj.remoteLocations.results, (location, i)=>{
-          // Remove locations with invalid coordinates
-          if (location.data.VoxelY > -128 && location.data.VoxelY < 127
-            && location.data.VoxelZ > -2048 && location.data.VoxelZ < 2047
-            && location.data.VoxelX > -2048 && location.data.VoxelX < 2047
-            && (remoteLength <= 4000
-              || location.data.upvote
-              || i < lengthLimit)) {
-            locations.push(location)
-          }
-        });
-        locations = uniqBy(locations, (location)=>{
-          return location.data.id;
-        });
-        obj.remoteLocations.results = locations;
-        obj.remoteLocations.count = locations.length;
+    // TODO: Find a beter way to handle cache
 
-        defer(()=>{
-          obj.maintenanceTS = Date.now();
-          resolve(obj)
-        });
-      } else {
-        resolve(obj);
+    if ((state.maintenanceTS + 86400000 < Date.now())) {
+      state.set({loading: 'Validating locations Please wait...'});
+      let remoteLength = obj.remoteLocations.results.length;
+      if (remoteLength < 6000) {
+        return obj;
       }
-    });
-  },
-  set(obj, cb=null){
-    if (process.env.NODE_ENV === 'development') {
-      tryFn(() => {
-        throw new Error('STATE STACK');
-      }, (e) => {
-        let stackParts = e.stack.split('\n');
-        console.log('STATE CALLEE: ', stackParts[2].trim());
+
+      let locations = filter(
+        take(
+          obj.remoteLocations.results,
+          Math.ceil(remoteLength * 0.90)
+      ), (location) => {
+        return (location.data.upvote
+          || (location.data.VoxelY > -128 && location.data.VoxelY < 127
+          && location.data.VoxelZ > -2048 && location.data.VoxelZ < 2047
+          && location.data.VoxelX > -2048 && location.data.VoxelX < 2047));
       });
+      locations = uniqBy(locations, (location) => {
+        return location.data.id;
+      });
+      obj.remoteLocations.results = locations;
+      obj.remoteLocations.count = locations.length;
+      obj.page = Math.ceil(obj.remoteLocations.results.length / state.pageSize)
+      obj.remoteLocations.page = obj.page;
+      obj.maintenanceTS = Date.now();
     }
-    obj = clone(obj);
-    console.log('STATE INPUT: ', obj);
-    if (obj.selectedLocation) {
-      this.state.selectedLocation = null;
+    cb(obj);
+  },
+  handleState: (obj) => {
+    if (state.closing || obj.search) {
+      return;
     }
-
-    let objRemoteLen = 0;
-    if (obj.remoteLocations) {
-      objRemoteLen = obj.remoteLocations.results.length;
-    }
-    if (objRemoteLen === 0 && !this.state.offline && this.state.remoteLocations && this.state.remoteLocations.results) {
-      objRemoteLen = this.state.remoteLocations.results.length;
-    }
-
-    if (obj.remoteLocations
-      && objRemoteLen > 0
-      && this.state.search.length === 0
-      && this.state.remoteLocations
-      && this.state.remoteLocations.results
-      && this.state.remoteLocations.results.length > 0) {
-      this.handleMaintenance(obj, objRemoteLen).then((newObj)=>{
-        window.jsonWorker.postMessage({
+    each(obj, (value, key) => {
+      if (state.settingsKeys.indexOf(key) > -1) {
+        window.settingsWorker.postMessage({
           method: 'set',
-          key: 'remoteLocations',
-          value: JSON.stringify(newObj.remoteLocations),
+          key,
+          value
         });
-        this.handleState(newObj, cb, objRemoteLen);
-      });
-    } else {
-      this.handleState(obj, cb, objRemoteLen);
-    }
-  },
-  handleState(obj, cb=null, objRemoteLen){
-    if (obj.remoteLocations && obj.remoteLocations.results) {
-      this.state.remoteLength = objRemoteLen;
-    }
-
-    if (obj.error) {
-      this.displayErrorDialog(obj.error);
-      obj.error = '';
-    }
-
-    assignIn(this.state, obj);
-    console.log('STATE: ', this.state);
-    this.trigger(this.state);
-
-    each(obj, (value, key)=>{
-      delay(()=>{
-        if (this.settingsKeys.indexOf(key) > -1) {
-          window.settingsWorker.postMessage({
-            method: 'set',
-            key: key,
-            value: JSON.stringify(value),
-          });
-        }
-      }, 100);
+      }
     });
-
-    if (cb) {
-      defer(cb);
-    }
   },
-  get(){
-    return this.state;
-  },
-  handleSettingsMigration(){
-    let username = utils.store.get('username');
-    if (username) {
-      this.state.username = username;
-      let maintenanceTS = utils.store.get('maintenanceTS');
-      if (maintenanceTS) {
-        this.state.storedBases = maintenanceTS;
-      }
-      let wallpaper = utils.store.get('wallpaper');
-      if (wallpaper) {
-        this.state.wallpaper = wallpaper;
-      }
-      let installDirectory = utils.store.get('installDirectory');
-      if (installDirectory) {
-        this.state.installDirectory = installDirectory;
-      }
-      let saveDirectory = utils.store.get('saveDirectory');
-      if (saveDirectory) {
-        this.state.saveDirectory = saveDirectory;
-      }
-      let mapLines = utils.store.get('mapLines');
-      if (mapLines) {
-        this.state.mapLines = mapLines;
-      }
-      let map3d = utils.store.get('map3d');
-      if (map3d) {
-        this.state.map3d = map3d;
-      }
-      let mapDrawDistance = utils.store.get('mapDrawDistance');
-      if (mapDrawDistance) {
-        this.state.mapDrawDistance = mapDrawDistance;
-      }
-      let show = utils.store.get('show');
-      if (show) {
-        this.state.show = show;
-      }
-      let filterOthers = utils.store.get('filterOthers');
-      if (filterOthers) {
-        this.state.filterOthers = filterOthers;
-      }
-      let useGAFormat = utils.store.get('useGAFormat');
-      if (useGAFormat) {
-        this.state.useGAFormat = useGAFormat;
-      }
-      let remoteLocationsColumns = utils.store.get('remoteLocationsColumns');
-      if (remoteLocationsColumns) {
-        this.state.remoteLocationsColumns = remoteLocationsColumns;
-      }
-      let sortStoredByTime = utils.store.get('sortStoredByTime');
-      if (sortStoredByTime) {
-        this.state.sortStoredByTime = sortStoredByTime;
-      }
-      let pollRate = utils.store.get('pollRate');
-      if (pollRate) {
-        this.state.pollRate = pollRate;
-      }
-      let mode = utils.store.get('mode');
-      if (mode) {
-        this.state.mode = mode;
-      }
-      let storedBases = utils.store.get('storedBases');
-      if (storedBases) {
-        this.state.storedBases = storedBases;
-      }
-      let storedLocations = utils.store.get('storedLocations');
-      if (storedLocations) {
-        this.state.storedLocations = storedLocations[this.state.mode];
-      }
-      let favorites = utils.store.get('favorites');
-      if (favorites) {
-        this.state.favorites = favorites;
-      }
-      let autoCapture = utils.store.get('autoCapture');
-      if (autoCapture !== null) {
-        this.state.autoCapture = autoCapture;
-      }
-      this.completedMigration = true;
-    }
-  },
-  displayErrorDialog(error){
+  displayErrorDialog: (error) => {
     dialog.showErrorBox('NMC Error', error);
   },
 });
+state._init();
 window.state = state;
 export default state;

@@ -47,24 +47,6 @@ export var exc = (cmd)=>{
   });
 };
 
-export var store = {
-  set: (key, obj)=>{
-    console.log(`Setting storage key ${key}:`, obj)
-    window.localStorage.setItem(key, JSON.stringify(obj));
-  },
-  get: (key)=>{
-    let res = window.localStorage.getItem(key);
-    res = res === 'undefined' ? null : res;
-    return JSON.parse(res);
-  },
-  remove: (key)=>{
-    window.localStorage.removeItem(key);
-  },
-  clear: ()=>{
-    window.localStorage.clear();
-  }
-};
-
 export var formatID = (location)=>{
   location.GalacticAddress.id = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
   return cloneDeep(location.GalacticAddress);
@@ -181,6 +163,7 @@ export var fromHex = (str, username, galaxy)=>{
       manuallyEntered: true,
       timeStamp: Date.now(),
     };
+
     if (isNaN(manualLocation.SolarSystemIndex)
       || isNaN(manualLocation.translatedX)
       || isNaN(manualLocation.translatedY)
@@ -188,7 +171,13 @@ export var fromHex = (str, username, galaxy)=>{
       || manualLocation.translatedX > 4096
       || manualLocation.translatedZ > 4096
       || manualLocation.translatedY > 256
-      || manualLocation.SolarSystemIndex > 600) {
+      || manualLocation.SolarSystemIndex > 600
+      || manualLocation.data.VoxelY < -128
+      || manualLocation.data.VoxelY > 127
+      || manualLocation.data.VoxelZ < -2048
+      || manualLocation.data.VoxelZ > 2047
+      || manualLocation.data.VoxelX < -2048
+      || manualLocation.data.VoxelX > 2047) {
       return null;
     }
     assignIn(manualLocation, {
@@ -579,7 +568,12 @@ export const cleanUp = (obj)=>{
   defer(()=>{
     let contextProps = Object.keys(obj);
     each(contextProps, (key)=>{
+      if (key === 'willUnmount') {
+        return;
+      }
       obj[key] = undefined;
     })
   });
 }
+
+export const dirSep = process.platform === 'win32' ? '\\' : '/';

@@ -1,8 +1,7 @@
 import state from './state';
 import React from 'react';
-import autoBind from 'react-autobind';
 import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
-import {isEqual, isArray, cloneDeep, uniqBy, orderBy, filter, defer} from 'lodash';
+import {isArray, cloneDeep, uniqBy, filter, defer, delay, isEqual} from 'lodash';
 import v from 'vquery';
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
@@ -29,6 +28,10 @@ const toolTipContainerStyle = {
   letterSpacing: '3px',
 };
 
+const travelCurrentLocation = () => {
+  window.travelToCurrent = true;
+};
+
 class TooltipChild extends React.Component {
   constructor(props) {
     super(props);
@@ -36,7 +39,7 @@ class TooltipChild extends React.Component {
   componentWillReceiveProps() {
     cleanUp(this);
   }
-  render(){
+  render() {
     if (this.props.active || this.props.isSelected) {
       return (
         <div className="ui segments" style={toolTipContainerStyle}>
@@ -113,31 +116,31 @@ class ThreeDimScatterChart extends React.Component {
       right: 20,
       bottom: 20
     };
-    this.tickFormatter = ()=>'';
-    autoBind(this);
+    this.tickFormatter = () => '';
   }
-  componentDidMount(){
+  componentDidMount() {
+    this.connections = [
+      state.connect(['width', 'height', 'remoteLocationsColumns'], () => this.handlePostMessageSize()),
+      state.connect(['selectedGalaxy', 'storedLocations', 'remoteLocations'], () => this.handlePostMessage()),
+      state.connect({
+        selectedLocation: () => this.handlePostMessageSelect()
+      })
+    ];
     this.handleMapWorker();
-    this.handlePostMessage(this.props);
-    this.handlePostMessageSize(this.props);
+    this.handlePostMessage();
+    this.handlePostMessageSize();
   }
-  componentWillReceiveProps(nextProps){
-    if (nextProps.width !== this.props.width
-      || nextProps.height !== this.props.height
-      || nextProps.remoteLocationsColumns !== this.props.remoteLocationsColumns) {
-      this.handlePostMessageSize(nextProps);
-    } else if (nextProps.selectedGalaxy !== this.props.selectedGalaxy
-      || nextProps.storedLocations !== this.props.storedLocations
-      || nextProps.remoteLocations !== this.props.remoteLocations) {
-      this.handlePostMessage(nextProps);
-    } else if (!isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
-      this.handlePostMessageSelect(nextProps);
-    }
+  componentWillUnmount() {
+    this.willUnmount = true;
+    each(this.connections, (connection) => {
+      state.disconnect(connection);
+    });
+    cleanUp(this);
   }
-  shouldComponentUpdate(nextProps, nextState){
-    return !isEqual(this.state, nextState) || !isEqual(this.props, nextProps)
+  shouldComponentUpdate(nP, nS) {
+    return isEqual(this.props, nP) || !isEqual(this.state, nS)
   }
-  getLocationsByTranslatedId(locations){
+  getLocationsByTranslatedId = (locations) => {
     if (isArray(locations)) {
       locations = {results: locations}
     }
@@ -180,56 +183,57 @@ class ThreeDimScatterChart extends React.Component {
     _locations.results = systems;
     return _locations;
   }
-  handlePostMessage(p){
-    window.mapWorker.postMessage(JSON.stringify({
+  handlePostMessage = () => {
+    if (!state.navLoad) {
+      state.set({navLoad: true});
+    }
+    window.mapWorker.postMessage({
       selectOnly: false,
       p: {
-        storedLocations: p.storedLocations,
-        remoteLocations: p.remoteLocations,
-        selectedLocation: p.selectedLocation,
-        selectedGalaxy: p.selectedGalaxy,
-        currentLocation: p.currentLocation,
-        username: p.username,
-        width: p.width,
-        height: p.height,
-        show: p.show
+        remoteLocations: state.remoteLocations,
+        selectedLocation: state.selectedLocation,
+        selectedGalaxy: state.selectedGalaxy,
+        currentLocation: state.currentLocation,
+        username: state.username,
+        show: state.show
       },
       opts: {
-        locations: true,
-        selectedLocation: true
+        locations: true
       }
-    }));
+    });
   }
-  handlePostMessageSize(p){
-    window.mapWorker.postMessage(JSON.stringify({
+  handlePostMessageSize = () => {
+    window.mapWorker2.postMessage({
       selectOnly: false,
       p: {
-        width: p.width,
-        height: p.height,
-        remoteLocationsColumns: p.remoteLocationsColumns,
-        show: p.show
+        width: state.width,
+        height: state.height,
+        remoteLocationsColumns: state.remoteLocationsColumns,
+        show: state.show
       },
       opts: {
         size: true
       }
-    }));
+    });
   }
-  handlePostMessageSelect(p){
-    window.mapWorker.postMessage(JSON.stringify({
+  handlePostMessageSelect = () => {
+    window.mapWorker2.postMessage({
       p: {
-        selectedLocation: p.selectedLocation,
-        selectedGalaxy: p.selectedGalaxy,
-        storedLocations: p.storedLocations,
-        remoteLocations: p.remoteLocations,
-        show: p.show
+        selectedLocation: state.selectedLocation,
+        selectedGalaxy: state.selectedGalaxy,
+        remoteLocations: state.remoteLocations,
+        show: state.show
       },
       opts: {
         selectedLocation: true
       }
-    }));
+    });
   }
-  handleMapWorker(){
-    window.mapWorker.onmessage = (e) => {
+  handleMapWorker = () => {
+    const handler = (e) => {
+      if (this.willUnmount) {
+        return;
+      }
       let setState = (data) => {
         this.setState(data, () => {
           if (this.props.init) {
@@ -247,78 +251,73 @@ class ThreeDimScatterChart extends React.Component {
             });
             this.props.onInit();
           }
+          state.set({navLoad: false});
         });
       };
-      let data = JSON.parse(e.data);
-      if (data.fromSelected) {
-        if (data.fromSelected.globalState) {
-          state.set(data.fromSelected.globalState, ()=>setState({selectedLocation: data.fromSelected.selectedLocation}));
+      if (e.data.fromSelected) {
+        if (e.data.fromSelected.globalState) {
+          state.set(e.data.fromSelected.globalState, () => setState({selectedLocation: e.data.fromSelected.selectedLocation}));
         } else {
-          setState({selectedLocation: data.fromSelected.selectedLocation})
+          setState({selectedLocation: e.data.fromSelected.selectedLocation})
         }
       } else {
-        setState(data);
+        setState(e.data);
       }
-    }
-  }
-  handleSelect(symbol){
-    let stateUpdate = {};
-
-    let findSelected = (locations) => {
-      let sector;
-      let hexSector;
-      let results = [];
-      each(locations, (location) => {
-        location = location.data ? location : {
-          data: cloneDeep(location),
-          teleports: location.teleports ? location.teleports : 0,
-          id: uuidV4(),
-          image: location.image ? location.image : '',
-          name: location.name ? location.name : '',
-          description: location.description ? location.description : ''
-        };
-        sector = `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`;
-        let hexArr = location.data.translatedId.split(':');
-        hexArr.pop();
-        hexSector = hexArr.join(':');
-        if (sector === symbol.id) {
-          results.push(location);
-        }
-      });
-      let remoteLen = results.length;
-      stateUpdate = {selectedLocation: results[0].data ? results[0].data : results[0]};
-      if (remoteLen > 1) {
-        stateUpdate = {
-          searchCache: {
-            results: results,
-            count: remoteLen,
-            multipleSelectedLocations: true
-          },
-          searchInProgress: true,
-          search: `Sector ${hexSector}`
-        };
-      }
-      state.set(stateUpdate, () => {
-        defer(()=>this.handlePostMessageSelect(this.props));
-      });
     };
-
-    if (symbol.stored) {
-      findSelected(this.props.storedLocations);
-    } else {
-      findSelected(this.props.remoteLocations.results);
-    }
+    window.mapWorker.onmessage = handler;
+    window.mapWorker2.onmessage = handler;
   }
-  handleUpdateLegend(){
+  handleSelect = (symbol) => {
+    let stateUpdate = {};
+    let sector;
+    let hexSector;
+    let results = [];
+
+    each(state.remoteLocations.results, (location) => {
+      if (!location) {
+        return;
+      }
+      location = location.data ? location : {
+        data: cloneDeep(location),
+        teleports: location.teleports ? location.teleports : 0,
+        id: uuidV4(),
+        image: location.image ? location.image : '',
+        name: location.name ? location.name : '',
+        description: location.description ? location.description : ''
+      };
+      sector = `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`;
+      let hexArr = location.data.translatedId.split(':');
+      hexArr.pop();
+      hexSector = hexArr.join(':');
+      if (sector === symbol.id) {
+        results.push(location);
+      }
+    });
+    let remoteLen = results.length;
+    stateUpdate = {selectedLocation: results[0].data ? results[0].data : results[0]};
+    if (remoteLen > 1) {
+      stateUpdate = {
+        searchCache: {
+          results: results,
+          count: remoteLen,
+          multipleSelectedLocations: true
+        },
+        searchInProgress: true,
+        search: `Sector ${hexSector}`
+      };
+    }
+    state.set(stateUpdate);
+  }
+  handleUpdateLegend = () => {
     each(this.props.show, (bool, name) => {
       v(`.${name}`).css({
         opacity: bool ? '1' : '0.5'
       });
     });
   }
-  handleLegendClick(e){
+  handleLegendClick = (e) => {
     this.props.show[e.payload.name] = !this.props.show[e.payload.name];
-    state.set({show: this.props.show}, () => {
+    state.set({show: this.props.show, navLoad: true}, () => {
       if (e.payload.name === 'Center') {
         this.handlePostMessageSize(this.props);
       } else if (e.payload.name.indexOf('Selected') > -1) {
@@ -329,7 +328,7 @@ class ThreeDimScatterChart extends React.Component {
       this.handleUpdateLegend();
     });
   }
-  render () {
+  render = () => {
     return (
       <ScatterChart width={this.state.size} height={this.state.size} margin={this.chartMargin}>
         <XAxis tickLine={false} tickFormatter={this.tickFormatter} ticks={this.state.ticks} domain={[0, 4096]} type="number" dataKey="x" range={this.state.range} name="X" label="X"/>
@@ -366,104 +365,85 @@ class GalacticMap extends React.Component {
       right: this.props.map3d ? '38px' : '54px',
       top: '16px'
     };
-    autoBind(this);
+
   }
-  componentDidMount(){
-    this.buildGalaxyOptions(this.props, true);
-  }
-  componentWillReceiveProps(nextProps){
-    if (nextProps.storedLocations !== this.props.storedLocations
-      || nextProps.remoteLocations !== this.props.remoteLocations
-      || !isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
-      this.buildGalaxyOptions(nextProps, false);
-    } else if (this.props.map3d
-      && nextProps.selectedGalaxy !== this.props.selectedGalaxy
-      && isEqual(nextProps.selectedLocation, this.props.selectedLocation)) {
-      this.travelToCenter();
-    }
-  }
-  shouldComponentUpdate(nextProps, nextState){
-    return (nextProps.mapLines !== this.props.mapLines
-      || nextProps.galaxyOptions !== this.props.galaxyOptions
-      || nextProps.selectedGalaxy !== this.props.selectedGalaxy
-      || nextProps.storedLocations !== this.props.storedLocations
-      || nextProps.width !== this.props.width
-      || nextProps.height !== this.props.height
-      || nextProps.remoteLocationsColumns !== this.props.remoteLocationsColumns
-      || (nextProps.remoteLocations && this.props.remoteLocations && nextProps.remoteLocations.results !== this.props.remoteLocations.results)
-      || !isEqual(nextProps.selectedLocation, this.props.selectedLocation)
-      || nextProps.currentLocation !== this.props.currentLocation
-      || nextState.init !== this.state.init)
-  }
-  buildGalaxyOptions(p, init){
-    let options = [];
-    let currentGalaxy = 0;
-    each(p.storedLocations, (location) => {
-      if (location.id === p.currentLocation && location.galaxy) {
-        currentGalaxy = location.galaxy;
-      }
-      options.push({id: location.galaxy});
-    });
-    if (p.remoteLocations && p.remoteLocations.results) {
-      each(p.remoteLocations.results, (location) => {
-        if (location.data.galaxy) {
-          options.push({id: location.data.galaxy});
+  componentWillMount() {
+    window.mapWorker3.onmessage = (e) => {
+      state.set(e.data.buildGalaxyOptions, () => {
+        if (e.data.init) {
+          travelCurrentLocation();
         }
       });
-    }
-    if (p.selectedLocation && p.selectedLocation.galaxy) {
-      options.push({id: p.selectedLocation.galaxy});
-    }
-    options = orderBy(uniqBy(options, 'id'), 'id', 'asc');
-    each(options, (option, i) => {
-      options[i].label = state.galaxies[option.id];
-      options[i].onClick = (id)=>state.set({selectedGalaxy: id});
+    };
+    state.set({navLoad: true});
+    this.connections = [
+      state.connect(['storedLocations', 'remoteLocations', 'selectedLocation'], () => this.buildGalaxyOptions(false)),
+      state.connect(['selectedGalaxy', 'selectedLocation'], () => {
+        if (this.props.map3d) {
+          this.travelToCenter();
+        }
+      })
+    ];
+  }
+  componentWillUnmount() {
+    each(this.connections, (connection) => {
+      state.disconnect(connection);
     });
-    state.set({
-      galaxyOptions: options,
-      selectedGalaxy: init ? currentGalaxy : p.selectedGalaxy
-    }, () => {
-      if (init) {
-        this.travelCurrentLocation();
+  }
+  buildGalaxyOptions = (init) => {
+    window.mapWorker3.postMessage({
+      buildGalaxyOptions: {
+        init,
+        storedLocations: state.storedLocations,
+        remoteLocations: state.remoteLocations,
+        selectedLocation: state.selectedLocation,
+        selectedGalaxy: state.selectedGalaxy,
+        currentLocation: state.currentLocation,
+        ps4User: state.ps4User,
+        galaxies: state.galaxies
       }
     });
   }
-  handleInit(){
-    this.setState({init: false});
+  handleInit = () => {
+    if (!state.currentLocation && !state.ps4User) {
+      delay(() => this.handleInit(), 25);
+      return;
+    }
+    this.setState({init: false}, () => defer(() => this.buildGalaxyOptions(true)));
   }
-  travelToCenter(){
+  travelToCenter = () => {
     window.travelTo = [0, 2, 0];
   }
-  travelCurrentLocation(){
-    window.travelToCurrent = true;
-  }
-  travelToGalacticHub(){
+  travelToGalacticHub = () => {
     this.props.onSearch();
     window.travelTo = [-3474, 865, 5516];
   }
-  travelToAGT(){
+  travelToAGT = () => {
     this.props.onSearch();
     window.travelTo = [2934, 71, -5277];
   }
-  travelToPilgrimStar(){
+  travelToPilgrimStar = () => {
     this.props.onSearch();
     window.travelTo = [-1770, 492, -6420];
   }
-  render(){
+  render() {
     let p = this.props;
+    if (!p.selectedGalaxy < 0) {
+      return null;
+    }
     let compact = p.width <= 1212 || p.height <= 850;
     let leftOptions = [
       {
         id: 'map3d',
         label: `3D Map (BETA): ${p.map3d ? 'On' : 'Off'}`,
-        onClick: ()=>state.set({map3d: !p.map3d}, p.onRestart)
+        onClick: () => state.set({map3d: !p.map3d})
       }
     ];
     if (p.map3d) {
       leftOptions.push({
         id: 'mapDrawDistance',
         label: `Draw Distance: ${p.mapDrawDistance ? 'High' : 'Medium'}`,
-        onClick: ()=>state.set({mapDrawDistance: !p.mapDrawDistance}, p.onRestart)
+        onClick: () => state.set({mapDrawDistance: !p.mapDrawDistance}, p.onRestart)
       });
       leftOptions.push({
         id: 'travelTo',
@@ -473,7 +453,7 @@ class GalacticMap extends React.Component {
       leftOptions.push({
         id: 'travelToCurrent',
         label: `Travel to Current Location`,
-        onClick: this.travelCurrentLocation
+        onClick: travelCurrentLocation
       });
       leftOptions.push({
         id: 'travelTo',
@@ -509,7 +489,7 @@ class GalacticMap extends React.Component {
       leftOptions.push({
         id: 'mapLines',
         label: `Show Path: ${p.mapLines ? 'On' : 'Off'}`,
-        onClick: ()=>state.set({mapLines: !p.mapLines})
+        onClick: () => state.set({mapLines: !p.mapLines})
       });
     }
 
@@ -537,7 +517,7 @@ class GalacticMap extends React.Component {
         position: 'absolute',
         top: '-11px',
         left: '15px',
-        WebkitTransition: 'left 0.1s, background 0.1s',
+        WebkitTransition: 'left 0.1s, background 0.1s, opacity 0.2s',
         zIndex: p.map3d ? '0' : '90',
         WebkitUserSelect: 'none',
         minWidth: '360px',

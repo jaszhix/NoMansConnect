@@ -10,21 +10,26 @@ const textStyle = {
 };
 const fill = Array(64).fill('');
 class Loader extends React.Component {
-  render(){
+  render() {
+    let style = !this.props.loading ? {
+      fontSize: '6px',
+      left: '0px',
+      position: 'relative'
+    } : null;
     return (
-      <div className="loader">
+      <div className="loader" style={style}>
         {map(fill, (v, i)=>{
           return (
             <span key={i} />
           );
         })}
         <div className="pulsing">
-          <div className="circle"></div>
-          <div className="circle"></div>
-          <div className="circle"></div>
-          <div className="circle"></div>
+          <div className="circle" />
+          <div className="circle" />
+          <div className="circle" />
+          <div className="circle" />
         </div>
-        <div style={textStyle}>{this.props.loading}</div>
+        {this.props.loading ? <div style={textStyle}>{this.props.loading}</div> : null}
       </div>
     );
   }
