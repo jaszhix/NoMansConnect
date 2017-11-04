@@ -4,7 +4,6 @@ import {StringDecoder} from 'string_decoder';
 const decoder = new StringDecoder('utf8');
 import axios from 'axios';
 import {clone, cloneDeep, assignIn, pullAt, last, orderBy, isString, defer} from 'lodash';
-import state from './state';
 import {each, findIndex} from './lang';
 
 var exec = require('child_process').exec;

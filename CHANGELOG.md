@@ -1,3 +1,8 @@
+# 1.0.1
+
+  * Fixed the search view getting stuck when selecting a map location with multiple planets.
+  * Fixed a regression causing location box inputs to show the wrong location data while editing.
+
 # 1.0.0
 
   * Fixed a bug preventing the 2D map from displaying scatter points in some situations.
@@ -5,7 +10,7 @@
   * Added a loading status indicator to the top navigation pane.
   * Added the ability to hide one's own locations from the stored location list.
   * Added an option to copy the Universe Address to the clipboard.
-  * The info tooltip that shows when overing over the Teleport option now lists the currently detected save file. If this is incorrect, you need to save the file you want NMC to modify in the game. NMC looks for the last modified save file.
+  * The info tooltip that shows when hovering over the Teleport option now lists the currently detected save file. If this is incorrect, you need to save the file you want NMC to modify in the game. NMC looks for the last modified save file.
   * Performance improvements.
   * Improved validation of manually entered coordinates, and added more thorough checks of locations periodically.
   * NMC will now attempt to gracefully wind down its file I/O before terminating, which should prevent settings/cache JSON files from getting corrupt.
@@ -24,7 +29,7 @@
   * Added an indicator for the current location in the stored location list.
   * Added toggle icons to the location filtering menu.
   * Added periodic purging of 25% of the remote location cache every 1-3 days depending on the amount of locations cached. Locations that are favorited will not be purged. This needs to be done until a better solution is in place for the performance issues caused by loading thousands of data points on the map.
-  * Fixed images not being cached correctly after they're uploaded manually.
+  * Fixed images not being cached correctly after they're uploaded manually.e?count=25&after=t3_7a2qyy
   * Fixed a false positive username protection error when users with NMS save data use PS4 mode.
 
 # 0.17.1

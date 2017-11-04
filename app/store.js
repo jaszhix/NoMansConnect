@@ -1,4 +1,4 @@
-import {clone, isEqual, intersection as intersect, difference, pullAt, defer, isPlainObject} from 'lodash';
+import {clone, isEqual, intersection as intersect, difference, pullAt, defer} from 'lodash';
 import {find, findIndex, filter} from './lang';
 
 function storeError(method, key, message) {

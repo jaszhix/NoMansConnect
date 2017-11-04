@@ -1621,7 +1621,9 @@ class App extends React.Component {
     win.minimize();
   }
   handleClose = () => {
-    this.monitor.stop();
+    if (this.monitor) {
+      this.monitor.stop();
+    }
     state.set({closing: true});
     defer(() => {
       win.close();

@@ -1,7 +1,7 @@
 {
   "name": "no-mans-connect",
   "productName": "NoMansConnect",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A location manager for No Man's Sky.",
   "main": "main.js",
   "scripts": {
@@ -271,7 +271,7 @@
     "resolve-dir": "^1.0.1",
     "rng-js": "^1.0.1",
     "source-map-support": "^0.5.0",
-    "threact": "0.4.6",
+    "threact": "0.4.7",
     "three": "^0.87.1",
     "tween.js": "^16.6.0",
     "vquery": "^5.0.1",

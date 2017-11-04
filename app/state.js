@@ -1,7 +1,7 @@
 import {remote} from 'electron';
 import os from 'os';
 import fs from 'graceful-fs';
-import {assignIn, pick, uniqBy, take, defer} from 'lodash';
+import {assignIn, pick, uniqBy, take} from 'lodash';
 import {each, filter} from './lang';
 import initStore from './store';
 import galaxies from './static/galaxies.json';
@@ -15,7 +15,7 @@ const state = initStore({
   knownProducts,
   galaxies,
   completedMigration: false,
-  version: '1.0.0',
+  version: '1.0.1',
   apiBase: 'https://neuropuff.com/api/',
   winVersion: os.release(),
   machineId: null,

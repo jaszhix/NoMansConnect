@@ -1,6 +1,6 @@
 import React from 'react'
 import * as THREE from 'three';
-import {defer, delay, isEqual, cloneDeep, uniq, uniqBy, concat} from 'lodash';
+import {delay, isEqual} from 'lodash';
 import state from './state';
 import path from 'path'
 import TWEEN from 'tween.js'
@@ -80,7 +80,7 @@ let Mesh = null;
 let SpotLight = null;
 class Map3D extends React.Component {
   constructor(props) {
-    let threact = require('./threact');
+    let threact = require('threact');
     WebGLRenderer = threact.WebGLRenderer;
     Mesh = threact.Mesh;
     SpotLight = threact.SpotLight;

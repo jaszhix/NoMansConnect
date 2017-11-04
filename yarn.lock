@@ -8353,9 +8353,9 @@ text-table@~0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/text-table/-/text-table-0.2.0.tgz#7f5ee823ae805207c00af2df4a84ec3fcfa570b4"
 
-threact@0.4.6:
-  version "0.4.6"
-  resolved "https://registry.yarnpkg.com/threact/-/threact-0.4.6.tgz#03ee4182ca3caa61c2a036356161b032de2fb221"
+threact@0.4.7:
+  version "0.4.7"
+  resolved "https://registry.yarnpkg.com/threact/-/threact-0.4.7.tgz#6fb37440ceec4115bf47581700ae9494230f042b"
   dependencies:
     lodash.isequal "^4.5.0"
     orbit-controls "^1.1.3"
