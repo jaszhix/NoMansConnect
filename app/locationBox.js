@@ -55,18 +55,7 @@ class LocationBox extends React.Component {
       image: null
     };
     this.connections = [
-      state.connect(['location', 'updating'], () => {
-        if (this.scrollBox) {
-          this.scrollBox.scrollTop = 0;
-        }
-        if (this.scrollBox || props.updating) {
-          this.setState({name: '', description: '', image: ''});
-        }
-      }),
       state.connect({
-        name: () => this.setState({name: props.name}),
-        description: () => this.setState({description: props.description}),
-        image: () => this.getImage(props),
         compactRemote: () => {
           if (!props.selectType && !this.willUnmount) {
             ReactTooltip.rebuild();
@@ -78,6 +67,35 @@ class LocationBox extends React.Component {
   }
   componentDidMount() {
     this.getImage(this.props);
+  }
+  componentWillReceiveProps(nextProps) {
+    if ((nextProps.selectType
+      && nextProps.location.id !== this.props.location.id
+      && this.scrollBox)
+      || (nextProps.updating !== this.props.updating && nextProps.updating)) {
+      if (this.scrollBox) {
+        this.scrollBox.scrollTop = 0;
+      }
+
+      this.setState({name: '', description: '', image: ''});
+    }
+
+    if (nextProps.name !== this.props.name) {
+      this.setState({name: nextProps.name});
+    }
+
+    if (nextProps.description !== this.props.description) {
+      this.setState({description: nextProps.description});
+    }
+
+    if (nextProps.image !== this.props.image) {
+      this.getImage(nextProps);
+    }
+
+    if (nextProps.compactRemote !== this.props.compactRemote && !nextProps.selectType) {
+      ReactTooltip.rebuild();
+      this.setState({compactRemote: nextProps.compactRemote}, this.props.onCompactRemoteSwitch);
+    }
   }
   componentWillUnmount = () => {
     this.willUnmount = true;
