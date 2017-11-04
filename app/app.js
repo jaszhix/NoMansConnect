@@ -90,13 +90,13 @@ class Search extends React.Component {
     return (
       <div className="item">
         <div
-        className={`ui transparent icon input${state.navLoad ? ' disabled' : ''}`}
+        className={`ui transparent icon input${this.props.navLoad ? ' disabled' : ''}`}
         style={transparentIconInputStyle}>
           <input
           type="text"
           style={letterSpacingStyle}
           placeholder="Search..."
-          value={this.state.search}
+          value={this.state.search || this.props.search}
           onChange={this.setValue}
           onKeyDown={this.handleEnter} />
           <i
@@ -1670,7 +1670,12 @@ class App extends React.Component {
               Favorites
             </div> : null}
             {!s.init ?
-            <Search onKeyDown={this.handleSearch} style={this.searchIconStyle} onClick={this.handleSearchIconClick} /> : null}
+            <Search
+            onKeyDown={this.handleSearch}
+            style={this.searchIconStyle}
+            onClick={this.handleSearchIconClick}
+            search={s.search}
+            navLoad={s.navLoad} /> : null}
             {!s.ps4User ?
             <BaseDropdownMenu
             onSaveBase={this.handleSaveBase}
