@@ -9,6 +9,7 @@ import {machineId} from 'node-machine-id';
 import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
+import {shouldComponentUpdate} from "reflective-bind";
 import openExternal from 'open-external';
 import {assignIn, cloneDeep, clone, orderBy, uniq, uniqBy, defer, delay, concat, first, last, isArray, isString, pullAt, throttle, pick} from 'lodash';
 import v from 'vquery';
@@ -29,6 +30,13 @@ import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
 import RemoteLocations from './remoteLocations';
+
+React.Component.prototype.shouldComponentUpdate = function(
+  nextProps,
+  nextState
+) {
+  return shouldComponentUpdate(this, nextProps, nextState);
+};
 
 const {dialog} = remote;
 

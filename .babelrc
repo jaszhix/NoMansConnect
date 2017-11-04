@@ -5,6 +5,7 @@
     "react"
   ],
   "plugins": [
+    "reflective-bind/babel",
     "lodash",
     "add-module-exports",
     "dynamic-import-webpack"
