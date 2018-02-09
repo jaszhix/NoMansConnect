@@ -1,3 +1,8 @@
+# 1.0.2
+
+  * Corrected an issue with the app getting stuck on location validation if the cache hasn't been updated for a while.
+  * Upgraded dependencies.
+
 # 1.0.1
 
   * Fixed the search view getting stuck when selecting a map location with multiple planets.

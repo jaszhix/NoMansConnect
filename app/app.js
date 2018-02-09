@@ -9,7 +9,6 @@ import {machineId} from 'node-machine-id';
 import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
-import {shouldComponentUpdate} from "reflective-bind";
 import openExternal from 'open-external';
 import {assignIn, cloneDeep, clone, orderBy, uniq, uniqBy, defer, delay, concat, first, last, isArray, isString, pullAt, throttle, pick} from 'lodash';
 import v from 'vquery';
@@ -30,13 +29,6 @@ import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
 import RemoteLocations from './remoteLocations';
-
-React.Component.prototype.shouldComponentUpdate = function(
-  nextProps,
-  nextState
-) {
-  return shouldComponentUpdate(this, nextProps, nextState);
-};
 
 const {dialog} = remote;
 
@@ -789,7 +781,7 @@ class App extends React.Component {
       params: [page, sort, init, true, false]
     });
   }
-  formatRemoteLocations = (res, page, sort, init, partial, pagination, cb=null) => {
+  formatRemoteLocations = (res, page=1, sort, init, partial, pagination, cb=null) => {
     if (this.state.offline || this.state.closing) {
       return;
     }
@@ -851,7 +843,7 @@ class App extends React.Component {
           id: lastRemoteLocation.data.id
         }
       },
-      params: [state.page, state.sort, false, true, state.pagination]
+      params: [state.page ? state.page : 1, state.sort, false, true, state.pagination]
     });
   }
   fetchRemoteLocations = (page = this.state.page, sort = this.state.sort, init = false, pagination = false) => {
@@ -866,7 +858,7 @@ class App extends React.Component {
     sort = sort === 'search' ? '-created' : sort;
 
     let params = {
-      page: page,
+      page: page ? page : 1,
       sort: sort,
       q: q
     };

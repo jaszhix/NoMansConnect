@@ -493,6 +493,9 @@ export function convertRange(value, r1, r2) {
 };
 
 export const formatForGlyphs = function(translatedId) {
+  if (!translatedId || typeof translatedId !== 'string') {
+    return [];
+  }
   // Based on
   // https://github.com/nmsportals/nmsportals.github.io/blob/47f52a729ed38bb5ce4224e7fe52575b5c8329ec/js/glyphs.js#L378
   let [A, B, C, D] = translatedId.split(':');
@@ -513,8 +516,6 @@ export const formatForGlyphs = function(translatedId) {
   B = B.toString(16).toUpperCase();
   if (B.length === 1) {
     B = '0' + B;
-  } else {
-    B = B;
   }
   C = parseInt(C, 16);
   C = +C + 2049;

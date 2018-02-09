@@ -23,7 +23,7 @@ onmessage = function(e) {
       func: e.data.func,
       params: e.data.params,
       err: 'err',
-      status: err.response.status
+      status: err.response ? err.response.status : 400
     });
   });
 }

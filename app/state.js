@@ -15,7 +15,7 @@ const state = initStore({
   knownProducts,
   galaxies,
   completedMigration: false,
-  version: '1.0.1',
+  version: '1.0.2',
   apiBase: 'https://neuropuff.com/api/',
   winVersion: os.release(),
   machineId: null,
@@ -236,11 +236,7 @@ const state = initStore({
         return obj;
       }
 
-      let locations = filter(
-        take(
-          obj.remoteLocations.results,
-          Math.ceil(remoteLength * 0.90)
-      ), (location) => {
+      let locations = filter(obj.remoteLocations.results, (location) => {
         return (location.data.upvote
           || (location.data.VoxelY > -128 && location.data.VoxelY < 127
           && location.data.VoxelZ > -2048 && location.data.VoxelZ < 2047
