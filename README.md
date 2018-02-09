@@ -1,7 +1,3 @@
-# DISCONTINUED
-
-No Man's Sky no longer carries my interest, not enough time to maintain this, and too much modder drama. Maybe things will improve later.
-
 # No Man's Connect
 
 This is a location manager that syncs your current game's coordinates, uploads them to a server, and indexes a list of everyone's coordinates using the app. It also provides a map that plots your coordinates relative to the center of the galaxy.
