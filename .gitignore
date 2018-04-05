@@ -54,3 +54,4 @@ dll
 /.vscode/launch.json
 /app/package-lock.json
 /app/threact
+/proj.code-workspace

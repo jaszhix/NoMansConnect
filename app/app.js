@@ -524,7 +524,7 @@ class App extends React.Component {
       this.setState(obj, () => {
         state.handleState(obj);
       });
-      console.log(`STATE: `, this.state);
+      console.log(`STATE: `, cloneDeep(this.state));
     });
 
     this.topAttachedMenuStyle = {
@@ -1133,7 +1133,7 @@ class App extends React.Component {
       let processData = (saveData, location, refLocation, username, profile=null) => {
         if (this.state.ps4User) {
           state.set({
-            machineId: machineId,
+            machineId,
           }, next);
           return;
         }
@@ -1231,7 +1231,7 @@ class App extends React.Component {
             saveDirectory: this.state.saveDirectory,
             saveFileName: saveData.path,
             saveVersion: saveData.result.Version,
-            machineId: machineId,
+            machineId,
             loading: 'Loading save data...'
           };
 
@@ -1297,12 +1297,14 @@ class App extends React.Component {
             processData(saveData, location, refLocation, username, profile);
           }).catch((err) => {
             log.error(err)
-            if (err.response && err.response.status === 403) {
-              log.error(`Username protected: ${username}`);
-              this.handleProtectedSession(username);
-            } else {
-              processData(saveData, location, refLocation, username);
-            }
+            state.set({machineId, username}, () => {
+              if (err.response && err.response.status === 403) {
+                log.error(`Username protected: ${username}`);
+                this.handleProtectedSession(username);
+              } else {
+                processData(saveData, location, refLocation, username);
+              }
+            });
           });
         }
 
@@ -1340,9 +1342,9 @@ class App extends React.Component {
       if (result === 1) {
         utils.ajax.post('/nmsrequestrecovery/', {
           machineId: this.state.machineId,
-          username: this.state.username
+          username
         }).then(() => {
-          this.handleProtectedSession(username);
+          state.set({username}, () => this.handleProtectedSession(username));
         }).catch((err) => {
           if (err.response && err.response.status === 400) {
             dialog.showMessageBox({
