@@ -230,10 +230,12 @@ const state = initStore({
     // TODO: Find a beter way to handle cache
 
     if ((state.maintenanceTS + 86400000 < Date.now())) {
-      state.set({loading: 'Validating locations Please wait...'});
       let remoteLength = obj.remoteLocations.results.length;
+      state.set({loading: 'Validating locations Please wait...', remoteLength});
+      obj.maintenanceTS = Date.now();
       if (remoteLength < 6000) {
-        return obj;
+        cb(obj);
+        return;
       }
 
       let locations = filter(obj.remoteLocations.results, (location) => {
@@ -249,7 +251,6 @@ const state = initStore({
       obj.remoteLocations.count = locations.length;
       obj.page = Math.ceil(obj.remoteLocations.results.length / state.pageSize)
       obj.remoteLocations.page = obj.page;
-      obj.maintenanceTS = Date.now();
     }
     cb(obj);
   },
