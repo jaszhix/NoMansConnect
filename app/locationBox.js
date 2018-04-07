@@ -123,6 +123,8 @@ class LocationBox extends React.Component {
           });
         }
       }
+    }).catch((err) => {
+      this.props.onUpdate(this.props.id, null, true);
     })
   }
   getImage = (p) => {
