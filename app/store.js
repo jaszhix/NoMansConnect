@@ -97,7 +97,7 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
       if (!state.hasOwnProperty(keys[i])) {
         throw storeError('set', keys[i], 'Property not found.');
       }
-      if ((typeof object[keys[i]] === 'object' && isEqual(state[keys[i]], object[keys[i]]))
+      if ((typeof object[keys[i]] === 'object' /* && isEqual(state[keys[i]], object[keys[i]]) */)
         || state[keys[i]] !== object[keys[i]]) {
         changed = true;
         state[keys[i]] = object[keys[i]];

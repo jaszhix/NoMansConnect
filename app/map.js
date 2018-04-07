@@ -144,15 +144,14 @@ class ThreeDimScatterChart extends React.Component {
     if (isArray(locations)) {
       locations = {results: locations}
     }
-    let _locations = cloneDeep(locations);
-    let systems = uniqBy(_locations.results, (location) => {
+    let systems = uniqBy(locations.results, (location) => {
       location = location.data ? location : {data: location};
       return location.data.translatedX && location.data.translatedY && location.data.translatedZ;
     });
     each(systems, (location, i) => {
       systems[i] = location.data ? location : {data: location};
       location = systems[i];
-      let planets = filter(_locations.results, (planet) => {
+      let planets = filter(locations.results, (planet) => {
         planet = planet.data ? planet : {data: planet};
         return (location.data.translatedX === planet.data.translatedX
           && location.data.translatedY === planet.data.translatedY
@@ -180,8 +179,8 @@ class ThreeDimScatterChart extends React.Component {
       });
       location.data.planetData = planetData;
     });
-    _locations.results = systems;
-    return _locations;
+    locations.results = systems;
+    return locations;
   }
   handlePostMessage = () => {
     if (!state.navLoad) {
@@ -278,7 +277,7 @@ class ThreeDimScatterChart extends React.Component {
         return;
       }
       location = location.data ? location : {
-        data: cloneDeep(location),
+        data: location,
         teleports: location.teleports ? location.teleports : 0,
         id: uuidV4(),
         image: location.image ? location.image : '',

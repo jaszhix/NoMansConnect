@@ -336,7 +336,6 @@ class Container extends React.Component {
     });
   }
   handleSelectLocation = (location) => {
-    location = cloneDeep(location);
     let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id;
     let _location = null;
     if (!deselected) {
@@ -524,7 +523,7 @@ class App extends React.Component {
       this.setState(obj, () => {
         state.handleState(obj);
       });
-      console.log(`STATE: `, cloneDeep(this.state));
+      console.log(`STATE: `, this.state);
     });
 
     this.topAttachedMenuStyle = {
@@ -764,7 +763,6 @@ class App extends React.Component {
         };
       });
       if (!existsInRemoteLocations) {
-        location = cloneDeep(location);
         location.timeStamp = new Date(location.timeStamp);
         locations.push(location);
       }
@@ -1156,11 +1154,11 @@ class App extends React.Component {
           if (refLocation === -1) {
             assignIn(location, {
               username: username,
-              playerPosition: clone(saveData.result.SpawnStateData.PlayerPositionInSystem),
-              playerTransform: clone(saveData.result.SpawnStateData.PlayerTransformAt),
-              shipPosition: clone(saveData.result.SpawnStateData.ShipPositionInSystem),
-              shipTransform: clone(saveData.result.SpawnStateData.ShipTransformAt),
-              galaxy: clone(saveData.result.PlayerStateData.UniverseAddress.RealityIndex),
+              playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
+              playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
+              shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
+              shipTransform: saveData.result.SpawnStateData.ShipTransformAt,
+              galaxy: saveData.result.PlayerStateData.UniverseAddress.RealityIndex,
               distanceToCenter: Math.sqrt(Math.pow(location.VoxelX, 2) + Math.pow(location.VoxelY, 2) + Math.pow(location.VoxelZ, 2)) * 100,
               translatedX: utils.convertInteger(location.VoxelX, 'x'),
               translatedZ: utils.convertInteger(location.VoxelZ, 'z'),

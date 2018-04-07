@@ -3,7 +3,7 @@ import path from 'path';
 import {StringDecoder} from 'string_decoder';
 const decoder = new StringDecoder('utf8');
 import axios from 'axios';
-import {clone, cloneDeep, assignIn, pullAt, last, orderBy, isString, defer} from 'lodash';
+import {cloneDeep, assignIn, pullAt, last, orderBy, isString, defer} from 'lodash';
 import {each, findIndex} from './lang';
 
 var exec = require('child_process').exec;
@@ -48,7 +48,7 @@ export var exc = (cmd)=>{
 
 export var formatID = (location)=>{
   location.GalacticAddress.id = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
-  return cloneDeep(location.GalacticAddress);
+  return location.GalacticAddress;
 };
 
 export var parseID = (id)=>{
@@ -319,7 +319,7 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
         reject();
         return;
       }
-      resolve(cloneDeep(lastModifiedSave));
+      resolve(lastModifiedSave);
     });
   });
 };
@@ -546,7 +546,7 @@ export var validateEmail = (email) => {
 }
 
 export var css = (styleObject, newObject)=>{
-  return assignIn(clone(styleObject), clone(newObject));
+  return assignIn({}, styleObject, newObject);
 };
 
 export var tip = (content)=>{
