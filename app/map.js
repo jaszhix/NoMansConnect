@@ -130,6 +130,11 @@ class ThreeDimScatterChart extends React.Component {
     this.handlePostMessage();
     this.handlePostMessageSize();
   }
+  componentWillReceiveProps(nP) {
+    if (nP.mapLines !== this.props.mapLines) {
+      this.forceUpdate();
+    }
+  }
   componentWillUnmount() {
     this.willUnmount = true;
     each(this.connections, (connection) => {
