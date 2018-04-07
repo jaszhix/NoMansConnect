@@ -10,7 +10,7 @@ import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
 import openExternal from 'open-external';
-import {assignIn, cloneDeep, clone, orderBy, uniq, uniqBy, defer, delay, concat, first, last, isArray, isString, pullAt, throttle, pick} from 'lodash';
+import {assignIn, cloneDeep, orderBy, uniq, uniqBy, defer, delay, concat, first, last, isArray, isString, pullAt, throttle, pick} from 'lodash';
 import v from 'vquery';
 import math from 'mathjs';
 
@@ -342,6 +342,10 @@ class Container extends React.Component {
       let refRemoteLocation = find(this.props.s.remoteLocations.results, (remoteLocation) => {
         return remoteLocation.data.id === location.id;
       });
+      if (!refRemoteLocation) {
+        log.error(`Unable to find reference remote location from stored locations cache:\n ${JSON.stringify(location)}`)
+        return;
+      }
       console.log('SELECTED: ', location.id, refRemoteLocation.data.id);
       if (refRemoteLocation !== undefined && refRemoteLocation) {
         refRemoteLocation.data.image = refRemoteLocation.image;
@@ -466,6 +470,7 @@ class Container extends React.Component {
         {remoteLocationsLoaded ?
         <RemoteLocations
         s={p.s}
+        onSearch={p.onSearch}
         currentLocation={p.s.currentLocation}
         isOwnLocation={isOwnLocation}
         updating={this.state.updating}
@@ -690,7 +695,7 @@ class App extends React.Component {
           })
           e.data.data.results[i] = location;
         });
-        this.state.storedLocations = orderBy(uniqBy(concat(this.state.storedLocations, map(e.data.data.results, res => res.data)), 'id'), 'timeStamp', 'desc');
+        this.state.storedLocations = uniqBy(concat(this.state.storedLocations, map(e.data.data.results, res => res.data)), 'id');
         state.set({
           storedLocations: this.state.storedLocations,
           loading: 'Syncing locations...'
@@ -862,7 +867,7 @@ class App extends React.Component {
     };
 
     if (q) {
-      params.page_size = 200;
+      params.page_size = q.substr(0, 5) === 'user:' ? 2000 : 200;
     }
 
     window.ajaxWorker.postMessage({

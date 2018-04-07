@@ -13173,15 +13173,6 @@ a.ui.basic.grey.label:hover {
   border-color: #838383 !important;
 }
 
-/*--- Black ---*/
-
-.ui.black.labels .label,
-.ui.black.label {
-  background-color: #1B1C1D !important;
-  border-color: #1B1C1D !important;
-  color: #171A16 !important;
-}
-
 /* Link */
 
 .ui.black.labels .label:hover,
@@ -13444,9 +13435,6 @@ a.ui.basic.label:hover {
 .ui.floating.label {
   position: absolute;
   z-index: 100;
-  top: -1em;
-  left: 100%;
-  margin: 0em 0em 0em -1.5em !important;
 }
 
 /*-------------------
@@ -38741,6 +38729,17 @@ LocationBox
   overflow-y: auto;
   overflow-x: hidden;
   width: 363px;
+}
+
+.LocationBox__badge {
+  position: absolute;
+  top: 1em !important;
+  left: initial !important;
+  margin: initial !important;
+  margin-left: 8px !important;
+  background-color: rgba(0, 0, 0, 0) !important;
+  color: rgba(255, 255, 255, 0.61);
+  border: 1px solid rgba(255, 255, 255, 0.27) !important;
 }
 
 /*

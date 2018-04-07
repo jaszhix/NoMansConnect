@@ -101,7 +101,7 @@ class ThreeDimScatterChart extends React.Component {
         z: 127
       }],
       size: 480,
-      zRange: [14, 64],
+      zRange: [14, 32],
       ticks: [0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096],
       range: [0, 4096]
     };

@@ -7,10 +7,10 @@ import axios from 'axios';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import ReactTooltip from 'react-tooltip';
-import {defer, truncate, upperFirst, pullAt} from 'lodash';
+import {defer, truncate, upperFirst, pullAt, isEqual} from 'lodash';
 import moment from 'moment';
 
-import {css, tip, cleanUp, formatForGlyphs} from './utils';
+import {css, tip, cleanUp, formatForGlyphs, ajax} from './utils';
 import {each, findIndex, map, tryFn} from './lang';
 
 import baseIcon from './assets/images/base_icon.png';
@@ -43,7 +43,7 @@ class LocationBox extends React.Component {
   static defaultProps = {
     selectType: false,
     name: '',
-    description: ''
+    description: '',
   };
   constructor(props) {
     super(props);
@@ -52,7 +52,9 @@ class LocationBox extends React.Component {
       limit: false,
       name: this.props.name,
       description: this.props.description,
-      image: null
+      image: null,
+      profile: null,
+      location: this.props.location,
     };
     this.connections = [
       state.connect({
@@ -67,17 +69,20 @@ class LocationBox extends React.Component {
   }
   componentDidMount() {
     this.getImage(this.props);
+    if (this.props.id && !this.props.offline) {
+      this.updateLocation();
+    }
   }
   componentWillReceiveProps(nextProps) {
-    if ((nextProps.selectType
-      && nextProps.location.id !== this.props.location.id
-      && this.scrollBox)
-      || (nextProps.updating !== this.props.updating && nextProps.updating)) {
-      if (this.scrollBox) {
-        this.scrollBox.scrollTop = 0;
+    if (nextProps.location.id !== this.props.location.id) {
+      if ((nextProps.selectType && this.scrollBox)
+        || (nextProps.updating !== this.props.updating && nextProps.updating)) {
+        if (this.scrollBox) {
+          this.scrollBox.scrollTop = 0;
+        }
+        this.setState({name: '', description: '', image: ''});
       }
-
-      this.setState({name: '', description: '', image: ''});
+      this.setState({location: nextProps.location});
     }
 
     if (nextProps.name !== this.props.name) {
@@ -106,6 +111,19 @@ class LocationBox extends React.Component {
   }
   handleCancel = () => {
     this.props.onEdit();
+  }
+  updateLocation = () => {
+    ajax.get(`/nmslocation/${this.props.id}/`).then((res) => {
+      if (!this.willUnmount) {
+        if (!isEqual(this.props.location, res.data.data) || !isEqual(this.props.profile, res.data.profile)) {
+          this.props.onUpdate(this.props.id, res.data);
+          this.setState({
+            location: res.data.data,
+            profile: res.data.profile
+          });
+        }
+      }
+    })
   }
   getImage = (p) => {
     if (p.image) {
@@ -161,6 +179,7 @@ class LocationBox extends React.Component {
   }
   renderDetails = () => {
     let p = this.props;
+    let {location} = this.state;
     let scrollBoxStyle = p.compactRemote ? compactRemoteScrollBoxStyle : {};
     return (
       <div ref={this.getRef} style={scrollBoxStyle} className="LocationBox__scrollBoxStyle">
@@ -169,53 +188,60 @@ class LocationBox extends React.Component {
             {this.state.image ? <img className="LocationBox__imageStyle" src={this.state.image} onClick={() => state.set({selectedImage: this.state.image})} /> : null}
           </div>
         ) : null}
-        {p.location.description ? <Item label="Description" value={p.location.description} /> : null}
-        <Item label="Galactic Address" value={p.location.translatedId} />
-        <Item label="Universe Address" value={p.location.id} />
+        {location.description || this.props.description ? <Item label="Description" value={this.props.description ? this.props.description : location.description} /> : null}
+        <Item label="Galactic Address" value={location.translatedId} />
+        <Item label="Universe Address" value={location.id} />
         <Item label="Portal Address">
-          {map(formatForGlyphs(p.location.translatedId), (glyph, i) => {
+          {map(formatForGlyphs(location.translatedId), (glyph, i) => {
               return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
           })}
         </Item>
-        {p.location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[p.location.galaxy]} /> : null}
-        {p.location.distanceToCenter ? <Item label="Distance to Center" value={`${p.location.distanceToCenter.toFixed(0)} LY / ${p.location.jumps} Jumps`} /> : null}
-        {p.location.mode ? <Item label="Mode" value={upperFirst(p.location.mode)} /> : null}
-        {p.name.length > 0 || p.location.baseData ? <Item label="Explored by" value={p.location.username} /> : null}
-        {p.location.teleports ? <Item label="Teleports" value={p.location.teleports} /> : null}
-        {p.location.score ? <Item label="Favorites" value={p.location.score} /> : null}
+        {location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[location.galaxy]} /> : null}
+        {location.distanceToCenter ? <Item label="Distance to Center" value={`${location.distanceToCenter.toFixed(0)} LY / ${location.jumps} Jumps`} /> : null}
+        {location.mode ? <Item label="Mode" value={upperFirst(location.mode)} /> : null}
+        {p.name.length > 0 || location.baseData ? <Item label="Explored by" value={location.username} /> : null}
+        {location.teleports ? <Item label="Teleports" value={location.teleports} /> : null}
+        {location.score ? <Item label="Favorites" value={location.score} /> : null}
         {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
-        <Item label="Created" value={moment(p.location.timeStamp).format('MMMM D, Y')} />
-        {p.location.mods && p.location.mods.length > 0 && !p.compactRemote ? (
-          <Item label={`Mods Used (${p.location.mods.length})`} dataPlace="top" dataTip={utils.tip(this.getModMarkup(p.location.mods))} />
+        <Item label="Created" value={moment(location.timeStamp).format('MMMM D, Y')} />
+        {location.mods && location.mods.length > 0 && !p.compactRemote ? (
+          <Item label={`Mods Used (${location.mods.length})`} dataPlace="top" dataTip={utils.tip(this.getModMarkup(location.mods))} />
         ) : null}
       </div>
     );
   }
+  handleBadgeClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    state.set({search: `user:${this.state.profile.username}`});
+    this.props.onSearch();
+  }
   render() {
     let p = this.props;
+    let {location} = this.state;
     let refFav = findIndex(p.favorites, fav => {
-      return fav === p.location.id;
+      return fav === location.id;
     });
     let upvote = refFav !== -1 || location.update;
-    let isOwnLocation = p.isOwnLocation && p.selectType && p.location.username === p.username;
-    let deleteArg = p.location.image && p.location.image.length > 0;
+    let isOwnLocation = p.isOwnLocation && p.selectType && location.username === p.username;
+    let deleteArg = location.image && location.image.length > 0;
     let compact = p.width && p.width <= 1212;
-    let isSpaceStation = p.location.id[p.location.id.length - 1] === '0';
+    let isSpaceStation = location.id[location.id.length - 1] === '0';
     let leftOptions = [];
-    let name = p.edit && this.state.name.length > 0 ? this.state.name : p.location.username ? (p.name.length > 0 ? p.name : `${p.location.username} explored`) : 'Selected';
+    let name = p.edit && this.state.name.length > 0 ? this.state.name : location.username ? (p.name.length > 0 ? p.name : `${location.username} explored`) : 'Selected';
 
-    if (p.location.id !== p.currentLocation && !p.ps4User) {
+    if (location.id !== p.currentLocation && !p.ps4User) {
       leftOptions.push({
         id: 'teleport',
         label: (p.selectType && p.installing && p.installing === `tselected`) || (p.i && p.installing === `t${p.i}`) ? 'Working...' : 'Teleport Here',
-        onClick: () => p.onTeleport(p.location, p.selectType ? 'selected' : p.i)
+        onClick: () => p.onTeleport(location, p.selectType ? 'selected' : p.i)
       });
     }
-    if (p.location.base && p.location.baseData) {
+    if (location.base && location.baseData) {
       leftOptions.push({
         id: 'storeBase',
         label: 'Store Base',
-        onClick: () => p.onSaveBase(p.location.baseData)
+        onClick: () => p.onSaveBase(location.baseData)
       });
     }
     if (isOwnLocation) {
@@ -247,22 +273,22 @@ class LocationBox extends React.Component {
         pullAt(leftOptions, refLeftOption);
       }
     }
-    if (p.selectType && p.location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
+    if (p.selectType && location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
       leftOptions.push({
         id: 'removeStored',
-        label: `${isOwnLocation ? p.location.isHidden ? 'Show In' : 'Hide From' : 'Remove From'} Storage`,
+        label: `${isOwnLocation ? location.isHidden ? 'Show In' : 'Hide From' : 'Remove From'} Storage`,
         onClick: () => p.onRemoveStoredLocation()
       });
     }
     leftOptions.push({
       id: 'copyAddress',
       label: 'Copy Galactic Address to Clipboard',
-      onClick: () => clipboard.writeText(p.location.translatedId)
+      onClick: () => clipboard.writeText(location.translatedId)
     });
     leftOptions.push({
       id: 'copyAddress',
       label: 'Copy Universe Address to Clipboard',
-      onClick: () => clipboard.writeText(p.location.id)
+      onClick: () => clipboard.writeText(location.id)
     });
 
     let visibleStyle = {
@@ -297,15 +323,17 @@ class LocationBox extends React.Component {
               fontSize: name.length > 28 ? '14px' : '17.92px',
               textAlign: 'center',
               maxHeight: '23px',
-              color: p.location.playerPosition && !p.location.manuallyEntered ? 'inherit' : '#7fa0ff',
+              color: location.playerPosition && !location.manuallyEntered ? 'inherit' : '#7fa0ff',
               cursor: p.selectType ? 'default' : 'pointer'
             }}
-          onClick={() => state.set({selectedLocation: p.location, selectedGalaxy: p.location.galaxy})}>
+          onClick={() => state.set({selectedLocation: location, selectedGalaxy: location.galaxy})}>
             {name}
+            {this.state.profile ?
+            <div onClick={this.handleBadgeClick} className="floating ui black label LocationBox__badge">{this.state.profile.exp}</div> : null}
           </h3>
         ) : null}
 
-        {this.props.isVisible ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => p.onFav(p.location)} /> : null}
+        {this.props.isVisible ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => p.onFav(location)} /> : null}
         {this.props.isVisible ? (
           <div
           style={{
@@ -315,7 +343,7 @@ class LocationBox extends React.Component {
               top: '16px'
             }}>
             {leftOptions.length > 0 ? <BasicDropdown icon="ellipsis horizontal" showValue={null} persist={p.edit} options={leftOptions} /> : null}
-            {p.location.base ? (
+            {location.base ? (
               <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
                 <img className="LocationBox__baseStyle" src={baseIcon} />
               </span>

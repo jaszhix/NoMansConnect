@@ -1,9 +1,9 @@
 import state from './state';
 import React from 'react';
 import {delay, defer, throttle, orderBy} from 'lodash';
-
+import log from './log';
 import {whichToShow} from './utils';
-import {each, filter} from './lang';
+import {each, filter, findIndex} from './lang';
 import {BasicDropdown} from './dropdowns';
 import LocationBox from './locationBox';
 
@@ -13,7 +13,12 @@ class RemoteLocations extends React.Component {
     this.state = {
       init: true
     };
-    state.connect(['searchCache', 'sort'], () => this.recentExplorations.scrollTop = 0);
+    state.connect(['searchCache', 'sort'], () => {
+      if (!this.recentExplorations) {
+        return;
+      }
+      this.recentExplorations.scrollTop = 0;
+    });
     state.connect(['remoteLocationsColumns', 'compactRemote'], () => defer(() => this.setViewableRange(this.recentExplorations)));
     this.range = {start: 0, length: 0};
   }
@@ -85,6 +90,15 @@ class RemoteLocations extends React.Component {
   }
   handleFavorite = (location, upvote) => {
     this.props.onFav(location, upvote);
+  }
+  handleUpdate = (id, location) => {
+    let refIndex = findIndex(this.props.s.remoteLocations, (_location) => _location.id === id);
+    if (refIndex === -1) {
+      log.error(`Unable to find reference remote location to be updated:\n ${JSON.stringify(location)}`);
+      return;
+    }
+    this.props.s.remoteLocations.results[refIndex] = location;
+    state.set({remoteLocations: this.props.s.remoteLocations});
   }
   getRef = (ref) => {
     this.recentExplorations = ref;
@@ -199,7 +213,10 @@ class RemoteLocations extends React.Component {
     }
     let parenthesis = p.s.offline || p.s.remoteLength === 0 ? '' : `(${p.s.remoteLength})`;
     let criteria = p.s.offline ? 'Cached' : p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular';
-    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count > 200 ? 200 : p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
+    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count > 2000 ? 2000 : p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
+    if (title.substr(0, 5) === 'user:') {
+      title = title.split('user:')[1];
+    }
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.s.remoteLocations.results;
     if (this.props.s.showOnlyScreenshots) {
       locations = filter(locations, (location)=>{
@@ -265,7 +282,9 @@ class RemoteLocations extends React.Component {
           i={i}
           scrollTop={this.recentExplorations ? this.recentExplorations.scrollTop : 0}
           isVisible={true}
+          id={location.id}
           name={location.name}
+          profile={location.profile}
           description={location.description}
           username={p.s.username}
           isOwnLocation={p.isOwnLocation}
@@ -279,8 +298,11 @@ class RemoteLocations extends React.Component {
           onTeleport={p.onTeleport}
           onSaveBase={p.onSaveBase}
           onCompactRemoteSwitch={this.setViewableRange}
+          onSearch={p.onSearch}
+          onUpdate={this.handleUpdate}
           ps4User={p.ps4User}
           compactRemote={p.s.compactRemote}
+          offline={p.s.offline}
           configDir={p.s.configDir} />
         );
       } else {
