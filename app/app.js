@@ -772,17 +772,31 @@ class App extends React.Component {
         locations.push(location);
       }
     });
-    window.ajaxWorker.postMessage({
-      method: 'post',
-      func: 'handleSync',
-      url: '/nmslocationremotesync/',
-      obj: {
-        locations: locations,
+    utils.ajax.post('/nmslocationremotecheck/', {
+        locations: map(locations, (location) => location.id),
         mode: state.mode,
         username: state.username,
-      },
-      params: [page, sort, init, true, false]
-    });
+    }).then((missing) => {
+      missing = missing.data;
+      let missingLocations = [];
+      each(missing, (id) => {
+        let location = findIndex(locations, (location) => location.id === id);
+        if (location) {
+          missingLocations.push(location);
+        }
+      });
+      window.ajaxWorker.postMessage({
+        method: 'post',
+        func: 'handleSync',
+        url: '/nmslocationremotesync/',
+        obj: {
+          locations: missingLocations,
+          mode: state.mode,
+          username: state.username,
+        },
+        params: [page, sort, init, true, false]
+      });
+    }).catch((err) => log.error(err.message));
   }
   formatRemoteLocations = (res, page=1, sort, init, partial, pagination, cb=null) => {
     if (this.state.offline || this.state.closing) {
