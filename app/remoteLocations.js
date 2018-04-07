@@ -92,13 +92,17 @@ class RemoteLocations extends React.Component {
     this.props.onFav(location, upvote);
   }
   handleUpdate = (id, location) => {
-    let refIndex = findIndex(this.props.s.remoteLocations, (_location) => _location.id === id);
+    let refIndex = findIndex(this.props.s.remoteLocations.results, (_location) => _location.id === id);
     if (refIndex === -1) {
-      log.error(`Unable to find reference remote location to be updated:\n ${JSON.stringify(location)}`);
+      log.error(`Unable to find reference remote location to be updated: ${id}`);
       return;
     }
     this.props.s.remoteLocations.results[refIndex] = location;
-    state.set({remoteLocations: this.props.s.remoteLocations});
+    window.jsonWorker.postMessage({
+      method: 'set',
+      key: 'remoteLocations',
+      value: this.props.s.remoteLocations,
+    });
   }
   getRef = (ref) => {
     this.recentExplorations = ref;

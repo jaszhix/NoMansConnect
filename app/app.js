@@ -343,7 +343,7 @@ class Container extends React.Component {
         return remoteLocation.data.id === location.id;
       });
       if (!refRemoteLocation) {
-        log.error(`Unable to find reference remote location from stored locations cache:\n ${JSON.stringify(location)}`)
+        log.error(`Unable to find reference remote location from stored locations cache: ${JSON.stringify(location)}`)
         return;
       }
       console.log('SELECTED: ', location.id, refRemoteLocation.data.id);
