@@ -1,3 +1,10 @@
+# 1.1.0
+
+  * Addressed issues with the recent explorations panel not updating.
+  * Added an exploration count badge next to usernames.
+  * Decreased location sync time.
+  * Upgraded dependencies.
+
 # 1.0.2
 
   * Corrected an issue with the app getting stuck on location validation if the cache hasn't been updated for a while.

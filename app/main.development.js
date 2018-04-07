@@ -1,5 +1,5 @@
 // @flow
-import { app, BrowserWindow, Menu, globalShortcut, systemPreferences } from 'electron';
+import {app, BrowserWindow, Menu, globalShortcut, systemPreferences} from 'electron';
 import windowStateKeeper from 'electron-window-state';
 import fs from 'graceful-fs';
 import log from './log';
@@ -28,10 +28,13 @@ if (process.env.NODE_ENV === 'development') {
   const p = path.join(__dirname, '..', 'app', 'node_modules'); // eslint-disable-line
   require('module').globalPaths.push(p); // eslint-disable-line
 }
-
-app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
+app.commandLine.appendSwitch('--enable-usermedia-screen-capturing');
 app.commandLine.appendSwitch('--enable-native-gpu-memory-buffers');
 app.commandLine.appendSwitch('--enable-gpu-rasterization');
+app.commandLine.appendSwitch('--disable-gpu-sandbox');
+app.commandLine.appendSwitch('--background-color=#000000');
+app.commandLine.appendSwitch('--js-flags="--max_old_space_size=32768 --nolazy"');
+app.commandLine.appendSwitch('--enable-features="CheckerImaging"');
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
