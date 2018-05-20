@@ -15,7 +15,7 @@ const state = initStore({
   knownProducts,
   galaxies,
   completedMigration: false,
-  version: '1.1.0',
+  version: '1.1.1',
   apiBase: 'https://neuropuff.com/api/',
   winVersion: os.release(),
   machineId: null,
