@@ -124,6 +124,10 @@ class LocationBox extends React.Component {
         }
       }
     }).catch((err) => {
+      if (!this.props) {
+        // cleanUp was already called
+        return;
+      }
       this.props.onUpdate(this.props.id, null, true);
     })
   }

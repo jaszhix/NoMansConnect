@@ -101,7 +101,7 @@ class Map3D extends React.Component {
     this.sphereVs = document.getElementById('surface-vertexShader').textContent;
     this.sphereFs = document.getElementById('surface-fragmentShader').textContent;
 
-    let getMaterialProperties = (texture)=>{
+    let getMaterialProperties = (texture) => {
       return {
         uniforms: {
           texture1: {type: 't', value: texture},
@@ -145,6 +145,9 @@ class Map3D extends React.Component {
   }
   componentDidMount() {
     window.map3DWorker.onmessage = (e) => {
+      if (this.willUnmount) {
+        return;
+      }
       this.setState({locations: e.data.locations});
     };
     this.updateLocations(this.props, true);
@@ -202,7 +205,7 @@ class Map3D extends React.Component {
 
     if (this.galaxyChanged) {
       this.galaxyChanged = false;
-      each(this.scene.children, (child)=>{
+      each(this.scene.children, (child) => {
         if (child.type === 'Mesh' && child.name !== 'Center') {
           child.visible = child.userData.data.galaxy === state.selectedGalaxy;
           if (!child.visible && child.el) {
@@ -228,7 +231,7 @@ class Map3D extends React.Component {
         if (state.selectedGalaxy !== currentLocation.galaxy) {
           state.set({selectedGalaxy: currentLocation.galaxy});
         }
-        let refMesh = findIndex(this.scene.children, (child)=>{
+        let refMesh = findIndex(this.scene.children, (child) => {
           return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === currentLocation.translatedId;
         });
         if (refMesh > -1) {
@@ -238,7 +241,7 @@ class Map3D extends React.Component {
     }
 
     if (this.travelTo) {
-      let refMesh = findIndex(this.scene.children, (child)=>{
+      let refMesh = findIndex(this.scene.children, (child) => {
         return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === this.travelTo.data.translatedId;
       });
       this.travelTo = false;
@@ -303,7 +306,7 @@ class Map3D extends React.Component {
         return;
       }
 
-      state.set({selectedLocation: intersects[0].object.userData.data}, ()=>{
+      state.set({selectedLocation: intersects[0].object.userData.data}, () => {
         if (intersects[0].object.userData.data
           && intersects[0].object.userData.data.translatedId !== this.props.selectedLocation.translatedId) {
           this.handleTravel(intersects[0].object.position);
@@ -323,7 +326,7 @@ class Map3D extends React.Component {
 
     var intersects = this.raycaster.intersectObjects(this.scene.children, true);
 
-    let removeHovered = ()=>{
+    let removeHovered = () => {
       let refInstance = findIndex(this.scene.children, child => child.uuid === this.hovered);
       if (refInstance > -1 && this.scene.children[refInstance]) {
         let el = v(`#${this.hovered}`);
@@ -356,9 +359,9 @@ class Map3D extends React.Component {
   }
   getHUDElement = (instance, screen) => {
     let planets = '';
-    each(instance.userData.data.planetData, (array, key)=>{
+    each(instance.userData.data.planetData, (array, key) => {
       planets += `<div style="border-bottom: 1px solid rgb(149, 34, 14);">${key}</div>`
-      each(array, (planetLabel)=>{
+      each(array, (planetLabel) => {
         planets += `<div class="planetLabel" style="cursor: pointer;">${planetLabel}</div>`;
       });
     });
@@ -374,19 +377,22 @@ class Map3D extends React.Component {
       fontFamily: 'geosanslight-nmsregular',
       fontSize: '16px',
     });
-    each(el.find('.planetLabel').ns, (label)=>{
-      label.addEventListener('click', ()=>{
-        let refLocation = find(this.props.remoteLocations.results, (location)=>{
+    each(el.find('.planetLabel').ns, (label) => {
+      label.addEventListener('click', () => {
+        if (!this.props) {
+          return;
+        }
+        let refLocation = find(this.props.remoteLocations.results, (location) => {
           return location.name === label.innerText || location.data.id === label.innerText;
         });
         if (refLocation) {
           state.set({selectedLocation: refLocation.data});
         }
       });
-      label.addEventListener('mouseenter', ()=>{
+      label.addEventListener('mouseenter', () => {
         label.style.fontWeight = '600';
       });
-      label.addEventListener('mouseleave', ()=>{
+      label.addEventListener('mouseleave', () => {
         label.style.fontWeight = 'inherit';
       });
     })
@@ -396,20 +402,20 @@ class Map3D extends React.Component {
 
     c.instance.userData = location;
 
-    let dupePositions = filter(c.scene.children, (child)=>{
+    let dupePositions = filter(c.scene.children, (child) => {
       return child.position.equals(c.instance.position);
     });
 
     let currentCentered = null;
 
-    each(dupePositions, (child)=>{
+    each(dupePositions, (child) => {
       let pos = ['x', 'y', 'z']
 
       if (!child.userData.data) {
         return;
       }
 
-      each(pos, (key, i)=>{
+      each(pos, (key, i) => {
         let div = key === 'y' ? 1 : 2;
         let rng = new RNG((child.position[key] * child.userData.data.SolarSystemIndex) / div);
         let value = Math.ceil((rng.uniform() * child.userData.data.SolarSystemIndex) / div);
@@ -444,10 +450,10 @@ class Map3D extends React.Component {
       }
     } else {
       if (!c.material) {
-        let refSelected = findIndex(this.props.storedLocations, (location)=>{
+        let refSelected = findIndex(this.props.storedLocations, (location) => {
           return c.instance.userData.data.id === location.id;
         });
-        let refCurrent = findIndex(this.props.storedLocations, (location)=>{
+        let refCurrent = findIndex(this.props.storedLocations, (location) => {
           return c.instance.userData.data.id === this.props.currentLocation;
         });
         if (refCurrent > -1) {
@@ -517,10 +523,10 @@ class Map3D extends React.Component {
           geometry={new THREE.SphereGeometry( 20, 9, 9 )}
           material={this.redMaterial}
           position={[0, 2, 0]}
-          onMount={(c)=>{
+          onMount={(c) => {
             c.instance.parent.intensity / Math.pow( 0.02, 2.0 );
           }}
-          onAnimate={(c)=>{
+          onAnimate={(c) => {
             c.instance.rotation.x += 0.0002;
             c.instance.rotation.y += 0.0002;
           }}  />
