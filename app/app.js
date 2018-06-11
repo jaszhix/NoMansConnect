@@ -1172,7 +1172,7 @@ class App extends React.Component {
         screenshot(!init && NMSRunning && this.state.autoCapture, (image) => {
           if (refLocation === -1) {
             assignIn(location, {
-              username: username,
+              username,
               playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
               playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
               shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
@@ -1244,7 +1244,7 @@ class App extends React.Component {
             storedLocations: this.state.storedLocations,
             currentLocation: location.id,
             selectedGalaxy: tryFn(() => parseInt(location.id.split(':')[3])),
-            username: username,
+            username,
             saveDirectory: this.state.saveDirectory,
             saveFileName: saveData.path,
             saveVersion: saveData.result.Version,
@@ -1290,7 +1290,9 @@ class App extends React.Component {
         if (!this.state.ps4User) {
           location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
           refLocation = findIndex(this.state.storedLocations, _location => _location.id === location.id);
-          username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+          if (!this.state.username || this.state.username === 'Explorer') {
+            username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
+          }
         }
 
         if (this.state.ps4User || !username) {
