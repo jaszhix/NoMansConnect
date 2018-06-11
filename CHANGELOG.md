@@ -1,3 +1,8 @@
+# 1.1.2
+
+  * Username protection has been changed so users now need to associate an email with their profile before it can be enabled. This is needed because there is no way to recover a protected profile without manual intervention, otherwise. **All users without a recovery email have had protection removed from their profiles, and need to set one to continue using protection mode.**
+  * Addressed an issue that could cause the username to change when teleporting (#72).
+
 # 1.1.1
 
   * Fixed a few bugs.
