@@ -252,6 +252,7 @@ Please back up your save files.
 
 Special Thanks
 
+- ViktorKrugar
 - Artimec_w
 - Bbsoto
 - Matthew Humphrey
@@ -441,10 +442,14 @@ You should have received a copy of the GNU General Public License along with thi
           </div> : null}
           {p.s.profile ?
           <div
-          className="item"
-          onClick={this.handleUsernameProtection}
+          className={`item${!p.s.profile.email ? ' item-disabled' : ''}`}
+          onClick={p.s.profile.email ? this.handleUsernameProtection : null}
           data-place="left"
-          data-tip={utils.tip('Highly recommended! Anyone can claim your username and impersonate you if this is not enabled. This associates your username with your Windows installation\'s cryptographic signature, so be sure to disable this when switching computers, upgrading hardware, or reinstalling Windows.')}>
+          data-tip={
+            p.s.profile.email ?
+            utils.tip('Highly recommended! Anyone can claim your username and impersonate you if this is not enabled. This associates your username with your Windows installation\'s cryptographic signature, so be sure to disable this when switching computers, upgrading hardware, or reinstalling Windows.')
+            :
+            utils.tip('Please associate an email address with your profile in order to use username protection.')}>
             {`Username Protection: ${p.s.profile.protected ? 'On' : 'Off'}`}
           </div> : null}
           {p.s.profile ?
@@ -452,7 +457,7 @@ You should have received a copy of the GNU General Public License along with thi
           className="item"
           onClick={this.handleSetEmail}
           data-place="left"
-          data-tip={utils.tip(`Incase you get locked out of your profile, setting a recovery email can assist in unprotecting your username.${p.s.profile.email ? ' Current recovery email: ' + p.s.profile.email : ''}`)}>
+          data-tip={utils.tip(`Incase you get locked out of your profile, setting a recovery email can assist in unprotecting your username, when enabled. ${p.s.profile.email ? ' Current recovery email: ' + p.s.profile.email : ''}`)}>
             Set Recovery Email
           </div> : null}
           {!p.s.offline ?
@@ -489,7 +494,7 @@ You should have received a copy of the GNU General Public License along with thi
           className="item"
           onClick={this.handleSupport}
           data-place="left"
-          data-tip={utils.tip('Help pay for server time. Total contributions as of this release: $125. Thanks a lot!')}>
+          data-tip={utils.tip('Help pay for server time. Total contributions since initial release: $135. Thanks a lot!')}>
             Support NMC
           </div>
           <div

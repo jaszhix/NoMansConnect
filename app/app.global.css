@@ -38775,3 +38775,7 @@ Item
   position: absolute;
   right: 8px;
 }
+
+.item-disabled {
+  opacity: 0.7;
+}
