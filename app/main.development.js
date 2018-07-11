@@ -75,6 +75,8 @@ app.on('ready', async () => {
     y: mainWindowState.y,
     width: mainWindowState.width,
     height: mainWindowState.height,
+    minWidth: 1421,
+    minHeight: 1040,
     frame: !aeroEnabled,
     thickFrame: !aeroEnabled,
     transparent: false,
