@@ -8,8 +8,7 @@ import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import {BundleAnalyzerPlugin} from 'webpack-bundle-analyzer';
 import merge from 'webpack-merge';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import BabiliPlugin from 'babili-webpack-plugin';
-//import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
+import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
 import baseConfig from './webpack.config.base';
 
 export default merge.smart(baseConfig, {
@@ -149,36 +148,22 @@ export default merge.smart(baseConfig, {
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
 
-    /**
-     * Babli is an ES6+ aware minifier based on the Babel toolchain (beta)
-     */
-    new BabiliPlugin({
-      removeConsole: true,
-      mangle: false
-    }),
-    /*new UglifyJSPlugin({
+    new UglifyJSPlugin({
       sourceMap: true,
-      mangle: false,
-      compress: {
-        warnings: false,
-        drop_console: true,
-        dead_code: true,
-        unused: true,
-        booleans: true,
-        join_vars: true,
-        negate_iife: true,
-        sequences: true,
-        properties: true,
-        evaluate: true,
-        loops: true,
-        if_return: true,
-        cascade: true,
-        unsafe: false
-      },
-      output: {
-        comments: false
+      uglifyOptions: {
+        mangle: false,
+        compress: {
+          warnings: false,
+          drop_console: true,
+          drop_debugger: true,
+          dead_code: true,
+          unused: true,
+        },
+        output: {
+          comments: false
+        }
       }
-    }),*/
+    }),
 
     new ExtractTextPlugin('style.css'),
 
