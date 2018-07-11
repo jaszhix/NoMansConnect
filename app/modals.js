@@ -320,8 +320,8 @@ export class LocationRegistrationModal extends React.Component {
         username: location.username,
         data: location
       }).then((res)=>{
+        state.trigger('fetchRemoteLocations');
         this.handleClickOutside();
-
       }).catch((err)=>{
         this.setState({
           address: '',

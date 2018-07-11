@@ -530,6 +530,9 @@ class App extends React.Component {
       });
       console.log(`STATE: `, this.state);
     });
+    state.connect({
+      fetchRemoteLocations: () => this.fetchRemoteLocations(1)
+    });
 
     this.topAttachedMenuStyle = {
       position: 'absolute',
