@@ -24,7 +24,7 @@ import defaultWallpaper from './assets/images/default_wallpaper.png';
 import baseIcon from './assets/images/base_icon.png';
 
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu} from './dropdowns';
-import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal} from './modals';
+import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification} from './modals';
 import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
@@ -684,6 +684,15 @@ class App extends React.Component {
         if (e.data.data.version !== this.state.version) {
           this.handleUpgrade(e.data.data.version);
         }
+        if (e.data.data.news && e.data.data.id !== this.state.newsId) {
+          state.set({
+            notification: {
+              message: e.data.data.news,
+              type: 'info'
+            },
+            newsId: e.data.data.id
+          });
+        }
       } else if (e.data.func === 'syncRemoteOwned') {
         each(e.data.results, (location, i) => {
           assignIn(location.data, {
@@ -692,7 +701,7 @@ class App extends React.Component {
             teleports: location.teleports,
             score: location.score,
             image: location.image
-          })
+          });
           e.data.data.results[i] = location;
         });
         this.state.storedLocations = uniqBy(concat(this.state.storedLocations, map(e.data.data.results, res => res.data)), 'id');
@@ -1117,30 +1126,32 @@ class App extends React.Component {
       return;
     }
     let getLastSave = (NMSRunning=false) => {
-      let next = (error=false) => {
-        if (init && !this.state.ps4User) {
-          this.handleWallpaper();
-          this.syncRemoteOwned();
-          watch.createMonitor(this.state.saveDirectory, {
-            ignoreDotFiles: true,
-            ignoreNotPermitted: true,
-
-          }, (monitor) => {
-            this.monitor = monitor;
-            this.pollSaveDataThrottled = throttle(this.pollSaveData, 15000, {leading: true});
-            this.monitor.on('changed', (f, curr, prev) => {
-              this.pollSaveDataThrottled();
-            });
-          });
-          if (this.state.username.toLowerCase() === 'explorer') {
-            state.set({usernameOverride: true});
-          }
-        } else {
-          if (init) {
-            this.handleWallpaper();
-          }
-          this.fetchRemoteLocations(1, this.state.sort, init);
+      let next = (error = false) => {
+        if (error) {
+          log.error(`getLastSave -> next -> ${error}`);
         }
+        if (init) {
+          this.handleWallpaper();
+          if (!this.state.ps4User) {
+            this.syncRemoteOwned();
+            watch.createMonitor(this.state.saveDirectory, {
+              ignoreDotFiles: true,
+              ignoreNotPermitted: true,
+
+            }, (monitor) => {
+              this.monitor = monitor;
+              this.pollSaveDataThrottled = throttle(this.pollSaveData, 15000, {leading: true});
+              this.monitor.on('changed', (f, curr, prev) => {
+                this.pollSaveDataThrottled();
+              });
+            });
+            if (this.state.username.toLowerCase() === 'explorer') {
+              state.set({usernameOverride: true});
+            }
+          }
+          return;
+        }
+        this.fetchRemoteLocations(1, this.state.sort, init);
       };
 
       if (mode && mode !== this.state.mode) {
@@ -1274,11 +1285,14 @@ class App extends React.Component {
               }).then((res) => {
                 next(false);
               }).catch((err) => {
+                if (err.response && err.response.data && err.response.data.status) {
+                  log.error(err.response.data.status);
+                }
                 next([err, err.message, err.stack]);
               });
-            } else {
-              next('exists');
+              return;
             }
+            next(false);
           });
         });
       }
@@ -1788,6 +1802,8 @@ class App extends React.Component {
         multiline={false}
         html={true}
         offset={{top: 0, left: 6}}  />
+        {this.state.notification && this.state.notification.message ?
+        <Notification notification={this.state.notification} /> : null}
       </div>
     );
   }

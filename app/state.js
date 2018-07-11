@@ -16,6 +16,11 @@ const state = initStore({
   galaxies,
   completedMigration: false,
   version: '1.1.2',
+  notification: {
+    message: '',
+    type: 'info'
+  },
+  newsId: '',
   apiBase: 'https://neuropuff.com/api/',
   winVersion: os.release(),
   machineId: null,
@@ -106,6 +111,7 @@ const state = initStore({
   navLoad: false,
   installing: false,
   settingsKeys: [
+    'newsId',
     'maximized',
     'maintenanceTS',
     'wallpaper',

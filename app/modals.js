@@ -1,6 +1,7 @@
 import state from './state';
 import React from 'react';
 import onClickOutside from 'react-onclickoutside';
+import ReactMarkdown from 'react-markdown';
 import {assignIn, pick, isString, orderBy} from 'lodash';
 
 import {validateEmail, ajax, fromHex, cleanUp} from './utils';
@@ -8,6 +9,14 @@ import {each, findIndex} from './lang';
 
 import {BasicDropdown} from './dropdowns';
 import Button from './buttons';
+
+const errorStyle = {
+  fontFamily: 'geosanslight-nmsregular',
+  fontSize: '15px',
+  fontWeight: 600,
+  letterSpacing: '2px',
+  color: 'rgb(218, 38, 0)'
+};
 
 export class ImageModal extends React.Component {
   constructor(props) {
@@ -146,13 +155,6 @@ export class RecoveryModal extends React.Component {
       fontSize: '15px',
       letterSpacing: '2px'
     };
-    this.errorStyle = {
-      fontFamily: 'geosanslight-nmsregular',
-      fontSize: '15px',
-      fontWeight: 600,
-      letterSpacing: '2px',
-      color: 'rgb(218, 38, 0)'
-    };
   }
   handleClickOutside = () => {
     let obj = {};
@@ -206,7 +208,7 @@ export class RecoveryModal extends React.Component {
     return (
       <div className="ui small modal active" style={this.modalStyle}>
         <span className="close" />
-        {this.state.error ? <div style={this.errorStyle}>{this.state.error}</div> : null}
+        {this.state.error ? <div style={errorStyle}>{this.state.error}</div> : null}
         <div style={{position: 'absolute', top: '50px', left: '50px'}}>
           <input
           style={this.inputStyle}
@@ -263,13 +265,6 @@ export class LocationRegistrationModal extends React.Component {
       fontFamily: 'geosanslight-nmsregular',
       fontSize: '15px',
       letterSpacing: '2px'
-    };
-    this.errorStyle = {
-      fontFamily: 'geosanslight-nmsregular',
-      fontSize: '15px',
-      fontWeight: 600,
-      letterSpacing: '2px',
-      color: 'rgb(218, 38, 0)'
     };
   }
   componentDidMount() {
@@ -345,7 +340,7 @@ export class LocationRegistrationModal extends React.Component {
           options={this.state.galaxies}
           selectedGalaxy={this.state.galaxy} />
         </div>
-        {this.state.error ? <div style={this.errorStyle}>{this.state.error}</div> : null}
+        {this.state.error ? <div style={errorStyle}>{this.state.error}</div> : null}
         <div style={{position: 'absolute', top: '50px', left: '50px'}}>
           <input
           style={this.inputStyle}
@@ -364,3 +359,52 @@ export class LocationRegistrationModal extends React.Component {
 };
 
 LocationRegistrationModal = onClickOutside(LocationRegistrationModal);
+
+export class Notification extends React.Component {
+  constructor(props) {
+    super(props);
+    this.modalStyle = {
+      padding: '8px',
+      textAlign: 'center',
+      zIndex: '1001',
+      WebkitTransformOrigin: '50% 25%',
+      boxShadow: 'none',
+      borderTop: '2px solid #95220E',
+      border: '1px solid #DA2600',
+      width: '400px',
+      height: '145px',
+      position: 'absolute',
+      top: 'unset',
+      left: 'unset',
+      right: '30px',
+      bottom: '30px',
+      margin: 'auto'
+    };
+  }
+  handleDismiss = () => {
+    state.set({
+      notification: {
+        message: '',
+        type: 'info'
+      }
+    });
+  }
+  render() {
+    const {type, message} = this.props.notification;
+    let renderedMessage = <ReactMarkdown className="md-p" source={message} />;
+    return (
+      <div className="ui small modal active" style={this.modalStyle}>
+        <span className="close" />
+        {type === 'error' ?
+        <div style={errorStyle}>
+          {renderedMessage}
+        </div> : renderedMessage}
+        <div style={{width: '50px', position: 'absolute', right: '46px', bottom: '10px'}}>
+          <Button onClick={this.handleDismiss}>
+            Dismiss
+          </Button>
+        </div>
+      </div>
+    );
+  }
+};
