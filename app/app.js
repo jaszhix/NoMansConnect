@@ -1635,13 +1635,6 @@ class App extends React.Component {
     state.set({maximized: !this.state.maximized}, () => {
       if (this.state.maximized) {
         win.unmaximize();
-        let bounds = {
-          height: 1040,
-          width: 1421,
-          x: 600,
-          y: 5
-        };
-        win.setBounds(bounds);
       } else {
         win.maximize();
       }
