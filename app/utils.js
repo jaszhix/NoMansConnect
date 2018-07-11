@@ -171,12 +171,12 @@ export var fromHex = (str, username, galaxy)=>{
       || manualLocation.translatedZ > 4096
       || manualLocation.translatedY > 256
       || manualLocation.SolarSystemIndex > 600
-      || manualLocation.data.VoxelY < -128
-      || manualLocation.data.VoxelY > 127
-      || manualLocation.data.VoxelZ < -2048
-      || manualLocation.data.VoxelZ > 2047
-      || manualLocation.data.VoxelX < -2048
-      || manualLocation.data.VoxelX > 2047) {
+      || manualLocation.VoxelY < -128
+      || manualLocation.VoxelY > 127
+      || manualLocation.VoxelZ < -2048
+      || manualLocation.VoxelZ > 2047
+      || manualLocation.VoxelX < -2048
+      || manualLocation.VoxelX > 2047) {
       return null;
     }
     assignIn(manualLocation, {
@@ -200,6 +200,7 @@ export var fromHex = (str, username, galaxy)=>{
     assignIn(manualLocation, _manualLocation)
     return manualLocation;
   } catch (e) {
+    console.log(e);
     return null;
   }
 }
