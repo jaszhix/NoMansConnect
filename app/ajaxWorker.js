@@ -1,11 +1,16 @@
 const axios = require('axios/dist/axios')
 
-const ajax = axios.create({
-  //baseURL: 'http://z.npff.co:8000/api/',
+const opts = {
   baseURL: 'https://neuropuff.com/api/',
   timeout: 60000,
   xsrfCookieName: 'csrftoken'
-});
+};
+
+if (process.env.NODE_ENV === 'development') {
+  opts.baseURL = 'http://z.npff.co:8000/api/'
+}
+
+const ajax = axios.create(opts);
 
 onmessage = function(e) {
   let method = e.data.method;

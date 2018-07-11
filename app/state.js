@@ -15,7 +15,7 @@ const state = initStore({
   knownProducts,
   galaxies,
   completedMigration: false,
-  version: '1.1.2',
+  version: '1.1.3',
   notification: {
     message: '',
     type: 'info'

@@ -557,12 +557,17 @@ export var tip = (content)=>{
   return `<div style="font-family:'geosanslight-nmsregular';font-size:14px;border-radius:0px; max-width: 200px;">${content}</div>`
 }
 
-export var ajax = axios.create({
-  //baseURL: 'http://z.npff.co:8000/api/',
+const opts = {
   baseURL: 'https://neuropuff.com/api/',
   timeout: 60000,
   xsrfCookieName: 'csrftoken'
-});
+};
+
+if (process.env.NODE_ENV === 'development') {
+  opts.baseURL = 'http://z.npff.co:8000/api/'
+}
+
+export const ajax = axios.create(opts);
 
 // Cleans up the left over object references after a component unmounts, helps with garbage collection
 export const cleanUp = (obj)=>{

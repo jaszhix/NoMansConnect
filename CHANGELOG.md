@@ -1,3 +1,10 @@
+# 1.1.3
+
+  * Fixed an error occurring on manual location entry.
+  * Fixed an issue with un-maximizing the window causing it to move it to the primary monitor instead of the window's current monitor.
+  * Implemented a simple notification system for server announcements, e.g. scheduled maintenance.
+  * Upgraded dependencies.
+
 # 1.1.2
 
   * Username protection has been changed so users now need to associate an email with their profile before it can be enabled. This is needed because there is no way to recover a protected profile without manual intervention, otherwise. **All users without a recovery email have had protection removed from their profiles, and need to set one to continue using protection mode.**
