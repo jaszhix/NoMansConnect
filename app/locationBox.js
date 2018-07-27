@@ -124,7 +124,7 @@ class LocationBox extends React.Component {
         }
       }
     }).catch((err) => {
-      if (!this.props) {
+      if (!this.props || err.response.status === 404) {
         // cleanUp was already called
         return;
       }
