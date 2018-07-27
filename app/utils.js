@@ -88,21 +88,10 @@ export var convertHex = (int, axis)=>{
   return Math.floor(((((int - oldMin) * newRange) / oldRange) + newMin) + offset)
 };
 
-window.convertInteger = convertInteger
-
-export var convertIntegerZ = (int, na)=>{
-  int = Math.abs(int);
-
-  int = Math.abs(Math.abs(Math.abs(int - na[0]) - na[1]) - na[2])
-  return int - 1;
-};
-
-var isValueNull = (variable)=>{
-  return (variable === undefined || variable == null);
-}
-
-var setDefaultValueIfNull = (variable, defaultVal)=>{
-  if(isValueNull(variable)) { variable = defaultVal; }
+var setDefaultValueIfNull = (variable, defaultVal) => {
+  if (variable == null) {
+    variable = defaultVal;
+  }
   return variable;
 }
 
@@ -422,8 +411,8 @@ export var modifyUnits = (saveData, n=100000)=>{
   return saveData.result;
 };
 
-export var formatBase = (saveData, knownProducts)=>{
-  let base = cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[0]);
+export var formatBase = (saveData, knownProducts, i = 0) => {
+  let base = cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[i]);
   // Check for modded objects and remove them
   let moddedObjectKeys = [];
   each(base.Objects, (object, key)=>{
@@ -462,21 +451,32 @@ var signInt = (x, byteLen)=>{
   }
 }
 
-var toAdd = (x)=>{
-  let y = null;
+export const intToObject = (x, isUA = false) => {
   if (typeof x === 'string' && x.indexOf('0x') !== -1) {
-    y = x.substr(2, x.length);
+    x = x.substr(2, x.length);
+  } else if (typeof x === 'number') {
+    x = x.toString();
+    x = trimStart(
+      toHex(x, x.length),
+      '0'
+    );
+  }
+  let RealityIndex = null;
+  if (isUA) {
+    RealityIndex = parseInt(x.substring(3, 6), 16); // TBD
   }
   let data = {
-    PlanetIndex: parseInt(flip(y.substring(0, 3)), 16),
-    SolarSystemIndex: parseInt(flip(y.substring(3, 6)), 16),
-    VoxelY: signInt(y.substring(6, 8), 2),
-    VoxelZ: signInt(y.substring(8, 11), 3),
-    VoxelX: signInt(y.substring(11, y.length), 3)
+    PlanetIndex: parseInt(flip(x.substr(0, 1)), 16),
+    SolarSystemIndex: parseInt(x.substr(1, 3), 16),
+    VoxelY: signInt(x.substring(6, 8), 2),
+    VoxelZ: signInt(x.substring(8, 11), 3),
+    VoxelX: signInt(x.substring(11, x.length), 3)
   };
+  if (typeof RealityIndex === 'number') {
+    data.RealityIndex = RealityIndex;
+  }
   return data;
 }
-window.toAdd = toAdd;
 
 export function whichToShow ({outerHeight, itemHeight, scrollTop, columns}) {
   let start = Math.floor(scrollTop / itemHeight);

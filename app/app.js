@@ -346,7 +346,7 @@ class Container extends React.Component {
         log.error(`Unable to find reference remote location from stored locations cache: ${JSON.stringify(location)}`)
         return;
       }
-      console.log('SELECTED: ', location.id, refRemoteLocation.data.id);
+      console.log('SELECTED: ', cloneDeep(location));
       if (refRemoteLocation !== undefined && refRemoteLocation) {
         refRemoteLocation.data.image = refRemoteLocation.image;
         refRemoteLocation.data.name = refRemoteLocation.name;
@@ -1223,33 +1223,31 @@ class App extends React.Component {
             this.state.storedLocations.push(location);
           }
 
-          // Detect player base
-
-          let base = null;
-          let refBase = find(saveData.result.PlayerStateData.TeleportEndpoints, item => item.TeleporterType === 'Base');
-          let baseFound = refBase !== undefined && refBase
-          if (baseFound) {
-            base = utils.formatID(refBase.UniverseAddress);
-          }
-
-          each(this.state.storedLocations, (storedLocation, i) => {
-            if (isString(storedLocation.timeStamp)) {
-              this.state.storedLocations[i].timeStamp = new Date(storedLocation.timeStamp).getTime()
+          // Detect player bases
+          each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
+            let galacticAddress;
+            if (!base.GalacticAddress) {
+              return;
             }
-            if (storedLocation.manuallyEntered === undefined && !storedLocation.playerPosition) { // For old locations
-              storedLocation.manuallyEntered = true;
-            }
-            if (baseFound) {
-              let hasBase = (base.VoxelX === storedLocation.VoxelX
-                && base.VoxelY === storedLocation.VoxelY
-                && base.VoxelZ === storedLocation.VoxelZ
-                && base.SolarSystemIndex === storedLocation.SolarSystemIndex
-                && base.PlanetIndex === storedLocation.PlanetIndex
-                && refBase.UniverseAddress.RealityIndex === storedLocation.galaxy);
-              this.state.storedLocations[i].base = hasBase;
-              if (hasBase) {
-                this.state.storedLocations[i].baseData = utils.formatBase(saveData, state.knownProducts);
-              }
+            galacticAddress = utils.intToObject(base.GalacticAddress);
+            let refStoredLocation = findIndex(this.state.storedLocations, (storedLocation) => {
+              return (
+                galacticAddress.VoxelX === storedLocation.VoxelX
+                && galacticAddress.VoxelY === storedLocation.VoxelY
+                && galacticAddress.VoxelZ === storedLocation.VoxelZ
+                && galacticAddress.SolarSystemIndex === storedLocation.SolarSystemIndex
+                && galacticAddress.PlanetIndex === storedLocation.PlanetIndex
+                && (!galacticAddress.RealityIndex || galacticAddress.RealityIndex === storedLocation.galaxy)
+              );
+            });
+            if (refStoredLocation > -1) {
+              this.state.storedLocations[refStoredLocation] = Object.assign(
+                this.state.storedLocations[refStoredLocation],
+                {
+                  base: true,
+                  baseData: utils.formatBase(saveData, state.knownProducts, i)
+                }
+              );
             }
           });
           this.state.storedLocations = orderBy(this.state.storedLocations, 'timeStamp', 'desc');
