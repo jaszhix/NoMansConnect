@@ -792,7 +792,7 @@ class App extends React.Component {
       missing = missing.data;
       let missingLocations = [];
       each(missing, (id) => {
-        let location = findIndex(locations, (location) => location.id === id);
+        let location = find(locations, (location) => location.id === id);
         if (location) {
           missingLocations.push(location);
         }
