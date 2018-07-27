@@ -3,11 +3,11 @@ import path from 'path';
 import {StringDecoder} from 'string_decoder';
 const decoder = new StringDecoder('utf8');
 import axios from 'axios';
-import {cloneDeep, assignIn, pullAt, last, orderBy, isString, defer} from 'lodash';
+import {cloneDeep, assignIn, pullAt, last, orderBy, isString, trimStart, defer} from 'lodash';
 import {each, findIndex} from './lang';
 
 var exec = require('child_process').exec;
-export var msToTime = (s)=>{
+export var msToTime = (s) => {
   var ms = s % 1000;
   s = (s - ms) / 1000;
   var secs = s % 60;
@@ -21,8 +21,8 @@ export var msToTime = (s)=>{
   return output;
 };
 
-export var exc = (cmd)=>{
-  return new Promise((resolve, reject)=>{
+export var exc = (cmd) => {
+  return new Promise((resolve, reject) => {
     var opts = {
       encoding: 'utf8',
       timeout: 0,
@@ -46,12 +46,12 @@ export var exc = (cmd)=>{
   });
 };
 
-export var formatID = (location)=>{
+export var formatID = (location) => {
   location.GalacticAddress.id = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
   return location.GalacticAddress;
 };
 
-export var parseID = (id)=>{
+export var parseID = (id) => {
   id = id.split(':');
   let location = {
     PlanetIndex: id[4],
@@ -63,11 +63,11 @@ export var parseID = (id)=>{
   return location;
 };
 
-export var isNegativeInteger = (int)=>{
+export var isNegativeInteger = (int) => {
   return int.toString()[0] === '-';
 };
 
-export var convertInteger = (int, axis)=>{
+export var convertInteger = (int, axis) => {
   let oldMin = axis === 'y' ? -128 : -2048;
   let oldMax = axis === 'y' ? 127 : 2047;
   let oldRange = (oldMax - oldMin);
@@ -77,7 +77,7 @@ export var convertInteger = (int, axis)=>{
   return Math.floor(((((int - oldMin) * newRange) / oldRange) + newMin) - 1);
 };
 
-export var convertHex = (int, axis)=>{
+export var convertHex = (int, axis) => {
   let oldMin = 0;
   let oldMax = axis === 'y' ? 255 : 4096;
   let oldRange = (oldMax - oldMin);
@@ -95,13 +95,13 @@ var setDefaultValueIfNull = (variable, defaultVal) => {
   return variable;
 }
 
-export var toHex = (str, totalChars)=>{
+var toHex = (str, totalChars) => {
   totalChars = setDefaultValueIfNull(totalChars, 2);
   str = ('0'.repeat(totalChars)+Number(str).toString(16)).slice(-totalChars).toUpperCase();
   return str;
 }
 
-export var fromHex = (str, username, galaxy)=>{
+export var fromHex = (str, username, galaxy) => {
   try {
     let result = {x: 0, y: 0, z: 0, SolarSystemIndex: 0};
     let resultKeys = Object.keys(result);
@@ -113,7 +113,7 @@ export var fromHex = (str, username, galaxy)=>{
       return null;
     }
     let valid = true;
-    each(strParts, (part, key)=>{
+    each(strParts, (part, key) => {
       part = part.trim();
       if (!part.match(/^[a-z0-9]+$/i)) {
         valid = false;
@@ -194,9 +194,9 @@ export var fromHex = (str, username, galaxy)=>{
   }
 }
 
-export var walk = (dir, done)=>{
+export var walk = (dir, done) => {
   var results = [];
-  fs.readdir(dir, (err, list)=>{
+  fs.readdir(dir, (err, list) => {
     if (err) {
       return done(err);
     }
@@ -204,11 +204,11 @@ export var walk = (dir, done)=>{
     if (!pending) {
       return done(null, results);
     }
-    each(list, (file)=>{
+    each(list, (file) => {
       file = path.resolve(dir, file);
-      fs.stat(file, (err, stat)=>{
+      fs.stat(file, (err, stat) => {
         if (stat && stat.isDirectory()) {
-          walk(file, (err, res)=>{
+          walk(file, (err, res) => {
             results = results.concat(res);
             if (!--pending) {
               done(null, results);
@@ -225,13 +225,13 @@ export var walk = (dir, done)=>{
   });
 };
 
-export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
-  return new Promise((resolve, reject)=>{
+export var getLastGameModeSave = (saveDirectory, ps4User, log) => {
+  return new Promise((resolve, reject) => {
     if (ps4User) {
       resolve();
       return;
     }
-    walk(saveDirectory, (err, results)=>{
+    walk(saveDirectory, (err, results) => {
       if (err) {
         console.log(err)
         reject(err);
@@ -253,8 +253,8 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
 
       let saves = [];
       let saveInts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-      each(saveInts, (int)=>{
-        each(results, (result)=>{
+      each(saveInts, (int) => {
+        each(results, (result) => {
           let fileName = last(result.split('\\'));
           if (((int === 0 && fileName.indexOf('save.hg') > -1) || result.indexOf(`save${int + 1}.hg`) > -1)
           || ((int === 0 && fileName.indexOf('storage.hg') > -1) || result.indexOf(`storage${int + 1}.hg`) > -1)) {
@@ -314,23 +314,23 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log)=>{
   });
 };
 
-export var repairInventory = (saveData)=>{
+export var repairInventory = (saveData) => {
   let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
-  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
     saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].DamageFactor = 0;
   });
 
-  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i) => {
     saveData.result.PlayerStateData.Inventory.Slots[i].DamageFactor = 0;
   });
 
-  each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i) => {
     saveData.result.PlayerStateData.WeaponInventory.Slots[i].DamageFactor = 0;
   });
   return saveData.result;
 };
 
-export var refuelEnergy = (saveData)=>{
+export var refuelEnergy = (saveData) => {
   let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
   let refillableTech = [
     // Suit inventory
@@ -368,17 +368,17 @@ export var refuelEnergy = (saveData)=>{
   saveData.result.PlayerStateData.Health = 8;
   saveData.result.PlayerStateData.Energy = 100;
   saveData.result.PlayerStateData.Shield = 100;
-  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Technology' && refillableTech.indexOf(slot.Id) !== -1) {
       saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
-  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Technology' && refillableTech.indexOf(slot.Id) !== -1) {
       saveData.result.PlayerStateData.Inventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
-  each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i) => {
     if (refillableTech.indexOf(slot.Id) !== -1) {
       saveData.result.PlayerStateData.WeaponInventory.Slots[i].Amount = slot.MaxAmount;
     }
@@ -386,19 +386,19 @@ export var refuelEnergy = (saveData)=>{
   return saveData.result;
 };
 
-export var stockInventory = (saveData)=>{
+export var stockInventory = (saveData) => {
   let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
-  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
       saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
-  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
       saveData.result.PlayerStateData.Inventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
-  each(saveData.result.PlayerStateData.FreighterInventory.Slots, (slot, i)=>{
+  each(saveData.result.PlayerStateData.FreighterInventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
       saveData.result.PlayerStateData.FreighterInventory.Slots[i].Amount = slot.MaxAmount;
     }
@@ -406,7 +406,7 @@ export var stockInventory = (saveData)=>{
   return saveData.result;
 };
 
-export var modifyUnits = (saveData, n=100000)=>{
+export var modifyUnits = (saveData, n=100000) => {
   saveData.result.PlayerStateData.Units += n;
   return saveData.result;
 };
@@ -415,13 +415,13 @@ export var formatBase = (saveData, knownProducts, i = 0) => {
   let base = cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[i]);
   // Check for modded objects and remove them
   let moddedObjectKeys = [];
-  each(base.Objects, (object, key)=>{
+  each(base.Objects, (object, key) => {
     let refProduct = findIndex(knownProducts, product => product === object.ObjectID);
     if (refProduct === -1) {
       moddedObjectKeys.push(key);
     }
   });
-  each(moddedObjectKeys, (key)=>{
+  each(moddedObjectKeys, (key) => {
     pullAt(base.Objects, key);
   });
   let cachedBase = {
@@ -433,7 +433,7 @@ export var formatBase = (saveData, knownProducts, i = 0) => {
   return cloneDeep(cachedBase);
 };
 
-var flip = (string)=>{
+var flip = (string) => {
   console.log('flip', string)
   let stringArr = string.split('').reverse();
   string = stringArr.join('');
@@ -441,7 +441,7 @@ var flip = (string)=>{
   return string;
 };
 
-var signInt = (x, byteLen)=>{
+var signInt = (x, byteLen) => {
   console.log('signInt', x, byteLen)
   let y = parseInt(x, 16);
   if (y > 0.5 * Math.pow(16, byteLen)) {
@@ -546,11 +546,11 @@ export var validateEmail = (email) => {
   return re.test(email);
 }
 
-export var css = (styleObject, newObject)=>{
+export var css = (styleObject, newObject) => {
   return assignIn({}, styleObject, newObject);
 };
 
-export var tip = (content)=>{
+export var tip = (content) => {
   if (content.length === 0) {
     return null;
   }
@@ -570,10 +570,10 @@ if (process.env.NODE_ENV === 'development') {
 export const ajax = axios.create(opts);
 
 // Cleans up the left over object references after a component unmounts, helps with garbage collection
-export const cleanUp = (obj)=>{
-  defer(()=>{
+export const cleanUp = (obj) => {
+  defer(() => {
     let contextProps = Object.keys(obj);
-    each(contextProps, (key)=>{
+    each(contextProps, (key) => {
       if (key === 'willUnmount') {
         return;
       }
