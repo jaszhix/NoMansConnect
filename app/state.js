@@ -45,6 +45,7 @@ const state = initStore({
   selectedLocation: null,
   username: 'Explorer',
   profile: null,
+  displayProfile: null,
   favorites: [],
   mods: [],
   selectedImage: null,

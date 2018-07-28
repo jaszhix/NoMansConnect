@@ -219,7 +219,10 @@ class LocationBox extends React.Component {
   handleBadgeClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    state.set({search: `user:${this.state.profile.username}`});
+    state.set({
+      search: `user:${this.state.profile.username}`,
+      displayProfile: this.state.profile.id,
+    });
     this.props.onSearch();
   }
   render() {

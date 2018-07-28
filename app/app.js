@@ -24,7 +24,7 @@ import defaultWallpaper from './assets/images/default_wallpaper.png';
 import baseIcon from './assets/images/base_icon.png';
 
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu} from './dropdowns';
-import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification} from './modals';
+import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification, ProfileModal} from './modals';
 import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
@@ -1170,13 +1170,6 @@ class App extends React.Component {
         }
         console.log('SAVE DATA: ', saveData);
         log.error(`Finished reading No Man's Sky v${saveData.result.Version} save file.`);
-        /*let uniquePlayers = [];
-        each(saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record, (record) => {
-          uniquePlayers.push(record.OWS.USN);
-        });
-        console.log(uniq(uniquePlayers))*/
-
-        //username = isString(username) && username.length > 0 ? username : this.state.username ? this.state.username : '';
 
         let refFav = findIndex(this.state.favorites, (fav) => {
           return fav === location.id;
@@ -1261,7 +1254,7 @@ class App extends React.Component {
             saveFileName: saveData.path,
             saveVersion: saveData.result.Version,
             machineId,
-            loading: 'Loading save data...'
+            loading: 'Syncing discoveries...'
           };
 
           if (profile) {
@@ -1275,25 +1268,30 @@ class App extends React.Component {
           }
 
           state.set(stateUpdate, () => {
-            if (refLocation === -1) {
-              utils.ajax.post('/nmslocation/', {
-                machineId: this.state.machineId,
-                username: location.username,
-                mode: this.state.mode,
-                image: image,
-                version: location.version,
-                data: location
-              }).then((res) => {
-                next(false);
-              }).catch((err) => {
-                if (err.response && err.response.data && err.response.data.status) {
-                  log.error(err.response.data.status);
-                }
-                next([err, err.message, err.stack]);
-              });
-              return;
-            }
-            next(false);
+            utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
+              machineId: this.state.machineId,
+              username: this.state.username,
+              discoveries: saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record
+            }).then(() => {
+              if (refLocation === -1) {
+                return utils.ajax.post('/nmslocation/', {
+                  machineId: this.state.machineId,
+                  username: location.username,
+                  mode: this.state.mode,
+                  image: image,
+                  version: location.version,
+                  data: location
+                });
+              }
+              next(false);
+            }).then(() => {
+              next(false);
+            }).catch((err) => {
+              if (err.response && err.response.data && err.response.data.status) {
+                log.error(err.response.data.status);
+              }
+              next([err, err.message, err.stack]);
+            });
           });
         });
       }
@@ -1788,6 +1786,8 @@ class App extends React.Component {
         onSaveBase={this.handleSaveBase}
         onRestart={this.handleRestart}
         onSearch={this.handleSearch} />}
+        {this.state.displayProfile ?
+        <ProfileModal profileId={this.state.displayProfile} /> : null}
         <ReactTooltip
         className="nmcTip"
         globalEventOff="click mouseleave"

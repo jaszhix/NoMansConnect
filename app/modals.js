@@ -1,5 +1,6 @@
 import state from './state';
 import React from 'react';
+import PropTypes from 'prop-types';
 import onClickOutside from 'react-onclickoutside';
 import ReactMarkdown from 'react-markdown';
 import {assignIn, pick, isString, orderBy} from 'lodash';
@@ -408,3 +409,59 @@ export class Notification extends React.Component {
     );
   }
 };
+
+export class ProfileModal extends React.Component {
+  static propTypes = {
+    profileId: PropTypes.string.isRequired
+  }
+  static defaultProps = {
+    profileId: ''
+  }
+  constructor(props) {
+    super(props);
+    this.state = {
+      profile: null
+    };
+    this.modalStyle = {
+      background: 'rgb(23, 26, 22)',
+      borderTop: '2px solid #95220E',
+      position: 'fixed',
+      left: '0px',
+      top: '6%',
+      zIndex: '1001',
+      WebkitTransformOrigin: '50% 25%',
+      boxShadow: 'none',
+      border: '1px solid #DA2600',
+      maxWidth: '75%'
+    };
+  }
+  componentDidMount() {
+    utils.ajax.get(`/nmsprofile/${this.props.profileId}/`).then((profile) => {
+      this.setState({profile: profile.data});
+    });
+  }
+  handleClickOutside = () => {
+    state.set({
+      displayProfile: null
+    });
+  }
+  render() {
+    const {profile} = this.state;
+    if (!profile) {
+      return null;
+    }
+    return (
+      <div className="ui fullscreen modal active" style={this.modalStyle}>
+        <span className="close" />
+        <div className="ui segment ProfileModal__noMarginTop">
+          <h3>{`${profile.username}'s Profile`}</h3>
+          <Button onClick={this.onClickOutside}>
+            Dismiss
+          </Button>
+        </div>
+      </div>
+    );
+  }
+};
+
+ProfileModal = onClickOutside(ProfileModal);

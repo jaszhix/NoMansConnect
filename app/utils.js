@@ -95,7 +95,7 @@ var setDefaultValueIfNull = (variable, defaultVal) => {
   return variable;
 }
 
-var toHex = (str, totalChars) => {
+export const toHex = (str, totalChars) => {
   totalChars = setDefaultValueIfNull(totalChars, 2);
   str = ('0'.repeat(totalChars)+Number(str).toString(16)).slice(-totalChars).toUpperCase();
   return str;
