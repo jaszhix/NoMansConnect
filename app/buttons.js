@@ -1,6 +1,6 @@
 import React from 'react';
 
-const style = {
+let style = {
   left: '9px',
   letterSpacing: '3px',
   fontFamily: 'geosanslight-nmsregular',
@@ -11,6 +11,9 @@ const style = {
 };
 
 class Button extends React.Component {
+  static defaultProps = {
+    style: {}
+  };
   constructor(props) {
     super(props);
     this.state = {
@@ -21,7 +24,7 @@ class Button extends React.Component {
     return (
       <div
       className="ui segment Button__div"
-      style={style}
+      style={Object.assign({}, style, this.props.style)}
       onClick={this.props.onClick}>
         {this.props.children}
       </div>

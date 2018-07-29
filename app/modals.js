@@ -3,13 +3,16 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import onClickOutside from 'react-onclickoutside';
 import ReactMarkdown from 'react-markdown';
+import moment from 'moment';
 import {assignIn, pick, isString, orderBy} from 'lodash';
 
 import {validateEmail, ajax, fromHex, cleanUp} from './utils';
-import {each, findIndex} from './lang';
+import {each, findIndex, map} from './lang';
 
 import {BasicDropdown} from './dropdowns';
 import Button from './buttons';
+import LocationBox from './locationBox';
+import Item from './item';
 
 const errorStyle = {
   fontFamily: 'geosanslight-nmsregular',
@@ -28,7 +31,7 @@ export class ImageModal extends React.Component {
       position: 'fixed',
       left: '13%',
       top: '6%',
-      zIndex: '1001',
+      zIndex: '1002',
       WebkitTransformOrigin: '50% 25%',
       boxShadow: 'none',
       border: '1px solid #DA2600',
@@ -410,6 +413,20 @@ export class Notification extends React.Component {
   }
 };
 
+const planetIcon = require('./assets/images/planet_discovery.png');
+const organicIcon = require('./assets/images/organic_discovery.png');
+const mineralIcon = require('./assets/images/mineral_discovery.png');
+const interactableIcon = require('./assets/images/interactable_discovery.png');
+
+const discoveryIconMap = {
+  Animal: organicIcon,
+  Flora: organicIcon,
+  Mineral: mineralIcon,
+  Planet: planetIcon,
+  SolarSystem: planetIcon,
+  Interactable: interactableIcon
+};
+
 export class ProfileModal extends React.Component {
   static propTypes = {
     profileId: PropTypes.string.isRequired
@@ -420,7 +437,9 @@ export class ProfileModal extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      profile: null
+      profile: null,
+      height: this.props.height / 1.2,
+      discoveriesPage: 1
     };
     this.modalStyle = {
       background: 'rgb(23, 26, 22)',
@@ -436,8 +455,19 @@ export class ProfileModal extends React.Component {
     };
   }
   componentDidMount() {
-    utils.ajax.get(`/nmsprofile/${this.props.profileId}/`).then((profile) => {
-      this.setState({profile: profile.data});
+    this.fetchProfile();
+  }
+  componentWillUnmount() {
+    this.ref.removeEventListener('resize', this.handleResize);
+  }
+  fetchProfile = (discoveriesPage = 1) => {
+    utils.ajax.get(`/nmsprofile/${this.props.profileId}/`, {
+      params: {discoveriesPage}
+    }).then((profile) => {
+      this.setState({
+        profile: profile.data,
+        discoveriesPage
+      });
     });
   }
   handleClickOutside = () => {
@@ -445,19 +475,158 @@ export class ProfileModal extends React.Component {
       displayProfile: null
     });
   }
+  handleResize = () => {
+    this.setState({height: this.ref.clientHeight});
+  }
+  handleNextPage = () => {
+    this.fetchProfile(
+      this.state.discoveriesPage + 1
+    );
+  }
+  handlePreviousPage = () => {
+    this.fetchProfile(
+      this.state.discoveriesPage - 1
+    );
+  }
+  getRef = (ref) => {
+    if (!this.ref) {
+      this.ref = ref;
+      this.setState({height: ref.clientHeight});
+      ref.addEventListener('resize', this.handleResize);
+    }
+  }
   render() {
     const {profile} = this.state;
     if (!profile) {
       return null;
     }
+    let isFriend = false;
+    let isOwnProfile = this.props.profile.id === profile.id;
+    if (!isOwnProfile) {
+      each(this.props.profile.friends, (friend) => {
+        if (friend.username === profile.username) {
+          isFriend = true;
+          return false;
+        }
+      });
+    }
     return (
-      <div className="ui fullscreen modal active" style={this.modalStyle}>
+      <div ref={this.getRef} className="ui fullscreen modal active" style={this.modalStyle}>
         <span className="close" />
-        <div className="ui segment ProfileModal__noMarginTop">
-          <h3>{`${profile.username}'s Profile`}</h3>
-          <Button onClick={this.onClickOutside}>
-            Dismiss
-          </Button>
+        <div
+        className="ui segment ProfileModal__content"
+        style={{maxHeight: `${this.state.height}px`}}>
+          <div className="ui four column grid">
+            <div className="ui feed eight wide column left floated segment ProfileModal__left_container">
+              <div className="ui">
+                <h3>{`${profile.username}'s Profile (Beta)`}</h3>
+                {!isOwnProfile ?
+                <Button onClick={this.onClickOutside} style={{position: 'absolute', top: '-4px', right: '0px', left: 'unset'}}>
+                  {isFriend ? 'Remove Friend' : 'Send Friend Request'}
+                </Button> : null}
+              </div>
+              <div className="ui segment">
+                <Item label="XP" value={profile.exp} />
+                <Item label="Discoveries" value={profile.discoveriesCount} />
+                {profile.friends.length > 0 ?
+                <Item
+                label="Friends"
+                value={
+                  <React.Fragment>
+                    {map(profile.friends, (friend) => {
+                      return <Item label="Name" value={friend.username} />
+                    })}
+                  </React.Fragment>
+                } /> : null}
+              </div>
+            </div>
+            <div
+            className="ui feed six wide column right floated ProfileModal__right_container"
+            style={{maxHeight: `${this.state.height - 77}px`}}>
+              <React.Fragment>
+                {map(profile.discoveries, (discovery, i) => {
+                  let name = discovery.name ? discovery.name
+                  : discovery.type === 'planet' && discovery.location && discovery.location.name ? discovery.location.name
+                  : 'Unknown';
+                  return (
+                    <div key={i} className="event">
+                      <div className="label">
+                        <img src={discoveryIconMap[discovery.type]} />
+                      </div>
+                      <div className="content">
+                        <div className="summary">
+                          {`Discovered ${discovery.type}`}
+                          <div className="date">
+                            {moment(discovery.created).format('MMMM D, Y')}
+                          </div>
+                        </div>
+                        {discovery.location && discovery.location.image ?
+                        <div className="extra images">
+                          <a onClick={() => state.set({selectedImage: `https://neuropuff.com/${discovery.location.image}`})}>
+                            <img src={`https://neuropuff.com/${discovery.location.image}`} />
+                          </a>
+                        </div> : null}
+                        <div className="extra text">
+                          <Item label="Name" value={name} />
+                          {discovery.location ?
+                          <LocationBox
+                          name={discovery.location.name}
+                          description={discovery.location.description}
+                          username={discovery.profile.username}
+                          selectType={false}
+                          currentLocation={''}
+                          isOwnLocation={false}
+                          isVisible={true}
+                          location={discovery.location.data}
+                          installing={false}
+                          updating={false}
+                          edit={false}
+                          favorites={this.props.favorites}
+                          image={discovery.location.image}
+                          version={/* p.s.selectedLocation.version === p.s.saveVersion */true}
+                          width={800}
+                          height={800}
+                          isSelectedLocationRemovable={false}
+                          onUploadScreen={null}
+                          onDeleteScreen={null}
+                          onFav={null}
+                          onEdit={null}
+                          onMarkCompatible={null}
+                          onRemoveStoredLocation={null}
+                          onTeleport={null}
+                          onSubmit={null}
+                          onSaveBase={null}
+                          ps4User={false}
+                          configDir={''}
+                          detailsOnly={true} /> : null}
+                        </div>
+                        <div className="meta">
+                          {discovery.location && discovery.location.score ?
+                          <div className="like">
+                            <i className="like icon" /> {`${discovery.location.score}`}
+                          </div> : null}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {profile.discoveries && profile.discoveries.length > 0 ?
+                <div className="ui two column grid">
+                  <div className="column">
+                    {this.state.discoveriesPage > 1 ?
+                    <Button onClick={this.handlePreviousPage}>
+                      Previous
+                    </Button> : null}
+                  </div>
+                  <div className="column">
+                    <Button onClick={this.handleNextPage}>
+                      Next
+                    </Button>
+                  </div>
+                </div> : null}
+              </React.Fragment>
+            </div>
+          </div>
         </div>
       </div>
     );

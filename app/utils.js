@@ -434,15 +434,12 @@ export var formatBase = (saveData, knownProducts, i = 0) => {
 };
 
 var flip = (string) => {
-  console.log('flip', string)
   let stringArr = string.split('').reverse();
   string = stringArr.join('');
-  console.log('flip return: ', string)
   return string;
 };
 
 var signInt = (x, byteLen) => {
-  console.log('signInt', x, byteLen)
   let y = parseInt(x, 16);
   if (y > 0.5 * Math.pow(16, byteLen)) {
     return y - Math.pow(16, byteLen);
@@ -451,7 +448,7 @@ var signInt = (x, byteLen) => {
   }
 }
 
-export const intToObject = (x, isUA = false) => {
+export const gaToObject = (x) => {
   if (typeof x === 'string' && x.indexOf('0x') !== -1) {
     x = x.substr(2, x.length);
   } else if (typeof x === 'number') {
@@ -461,21 +458,44 @@ export const intToObject = (x, isUA = false) => {
       '0'
     );
   }
-  let RealityIndex = null;
-  if (isUA) {
-    RealityIndex = parseInt(x.substring(3, 6), 16); // TBD
-  }
-  let data = {
+  return {
     PlanetIndex: parseInt(flip(x.substr(0, 1)), 16),
     SolarSystemIndex: parseInt(x.substr(1, 3), 16),
     VoxelY: signInt(x.substring(6, 8), 2),
     VoxelZ: signInt(x.substring(8, 11), 3),
     VoxelX: signInt(x.substring(11, x.length), 3)
   };
-  if (typeof RealityIndex === 'number') {
-    data.RealityIndex = RealityIndex;
+}
+
+export const uaToObject = (x) => {
+  console.log('uaToObject: ', x)
+  if (typeof x === 'string' && x.indexOf('0x') !== -1) {
+    x = x.substr(2, x.length);
+  } else {
+    x = x.toString();
+    x = trimStart(
+      toHex(x, x.length),
+      '0'
+    );
   }
-  return data;
+  const PlanetIndex = parseInt(x.substring(0, 1), 16);
+  const SolarSystemIndex = parseInt(x.substring(1, 4), 16);
+  const RealityIndex = parseInt(x.substring(4, 6), 16)
+  const VoxelY = signInt(x.substring(6, 8), 2);
+  const VoxelZ = signInt(x.substring(8, 11), 3);
+  const VoxelX = signInt(x.substring(11, x.length), 3);
+
+  let result = {
+    GalacticAddress: {
+      PlanetIndex,
+      SolarSystemIndex,
+      VoxelY,
+      VoxelZ,
+      VoxelX
+    },
+    RealityIndex,
+  };
+  return formatID(result);
 }
 
 export function whichToShow ({outerHeight, itemHeight, scrollTop, columns}) {

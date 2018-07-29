@@ -38784,6 +38784,16 @@ Item
 Profile
 */
 
-.ProfileModal__noMarginTop {
+.ProfileModal__content {
   margin-top: 0px !important;
+}
+
+.ProfileModal__right_container {
+  padding-top: 0px !important;
+  overflow: auto;
+}
+
+.ProfileModal__left_container {
+  padding-top: 14px !important;
+  overflow: auto;
 }

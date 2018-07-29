@@ -1222,7 +1222,7 @@ class App extends React.Component {
             if (!base.GalacticAddress) {
               return;
             }
-            galacticAddress = utils.intToObject(base.GalacticAddress);
+            galacticAddress = utils.gaToObject(base.GalacticAddress);
             let refStoredLocation = findIndex(this.state.storedLocations, (storedLocation) => {
               return (
                 galacticAddress.VoxelX === storedLocation.VoxelX
@@ -1268,10 +1268,14 @@ class App extends React.Component {
           }
 
           state.set(stateUpdate, () => {
+            let {Record} = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store;
+            each(Record, (discovery, i) => {
+              discovery.NMCID = utils.uaToObject(discovery.DD.UA).id;
+            });
             utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
               machineId: this.state.machineId,
               username: this.state.username,
-              discoveries: saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record
+              discoveries: Record
             }).then(() => {
               if (refLocation === -1) {
                 return utils.ajax.post('/nmslocation/', {
@@ -1787,7 +1791,11 @@ class App extends React.Component {
         onRestart={this.handleRestart}
         onSearch={this.handleSearch} />}
         {this.state.displayProfile ?
-        <ProfileModal profileId={this.state.displayProfile} /> : null}
+        <ProfileModal
+        profileId={this.state.displayProfile}
+        profile={this.state.profile}
+        height={this.state.height}
+        favorites={this.state.favorites} /> : null}
         <ReactTooltip
         className="nmcTip"
         globalEventOff="click mouseleave"
