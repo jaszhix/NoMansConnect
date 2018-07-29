@@ -25,6 +25,18 @@ const basicMenuContainerStyle = {
   fontFamily: 'geosanslight-nmsregular',
   fontSize: '16px'
 };
+const trashIconContainerStyle = {
+  position: 'relative',
+  left: '92%',
+  width: '179px',
+  top: '-14px',
+  cursor: 'pointer'
+};
+const notificationTrashIconContainerStyle = {
+  position: 'relative',
+  top: '14px',
+  cursor: 'pointer'
+};
 
 export class BaseDropdownMenu extends React.Component {
   constructor(props) {
@@ -32,13 +44,6 @@ export class BaseDropdownMenu extends React.Component {
     this.state = {
       hover: -1,
       open: false
-    };
-    this.trashIconContainerStyle = {
-      position: 'relative',
-      left: '92%',
-      width: '179px',
-      top: '-14px',
-      cursor: 'pointer'
     };
     this.baseItemStyle = {
       height: '36px'
@@ -114,15 +119,15 @@ export class BaseDropdownMenu extends React.Component {
               onMouseEnter={this.handleOnMouseEnter}
               onMouseLeave={this.handleOnMouseLeave}>
                 <div
-                onClick={()=>this.props.onRestoreBase(base)}
+                onClick={() => this.props.onRestoreBase(base)}
                 data-place="left"
                 data-tip={utils.tip('Restores the base over the claimed base in the currently loaded save file. In order for this to work, you must ensure at least one base item is placed on your existing base, as this is how the saved base\'s vertices are converted for the new location\'s geometry.')}>
                   {baseName}
                 </div>
                 <div
-                style={this.trashIconContainerStyle}
-                onClick={(e)=>this.handleDelete(e, base)}
-                data-place="right"
+                style={trashIconContainerStyle}
+                onClick={(e) => this.handleDelete(e, base)}
+                data-place="bottom"
                 data-tip={utils.tip('Remove Base')}>
                   {this.state.hover === i ? <i className="trash outline icon" /> : null}
                 </div>
@@ -377,7 +382,7 @@ You should have received a copy of the GNU General Public License along with thi
               <div
               key={i}
               className={`item${p.s.mode === mode ? ' selected' : ''}`}
-              onClick={()=>this.handleModeSwitch(mode)}
+              onClick={() => this.handleModeSwitch(mode)}
               data-place="left"
               data-tip={utils.tip('Controls which save file is loaded and saved.')}>
                 {upperFirst(mode)}
@@ -594,7 +599,7 @@ export class BasicDropdown extends React.Component {
               <div
               key={i}
               className={`item${option.disabled ? ' disabled' : ''}`}
-              onClick={(e)=>this.handleOptionClick(e, option)}
+              onClick={(e) => this.handleOptionClick(e, option)}
               data-place="left"
               data-tip={utils.tip(tooltip)}>
                 {option.label}
@@ -611,3 +616,101 @@ export class BasicDropdown extends React.Component {
 };
 
 BasicDropdown = onClickOutside(BasicDropdown);
+
+export class NotificationDropdown extends React.Component {
+  static defaultProps = {
+    options: [],
+    selectedGalaxy: 0,
+    icon: 'dropdown',
+    showValue: true,
+    persist: false
+  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      open: false
+    };
+  }
+  componentDidMount() {
+    defer(ReactTooltip.rebuild);
+  }
+  componentWillUnmount = () => {
+    this.willUnmount = true;
+  }
+  handleOptionClick = (e, option) => {
+    state.set({displayFriendRequest: option});
+  }
+  handleClickOutside = () => {
+    if (this.state.open && !this.willUnmount) {
+      this.setState({open: false});
+    }
+  }
+  handleToggleOpen = () => {
+    this.setState({open: !this.state.open});
+  }
+  handleDelete = (option) => {
+    utils.ajax.delete(`/nmsnotification/${option.id}/`, {
+      machineId: this.props.machineId,
+      username: this.props.username
+    }).then(() => {
+      state.trigger('pollSaveData');
+    }).catch((err) => {
+      console.log(err);
+    });
+  }
+  render() {
+    let height = this.props.height ? this.props.height : window.innerHeight;
+    return (
+      <div
+      style={noDragStyle}
+      className={`ui dropdown icon item${this.state.open ? ' active visible' : ''}`}
+      onClick={this.handleToggleOpen}
+      data-tip={!this.state.open ? utils.tip(`${this.props.options.length} new message${this.props.options.length > 1 ? 's' : ''}`) : ''}>
+        <i className="envelope icon" />
+        <div
+        style={{
+          display: this.state.open ? 'block !important' : 'none',
+          borderRadius: '0px',
+          background: 'rgb(23, 26, 22)',
+          maxHeight: `${height / 2}px`,
+          width: '400px',
+          overflowY: 'none',
+          overflowX: 'none'
+        }}
+        className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
+          {this.props.options.length > 0 ? map(this.props.options, (option, i)=>{
+            return (
+              <div
+              key={option.id}
+              className="item"
+              onMouseEnter={() => this.setState({hover: i})}
+              onMouseLeave={() => this.setState({hover: -1})}>
+                <div className="ui four column grid">
+                  <div className="ui six wide column left floated">
+                    <div
+                    key={i}
+                    className="item"
+                    onClick={(e) => this.handleOptionClick(e, option)}>
+                      {option.content}
+                    </div>
+                  </div>
+                  <div className="ui two wide column right floated">
+                    <div
+                    style={notificationTrashIconContainerStyle}
+                    onClick={(e) => this.handleDelete(e, option)}
+                    data-place="bottom"
+                    data-tip={utils.tip('Remove Notification')}>
+                      {this.state.hover === i ? <i className="trash outline icon" /> : null}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }) : null}
+        </div>
+      </div>
+    );
+  }
+};
+
+NotificationDropdown = onClickOutside(NotificationDropdown);

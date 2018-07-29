@@ -38650,6 +38650,10 @@ Components
 
 */
 
+.cursorPointer {
+  cursor: pointer;
+}
+
 /*
 Button
 */
@@ -38796,4 +38800,73 @@ Profile
 .ProfileModal__left_container {
   padding-top: 14px !important;
   overflow: auto;
+}
+
+/*
+Friend requests
+*/
+
+.FriendRequestModal__description {
+  margin-top: 20px;
+}
+
+.FriendRequestModal__buttonContainer {
+  position: absolute;
+  bottom: 20px;
+  left: 105px;
+}
+
+/*
+Modals
+*/
+.modal__InputStyle {
+  width: 300px;
+  position: relative;
+  top: 7px;
+  color: #FFFFFF;
+  background: rgb(23, 26, 22);
+  padding: 0.67861429em;
+  border-radius: 0px;
+  border: 1px solid #DA2600;
+  font-family: 'geosanslight-nmsregular';
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+
+.modal__compact {
+  padding: 8px !important;
+  text-align: center !important;
+  z-index: 1001 !important;
+  -webkit-transform-origin: 50% 25% !important;
+  box-shadow: none !important;
+  border-top: 2px solid #95220E !important;
+  border: 1px solid #DA2600 !important;
+  width: 400px !important;
+  height: 145px !important;
+  position: absolute !important;
+  left: 0px !important;
+  right: 0px !important;
+  top: 45% !important;
+  margin: 0px auto !important;
+}
+
+.modal__full {
+  background: rgb(23, 26, 22) !important;
+  border-top: 2px solid #95220E !important;
+  position: fixed !important;
+  left: 0px !important;
+  top: 6% !important;
+  z-index: 1001 !important;
+  -webkit-transform-origin: 50% 25% !important;
+  box-shadow: none !important;
+  border: 1px solid #DA2600 !important;
+  max-width: 75% !important;
+}
+
+.modal__error {
+  font-family: 'geosanslight-nmsregular';
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgb(218, 38, 0);
 }

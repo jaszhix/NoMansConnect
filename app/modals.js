@@ -14,29 +14,9 @@ import Button from './buttons';
 import LocationBox from './locationBox';
 import Item from './item';
 
-const errorStyle = {
-  fontFamily: 'geosanslight-nmsregular',
-  fontSize: '15px',
-  fontWeight: 600,
-  letterSpacing: '2px',
-  color: 'rgb(218, 38, 0)'
-};
-
 export class ImageModal extends React.Component {
   constructor(props) {
     super(props);
-    this.modalStyle = {
-      background: 'rgb(23, 26, 22)',
-      borderTop: '2px solid #95220E',
-      position: 'fixed',
-      left: '13%',
-      top: '6%',
-      zIndex: '1002',
-      WebkitTransformOrigin: '50% 25%',
-      boxShadow: 'none',
-      border: '1px solid #DA2600',
-      maxWidth: '75%'
-    };
   }
   handleClickOutside = () => {
     state.set({selectedImage: null});
@@ -46,7 +26,7 @@ export class ImageModal extends React.Component {
   }
   render() {
     return (
-      <div className="ui fullscreen modal active" style={this.modalStyle}>
+      <div className="ui fullscreen modal active modal__full">
         <span className="close" />
         <img className="image content" src={this.props.image} />
       </div>
@@ -73,19 +53,6 @@ export class UsernameOverrideModal extends React.Component {
       border: '1px solid #DA2600',
       width: '400px'
     };
-    this.inputStyle = {
-      width: '300px',
-      position: 'relative',
-      top: '7px',
-      color: '#FFF',
-      background: 'rgb(23, 26, 22)',
-      padding: '0.67861429em',
-      borderRadius: '0px',
-      border: '1px solid #DA2600',
-      fontFamily: 'geosanslight-nmsregular',
-      fontSize: '15px',
-      letterSpacing: '2px'
-    };
   }
   handleClickOutside = () => {
     state.set({usernameOverride: false});
@@ -108,7 +75,7 @@ export class UsernameOverrideModal extends React.Component {
       <div className="ui small modal active" style={this.modalStyle}>
         <span className="close" />
         <input
-        style={this.inputStyle}
+        className="modal__InputStyle"
         type="text"
         value={this.state.name}
         onChange={this.handleChange}
@@ -129,35 +96,6 @@ export class RecoveryModal extends React.Component {
     super(props);
     this.state = {
       value: '',
-    };
-    this.modalStyle = {
-      padding: '8px',
-      textAlign: 'center',
-      zIndex: '1001',
-      WebkitTransformOrigin: '50% 25%',
-      boxShadow: 'none',
-      borderTop: '2px solid #95220E',
-      border: '1px solid #DA2600',
-      width: '400px',
-      height: '145px',
-      position: 'absolute',
-      left: '0px',
-      right: '0px',
-      top: '45%',
-      margin: '0px auto'
-    };
-    this.inputStyle = {
-      width: '300px',
-      position: 'relative',
-      top: '7px',
-      color: '#FFF',
-      background: 'rgb(23, 26, 22)',
-      padding: '0.67861429em',
-      borderRadius: '0px',
-      border: '1px solid #DA2600',
-      fontFamily: 'geosanslight-nmsregular',
-      fontSize: '15px',
-      letterSpacing: '2px'
     };
   }
   handleClickOutside = () => {
@@ -210,12 +148,12 @@ export class RecoveryModal extends React.Component {
   }
   render() {
     return (
-      <div className="ui small modal active" style={this.modalStyle}>
+      <div className="ui small modal active modal__compact">
         <span className="close" />
-        {this.state.error ? <div style={errorStyle}>{this.state.error}</div> : null}
+        {this.state.error ? <div className="modal__error">{this.state.error}</div> : null}
         <div style={{position: 'absolute', top: '50px', left: '50px'}}>
           <input
-          style={this.inputStyle}
+          className="modal__InputStyle"
           type="text"
           value={this.state.value}
           onChange={this.handleChange}
@@ -240,35 +178,6 @@ export class LocationRegistrationModal extends React.Component {
       galaxy: 0,
       selectedGalaxy: 0,
       preventClose: false
-    };
-    this.modalStyle = {
-      padding: '8px',
-      textAlign: 'center',
-      zIndex: '1001',
-      WebkitTransformOrigin: '50% 25%',
-      boxShadow: 'none',
-      borderTop: '2px solid #95220E',
-      border: '1px solid #DA2600',
-      width: '400px',
-      height: '145px',
-      position: 'absolute',
-      left: '0px',
-      right: '0px',
-      top: '45%',
-      margin: '0px auto'
-    };
-    this.inputStyle = {
-      width: '300px',
-      position: 'relative',
-      top: '7px',
-      color: '#FFF',
-      background: 'rgb(23, 26, 22)',
-      padding: '0.67861429em',
-      borderRadius: '0px',
-      border: '1px solid #DA2600',
-      fontFamily: 'geosanslight-nmsregular',
-      fontSize: '15px',
-      letterSpacing: '2px'
     };
   }
   componentDidMount() {
@@ -336,7 +245,7 @@ export class LocationRegistrationModal extends React.Component {
   }
   render() {
     return (
-      <div className="ui small modal active" style={this.modalStyle}>
+      <div className="ui small modal active modal__compact">
         <span className="close" />
         <div onClick={()=>this.setState({preventClose: true})}>
           <BasicDropdown
@@ -344,10 +253,10 @@ export class LocationRegistrationModal extends React.Component {
           options={this.state.galaxies}
           selectedGalaxy={this.state.galaxy} />
         </div>
-        {this.state.error ? <div style={errorStyle}>{this.state.error}</div> : null}
+        {this.state.error ? <div className="modal__error">{this.state.error}</div> : null}
         <div style={{position: 'absolute', top: '50px', left: '50px'}}>
           <input
-          style={this.inputStyle}
+          className="modal__InputStyle"
           type="text"
           value={this.state.name}
           onChange={this.handleChange}
@@ -400,7 +309,7 @@ export class Notification extends React.Component {
       <div className="ui small modal active" style={this.modalStyle}>
         <span className="close" />
         {type === 'error' ?
-        <div style={errorStyle}>
+        <div className="modal__error">
           {renderedMessage}
         </div> : renderedMessage}
         <div style={{width: '50px', position: 'absolute', right: '46px', bottom: '10px'}}>
@@ -439,19 +348,8 @@ export class ProfileModal extends React.Component {
     this.state = {
       profile: null,
       height: this.props.height / 1.2,
-      discoveriesPage: 1
-    };
-    this.modalStyle = {
-      background: 'rgb(23, 26, 22)',
-      borderTop: '2px solid #95220E',
-      position: 'fixed',
-      left: '0px',
-      top: '6%',
-      zIndex: '1001',
-      WebkitTransformOrigin: '50% 25%',
-      boxShadow: 'none',
-      border: '1px solid #DA2600',
-      maxWidth: '75%'
+      discoveriesPage: 1,
+      error: ''
     };
   }
   componentDidMount() {
@@ -468,7 +366,42 @@ export class ProfileModal extends React.Component {
         profile: profile.data,
         discoveriesPage
       });
+    }).catch((err) => {
+      console.log(err);
     });
+  }
+  handleFriendRequest = (isFriend) => {
+    if (isFriend) {
+      utils.ajax.post('/nmsfriendremove/', {
+        username: this.props.profile.username,
+        machineId: this.props.profile.machine_id,
+        friend: this.state.profile.username,
+      }).then((profile) => {
+        profile = Object.assign(this.state.profile, profile.data)
+        this.setState({profile});
+      }).catch((err) => {
+        if (err.response && err.response.data && err.response.data.status) {
+          this.setState({error: err.response.data.status});
+        }
+      });
+    } else {
+      utils.ajax.post('/nmsfriendrequest/', {
+        from: {
+          username: this.props.profile.username
+        },
+        to: {
+          username: this.state.profile.username
+        },
+        machineId: this.props.profile.machine_id
+      }).then((profile) => {
+        profile = Object.assign(this.state.profile, profile.data)
+        this.setState({profile});
+      }).catch((err) => {
+        if (err.response && err.response.data && err.response.data.status) {
+          this.setState({error: err.response.data.status});
+        }
+      });
+    }
   }
   handleClickOutside = () => {
     state.set({
@@ -488,6 +421,10 @@ export class ProfileModal extends React.Component {
       this.state.discoveriesPage - 1
     );
   }
+  handleSwitchProfile = (friend) => {
+    setTimeout(() => state.set({displayProfile: friend.id}), 0);
+    state.set({displayProfile: ''});
+  }
   getRef = (ref) => {
     if (!this.ref) {
       this.ref = ref;
@@ -496,7 +433,7 @@ export class ProfileModal extends React.Component {
     }
   }
   render() {
-    const {profile} = this.state;
+    const {profile, error} = this.state;
     if (!profile) {
       return null;
     }
@@ -511,7 +448,7 @@ export class ProfileModal extends React.Component {
       });
     }
     return (
-      <div ref={this.getRef} className="ui fullscreen modal active" style={this.modalStyle}>
+      <div ref={this.getRef} className="ui fullscreen modal active modal__full">
         <span className="close" />
         <div
         className="ui segment ProfileModal__content"
@@ -521,23 +458,38 @@ export class ProfileModal extends React.Component {
               <div className="ui">
                 <h3>{`${profile.username}'s Profile (Beta)`}</h3>
                 {!isOwnProfile ?
-                <Button onClick={this.onClickOutside} style={{position: 'absolute', top: '-4px', right: '0px', left: 'unset'}}>
-                  {isFriend ? 'Remove Friend' : 'Send Friend Request'}
+                <Button
+                style={{position: 'absolute', top: '-4px', right: '0px', left: 'unset'}}
+                onClick={() => this.handleFriendRequest(isFriend)} >
+                  {error ? error : isFriend ? 'Remove Friend' : 'Send Friend Request'}
                 </Button> : null}
               </div>
               <div className="ui segment">
                 <Item label="XP" value={profile.exp} />
-                <Item label="Discoveries" value={profile.discoveriesCount} />
+                {profile.discoveriesCount > 0 ?
+                <Item label="Discoveries" value={profile.discoveriesCount} /> : null}
+                {profile.discoveriesCount > 0 ?
+                <div className="ui segment ProfileModal__content">
+                  <Item label="Systems" value={profile.solarSystemCount} />
+                  <Item label="Planets" value={profile.planetCount} />
+                  <Item label="Interactables" value={profile.interactableCount} />
+                  <Item label="Fauna" value={profile.animalCount} />
+                  <Item label="Flora" value={profile.floraCount} />
+                </div> : null}
                 {profile.friends.length > 0 ?
-                <Item
-                label="Friends"
-                value={
-                  <React.Fragment>
-                    {map(profile.friends, (friend) => {
-                      return <Item label="Name" value={friend.username} />
-                    })}
-                  </React.Fragment>
-                } /> : null}
+                <Item label="Friends" /> : null}
+                {profile.friends.length > 0 ?
+                <div className="ui segment ProfileModal__content">
+                  {map(profile.friends, (friend) => {
+                    return (
+                      <Item
+                      key={friend.id}
+                      label="Name"
+                      value={friend.username}
+                      onValueClick={() => this.handleSwitchProfile(friend)} />
+                    );
+                  })}
+                </div> : null}
               </div>
             </div>
             <div
@@ -634,3 +586,60 @@ export class ProfileModal extends React.Component {
 };
 
 ProfileModal = onClickOutside(ProfileModal);
+
+export class FriendRequestModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      error: ''
+    };
+  }
+  handleClickOutside = () => {
+    state.set({displayFriendRequest: null});
+  }
+  handleFriendRequest = () => {
+    utils.ajax.post('/nmsfriendaccept/', {
+      to: {
+        username: this.props.username,
+      },
+      from: {
+        username: this.props.notification.fromProfile.username
+      },
+      machineId: this.props.machineId
+    }).then(() => {
+      state.trigger('pollSaveData');
+      state.set({displayFriendRequest: null});
+    }).catch((err) => {
+      if (err.response && err.response.data && err.response.data.status) {
+        this.setState({error: err.response.data.status});
+      }
+    });
+  }
+  render() {
+    return (
+      <div className="ui small modal active modal__compact">
+        <span className="close" />
+        {this.state.error ? <div className="modal__error">{this.state.error}</div> : null}
+        <div className="FriendRequestModal__description">
+          {`Do you want to accept ${this.props.notification.fromProfile.username}'s friend request?`}
+        </div>
+        <div className="FriendRequestModal__buttonContainer">
+          <div className="ui two column grid">
+            <div className="column">
+              <Button onClick={this.handleFriendRequest}>
+                Accept
+              </Button>
+            </div>
+            <div className="column">
+              <Button onClick={this.handleClickOutside}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+};
+
+FriendRequestModal = onClickOutside(FriendRequestModal);

@@ -448,16 +448,21 @@ var signInt = (x, byteLen) => {
   }
 }
 
-export const gaToObject = (x) => {
+const formatIntAddress = (x) => {
   if (typeof x === 'string' && x.indexOf('0x') !== -1) {
     x = x.substr(2, x.length);
-  } else if (typeof x === 'number') {
+  } else {
     x = x.toString();
     x = trimStart(
       toHex(x, x.length),
       '0'
     );
   }
+  return x;
+};
+
+export const gaToObject = (x) => {
+  x = formatIntAddress(x);
   return {
     PlanetIndex: parseInt(flip(x.substr(0, 1)), 16),
     SolarSystemIndex: parseInt(x.substr(1, 3), 16),
@@ -468,16 +473,7 @@ export const gaToObject = (x) => {
 }
 
 export const uaToObject = (x) => {
-  console.log('uaToObject: ', x)
-  if (typeof x === 'string' && x.indexOf('0x') !== -1) {
-    x = x.substr(2, x.length);
-  } else {
-    x = x.toString();
-    x = trimStart(
-      toHex(x, x.length),
-      '0'
-    );
-  }
+  x = formatIntAddress(x);
   const PlanetIndex = parseInt(x.substring(0, 1), 16);
   const SolarSystemIndex = parseInt(x.substring(1, 4), 16);
   const RealityIndex = parseInt(x.substring(4, 6), 16)

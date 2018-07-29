@@ -12,7 +12,8 @@ const iconStyle = {
 
 class Item extends React.Component {
   static defaultProps = {
-    dataTip: null
+    dataTip: null,
+    onValueClick: null
   };
   constructor(props) {
     super(props);
@@ -53,8 +54,9 @@ class Item extends React.Component {
     } else {
       return (
         <div
-        className="Item__wrapperStyle"
+        className={`Item__wrapperStyle${this.props.onValueClick ? ' cursorPointer' : ''}`}
         style={locationItemStyle}
+        onClick={this.props.onValueClick}
         data-place="top"
         data-tip={this.props.dataTip}>
           <span className="Item__labelStyle">{`${this.props.label}`}</span>
@@ -63,7 +65,8 @@ class Item extends React.Component {
             {this.props.children}
           </span>
           :
-          <span className="Item__valueStyle">
+          <span
+          className="Item__valueStyle">
             {this.props.value ? this.props.value
             : this.props.icon ?
             <i

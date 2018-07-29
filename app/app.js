@@ -23,8 +23,8 @@ import {each, find, findIndex, map, filter, tryFn} from './lang';
 import defaultWallpaper from './assets/images/default_wallpaper.png';
 import baseIcon from './assets/images/base_icon.png';
 
-import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu} from './dropdowns';
-import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification, ProfileModal} from './modals';
+import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDropdown} from './dropdowns';
+import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification, ProfileModal, FriendRequestModal} from './modals';
 import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
@@ -531,7 +531,8 @@ class App extends React.Component {
       console.log(`STATE: `, this.state);
     });
     state.connect({
-      fetchRemoteLocations: () => this.fetchRemoteLocations(1)
+      fetchRemoteLocations: () => this.fetchRemoteLocations(1),
+      pollSaveData: () => this.pollSaveData()
     });
 
     this.topAttachedMenuStyle = {
@@ -1701,6 +1702,12 @@ class App extends React.Component {
             onClick={this.handleSearchIconClick}
             search={s.search}
             navLoad={s.navLoad} /> : null}
+            {this.state.profile && this.state.profile.notifications && this.state.profile.notifications.length > 0 ?
+            <NotificationDropdown
+            machineId={this.state.profile.machine_id}
+            username={this.state.username}
+            options={this.state.profile.notifications}
+            height={this.state.height} /> : null}
             {!s.ps4User ?
             <BaseDropdownMenu
             onSaveBase={this.handleSaveBase}
@@ -1796,6 +1803,12 @@ class App extends React.Component {
         profile={this.state.profile}
         height={this.state.height}
         favorites={this.state.favorites} /> : null}
+        {this.state.displayFriendRequest ?
+        <FriendRequestModal
+        notification={this.state.displayFriendRequest}
+        profile={this.state.profile}
+        username={this.state.username}
+        machineId={this.state.machineId} /> : null}
         <ReactTooltip
         className="nmcTip"
         globalEventOff="click mouseleave"
