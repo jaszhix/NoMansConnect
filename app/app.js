@@ -24,7 +24,7 @@ import defaultWallpaper from './assets/images/default_wallpaper.png';
 import baseIcon from './assets/images/base_icon.png';
 
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDropdown} from './dropdowns';
-import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification, ProfileModal, FriendRequestModal} from './modals';
+import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification, ProfileModal, FriendRequestModal, BaseRestorationModal} from './modals';
 import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
@@ -532,7 +532,8 @@ class App extends React.Component {
     });
     state.connect({
       fetchRemoteLocations: () => this.fetchRemoteLocations(1),
-      pollSaveData: () => this.pollSaveData()
+      pollSaveData: () => this.pollSaveData(),
+      restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected)
     });
 
     this.topAttachedMenuStyle = {
@@ -922,18 +923,26 @@ class App extends React.Component {
     });
   }
   handleSaveBase = (baseData=null) => {
+    const {storedBases} = this.state;
     if (baseData) {
-      this.state.storedBases.push(cloneDeep(baseData));
-      state.set({storedBases: this.state.storedBases});
+      storedBases.push(cloneDeep(baseData));
+      state.set({storedBases});
       return;
     }
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
-      let base = utils.formatBase(saveData, state.knownProducts);
-      let refBase = findIndex(this.state.storedBases, _base => _base.Name === base.Name);
-      if (refBase === -1 && isArray(this.state.storedBases)) { // Sentry error, cause TBD
-        this.state.storedBases.push(base);
-      }
-      state.set({storedBases: this.state.storedBases});
+      each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
+        if (!base.GalacticAddress || !base.Name) {
+          return;
+        }
+        base = utils.formatBase(saveData, state.knownProducts, i);
+        let refBase = findIndex(storedBases, _base => _base.Name === base.Name);
+        if (refBase === -1 && isArray(storedBases)) {
+          storedBases.push(base);
+        } else {
+          storedBases[refBase] = base;
+        }
+        state.set({storedBases});
+      });
     }).catch(() => {
       this.baseError();
     });
@@ -954,13 +963,39 @@ class App extends React.Component {
       log.error(e.message);
     });
   }
-  handleRestoreBase = (base) => {
+  handleRestoreBase = (base, confirmed = false) => {
+    console.log({base, confirmed})
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
-      if (saveData.result.PlayerStateData.PersistentPlayerBases.length === 0) {
+      const {PersistentPlayerBases} = saveData.result.PlayerStateData
+      if (confirmed === false) {
+        state.set({
+          displayBaseRestoration: {
+            savedBases: PersistentPlayerBases,
+            restoreBase: base
+          }
+        });
+        return;
+      }
+      if (PersistentPlayerBases.length === 0) {
         this.baseError();
         return;
       }
-      let newBase = saveData.result.PlayerStateData.PersistentPlayerBases[0];
+      if (!confirmed || typeof confirmed !== 'object') {
+        log.error('Base restoration cancelled - unable to get index of base to be replaced.');
+        return;
+      }
+      let refIndex = findIndex(PersistentPlayerBases, (base) => base.Name === confirmed.Name);
+      let newBase = PersistentPlayerBases[refIndex];
+      if (newBase.Name === base.Name) {
+        dialog.showMessageBox({
+          type: 'info',
+          buttons: [],
+          title: 'Base Restore',
+          message: 'Please select a different base to import than the one that is being written over.'
+        });
+        return;
+      }
+
       let storedBase = cloneDeep(base);
 
       // Base conversion algorithm by monkeyman192
@@ -968,7 +1003,18 @@ class App extends React.Component {
       // 3-vector
       let fwdOriginal = storedBase.Forward;
       // 3-vector
-      let upOriginal = storedBase.Objects[0].Up;
+      let upOriginal;
+      if (storedBase.Objects.length > 0) {
+        upOriginal = storedBase.Objects[0].Up;
+      } else {
+        dialog.showMessageBox({
+          type: 'info',
+          buttons: [],
+          title: 'Base Restore',
+          message: 'In order to restore your base correctly, at least one base building object must be placed on the new base first.'
+        });
+        return;
+      }
       // cross is defined in the math.js library.
       let perpOriginal = math.cross(fwdOriginal, upOriginal);
 
@@ -990,7 +1036,7 @@ class App extends React.Component {
           type: 'info',
           buttons: [],
           title: 'Base Restore',
-          message: 'In order to restore your base correctly, at least one base building object must be placed on the new base first.'
+          message: 'In order to restore your base correctly, at least one base building object must be placed on the old base first.'
         });
         return;
       }
@@ -1010,17 +1056,18 @@ class App extends React.Component {
         storedBase.Objects[i].Position = math.multiply(M, object.Position)._data;
       });
 
-      saveData.result.PlayerStateData.PersistentPlayerBases[0].Objects = storedBase.Objects;
+      saveData.result.PlayerStateData.PersistentPlayerBases[refIndex].Objects = storedBase.Objects;
 
       fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
         if (err) {
-          log.error(err);
+          log.error(`Failed to restore base: ${err.message}`);
           return;
         }
         this.signSaveData(saveData.slot);
+        state.set({displayBaseRestoration: null});
       });
     }).catch((err) => {
-      log.error(err);
+      log.error(`Failed to restore base: ${err.message}`);
     });
   }
   handleTeleport = (location, i, action=null, n=null) => {
@@ -1220,7 +1267,7 @@ class App extends React.Component {
           // Detect player bases
           each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
             let galacticAddress;
-            if (!base.GalacticAddress) {
+            if (!base.GalacticAddress || base.BaseType.PersistentBaseTypes !== 'HomePlanetBase') {
               return;
             }
             galacticAddress = utils.gaToObject(base.GalacticAddress);
@@ -1809,6 +1856,10 @@ class App extends React.Component {
         profile={this.state.profile}
         username={this.state.username}
         machineId={this.state.machineId} /> : null}
+        {this.state.displayBaseRestoration ?
+        <BaseRestorationModal
+        baseData={this.state.displayBaseRestoration}
+        height={this.state.height} /> : null}
         <ReactTooltip
         className="nmcTip"
         globalEventOff="click mouseleave"

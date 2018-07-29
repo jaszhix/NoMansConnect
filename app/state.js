@@ -47,6 +47,7 @@ const state = initStore({
   profile: null,
   displayProfile: null,
   displayFriendRequest: null,
+  displayBaseRestoration: null,
   favorites: [],
   mods: [],
   selectedImage: null,

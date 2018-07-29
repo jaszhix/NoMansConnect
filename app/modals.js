@@ -7,7 +7,7 @@ import moment from 'moment';
 import {assignIn, pick, isString, orderBy} from 'lodash';
 
 import {validateEmail, ajax, fromHex, cleanUp} from './utils';
-import {each, findIndex, map} from './lang';
+import {each, findIndex, map, filter} from './lang';
 
 import {BasicDropdown} from './dropdowns';
 import Button from './buttons';
@@ -643,3 +643,69 @@ export class FriendRequestModal extends React.Component {
 };
 
 FriendRequestModal = onClickOutside(FriendRequestModal);
+
+export class BaseRestorationModal extends React.Component {
+  static defaultProps = {
+    baseData: {
+      savedBases: [],
+      restoreBase: null
+    }
+  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      baseOptions: [],
+      selectedBase: [null, 0]
+    };
+  }
+  componentDidMount() {
+    let {baseOptions} = this.state;
+    let elgibleBases = filter(this.props.baseData.savedBases, (base) => {
+      return base.GalacticAddress
+      && base.Name
+      && base.BaseType.PersistentBaseTypes === 'HomePlanetBase'
+    });
+    each(elgibleBases, (base, i)=>{
+      baseOptions.push({
+        id: base.Name,
+        label: base.Name,
+        onClick: () => this.setState({selectedBase: [base, i + 1]})
+      });
+    });
+    baseOptions = [{
+      id: '',
+      label: 'Select',
+      onClick: null
+    }].concat(baseOptions);
+    this.setState({baseOptions});
+  }
+  handleClickOutside = () => {
+    state.set({displayBaseRestoration: null});
+  }
+  handleConfirm = () => {
+    state.trigger('restoreBase', this.props.baseData.restoreBase, this.state.selectedBase[0]);
+  }
+  render() {
+    return (
+      <div className="ui small modal active modal__compact">
+        <span className="close" />
+        <div>
+          {`Select which base will be overwritten by ${this.props.baseData.restoreBase.Name}. At least one base item must be placed for the import to work.`}
+        </div>
+        <div onClick={()=>this.setState({preventClose: true})}>
+          <BasicDropdown
+          height={this.props.height}
+          options={this.state.baseOptions}
+          selectedGalaxy={this.state.selectedBase[1]} />
+        </div>
+        <div style={{position: 'absolute', bottom: '10px', left: '145px'}}>
+          <Button onClick={this.handleConfirm}>
+            Confirm
+          </Button>
+        </div>
+      </div>
+    );
+  }
+};
+
+BaseRestorationModal = onClickOutside(BaseRestorationModal);

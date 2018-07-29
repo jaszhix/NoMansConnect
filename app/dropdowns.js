@@ -101,8 +101,8 @@ export class BaseDropdownMenu extends React.Component {
           className="item"
           onClick={this.handleSave}
           data-place="left"
-          data-tip={utils.tip('Saves the base claimed in the currently loaded save file.')}>
-            Save Base
+          data-tip={utils.tip('Saves all active bases found in the save file to NMC\'s storage.')}>
+            Save Bases
           </div>
           {p.storedBases && p.storedBases.length > 0 ? <div className="divider" /> : null}
           {p.storedBases && p.storedBases.length > 0 ? map(p.storedBases, (base, i)=>{
@@ -121,7 +121,7 @@ export class BaseDropdownMenu extends React.Component {
                 <div
                 onClick={() => this.props.onRestoreBase(base)}
                 data-place="left"
-                data-tip={utils.tip('Restores the base over the claimed base in the currently loaded save file. In order for this to work, you must ensure at least one base item is placed on your existing base, as this is how the saved base\'s vertices are converted for the new location\'s geometry.')}>
+                data-tip={utils.tip('Import this base over a currently existing base from the save. Choose the base to import, and then you will be prompted to choose which base to write over.')}>
                   {baseName}
                 </div>
                 <div
@@ -578,7 +578,7 @@ export class BasicDropdown extends React.Component {
       style={basicMenuContainerStyle}
       className={`ui dropdown${this.state.open ? ' active visible' : ''}`}
       onClick={this.handleToggleOpen}>
-        {this.props.showValue ? <div className="text">{state.galaxies[this.props.selectedGalaxy]}</div> : null}
+        {this.props.showValue && this.props.options.length > 0 ? <div className="text">{this.props.options[this.props.selectedGalaxy].label}</div> : null}
         <i className={`${this.props.icon} icon`} />
         <div
         style={{
