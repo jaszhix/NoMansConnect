@@ -1,12 +1,12 @@
-const {isArray, uniqBy, uniq, assignIn, orderBy} = require('lodash');
+const {uniqBy, uniq, assignIn, orderBy} = require('lodash');
 const {each, findIndex, filter} = require('./lang');
 
 const buildGalaxyOptions = function(state) {
   let options = [];
   let ids = [];
   let selectedGalaxy = state.selectedGalaxy;
-  if (state.remoteLocations && state.remoteLocations.results) {
-    each(state.remoteLocations.results, (location) => {
+  if (state.remoteLocations) {
+    each(state.remoteLocations, (location) => {
       if (location.data.galaxy == null || location.data.galaxy < 0) {
         location.data.galaxy = 0;
       }
@@ -36,17 +36,14 @@ const getLocationsByTranslatedId = function(locations) {
   if (!locations) {
     return null;
   }
-  if (isArray(locations)) {
-    locations = {results: locations}
-  }
-  let systems = uniqBy(locations.results, (location) => {
+  let systems = uniqBy(locations, (location) => {
     location = location.data ? location : {data: location};
     return location.data.translatedX && location.data.translatedY && location.data.translatedZ;
   });
   each(systems, (location, i) => {
     systems[i] = location.data ? location : {data: location};
     location = systems[i];
-    let planets = filter(locations.results, (planet) => {
+    let planets = filter(locations, (planet) => {
       planet = planet.data ? planet : {data: planet};
       return (location.data.translatedX === planet.data.translatedX
         && location.data.translatedY === planet.data.translatedY
@@ -74,8 +71,7 @@ const getLocationsByTranslatedId = function(locations) {
     });
     location.data.planetData = planetData;
   });
-  locations.results = systems;
-  return locations;
+  return systems
 }
 
 onmessage = function(e) {
@@ -84,7 +80,7 @@ onmessage = function(e) {
     return;
   }
   let stateUpdate = {};
-  let center = e.data.p.show.Center ? [{
+  let center = e.data.p.show.Center.value ? [{
     x: 2047,
     y: 2047,
     z: 127
@@ -94,12 +90,12 @@ onmessage = function(e) {
 
   if (e.data.opts.selectedLocation) {
     let selectedLocation = [];
-    if (e.data.p.remoteLocations && e.data.p.remoteLocations.results) {
-      each(e.data.p.remoteLocations.results, (location) => {
+    if (e.data.p.remoteLocations && e.data.p.remoteLocations) {
+      each(e.data.p.remoteLocations, (location) => {
         if (location.data.galaxy !== e.data.p.selectedGalaxy) {
           return;
         }
-        if (e.data.p.selectedLocation && e.data.p.show.Selected
+        if (e.data.p.selectedLocation && e.data.p.show.Selected.value
           && location.data.translatedX === e.data.p.selectedLocation.translatedX
           && location.data.translatedY === e.data.p.selectedLocation.translatedY
           && location.data.translatedZ === e.data.p.selectedLocation.translatedZ) {
@@ -120,15 +116,24 @@ onmessage = function(e) {
   }
 
   if (e.data.opts.locations) {
-    let currentLocation = [];
-    let locations = [];
-    let remoteLocations = [];
-    let favLocations = [];
-    let baseLocations = [];
-    let ps4Locations = []
+    Object.assign(stateUpdate, {
+      currentLocation: [],
+      locations: [],
+      remoteLocations: [],
+      favLocations: [],
+      baseLocations: [],
+      ps4Locations: []
+    })
 
-    if (e.data.p.remoteLocations && e.data.p.remoteLocations.results) {
-      each(e.data.p.remoteLocations.results, (location) => {
+    let friendKeys = [];
+    each(e.data.p.show, (legendItem, key) => {
+      if (e.data.p.defaultLegendKeys.indexOf(key) === -1) {
+        friendKeys.push(key);
+      }
+    });
+
+    if (e.data.p.remoteLocations && e.data.p.remoteLocations) {
+      each(e.data.p.remoteLocations, (location) => {
         if (location.data.galaxy !== e.data.p.selectedGalaxy) {
           return;
         }
@@ -139,30 +144,47 @@ onmessage = function(e) {
           id: `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`,
           planetData: location.data.planetData
         };
-        if (location.data.upvote && e.data.p.show.Favorite) {
-          favLocations.push(obj);
-        } else if (location.data.id === e.data.p.currentLocation && e.data.p.show.Current) {
-          currentLocation.push(obj);
-        } else if (location.data.base && e.data.p.show.Base) {
-          baseLocations.push(obj);
+        let matchedFriendKey = false;
+        each(friendKeys, (key) => {
+          if (location.username === key) {
+            let listKey = `${key}Locations`;
+            matchedFriendKey = true;
+            if (!stateUpdate[listKey]) {
+              stateUpdate[listKey] = [];
+            }
+            if (e.data.p.show[key].value) {
+              stateUpdate[listKey].push(obj);
+            }
+          }
+        });
+        if (matchedFriendKey) {
+          return;
+        }
+        if (location.data.upvote && e.data.p.show.Favorite.value) {
+          stateUpdate.favLocations.push(obj);
+        } else if (location.data.id === e.data.p.currentLocation) {
+          if (e.data.p.show.Current.value) {
+            stateUpdate.currentLocation.push(obj);
+          }
+        } else if (location.data.base) {
+          if (e.data.p.show.Base.value) {
+            stateUpdate.baseLocations.push(obj);
+          }
         } else if (location.data.username === e.data.p.username) {
-          locations.push(obj);
-        } else if (location.username !== e.data.p.username && (!location.data.playerPosition || location.data.manuallyEntered) && e.data.p.show.PS4) {
-          ps4Locations.push(obj);
-        } else if (location.username !== e.data.p.username && e.data.p.show.Shared) {
-          remoteLocations.push(obj);
+          if (e.data.p.show.Explored.value) {
+            stateUpdate.locations.push(obj);
+          }
+        } else if (location.username !== e.data.p.username && (!location.data.playerPosition || location.data.manuallyEntered)) {
+          if (e.data.p.show.PS4.value) {
+            stateUpdate.ps4Locations.push(obj);
+          }
+        } else if (location.username !== e.data.p.username) {
+          if (e.data.p.show.Shared.value) {
+            stateUpdate.remoteLocations.push(obj);
+          }
         }
       });
     }
-
-    assignIn(stateUpdate, {
-      currentLocation: currentLocation,
-      locations: locations,
-      remoteLocations: remoteLocations,
-      favLocations: favLocations,
-      baseLocations: baseLocations,
-      ps4Locations: ps4Locations
-    });
   }
 
   if (e.data.opts.size) {

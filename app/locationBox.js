@@ -199,7 +199,7 @@ class LocationBox extends React.Component {
         <Item label="Universe Address" value={location.id} />
         <Item label="Portal Address">
           {map(formatForGlyphs(location.translatedId), (glyph, i) => {
-              return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
+            return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
           })}
         </Item>
         {location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[location.galaxy]} /> : null}
@@ -219,10 +219,7 @@ class LocationBox extends React.Component {
   handleBadgeClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    state.set({
-      search: `user:${this.state.profile.username}`,
-      displayProfile: this.state.profile.id,
-    });
+    state.set({displayProfile: this.state.profile.id});
     this.props.onSearch();
   }
   render() {

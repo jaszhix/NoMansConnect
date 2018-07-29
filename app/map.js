@@ -27,6 +27,7 @@ const toolTipContainerStyle = {
   borderTop: '2px solid rgb(149, 34, 14)',
   letterSpacing: '3px',
 };
+const nonSelectable = ['Center', 'Selected'];
 
 const travelCurrentLocation = () => {
   window.travelToCurrent = true;
@@ -105,6 +106,12 @@ class ThreeDimScatterChart extends React.Component {
       ticks: [0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096],
       range: [0, 4096]
     };
+    each(props.show, (legendItem, key) => {
+      if (state.defaultLegendKeys.indexOf(key) > -1) {
+        return;
+      }
+      this.state[legendItem.listKey] = [];
+    });
     this.legendStyle = {
       fontFamily: 'geosanslight-nmsregular',
       fontSize: '16px',
@@ -121,7 +128,26 @@ class ThreeDimScatterChart extends React.Component {
   componentDidMount() {
     this.connections = [
       state.connect(['width', 'height', 'remoteLocationsColumns'], () => this.handlePostMessageSize()),
-      state.connect(['selectedGalaxy', 'storedLocations', 'remoteLocations'], () => this.handlePostMessage()),
+      state.connect([
+        'selectedGalaxy',
+        'storedLocations',
+        'remoteLocations'
+      ], () => this.handlePostMessage()),
+      state.connect([
+        'showOnlyNames',
+        'showOnlyDesc',
+        'showOnlyScreenshots',
+        'showOnlyGalaxy',
+        'showOnlyBases',
+        'showOnlyPC',
+        'showOnlyCompatible',
+        'showOnlyFriends',
+      ], () => {
+        setTimeout(() => {
+          this.handlePostMessage();
+          this.handlePostMessageSize();
+        }, 0);
+      }),
       state.connect({
         selectedLocation: () => this.handlePostMessageSelect()
       })
@@ -194,12 +220,13 @@ class ThreeDimScatterChart extends React.Component {
     window.mapWorker.postMessage({
       selectOnly: false,
       p: {
-        remoteLocations: state.remoteLocations,
-        selectedLocation: state.selectedLocation,
-        selectedGalaxy: state.selectedGalaxy,
-        currentLocation: state.currentLocation,
-        username: state.username,
-        show: state.show
+        remoteLocations: this.props.remoteLocations,
+        selectedLocation: this.props.selectedLocation,
+        selectedGalaxy: this.props.selectedGalaxy,
+        currentLocation: this.props.currentLocation,
+        username: this.props.username,
+        show: this.props.show,
+        defaultLegendKeys: state.defaultLegendKeys
       },
       opts: {
         locations: true
@@ -210,10 +237,11 @@ class ThreeDimScatterChart extends React.Component {
     window.mapWorker2.postMessage({
       selectOnly: false,
       p: {
-        width: state.width,
-        height: state.height,
-        remoteLocationsColumns: state.remoteLocationsColumns,
-        show: state.show
+        width: this.props.width,
+        height: this.props.height,
+        remoteLocationsColumns: this.props.remoteLocationsColumns,
+        show: this.props.show,
+        defaultLegendKeys: state.defaultLegendKeys
       },
       opts: {
         size: true
@@ -223,10 +251,11 @@ class ThreeDimScatterChart extends React.Component {
   handlePostMessageSelect = () => {
     window.mapWorker2.postMessage({
       p: {
-        selectedLocation: state.selectedLocation,
-        selectedGalaxy: state.selectedGalaxy,
-        remoteLocations: state.remoteLocations,
-        show: state.show
+        selectedLocation: this.props.selectedLocation,
+        selectedGalaxy: this.props.selectedGalaxy,
+        remoteLocations: this.props.remoteLocations,
+        show: this.props.show,
+        defaultLegendKeys: state.defaultLegendKeys
       },
       opts: {
         selectedLocation: true
@@ -243,7 +272,7 @@ class ThreeDimScatterChart extends React.Component {
           if (this.props.init) {
             defer(() => {
               v('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
-              each(this.props.show, (type, key) => {
+              each(this.props.show, (obj, key) => {
                 v('.recharts-legend-item').each(function(el){
                   let _el = v(el);
                   if (_el.text()[0] === key) {
@@ -277,7 +306,7 @@ class ThreeDimScatterChart extends React.Component {
     let hexSector;
     let results = [];
 
-    each(state.remoteLocations.results, (location) => {
+    each(this.props.remoteLocations, (location, i) => {
       if (!location) {
         return;
       }
@@ -310,17 +339,17 @@ class ThreeDimScatterChart extends React.Component {
         search: `Sector ${hexSector}`
       };
     }
-    state.set(stateUpdate);
+    setTimeout(() => state.set(stateUpdate), 0);
   }
   handleUpdateLegend = () => {
-    each(this.props.show, (bool, name) => {
+    each(this.props.show, (obj, name) => {
       v(`.${name}`).css({
-        opacity: bool ? '1' : '0.5'
+        opacity: obj.value ? '1' : '0.5'
       });
     });
   }
   handleLegendClick = (e) => {
-    this.props.show[e.payload.name] = !this.props.show[e.payload.name];
+    this.props.show[e.payload.name].value = !this.props.show[e.payload.name].value;
     state.set({show: this.props.show, navLoad: true}, () => {
       if (e.payload.name === 'Center') {
         this.handlePostMessageSize(this.props);
@@ -333,6 +362,19 @@ class ThreeDimScatterChart extends React.Component {
     });
   }
   render = () => {
+    let legends = [];
+    each(this.props.show, (obj, label) => {
+      legends.push(
+        <Scatter
+        key={label}
+        name={label}
+        data={this.state[obj.listKey]}
+        fill={obj.color}
+        shape="circle"
+        isAnimationActive={false}
+        onClick={nonSelectable.indexOf(label) === -1 ? this.handleSelect : null} />
+      );
+    });
     return (
       <ScatterChart width={this.state.size} height={this.state.size} margin={this.chartMargin}>
         <XAxis tickLine={false} tickFormatter={this.tickFormatter} ticks={this.state.ticks} domain={[0, 4096]} type="number" dataKey="x" range={this.state.range} name="X" label="X"/>
@@ -341,14 +383,7 @@ class ThreeDimScatterChart extends React.Component {
         <CartesianGrid />
         <Tooltip cursor={this.tooltipCursor} content={<TooltipChild />} selectedLocation={this.props.selectedLocation}/>
         <Legend align="right" wrapperStyle={this.legendStyle} iconSize={12} onClick={this.handleLegendClick}/>
-        <Scatter name="Shared" data={this.state.remoteLocations} fill="#0080db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
-        <Scatter name="PS4" data={this.state.ps4Locations} fill="#0039db" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
-        <Scatter name="Explored" data={this.state.locations} fill="#5fcc93" shape="circle" line={this.props.mapLines} isAnimationActive={false} onClick={this.handleSelect}/>
-        <Scatter name="Center" data={this.state.center} fill="#ba3935" shape="circle" isAnimationActive={false}/>
-        <Scatter name="Base" data={this.state.baseLocations} fill="#9A9D99" shape="circle" isAnimationActive={false} onClick={this.handleSelect}/>
-        <Scatter name="Favorite" data={this.state.favLocations} fill="#9c317c" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
-        <Scatter name="Current" data={this.state.currentLocation} fill="#FFF" shape="circle" isAnimationActive={false} onClick={this.handleSelect} />
-        <Scatter name="Selected" data={this.state.selectedLocation} fill="#ffc356" shape="circle" isAnimationActive={false}/>
+        {map(legends, (l) => l)}
       </ScatterChart>
     );
   }
@@ -381,7 +416,19 @@ class GalacticMap extends React.Component {
     };
     state.set({navLoad: true});
     this.connections = [
-      state.connect(['storedLocations', 'remoteLocations', 'selectedLocation'], () => this.buildGalaxyOptions(false)),
+      state.connect([
+        'storedLocations',
+        'remoteLocations',
+        'selectedLocation',
+        'showOnlyNames',
+        'showOnlyDesc',
+        'showOnlyScreenshots',
+        'showOnlyGalaxy',
+        'showOnlyBases',
+        'showOnlyPC',
+        'showOnlyCompatible',
+        'showOnlyFriends',
+      ], () => this.buildGalaxyOptions(false)),
       state.connect(['selectedGalaxy', 'selectedLocation'], () => {
         if (this.props.map3d) {
           this.travelToCenter();
@@ -398,12 +445,12 @@ class GalacticMap extends React.Component {
     window.mapWorker3.postMessage({
       buildGalaxyOptions: {
         init,
-        storedLocations: state.storedLocations,
-        remoteLocations: state.remoteLocations,
-        selectedLocation: state.selectedLocation,
-        selectedGalaxy: state.selectedGalaxy,
-        currentLocation: state.currentLocation,
-        ps4User: state.ps4User,
+        storedLocations: this.props.storedLocations,
+        remoteLocations: this.props.remoteLocations,
+        selectedLocation: this.props.selectedLocation,
+        selectedGalaxy: this.props.selectedGalaxy,
+        currentLocation: this.props.currentLocation,
+        ps4User: this.props.ps4User,
         galaxies: state.galaxies
       }
     });

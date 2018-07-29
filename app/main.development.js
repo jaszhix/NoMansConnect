@@ -60,7 +60,7 @@ const installExtensions = async () => {
 };
 
 app.on('ready', async () => {
-  //await installExtensions();
+  await installExtensions();
 
   let mainWindowState = windowStateKeeper({
     defaultWidth: 1421,

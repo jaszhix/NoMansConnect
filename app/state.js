@@ -1,7 +1,7 @@
 import {remote} from 'electron';
 import os from 'os';
 import fs from 'graceful-fs';
-import {assignIn, pick, uniqBy, take} from 'lodash';
+import {assignIn, pick, uniqBy, cloneDeep} from 'lodash';
 import {each, filter} from './lang';
 import initStore from './store';
 import galaxies from './static/galaxies.json';
@@ -10,10 +10,54 @@ import Raven from 'raven-js';
 
 const {dialog} = remote;
 
+const showDefault = {
+  Shared: {
+    color: '#0080db',
+    value: true,
+    listKey: 'remoteLocations'
+  },
+  PS4: {
+    color: '#0039db',
+    value: true,
+    listKey: 'ps4Locations'
+  },
+  Explored: {
+    color: '#5fcc93',
+    value: true,
+    listKey: 'locations'
+  },
+  Center: {
+    color: '#ba3935',
+    value: true,
+    listKey: 'center'
+  },
+  Favorite: {
+    color: '#9c317c',
+    value: true,
+    listKey: 'favLocations'
+  },
+  Current: {
+    color: '#FFF',
+    value: true,
+    listKey: 'currentLocation'
+  },
+  Selected: {
+    color: '#ffc356',
+    value: true,
+    listKey: 'selectedLocation'
+  },
+  Base: {
+    color: '#9A9D99',
+    value: true,
+    listKey: 'baseLocations'
+  }
+};
+
 const state = initStore({
   // Core
   knownProducts,
   galaxies,
+  defaultLegendKeys: Object.keys(showDefault),
   completedMigration: false,
   version: '1.1.3',
   notification: {
@@ -94,18 +138,10 @@ const state = initStore({
   showOnlyBases: false,
   showOnlyPC: false,
   showOnlyCompatible: false,
+  showOnlyFriends: false,
   sortByDistance: false,
   sortByModded: false,
-  show: {
-    Shared: true,
-    PS4: true,
-    Explored: true,
-    Center: true,
-    Favorite: true,
-    Current: true,
-    Selected: true,
-    Base: true
-  },
+  show: cloneDeep(showDefault),
   compactRemote: false,
   maintenanceTS: Date.now(),
   offline: false,
@@ -146,6 +182,7 @@ const state = initStore({
     'showOnlyBases',
     'showOnlyPC',
     'showOnlyCompatible',
+    'showOnlyFriends',
     'sortByDistance',
     'sortByModded'
   ],
@@ -228,6 +265,17 @@ const state = initStore({
           stateUpdate[key] = value;
         }
       });
+
+      // Temporary migration for legend data
+      if (stateUpdate.show && typeof stateUpdate.show.Center === 'boolean') {
+        each(stateUpdate.show, (val, key) => {
+          each(showDefault, (_val, _key) => {
+            if (key === _key) {
+              stateUpdate.show[key] = _val;
+            }
+          });
+        });
+      }
 
       state.set(stateUpdate, true);
     }

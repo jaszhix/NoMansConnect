@@ -397,6 +397,67 @@ class Container extends React.Component {
       let refLocation = findIndex(p.s.storedLocations, location => location.id === p.s.selectedLocation.id);
       isSelectedLocationRemovable = refLocation !== -1;
     }
+
+    let locations = p.s.remoteLocations.results;
+    if (this.props.s.showOnlyScreenshots) {
+      locations = filter(locations, (location)=>{
+        return location.image.length > 0;
+      });
+    }
+    if (this.props.s.showOnlyNames) {
+      locations = filter(locations, (location)=>{
+        return location.data.name && location.data.name.length > 0;
+      });
+    }
+    if (this.props.s.showOnlyDesc) {
+      locations = filter(locations, (location)=>{
+        return location.data.description && location.data.description.length > 0;
+      });
+    }
+    if (this.props.s.showOnlyGalaxy) {
+      locations = filter(locations, (location)=>{
+        return location.data.galaxy === p.s.selectedGalaxy;
+      });
+    }
+    if (this.props.s.showOnlyBases) {
+      locations = filter(locations, (location)=>{
+        return location.data.base;
+      });
+    }
+    if (this.props.s.showOnlyCompatible && this.props.s.saveVersion) {
+      locations = filter(locations, (location)=>{
+        return location.version === this.props.s.saveVersion || location.data.version === this.props.s.saveVersion;
+      });
+    }
+    if (this.props.s.showOnlyPC) {
+      locations = filter(locations, (location)=>{
+        return location.data.playerPosition && !location.data.manuallyEntered;
+      });
+    }
+    if (this.props.s.showOnlyFriends) {
+      locations = filter(locations, (location)=>{
+        return (
+          findIndex(this.props.s.profile.friends, (friend) => {
+            return friend.username === location.profile.username;
+          }) > -1
+          || location.profile.username === this.props.s.profile.username
+        );
+      });
+    }
+    if (this.props.s.sortByDistance || this.state.sortByModded) {
+      locations = orderBy(locations, (location)=>{
+        if (!location.data.mods) {
+          location.data.mods = [];
+        }
+        if (this.props.s.sortByModded && this.props.s.sortByDistance) {
+          return location.data.mods.length + location.data.distanceToCenter;
+        } else if (this.props.s.sortByDistance) {
+          return location.data.distanceToCenter;
+        } else if (this.props.s.sortByModded) {
+          return location.data.mods.length;
+        }
+      });
+    }
     return (
       <div className="ui grid row" style={containerStyle}>
         <input ref={this.getScreenshotRef} onChange={this.handleUploadScreen} style={{display: 'none'}} type="file" accept="image/*" multiple={false} />
@@ -426,14 +487,15 @@ class Container extends React.Component {
               width={p.s.width}
               height={p.s.height}
               remoteLocationsColumns={p.s.remoteLocationsColumns}
-              remoteLocations={p.s.remoteLocations}
+              remoteLocations={locations}
               selectedLocation={p.s.selectedLocation}
               currentLocation={p.s.currentLocation}
               username={p.s.username}
               show={p.s.show}
               onRestart={p.onRestart}
               onSearch={p.onSearch}
-              searchCache={p.s.searchCache.results} /> : null}
+              searchCache={p.s.searchCache.results}
+              friends={p.s.profile.friends} /> : null}
               {p.s.selectedLocation ?
               <LocationBox
               name={p.s.selectedLocation.name}
@@ -471,6 +533,7 @@ class Container extends React.Component {
         <RemoteLocations
         s={p.s}
         onSearch={p.onSearch}
+        locations={locations}
         currentLocation={p.s.currentLocation}
         isOwnLocation={isOwnLocation}
         updating={this.state.updating}
@@ -986,15 +1049,6 @@ class App extends React.Component {
       }
       let refIndex = findIndex(PersistentPlayerBases, (base) => base.Name === confirmed.Name);
       let newBase = PersistentPlayerBases[refIndex];
-      if (newBase.Name === base.Name) {
-        dialog.showMessageBox({
-          type: 'info',
-          buttons: [],
-          title: 'Base Restore',
-          message: 'Please select a different base to import than the one that is being written over.'
-        });
-        return;
-      }
 
       let storedBase = cloneDeep(base);
 
@@ -1307,6 +1361,29 @@ class App extends React.Component {
 
           if (profile) {
             stateUpdate.profile = profile.data;
+            // Add friends to the map legend
+            let {show} = this.state;
+            each(profile.data.friends, (friend) => {
+              if (show[friend.username]) {
+                return;
+              }
+              show[friend.username] = {
+                color: `#${(Math.random()*0xFFFFFF<<0).toString(16)}`,
+                value: true,
+                listKey: `${friend.username}Locations`
+              };
+            });
+            // Make sure stale/removed friends get removed from the legend
+            each(show, (val, key) => {
+              if (state.defaultLegendKeys.indexOf(key) > -1) {
+                return;
+              }
+              let refIndex = findIndex(profile.data.friends, (friend) => friend.username === key);
+              if (refIndex === -1) {
+                delete show[key];
+              }
+            });
+            stateUpdate.show = show;
           }
 
           if (init) {

@@ -147,135 +147,93 @@ class RemoteLocations extends React.Component {
       {
         id: 'remoteLocationsColumns',
         label: `Max Columns: ${p.s.remoteLocationsColumns}`,
-        onClick: ()=>state.set({remoteLocationsColumns: p.s.remoteLocationsColumns === 1 ? 2 : p.s.remoteLocationsColumns === 2 ? 3 : 1})
+        onClick: () => state.set({remoteLocationsColumns: p.s.remoteLocationsColumns === 1 ? 2 : p.s.remoteLocationsColumns === 2 ? 3 : 1})
       },
       {
         id: 'compactRemote',
         label: 'Compact View',
         toggle: this.props.s.compactRemote,
-        onClick: ()=>state.set({compactRemote: !p.s.compactRemote})
+        onClick: () => state.set({compactRemote: !p.s.compactRemote})
       },
       {
         id: 'showOnlyGalaxy',
         label: `Show Only Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
         toggle: this.props.s.showOnlyGalaxy,
-        onClick: ()=>state.set({showOnlyGalaxy: !this.props.s.showOnlyGalaxy})
+        onClick: () => state.set({showOnlyGalaxy: !this.props.s.showOnlyGalaxy})
       },
       {
         id: 'showOnlyPC',
         label: 'Show Only PC Locations',
         toggle: this.props.s.showOnlyPC,
-        onClick: ()=>state.set({showOnlyPC: !this.props.s.showOnlyPC})
+        onClick: () => state.set({showOnlyPC: !this.props.s.showOnlyPC})
       },
       {
         id: 'showOnlyScreenshots',
         label: 'Show Only Locations With Screenshots',
         toggle: this.props.s.showOnlyScreenshots,
-        onClick: ()=>state.set({showOnlyScreenshots: !this.props.s.showOnlyScreenshots})
+        onClick: () => state.set({showOnlyScreenshots: !this.props.s.showOnlyScreenshots})
       },
       {
         id: 'showOnlyNames',
         label: 'Show Only Locations With Names',
         toggle: this.props.s.showOnlyNames,
-        onClick: ()=>state.set({showOnlyNames: !this.props.s.showOnlyNames})
+        onClick: () => state.set({showOnlyNames: !this.props.s.showOnlyNames})
       },
       {
         id: 'showOnlyDesc',
         label: 'Show Only Locations With Descriptions',
         toggle: this.props.s.showOnlyDesc,
-        onClick: ()=>state.set({showOnlyDesc: !this.props.s.showOnlyDesc})
+        onClick: () => state.set({showOnlyDesc: !this.props.s.showOnlyDesc})
       },
       {
         id: 'showOnlyBases',
-        label: 'Show Only Locations With Bases: On',
+        label: 'Show Only Locations With Bases',
         toggle: this.props.s.showOnlyBases,
-        onClick: ()=>state.set({showOnlyBases: !this.props.s.showOnlyBases})
+        onClick: () => state.set({showOnlyBases: !this.props.s.showOnlyBases})
       },
       {
         id: 'showOnlyCompatible',
         label: 'Show Only Version Compatible Locations',
         toggle: this.props.s.showOnlyCompatible,
-        onClick: ()=>state.set({showOnlyCompatible: !this.props.s.showOnlyCompatible})
+        onClick: () => state.set({showOnlyCompatible: !this.props.s.showOnlyCompatible})
+      },
+      {
+        id: 'showOnlyFriends',
+        label: 'Show Only Friends\' Locations',
+        toggle: this.props.s.showOnlyFriends,
+        onClick: () => state.set({showOnlyFriends: !this.props.s.showOnlyFriends})
       },
       {
         id: 'sortByDistance',
         label: 'Sort by Distance to Center',
         toggle: this.props.s.sortByDistance,
-        onClick: ()=>state.set({sortByDistance: !this.props.s.sortByDistance})
+        onClick: () => state.set({sortByDistance: !this.props.s.sortByDistance})
       },
       {
         id: 'sortByModded',
-        label: 'Sort by Least Modded: On',
+        label: 'Sort by Least Modded',
         toggle: this.props.s.sortByModded,
-        onClick: ()=>state.set({sortByModded: !this.props.s.sortByModded})
+        onClick: () => state.set({sortByModded: !this.props.s.sortByModded})
       }
     ];
-    if (state.remoteLocations
-      && !state.searchInProgress
-      && state.remoteLocations.next) {
+    if (p.s.remoteLocations
+      && !p.s.searchInProgress
+      && p.s.remoteLocations.next) {
       leftOptions.push({
         id: 'loadMore',
-        disabled: state.navLoad || state.pagination,
-        label: state.pagination ? 'Catching up with the server, please wait...' : `Load More Locations`,
-        onClick: ()=>this.throttledPagination(p.s.page)
+        disabled: p.s.navLoad || p.s.pagination,
+        label: p.s.pagination ? 'Catching up with the server, please wait...' : `Load More Locations`,
+        onClick: () => this.throttledPagination(p.s.page)
       });
     }
-    let parenthesis = p.s.offline || p.s.remoteLength === 0 ? '' : `(${p.s.remoteLength})`;
+    let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.locations;
+    let parenthesis = p.s.offline || p.s.remoteLength === 0 ? '' : `(${locations.length})`;
     let criteria = p.s.offline ? 'Cached' : p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular';
     let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count > 2000 ? 2000 : p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
     if (title.substr(0, 5) === 'user:') {
       title = title.split('user:')[1];
     }
-    let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.s.remoteLocations.results;
-    if (this.props.s.showOnlyScreenshots) {
-      locations = filter(locations, (location)=>{
-        return location.image.length > 0;
-      });
-    }
-    if (this.props.s.showOnlyNames) {
-      locations = filter(locations, (location)=>{
-        return location.data.name && location.data.name.length > 0;
-      });
-    }
-    if (this.props.s.showOnlyDesc) {
-      locations = filter(locations, (location)=>{
-        return location.data.description && location.data.description.length > 0;
-      });
-    }
-    if (this.props.s.showOnlyGalaxy) {
-      locations = filter(locations, (location)=>{
-        return location.data.galaxy === p.s.selectedGalaxy;
-      });
-    }
-    if (this.props.s.showOnlyBases) {
-      locations = filter(locations, (location)=>{
-        return location.data.base;
-      });
-    }
-    if (this.props.s.showOnlyCompatible && this.props.s.saveVersion) {
-      locations = filter(locations, (location)=>{
-        return location.version === this.props.s.saveVersion || location.data.version === this.props.s.saveVersion;
-      });
-    }
-    if (this.props.s.showOnlyPC) {
-      locations = filter(locations, (location)=>{
-        return location.data.playerPosition && !location.data.manuallyEntered;
-      });
-    }
-    if (this.props.s.sortByDistance || this.state.sortByModded) {
-      locations = orderBy(locations, (location)=>{
-        if (!location.data.mods) {
-          location.data.mods = [];
-        }
-        if (this.props.s.sortByModded && this.props.s.sortByDistance) {
-          return location.data.mods.length + location.data.distanceToCenter;
-        } else if (this.props.s.sortByDistance) {
-          return location.data.distanceToCenter;
-        } else if (this.props.s.sortByModded) {
-          return location.data.mods.length;
-        }
-      });
-    }
+
     let invisibleStyle = {
       height: `${(p.s.compactRemote ? 68 : 245) + 26}px`
     };
