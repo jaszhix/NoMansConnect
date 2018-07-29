@@ -539,7 +539,8 @@ export class BasicDropdown extends React.Component {
     selectedGalaxy: 0,
     icon: 'dropdown',
     showValue: true,
-    persist: false
+    persist: false,
+    isGalaxies: true
   };
   constructor(props) {
     super(props);
@@ -579,7 +580,10 @@ export class BasicDropdown extends React.Component {
       style={basicMenuContainerStyle}
       className={`ui dropdown${this.state.open ? ' active visible' : ''}`}
       onClick={this.handleToggleOpen}>
-        {this.props.showValue && this.props.options.length > 0 ? <div className="text">{this.props.options[this.props.selectedGalaxy].label}</div> : null}
+        {this.props.showValue && this.props.options.length > 0 ?
+        <div className="text">
+          {this.props.isGalaxies ? state.galaxies[this.props.selectedGalaxy] : this.props.options[this.props.selectedGalaxy].label}
+        </div> : null}
         <i className={`${this.props.icon} icon`} />
         <div
         style={{

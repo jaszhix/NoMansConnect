@@ -698,6 +698,7 @@ export class BaseRestorationModal extends React.Component {
           <BasicDropdown
           height={this.props.height}
           options={this.state.baseOptions}
+          isGalaxies={false}
           selectedGalaxy={this.state.selectedBase[1]} />
         </div>
         <div style={{position: 'absolute', bottom: '10px', left: '145px'}}>

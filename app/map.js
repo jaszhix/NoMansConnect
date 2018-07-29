@@ -221,9 +221,9 @@ class ThreeDimScatterChart extends React.Component {
       selectOnly: false,
       p: {
         remoteLocations: this.props.remoteLocations,
-        selectedLocation: this.props.selectedLocation,
-        selectedGalaxy: this.props.selectedGalaxy,
-        currentLocation: this.props.currentLocation,
+        selectedLocation: state.selectedLocation,
+        selectedGalaxy: state.selectedGalaxy,
+        currentLocation: state.currentLocation,
         username: this.props.username,
         show: this.props.show,
         defaultLegendKeys: state.defaultLegendKeys
@@ -251,8 +251,8 @@ class ThreeDimScatterChart extends React.Component {
   handlePostMessageSelect = () => {
     window.mapWorker2.postMessage({
       p: {
-        selectedLocation: this.props.selectedLocation,
-        selectedGalaxy: this.props.selectedGalaxy,
+        selectedLocation: state.selectedLocation,
+        selectedGalaxy: state.selectedGalaxy,
         remoteLocations: this.props.remoteLocations,
         show: this.props.show,
         defaultLegendKeys: state.defaultLegendKeys
@@ -339,7 +339,7 @@ class ThreeDimScatterChart extends React.Component {
         search: `Sector ${hexSector}`
       };
     }
-    setTimeout(() => state.set(stateUpdate), 0);
+    state.set(stateUpdate);
   }
   handleUpdateLegend = () => {
     each(this.props.show, (obj, name) => {
@@ -445,12 +445,12 @@ class GalacticMap extends React.Component {
     window.mapWorker3.postMessage({
       buildGalaxyOptions: {
         init,
-        storedLocations: this.props.storedLocations,
+        storedLocations: state.storedLocations,
         remoteLocations: this.props.remoteLocations,
-        selectedLocation: this.props.selectedLocation,
-        selectedGalaxy: this.props.selectedGalaxy,
-        currentLocation: this.props.currentLocation,
-        ps4User: this.props.ps4User,
+        selectedLocation: state.selectedLocation,
+        selectedGalaxy: state.selectedGalaxy,
+        currentLocation: state.currentLocation,
+        ps4User: state.ps4User,
         galaxies: state.galaxies
       }
     });
