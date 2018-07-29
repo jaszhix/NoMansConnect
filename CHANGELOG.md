@@ -1,3 +1,16 @@
+# 1.2.0
+
+  * Added user profiles. Accessible by clicking a user's badge.
+    * All discoveries are now uploaded to the server - this includes flora, fauna, planets, and systems. These are then associated with registered locations. The only way to uniquely identify a discovery in the save file this way is by manually naming it in-game.
+    * More in-indepth statistics are shown, showing a break-down of the types of discoveries.
+    * You can now send friend requests to others and filter locations by friends-only. This system, along with profiles is still beta-quality and may contain bugs. Please report them to the Github repository.
+      * Locations can be filtered to only show locations from friends.
+      * Friends will get their own legend marker on the 2D map.
+    * Fixed an issue with map scatter points switching to another applicable legend color instead of disappearing when toggled off.
+  * Added support for multiple bases per save file. Multiple base icons can now show up in the stored location list.
+    * Since bases can be built anywhere in NEXT, importing a base from another location into a new one is no longer accurate, but still works for restoring a base that was originally built in the location its being imported into. For now it is best to use this feature as a backup tool rather than a migration one.
+  * Repaired corrupted star textures in the 3D map.
+
 # 1.1.3
 
   * Fixed an error occurring on manual location entry.

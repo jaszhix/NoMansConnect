@@ -725,6 +725,11 @@ class App extends React.Component {
     };
     defer(indexMods);
   }
+  componentWillUnmount() {
+    if (this.monitor) {
+      this.monitor.stop();
+    }
+  }
   handleWorkers = () => {
     window.ajaxWorker.onmessage = (e) => {
       if (this.state.closing) {
@@ -1239,17 +1244,19 @@ class App extends React.Component {
           this.handleWallpaper();
           if (!this.state.ps4User) {
             this.syncRemoteOwned();
-            watch.createMonitor(this.state.saveDirectory, {
-              ignoreDotFiles: true,
-              ignoreNotPermitted: true,
+            if (!this.monitor) {
+              watch.createMonitor(this.state.saveDirectory, {
+                ignoreDotFiles: true,
+                ignoreNotPermitted: true,
 
-            }, (monitor) => {
-              this.monitor = monitor;
-              this.pollSaveDataThrottled = throttle(this.pollSaveData, 15000, {leading: true});
-              this.monitor.on('changed', (f, curr, prev) => {
-                this.pollSaveDataThrottled();
+              }, (monitor) => {
+                this.monitor = monitor;
+                this.pollSaveDataThrottled = throttle(this.pollSaveData, 15000, {leading: true});
+                this.monitor.on('changed', (f, curr, prev) => {
+                  this.pollSaveDataThrottled();
+                });
               });
-            });
+            }
             if (this.state.username.toLowerCase() === 'explorer') {
               state.set({usernameOverride: true});
             }
@@ -1393,34 +1400,42 @@ class App extends React.Component {
           }
 
           state.set(stateUpdate, () => {
+            let errorHandler = (err) => {
+              if (err.response && err.response.data && err.response.data.status) {
+                log.error(err.response.data.status);
+              }
+              next([err, err.message, err.stack]);
+            };
             let {Record} = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store;
             each(Record, (discovery, i) => {
               discovery.NMCID = utils.uaToObject(discovery.DD.UA).id;
             });
-            utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
-              machineId: this.state.machineId,
-              username: this.state.username,
-              discoveries: Record
-            }).then(() => {
-              if (refLocation === -1) {
-                return utils.ajax.post('/nmslocation/', {
+            if (init || refLocation === -1) {
+              // Discoveries can change regardless if the location is known
+              utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
+                machineId: this.state.machineId,
+                username: this.state.username,
+                discoveries: Record
+              }).then(() => {
+                if (init) {
+                  next(false);
+                }
+              }).catch(errorHandler);
+              if (!init) {
+                utils.ajax.post('/nmslocation/', {
                   machineId: this.state.machineId,
                   username: location.username,
                   mode: this.state.mode,
                   image: image,
                   version: location.version,
                   data: location
-                });
+                }).then(() => {
+                  next(false);
+                }).catch(errorHandler);
               }
-              next(false);
-            }).then(() => {
-              next(false);
-            }).catch((err) => {
-              if (err.response && err.response.data && err.response.data.status) {
-                log.error(err.response.data.status);
-              }
-              next([err, err.message, err.stack]);
-            });
+              return;
+            }
+            next(false);
           });
         });
       }
@@ -1754,7 +1769,7 @@ class App extends React.Component {
         }
         window.location.reload();
       }
-    }, 1000);
+    }, 2000);
   }
   handleMaximize = () => {
     state.set({maximized: !this.state.maximized}, () => {

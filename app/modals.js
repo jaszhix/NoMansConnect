@@ -449,7 +449,10 @@ export class ProfileModal extends React.Component {
     }
     return (
       <div ref={this.getRef} className="ui fullscreen modal active modal__full">
-        <span className="close" />
+        <i
+        className="window close outline icon"
+        style={{paddingTop: '0px'}}
+        onClick={this.handleClickOutside} />
         <div
         className="ui segment ProfileModal__content"
         style={{maxHeight: `${this.state.height}px`}}>
@@ -618,7 +621,6 @@ export class FriendRequestModal extends React.Component {
   render() {
     return (
       <div className="ui small modal active modal__compact">
-        <span className="close" />
         {this.state.error ? <div className="modal__error">{this.state.error}</div> : null}
         <div className="FriendRequestModal__description">
           {`Do you want to accept ${this.props.notification.fromProfile.username}'s friend request?`}

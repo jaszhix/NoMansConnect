@@ -257,6 +257,7 @@ Please back up your save files.
 
 Special Thanks
 
+- rysulliv
 - ViktorKrugar
 - Artimec_w
 - Bbsoto
