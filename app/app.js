@@ -110,7 +110,10 @@ class Container extends React.Component {
       edit: false,
       mapRender: '<div />'
     };
-    state.connect({selectedLocation: () => this.setState({edit: false})})
+    state.connect({
+      selectedLocation: () => this.setState({edit: false}),
+      handleFavorite: (location) => this.handleFavorite(location)
+    })
   }
   handleFavorite = (location) => {
     if (this.props.s.offline) {
@@ -121,37 +124,45 @@ class Container extends React.Component {
       return fav === location.id;
     });
     let upvote = refFav === -1;
+    let {storedLocations, remoteLocations, machineId, username, favorites} = this.props.s;
 
     utils.ajax.post('/nmslocation/', {
-      machineId: this.props.s.machineId,
-      username: this.props.s.username,
+      machineId: machineId,
+      username: username,
       score: location.score,
       upvote: upvote,
       id: location.id
     }).then((res) => {
-      let refLocation = findIndex(this.props.s.storedLocations, _location => _location.id === location.id);
-      if (refLocation !== -1) {
-        this.props.s.storedLocations[refLocation].score = res.data.score;
-        this.props.s.storedLocations[refLocation].upvote = upvote;
-      }
-      let refRemoteLocation = findIndex(this.props.s.remoteLocations.results, (location) => {
+      res.data.data.score = res.data.score;
+      res.data.data.upvote = upvote;
+
+      let refRemoteLocation = findIndex(remoteLocations.results, (location) => {
         return location.data.id === location.id;
       });
-      if (refRemoteLocation !== -1) {
-        assignIn(this.props.s.remoteLocations.results[refRemoteLocation].data, {
+      if (refRemoteLocation > -1) {
+        assignIn(remoteLocations.results[refRemoteLocation].data, {
           score: res.data.score,
           upvote: upvote,
         });
       }
+      let refLocation = findIndex(storedLocations, _location => _location.id === location.id);
       if (upvote) {
-        this.props.s.favorites.push(location.id);
+        if (refLocation > -1) {
+          storedLocations[refLocation] = res.data.data;
+        } else {
+          storedLocations.push(res.data.data);
+        }
+        favorites.push(location.id);
       } else {
-        pullAt(this.props.s.favorites, refFav);
+        pullAt(favorites, refFav);
+        if (refLocation > -1) {
+          pullAt(storedLocations, refLocation)
+        }
       }
       state.set({
-        storedLocations: this.props.s.storedLocations,
-        remoteLocations: this.props.s.remoteLocations,
-        favorites: uniq(this.props.s.favorites)
+        storedLocations,
+        remoteLocations,
+        favorites: uniq(favorites)
       });
     }).catch((err) => {
       log.error(`Failed to favorite remote location: ${err}`);
@@ -377,7 +388,7 @@ class Container extends React.Component {
     let isOwnLocation = findIndex(p.s.storedLocations, location => location.id === (p.s.selectedLocation ? p.s.selectedLocation.id : null)) > -1;
     let remoteLocationsLoaded = p.s.remoteLocations && p.s.remoteLocations.results || p.s.searchCache.results.length > 0;
     let storedLocations = orderBy(p.s.storedLocations, (location) => {
-      return location.upvote !== undefined && location.upvote;
+      return p.s.favorites.indexOf(location.id) > -1;
     }, 'desc');
     if (p.s.filterOthers) {
       storedLocations = filter(storedLocations, (location) => {
@@ -849,7 +860,7 @@ class App extends React.Component {
           return false;
         };
       });
-      if (!existsInRemoteLocations) {
+      if (!existsInRemoteLocations && location.username === this.state.username) {
         location.timeStamp = new Date(location.timeStamp);
         locations.push(location);
       }
@@ -1201,6 +1212,7 @@ class App extends React.Component {
           }
           utils.ajax.post('/nmslocation/', {
             machineId: this.state.machineId,
+            username: this.state.username,
             teleports: true,
             id: _location.id
           }).then((res) => {
@@ -1235,6 +1247,8 @@ class App extends React.Component {
       state.set({usernameOverride: true});
       return;
     }
+    let {storedLocations} = this.state;
+    let stateUpdate = {};
     let getLastSave = (NMSRunning=false) => {
       let next = (error = false) => {
         if (error) {
@@ -1271,16 +1285,73 @@ class App extends React.Component {
       }
 
       let processData = (saveData, location, refLocation, username, profile=null) => {
+        let favorites = profile ? profile.data.favorites : this.state.favorites;
         if (this.state.ps4User) {
           state.set({
             machineId,
+            favorites
           }, next);
           return;
         }
         console.log('SAVE DATA: ', saveData);
         log.error(`Finished reading No Man's Sky v${saveData.result.Version} save file.`);
 
-        let refFav = findIndex(this.state.favorites, (fav) => {
+        if (profile && this.state.favorites.length !== profile.data.favorites.length) {
+          let {remoteLocations} = this.state;
+          log.error('Favorites are out of sync, fixing.');
+          state.set({loading: 'Syncing favorites...'});
+          let remainingFavorites = profile.data.favorites.slice();
+          each(storedLocations, (location) => {
+            if (favorites.indexOf(location.id) > -1) {
+              location.upvote = true;
+              if (location.username === username) {
+                remainingFavorites.splice(remainingFavorites.indexOf(location.id), 1);
+              }
+            }
+          });
+          each(remoteLocations.results, (location) => {
+            if (favorites.indexOf(location.data.id) > -1) {
+              location.data.score = location.score;
+              location.data.upvote = true;
+              let refStored = findIndex(storedLocations, (l) => l.id === location.data.id) === -1;
+              if (refStored === -1) {
+                storedLocations.push(location.data);
+              } else {
+                storedLocations[refStored] = location.data;
+              }
+              remainingFavorites.splice(remainingFavorites.indexOf(location.data.id), 1);
+            }
+          });
+
+          if (remainingFavorites.length > 0) {
+            console.log('REMAINING FAVORITES: ', remainingFavorites)
+            utils.ajax.post('/nmsfavoritesync/', {
+              machineId: this.state.machineId,
+              username,
+              locations: remainingFavorites
+            }).then((res) => {
+              remoteLocations = this.state.remoteLocations;
+              storedLocations = this.state.storedLocations;
+              let missingFromStored = [];
+              let missingFromRemote = [];
+              each(res.data, (location) => {
+                location.data.score = res.data.score;
+                location.data.upvote = true;
+                if (!find(storedLocations, (l) => l.id === location.data.id)) {
+                  missingFromStored.push(location.data);
+                }
+                if (!find(remoteLocations.results, (l) => l.id === location.data.id)) {
+                  missingFromRemote.push(location);
+                }
+              });
+              remoteLocations.results = uniqBy(remoteLocations.results.concat(missingFromRemote), 'id');
+              storedLocations = uniqBy(storedLocations.concat(missingFromStored), 'id');
+              state.set({remoteLocations, storedLocations});
+            }).catch((err) => log.error(`Error syncing favorites: ${err.message}`));
+          }
+        }
+
+        let refFav = findIndex(favorites, (fav) => {
           return fav === location.id;
         });
         let upvote = refFav !== -1;
@@ -1322,7 +1393,7 @@ class App extends React.Component {
             if (!location.playerPosition) {
               location.manuallyEntered = true;
             }
-            this.state.storedLocations.push(location);
+            storedLocations.push(location);
           }
 
           // Detect player bases
@@ -1332,7 +1403,7 @@ class App extends React.Component {
               return;
             }
             galacticAddress = utils.gaToObject(base.GalacticAddress);
-            let refStoredLocation = findIndex(this.state.storedLocations, (storedLocation) => {
+            let refStoredLocation = findIndex(storedLocations, (storedLocation) => {
               return (
                 galacticAddress.VoxelX === storedLocation.VoxelX
                 && galacticAddress.VoxelY === storedLocation.VoxelY
@@ -1343,8 +1414,8 @@ class App extends React.Component {
               );
             });
             if (refStoredLocation > -1) {
-              this.state.storedLocations[refStoredLocation] = Object.assign(
-                this.state.storedLocations[refStoredLocation],
+              storedLocations[refStoredLocation] = Object.assign(
+                storedLocations[refStoredLocation],
                 {
                   base: true,
                   baseData: utils.formatBase(saveData, state.knownProducts, i)
@@ -1352,19 +1423,20 @@ class App extends React.Component {
               );
             }
           });
-          this.state.storedLocations = orderBy(this.state.storedLocations, 'timeStamp', 'desc');
+          storedLocations = orderBy(storedLocations, 'timeStamp', 'desc');
 
-          let stateUpdate = {
-            storedLocations: this.state.storedLocations,
+          stateUpdate = Object.assign(stateUpdate, {
+            storedLocations,
             currentLocation: location.id,
             selectedGalaxy: tryFn(() => parseInt(location.id.split(':')[3])),
             username,
+            favorites,
             saveDirectory: this.state.saveDirectory,
             saveFileName: saveData.path,
             saveVersion: saveData.result.Version,
             machineId,
             loading: 'Syncing discoveries...'
-          };
+          });
 
           if (profile) {
             stateUpdate.profile = profile.data;
@@ -1472,12 +1544,13 @@ class App extends React.Component {
             }
             processData(saveData, location, refLocation, username, profile);
           }).catch((err) => {
-            log.error(err)
+            log.error(err.message)
             state.set({machineId, username}, () => {
               if (err.response && err.response.status === 403) {
                 log.error(`Username protected: ${username}`);
                 this.handleProtectedSession(username);
               } else {
+                log.error(`NMC couldn't fetch the profile: ${err.message}`);
                 processData(saveData, location, refLocation, username);
               }
             });
