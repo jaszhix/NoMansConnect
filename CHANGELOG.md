@@ -1,8 +1,21 @@
+# 1.2.1
+
+  * Fixed friend location scatter points not adjusting to galaxy change.
+  * Fixed favorite location scatter points not disappearing on toggle.
+  * Fixed invalid coordinates being re-submitted through the location sync functionality.
+    * All invalid coordinates have been deleted from the server, and should be prevented from being uploaded again. If the map's scale is off, please delete the contents of AppData/Roaming/NoMansConnect. Server will re-sync all locations.
+  * Implemented server synchronization of favorite locations. Favorites will now always be up to date on the client, and will be automatically re-added to the stored location list. The only way to remove them is by un-favoriting them.
+  * Added a bit more polish to the profile view.
+    * Locations can now be favorited from the profile.
+  * Fixed an issue with discoveries not uploading correctly for some users.
+  * Fixed an issue with the cached remote location list becoming corrupt and resetting.
+  * Fixed a rendering error that could occur when loading locations with the friends filter enabled.
+
 # 1.2.0
 
   * Added user profiles. Accessible by clicking a user's badge.
     * All discoveries are now uploaded to the server - this includes flora, fauna, planets, and systems. These are then associated with registered locations. The only way to uniquely identify a discovery in the save file this way is by manually naming it in-game.
-    * More in-indepth statistics are shown, showing a break-down of the types of discoveries.
+    * More indepth statistics are shown, showing a break-down of the types of discoveries.
     * You can now send friend requests to others and filter locations by friends-only. This system, along with profiles is still beta-quality and may contain bugs. Please report them to the Github repository.
       * Locations can be filtered to only show locations from friends.
       * Friends will get their own legend marker on the 2D map.
