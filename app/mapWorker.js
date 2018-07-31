@@ -145,13 +145,14 @@ onmessage = function(e) {
           planetData: location.data.planetData
         };
         let matchedFriendKey = false;
-        each(friendKeys, (key) => {
+
+        each(friendKeys, (key, i) => {
+          let listKey = `${key}Locations`;
+          if (!stateUpdate[listKey]) {
+            stateUpdate[listKey] = [];
+          }
           if (location.username === key) {
-            let listKey = `${key}Locations`;
             matchedFriendKey = true;
-            if (!stateUpdate[listKey]) {
-              stateUpdate[listKey] = [];
-            }
             if (e.data.p.show[key].value) {
               stateUpdate[listKey].push(obj);
             }
