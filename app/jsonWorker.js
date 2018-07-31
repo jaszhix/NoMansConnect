@@ -26,5 +26,7 @@ onmessage = function(e) {
     postMessage(global.Json.get(e.data.key));
   } else if (e.data.method === 'remove') {
     global.Json.remove(e.data.key);
+  } else if (e.data.method === 'checkIfWriting') {
+    postMessage(global.Json.writing);
   }
 }

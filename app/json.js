@@ -10,11 +10,14 @@ class Json {
     this.backupPath = `${path}/__backup__${this.fileName}`;
     this.data = defaultObj ? defaultObj : {};
     this.init(this.path, cb);
+    this.writing = false;
   }
   init(readPath, cb, fromFailure=null){
-    fs.readFile(readPath, (err, data=this.data)=>{
+    fs.readFile(readPath, (err, data=this.data) => {
       if (err) {
-        fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
+        this.writing = true;
+        fs.writeFile(this.path, JSON.stringify(this.data), (err, data) => {
+          this.writing = false;
           if (err) {
             console.log(err);
             return;
@@ -40,7 +43,8 @@ class Json {
     cb(this.data);
   }
   _writeFile(cb){
-    fs.writeFile(this.path, JSON.stringify(this.data), (err, data)=>{
+    fs.writeFile(this.path, JSON.stringify(this.data), (err, data) => {
+      this.writing = false;
       if (err) {
         console.log(err);
         return;
@@ -58,7 +62,7 @@ class Json {
       return;
     }
     if (backup) {
-      copyFile(this.path, this.backupPath, (err)=>{
+      copyFile(this.path, this.backupPath, (err) => {
         if (err) {
           console.log(err);
           return;
@@ -70,7 +74,16 @@ class Json {
     }
   }
   set(key, value){
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+    }
+    if (this.writing) {
+      this.timeout = setTimeout((...args) => this.set(...args), 1000);
+      return;
+    }
     this.data[key] = value;
+    this.writing = true;
     this.writeFile(null, this.data.hasOwnProperty('maintenanceTS'));
   }
   get(key){
