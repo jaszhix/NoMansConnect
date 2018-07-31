@@ -127,13 +127,14 @@ class ThreeDimScatterChart extends React.Component {
   }
   componentDidMount() {
     this.connections = [
-      state.connect(['width', 'height', 'remoteLocationsColumns'], () => this.handlePostMessageSize()),
+      state.connect(['width', 'height'], () => this.handlePostMessageSize()),
       state.connect([
         'selectedGalaxy',
         'storedLocations',
         'remoteLocations'
       ], () => this.handlePostMessage()),
       state.connect([
+        'remoteLocationsColumns',
         'showOnlyNames',
         'showOnlyDesc',
         'showOnlyScreenshots',
