@@ -161,8 +161,10 @@ onmessage = function(e) {
         if (matchedFriendKey) {
           return;
         }
-        if (location.data.upvote && e.data.p.show.Favorite.value) {
-          stateUpdate.favLocations.push(obj);
+        if (location.data.upvote) {
+          if (e.data.p.show.Favorite.value) {
+            stateUpdate.favLocations.push(obj);
+          }
         } else if (location.data.id === e.data.p.currentLocation) {
           if (e.data.p.show.Current.value) {
             stateUpdate.currentLocation.push(obj);
