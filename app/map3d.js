@@ -374,7 +374,6 @@ class Map3D extends React.Component {
       padding: '4px 8px',
       borderTop: '2px solid rgb(149, 34, 14)',
       letterSpacing: '3px',
-      fontFamily: 'geosanslight-nmsregular',
       fontSize: '16px',
     });
     each(el.find('.planetLabel').ns, (label) => {

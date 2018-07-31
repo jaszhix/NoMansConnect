@@ -22,7 +22,6 @@ const noDragStyle = {
   WebkitAppRegion: 'no-drag'
 };
 const basicMenuContainerStyle = {
-  fontFamily: 'geosanslight-nmsregular',
   fontSize: '16px'
 };
 const trashIconContainerStyle = {

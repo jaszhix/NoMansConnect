@@ -4,7 +4,6 @@ import {map} from './lang';
 const textStyle = {
   position: 'relative',
   top: '140px',
-  fontFamily: 'geosanslight-nmsregular',
   fontSize: '28px',
   width: '300px'
 };

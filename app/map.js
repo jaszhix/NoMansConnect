@@ -22,7 +22,6 @@ const toolTipExploredStyle = {
 const toolTipContainerStyle = {
   display: 'inline-table',
   textAlign: 'left',
-  fontFamily: 'geosanslight-nmsregular',
   fontSize: '16px',
   borderTop: '2px solid rgb(149, 34, 14)',
   letterSpacing: '3px',
@@ -113,7 +112,6 @@ class ThreeDimScatterChart extends React.Component {
       this.state[legendItem.listKey] = [];
     });
     this.legendStyle = {
-      fontFamily: 'geosanslight-nmsregular',
       fontSize: '16px',
       right: '0px'
     };

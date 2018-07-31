@@ -23,7 +23,6 @@ class StoredLocationItem extends React.Component {
   }
   render() {
     let uiSegmentStyle = {
-      fontFamily: 'geosanslight-nmsregular',
       fontSize: '16px',
       fontWeight: this.props.location.upvote ? '600' : '400',
       cursor: 'pointer',

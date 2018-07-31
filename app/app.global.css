@@ -10,8 +10,8 @@
  */
 
 @font-face {
-  font-family: 'geosanslight-nmsregular';
   src: url('./assets/styles/geonms.ttf');
+  font-family: 'geosanslight-nmsregular';
   font-weight: 400;
   font-style: normal;
   letter-spacing: 2px;
@@ -551,7 +551,6 @@ h2,
 h3,
 h4,
 h5 {
-  font-family: 'geosanslight-nmsregular';
   line-height: 1.2857em;
   margin: calc(2rem -  0.14285em ) 0em 1rem;
   font-weight: bold;
@@ -697,7 +696,6 @@ input::selection {
   vertical-align: baseline;
   background: #E0E1E2 none;
   color: rgba(255, 255, 255, 0.6);
-  font-family: 'geosanslight-nmsregular';
   margin: 0em 0.25em 0em 0em;
   padding: 0.78571429em 1.5em 0.78571429em;
   text-transform: none;
@@ -4754,7 +4752,6 @@ input::selection {
 /* Text Container */
 
 .ui.text.container {
-  font-family: 'geosanslight-nmsregular';
   max-width: 700px !important;
   line-height: 1.5;
 }
@@ -6357,7 +6354,6 @@ i.flag.zimbabwe:before {
   border: none;
   margin: calc(2rem -  0.14285em ) 0em 1rem;
   padding: 0em 0em;
-  font-family: 'geosanslight-nmsregular';
   font-weight: bold;
   line-height: 1.2857em;
   text-transform: none;
@@ -11563,7 +11559,6 @@ img.ui.bordered.image {
   outline: none;
   text-align: left;
   line-height: 1.2142em;
-  font-family: 'geosanslight-nmsregular';
   padding: 0.67861429em 0em;
   background: #171A16;
   border: 1px solid rgba(34, 36, 38, 0.15);
@@ -13665,7 +13660,6 @@ ol.ui.list ol li,
 .ui.list > .item .header {
   display: block;
   margin: 0em;
-  font-family: 'geosanslight-nmsregular';
   font-weight: bold;
   color: rgba(255, 255, 255, 0.87);
 }
@@ -16433,7 +16427,6 @@ ol.ui.horizontal.list li:before,
 /* Title */
 
 .ui.steps .step .title {
-  font-family: 'geosanslight-nmsregular';
   font-size: 1.14285714em;
   font-weight: bold;
 }
@@ -17232,7 +17225,6 @@ ol.ui.horizontal.list li:before,
 .ui.form input[type="text"],
 .ui.form input[type="file"],
 .ui.form input[type="url"] {
-  font-family: 'geosanslight-nmsregular';
   margin: 0em;
   outline: none;
   -webkit-appearance: none;
@@ -20634,7 +20626,6 @@ ol.ui.horizontal.list li:before,
   display: -ms-flexbox;
   display: flex;
   margin: 1rem 0em;
-  font-family: 'geosanslight-nmsregular';
   background: rgba(23, 26, 22, 0.901961);
   font-weight: normal;
   border: 1px solid rgba(34, 36, 38, 0.15);
@@ -22912,7 +22903,6 @@ Floated Menu / Item
 
 .ui.message .header {
   display: block;
-  font-family: 'geosanslight-nmsregular';
   font-weight: bold;
   margin: -0.14285em 0em 0rem 0em;
 }
@@ -25154,7 +25144,6 @@ Floated Menu / Item
 .ui.card > .content > .header {
   display: block;
   margin: '';
-  font-family: 'geosanslight-nmsregular';
   color: rgba(255, 255, 255, 0.85);
 }
 
@@ -26804,7 +26793,6 @@ a.ui.card:hover,
 .ui.items > .item > .content > .header {
   display: inline-block;
   margin: -0.21425em 0em 0em;
-  font-family: 'geosanslight-nmsregular';
   font-weight: bold;
   color: rgba(255, 255, 255, 0.85);
 }
@@ -27285,7 +27273,6 @@ a.ui.card:hover,
 
 .ui.statistics .statistic > .value,
 .ui.statistic > .value {
-  font-family: 'geosanslight-nmsregular';
   font-size: 4rem;
   font-weight: normal;
   line-height: 1em;
@@ -27300,7 +27287,6 @@ a.ui.card:hover,
 
 .ui.statistics .statistic > .label,
 .ui.statistic > .label {
-  font-family: 'geosanslight-nmsregular';
   font-size: 1em;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.87);
@@ -27855,7 +27841,6 @@ a.ui.card:hover,
 
 .ui.accordion .title:not(.ui) {
   padding: 0.5em 0em;
-  font-family: 'geosanslight-nmsregular';
   font-size: 1em;
   color: rgba(255, 255, 255, 0.87);
 }
@@ -30746,7 +30731,6 @@ select.ui.dropdown {
 
 .ui.modal > .header {
   display: block;
-  font-family: 'geosanslight-nmsregular';
   background: #171A16;
   margin: 0em;
   padding: 1.25rem 1.5rem;
@@ -31409,7 +31393,6 @@ a.ui.nag {
 
 .ui.popup > .header {
   padding: 0em;
-  font-family: 'geosanslight-nmsregular';
   font-size: 1.14285714em;
   line-height: 1.2;
   font-weight: bold;
@@ -33166,7 +33149,6 @@ a.ui.nag {
 
 .ui.search > .results .result .title {
   margin: -0.14285em 0em 0em;
-  font-family: 'geosanslight-nmsregular';
   font-weight: bold;
   font-size: 1em;
   color: rgba(255, 255, 255, 0.85);
@@ -33192,7 +33174,6 @@ a.ui.nag {
 }
 
 .ui.search > .results > .message .header {
-  font-family: 'geosanslight-nmsregular';
   font-size: 1rem;
   font-weight: bold;
   color: rgba(255, 255, 255, 0.87);
@@ -33402,7 +33383,6 @@ a.ui.nag {
 .ui.category.search > .results .category > .name {
   width: 100px;
   background: transparent;
-  font-family: 'geosanslight-nmsregular';
   font-size: 1em;
   float: 1em;
   float: left;
@@ -38624,6 +38604,10 @@ body {
   100% { transform: translate(-100%, 0); }
 }
 
+* {
+  font-family: 'geosanslight-nmsregular';
+}
+
 .md-p {
   margin-bottom: 8px;
 }
@@ -38633,6 +38617,7 @@ body {
   background-color: rgb(23, 26, 22) !important;
   display: inline !important;
   padding: 2px 4px !important;
+  z-index: 1003 !important;
 }
 
 .ui.input.focus input, .ui.input input:focus {
@@ -38701,7 +38686,6 @@ LocationBox
   background: rgba(0, 0, 0, 0);
   padding: 0.67861429em 0em;
   border: 0px;
-  font-family: 'geosanslight-nmsregular';
   font-size: 15px;
   letter-spacing: 2px;
   outline-color: none;
@@ -38734,6 +38718,12 @@ LocationBox
   overflow-x: hidden;
   width: 363px;
 }
+.LocationBox__scrollBoxProfileStyle {
+  width: unset !important;
+  min-height: unset !important;
+  overflow-y: unset;
+  overflow-x: unset;
+}
 
 .LocationBox__badge {
   position: absolute;
@@ -38755,6 +38745,10 @@ Item
   position: relative;
   box-shadow: 0px 1px 2px 0 rgba(34, 36, 38, 0.15);
   border-bottom: 1px solid rgba(255, 255, 255, 0.27);
+  padding: 0px 2px;
+  margin: 0px 3px;
+  background: rgba(23, 26, 22, 0.8);
+  font-size: 16px;
 }
 
 .Item__portal {
@@ -38792,14 +38786,27 @@ Profile
   margin-top: 0px !important;
 }
 
-.ProfileModal__right_container {
-  padding-top: 0px !important;
+.ProfileModal__container {
+  padding-top: 14px !important;
   overflow: auto;
 }
 
-.ProfileModal__left_container {
-  padding-top: 14px !important;
-  overflow: auto;
+.ProfileModal__lgColumn {
+  max-width: 689px !important;
+}
+
+.ProfileModal__mdColumn {
+  max-width: 572px !important;
+}
+
+.ProfileModal__meta {
+  position: absolute;
+  right: 20px;
+  margin: 0px !important;
+}
+
+.ProfileModal__feed {
+  margin-bottom: 25px !important;
 }
 
 /*
@@ -38816,6 +38823,10 @@ Friend requests
   left: 105px;
 }
 
+.ImageModal__root {
+  z-index: 1002 !important;
+}
+
 /*
 Modals
 */
@@ -38828,7 +38839,6 @@ Modals
   padding: 0.67861429em;
   border-radius: 0px;
   border: 1px solid #DA2600;
-  font-family: 'geosanslight-nmsregular';
   font-size: 15px;
   letter-spacing: 2px;
 }
@@ -38856,7 +38866,8 @@ Modals
   position: fixed !important;
   left: 0px !important;
   top: 6% !important;
-  z-index: 1001 !important;
+  bottom: 5% !important;
+  z-index: 1001;
   -webkit-transform-origin: 50% 25% !important;
   box-shadow: none !important;
   border: 1px solid #DA2600 !important;
@@ -38864,7 +38875,6 @@ Modals
 }
 
 .modal__error {
-  font-family: 'geosanslight-nmsregular';
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 2px;

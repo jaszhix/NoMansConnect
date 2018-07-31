@@ -570,7 +570,7 @@ export var tip = (content) => {
   if (content.length === 0) {
     return null;
   }
-  return `<div style="font-family:'geosanslight-nmsregular';font-size:14px;border-radius:0px; max-width: 200px;">${content}</div>`
+  return `<div style="font-size:14px;border-radius:0px; max-width: 200px;">${content}</div>`
 }
 
 const opts = {

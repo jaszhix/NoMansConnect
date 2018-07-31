@@ -26,7 +26,7 @@ export class ImageModal extends React.Component {
   }
   render() {
     return (
-      <div className="ui fullscreen modal active modal__full">
+      <div className="ui fullscreen modal active modal__full ImageModal__root">
         <span className="close" />
         <img className="image content" src={this.props.image} />
       </div>
@@ -333,6 +333,7 @@ const discoveryIconMap = {
   Mineral: mineralIcon,
   Planet: planetIcon,
   SolarSystem: planetIcon,
+  Sector: planetIcon,
   Interactable: interactableIcon
 };
 
@@ -354,9 +355,13 @@ export class ProfileModal extends React.Component {
   }
   componentDidMount() {
     this.fetchProfile();
+    this.connections = [
+      state.connect({favorites: () => this.fetchProfile(this.state.discoveriesPage)})
+    ];
   }
   componentWillUnmount() {
     this.ref.removeEventListener('resize', this.handleResize);
+    each(this.connections, (id) => state.disconnect(id));
   }
   fetchProfile = (discoveriesPage = 1) => {
     utils.ajax.get(`/nmsprofile/${this.props.profileId}/`, {
@@ -433,7 +438,7 @@ export class ProfileModal extends React.Component {
     }
   }
   render() {
-    const {profile, error} = this.state;
+    const {profile, error, discoveriesPage, height} = this.state;
     if (!profile) {
       return null;
     }
@@ -448,16 +453,18 @@ export class ProfileModal extends React.Component {
       });
     }
     return (
-      <div ref={this.getRef} className="ui fullscreen modal active modal__full">
+      <div ref={this.getRef} className="ui fullscreen modal active modal__full ProfileModal__root">
         <i
         className="window close outline icon"
         style={{paddingTop: '0px'}}
         onClick={this.handleClickOutside} />
         <div
         className="ui segment ProfileModal__content"
-        style={{maxHeight: `${this.state.height}px`}}>
+        style={{maxHeight: `${height}px`}}>
           <div className="ui four column grid">
-            <div className="ui feed eight wide column left floated segment ProfileModal__left_container">
+            <div
+            className="ui feed eight wide column left floated segment ProfileModal__container ProfileModal__lgColumn"
+            style={{maxHeight: `${height - 1}px`}}>
               <div className="ui">
                 <h3>{`${profile.username}'s Profile (Beta)`}</h3>
                 {!isOwnProfile ?
@@ -496,33 +503,43 @@ export class ProfileModal extends React.Component {
               </div>
             </div>
             <div
-            className="ui feed six wide column right floated ProfileModal__right_container"
-            style={{maxHeight: `${this.state.height - 77}px`}}>
+            className="ui six wide column right floated ProfileModal__container ProfileModal__mdColumn"
+            style={{maxHeight: `${height - 1}px`}}>
               <React.Fragment>
                 {map(profile.discoveries, (discovery, i) => {
                   let name = discovery.name ? discovery.name
                   : discovery.type === 'planet' && discovery.location && discovery.location.name ? discovery.location.name
                   : 'Unknown';
                   return (
-                    <div key={i} className="event">
-                      <div className="label">
-                        <img src={discoveryIconMap[discovery.type]} />
-                      </div>
-                      <div className="content">
-                        <div className="summary">
-                          {`Discovered ${discovery.type}`}
-                          <div className="date">
-                            {moment(discovery.created).format('MMMM D, Y')}
-                          </div>
+                    <div key={i} className="ui feed ProfileModal__feed">
+                      <div className="event">
+                        <div className="label">
+                          <img src={discoveryIconMap[discovery.type]} />
                         </div>
-                        {discovery.location && discovery.location.image ?
-                        <div className="extra images">
-                          <a onClick={() => state.set({selectedImage: `https://neuropuff.com/${discovery.location.image}`})}>
-                            <img src={`https://neuropuff.com/${discovery.location.image}`} />
-                          </a>
-                        </div> : null}
-                        <div className="extra text">
-                          <Item label="Name" value={name} />
+                        <div className="content">
+                          <div className="summary">
+                            {`Discovered ${discovery.type === 'SolarSystem' ? 'Solar System' : discovery.type}`}
+                            <div className="date">
+                              {moment(discovery.created).format('MMMM D, Y')}
+                            </div>
+                            <div className="meta ProfileModal__meta">
+                              {discovery.location && discovery.location.score ?
+                              <div
+                              className={`like${this.props.favorites.indexOf(discovery.location.data.id) > -1 ? ' active' : ''}`}
+                              onClick={() => state.trigger('handleFavorite', discovery.location.data)}>
+                                <i className="like icon" /> {`${discovery.location.score}`}
+                              </div> : null}
+                            </div>
+                          </div>
+                          {discovery.location && discovery.location.image ?
+                          <div className="extra images">
+                            <a onClick={() => state.set({selectedImage: `https://neuropuff.com/${discovery.location.image}`})}>
+                              <img src={`https://neuropuff.com/${discovery.location.image}`} />
+                            </a>
+                          </div> : null}
+                          <div className="extra text">
+                            <Item label="Name" value={name} />
+                          </div>
                           {discovery.location ?
                           <LocationBox
                           name={discovery.location.name}
@@ -554,12 +571,7 @@ export class ProfileModal extends React.Component {
                           ps4User={false}
                           configDir={''}
                           detailsOnly={true} /> : null}
-                        </div>
-                        <div className="meta">
-                          {discovery.location && discovery.location.score ?
-                          <div className="like">
-                            <i className="like icon" /> {`${discovery.location.score}`}
-                          </div> : null}
+
                         </div>
                       </div>
                     </div>
@@ -568,16 +580,17 @@ export class ProfileModal extends React.Component {
                 {profile.discoveries && profile.discoveries.length > 0 ?
                 <div className="ui two column grid">
                   <div className="column">
-                    {this.state.discoveriesPage > 1 ?
+                    {discoveriesPage > 1 ?
                     <Button onClick={this.handlePreviousPage}>
                       Previous
                     </Button> : null}
                   </div>
+                  {profile.discoveriesCount > 60 && discoveriesPage < Math.ceil(profile.discoveriesCount / 60) ?
                   <div className="column">
                     <Button onClick={this.handleNextPage}>
                       Next
                     </Button>
-                  </div>
+                  </div> : null}
                 </div> : null}
               </React.Fragment>
             </div>

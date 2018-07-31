@@ -3,7 +3,6 @@ import React from 'react';
 let style = {
   left: '9px',
   letterSpacing: '3px',
-  fontFamily: 'geosanslight-nmsregular',
   fontSize: '16px',
   padding: '3px 3px',
   textAlign: 'center',

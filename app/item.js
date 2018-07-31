@@ -3,7 +3,6 @@ import ReactMarkdown from 'react-markdown';
 import openExternal from 'open-external';
 import {defer} from 'lodash';
 import {cleanUp} from './utils';
-import {locationItemStyle} from './constants';
 
 const iconStyle = {
   position: 'relative',
@@ -46,8 +45,7 @@ class Item extends React.Component {
       return (
         <div
         ref={this.getRef}
-        className="Item__wrapperStyle"
-        style={locationItemStyle}>
+        className="Item__wrapperStyle">
           <ReactMarkdown className="md-p" source={this.props.value} />
         </div>
       );
@@ -55,7 +53,6 @@ class Item extends React.Component {
       return (
         <div
         className={`Item__wrapperStyle${this.props.onValueClick ? ' cursorPointer' : ''}`}
-        style={locationItemStyle}
         onClick={this.props.onValueClick}
         data-place="top"
         data-tip={this.props.dataTip}>

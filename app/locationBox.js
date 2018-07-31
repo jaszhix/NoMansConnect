@@ -188,7 +188,7 @@ class LocationBox extends React.Component {
     let {location} = this.state;
     let scrollBoxStyle = p.compactRemote ? compactRemoteScrollBoxStyle : {};
     return (
-      <div ref={this.getRef} style={scrollBoxStyle} className="LocationBox__scrollBoxStyle">
+      <div ref={this.getRef} style={scrollBoxStyle} className={`LocationBox__scrollBoxStyle${p.detailsOnly ? ' LocationBox__scrollBoxProfileStyle' : ''}`}>
         {p.image && p.image.length > 0 ? (
           <div style={{textAlign: 'center'}}>
             {this.state.image ? <img className="LocationBox__imageStyle" src={this.state.image} onClick={() => state.set({selectedImage: this.state.image})} /> : null}
@@ -225,10 +225,7 @@ class LocationBox extends React.Component {
   render() {
     let p = this.props;
     let {location} = this.state;
-    let refFav = findIndex(p.favorites, fav => {
-      return fav === location.id;
-    });
-    let upvote = refFav !== -1 || location.update;
+    let upvote = p.favorites.indexOf(location.id) > -1;
     let isOwnLocation = p.isOwnLocation && p.selectType && location.username === p.username;
     let deleteArg = location.image && location.image.length > 0;
     let compact = p.width && p.width <= 1212;
@@ -299,17 +296,17 @@ class LocationBox extends React.Component {
 
     let visibleStyle = {
       background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
-      display: 'inline-table',
+      display: p.detailsOnly ? 'WebkitBox' : 'inline-table',
       opacity: '1',
-      borderTop: this.props.detailsOnly ? 'unset' : '2px solid #95220E',
+      borderTop: p.detailsOnly ? 'unset' : '2px solid #95220E',
       textAlign: 'left',
       marginTop: p.selectType ? '26px' : 'initial',
-      marginBottom: this.props.detailsOnly ? 'unset' : '26px',
+      marginBottom: p.detailsOnly ? 'unset' : '26px',
       marginRight: !p.selectType && p.i % 1 === 0 ? '26px' : 'initial',
-      minWidth: `${compact ? 358 : 386}px`,
-      maxWidth: '386px',
-      minHeight: this.props.detailsOnly ? 'unset' : p.compactRemote ? '68px' : '245px',
-      maxHeight: this.props.detailsOnly ? 'unset' : '289px',
+      minWidth: p.detailsOnly ? 'unset' : `${compact ? 358 : 386}px`,
+      maxWidth: p.detailsOnly ? 'unset' : '386px',
+      minHeight: p.detailsOnly ? 'unset' : p.compactRemote ? '68px' : '245px',
+      maxHeight: p.detailsOnly ? 'unset' : '289px',
       zIndex: p.selectType ? '91' : 'inherit',
       position: p.selectType ? 'fixed' : '',
       left: p.selectType ? '28px' : 'inherit',
@@ -317,13 +314,21 @@ class LocationBox extends React.Component {
       WebkitUserSelect: 'none'
     };
 
+    if (p.detailsOnly) {
+      Object.assign(visibleStyle, {
+        paddingTop: '0px',
+        paddingLeft: '0px',
+        paddingRight: '0px'
+      });
+    }
+
     return (
       <div
       className="ui segment"
       style={visibleStyle}
       data-place="left"
       data-tip={this.props.isVisible && !p.selectType && p.compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
-        {this.props.isVisible && !this.props.detailsOnly ? (
+        {this.props.isVisible && !p.detailsOnly ? (
           <h3
           style={{
               fontSize: name.length > 28 ? '14px' : '17.92px',
@@ -340,7 +345,7 @@ class LocationBox extends React.Component {
         ) : null}
 
         {this.props.isVisible ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => p.onFav(location)} /> : null}
-        {this.props.isVisible && !this.props.detailsOnly ? (
+        {this.props.isVisible && !p.detailsOnly ? (
           <div
           style={{
               position: 'absolute',
