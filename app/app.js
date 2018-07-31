@@ -449,9 +449,9 @@ class Container extends React.Component {
       locations = filter(locations, (location)=>{
         return (
           findIndex(this.props.s.profile.friends, (friend) => {
-            return friend.username === location.profile.username;
+            return (location.profile && friend.username === location.profile.username) || friend.username === location.username;
           }) > -1
-          || location.profile.username === this.props.s.profile.username
+          || (location.profile && location.profile.username === this.props.s.profile.username)
         );
       });
     }
