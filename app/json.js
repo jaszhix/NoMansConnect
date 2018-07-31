@@ -3,7 +3,7 @@ const copyFile = require('./copy');
 const {tryFn} = require('./lang');
 
 class Json {
-  constructor(path, fileName, defaultObj, cb){
+  constructor(path, fileName, defaultObj, cb) {
     this.shouldWrite = false;
     this.fileName = fileName;
     this.path = `${path}/${this.fileName}`;
@@ -12,7 +12,7 @@ class Json {
     this.init(this.path, cb);
     this.writing = false;
   }
-  init(readPath, cb, fromFailure=null){
+  init(readPath, cb, fromFailure=null) {
     fs.readFile(readPath, (err, data=this.data) => {
       if (err) {
         this.writing = true;
@@ -38,11 +38,11 @@ class Json {
       });
     });
   }
-  callback(cb){
+  callback(cb) {
     this.shouldWrite = true;
     cb(this.data);
   }
-  _writeFile(cb){
+  _writeFile(cb) {
     fs.writeFile(this.path, JSON.stringify(this.data), (err, data) => {
       this.writing = false;
       if (err) {
@@ -54,7 +54,7 @@ class Json {
       }
     });
   }
-  writeFile(cb, backup){
+  writeFile(cb, backup) {
     if (!this.shouldWrite) {
       if (typeof cb === 'function') {
         cb(this.data);
@@ -73,23 +73,23 @@ class Json {
       this._writeFile(cb);
     }
   }
-  set(key, value){
+  set(key, value) {
     if (this.timeout) {
       clearTimeout(this.timeout);
       this.timeout = null;
     }
     if (this.writing) {
-      this.timeout = setTimeout((...args) => this.set(...args), 1000);
+      this.timeout = setTimeout(() => this.set(...arguments), 1000);
       return;
     }
     this.data[key] = value;
     this.writing = true;
     this.writeFile(null, this.data.hasOwnProperty('maintenanceTS'));
   }
-  get(key){
+  get(key) {
     return tryFn(() => this.data, () => null);
   }
-  remove(key){
+  remove(key) {
     delete this.data[key];
     this.writeFile();
   }
