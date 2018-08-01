@@ -1964,7 +1964,6 @@ class App extends React.Component {
             onSetWallpaper={this.handleSetWallpaper}
             onUsernameOverride={this.handleSetUsernameOverride} />
           </div>
-          {process.platform === 'win32' ?
           <div
           style={this.titleBarControlsStyle}
           className={this.headerItemClasses}
@@ -1995,7 +1994,7 @@ class App extends React.Component {
                 </svg>
               </div>
             </div>
-          </div> : null}
+          </div>
         </div>
         {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} width={this.state.width} /> : null}
         {this.state.usernameOverride ? <UsernameOverrideModal ps4User={this.state.ps4User} onSave={this.handleUsernameOverride} onRestart={this.handleRestart} /> : null}
