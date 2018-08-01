@@ -12,7 +12,7 @@ import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import {spawn, execSync} from 'child_process';
 import baseConfig from './webpack.config.base';
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3940;
 const publicPath = `http://localhost:${port}/dist`;
 const dll = path.resolve(process.cwd(), 'dll');
 const manifest = path.resolve(dll, 'vendor.json');

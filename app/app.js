@@ -643,8 +643,20 @@ class App extends React.Component {
     }
     this.handleWorkers();
     window.handleWallpaper = this.handleWallpaper;
-    this.saveJSON = process.env.NODE_ENV === 'production' ? `.${utils.dirSep}nmssavetool${utils.dirSep}saveCache.json` : `.${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}saveCache.json`;
-    this.saveTool = process.env.NODE_ENV === 'production' ? `${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe` : `${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
+
+    // TBD: Work around electron starting in the home directory on Linux
+    let modulePath = remote.app.getPath('module').split('/');
+    modulePath.pop();
+    modulePath = modulePath.join('/');
+    window.modulePath = modulePath;
+
+    if (process.env.NODE_ENV === 'production') {
+      this.saveJSON = `${remote.app.getPath('userData')}${utils.dirSep}saveCache.json`;
+      this.saveTool = `${modulePath}${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
+    } else {
+      this.saveJSON = `.${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}saveCache.json`;
+      this.saveTool = `${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
+    }
 
     if (!this.state.offline) {
       window.ajaxWorker.postMessage({
@@ -1030,7 +1042,7 @@ class App extends React.Component {
     let absoluteSaveDir = this.state.saveFileName.split(utils.dirSep);
     pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
     absoluteSaveDir = absoluteSaveDir.join(utils.dirSep);
-    let command = `${process.platform !== 'win32' ? 'wine ' : ''}.${this.saveTool} encrypt -g ${slot} -f ${this.saveJSON} --save-dir "${absoluteSaveDir}"`;
+    let command = `${process.platform !== 'win32' ? 'wine ' : '.'}${this.saveTool} encrypt -g ${slot} -f ${this.saveJSON} --save-dir "${absoluteSaveDir}"`;
     console.log(command);
     utils.exc(command, (res) => {
       console.log(res);
@@ -1202,6 +1214,7 @@ class App extends React.Component {
 
         fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
           if (err) {
+            log.error('Error occurred while attempting to write save file cache:');
             log.error(err);
           }
           this.signSaveData(saveData.slot);

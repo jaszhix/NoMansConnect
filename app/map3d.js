@@ -91,11 +91,12 @@ class Map3D extends React.Component {
 
     this.mounted = false;
     this.loader = new THREE.TextureLoader();
-    this.starRed = this.loader.load(path.resolve('app/textures/star_red.jpg'));
-    this.starOrange = this.loader.load(path.resolve('app/textures/star_orange.jpg'));
-    this.starBlue = this.loader.load(path.resolve('app/textures/star_blue.jpg'));
-    this.starGreen = this.loader.load(path.resolve('app/textures/star_green.jpg'));
-    this.starPurple = this.loader.load(path.resolve('app/textures/star_purple.jpg'));
+    let {modulePath} = window;
+    this.starRed = this.loader.load(path.resolve(`${modulePath}/app/textures/star_red.jpg`));
+    this.starOrange = this.loader.load(path.resolve(`${modulePath}/app/textures/star_orange.jpg`));
+    this.starBlue = this.loader.load(path.resolve(`${modulePath}/app/textures/star_blue.jpg`));
+    this.starGreen = this.loader.load(path.resolve(`${modulePath}/app/textures/star_green.jpg`));
+    this.starPurple = this.loader.load(path.resolve(`${modulePath}/app/textures/star_purple.jpg`));
 
     this.sphere = new THREE.SphereGeometry(5, 9, 9);
     this.sphereVs = document.getElementById('surface-vertexShader').textContent;
