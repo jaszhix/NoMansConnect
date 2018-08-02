@@ -645,9 +645,9 @@ class App extends React.Component {
     window.handleWallpaper = this.handleWallpaper;
 
     // TBD: Work around electron starting in the home directory on Linux
-    let modulePath = remote.app.getPath('module').split('/');
+    let modulePath = remote.app.getPath('module').split(utils.dirSep);
     modulePath.pop();
-    modulePath = modulePath.join('/');
+    modulePath = modulePath.join(utils.dirSep);
     window.modulePath = modulePath;
 
     if (process.env.NODE_ENV === 'production') {
@@ -1042,7 +1042,7 @@ class App extends React.Component {
     let absoluteSaveDir = this.state.saveFileName.split(utils.dirSep);
     pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
     absoluteSaveDir = absoluteSaveDir.join(utils.dirSep);
-    let command = `${process.platform !== 'win32' ? 'wine ' : '.'}${this.saveTool} encrypt -g ${slot} -f ${this.saveJSON} --save-dir "${absoluteSaveDir}"`;
+    let command = `${process.platform !== 'win32' ? 'wine ' : ''}${this.saveTool} encrypt -g ${slot} -f ${this.saveJSON} --save-dir "${absoluteSaveDir}"`;
     console.log(command);
     utils.exc(command, (res) => {
       console.log(res);

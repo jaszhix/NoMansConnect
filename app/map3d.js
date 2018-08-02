@@ -92,6 +92,9 @@ class Map3D extends React.Component {
     this.mounted = false;
     this.loader = new THREE.TextureLoader();
     let {modulePath} = window;
+    if (process.env.NODE_ENV === 'development') {
+      modulePath = '.';
+    }
     this.starRed = this.loader.load(path.resolve(`${modulePath}/app/textures/star_red.jpg`));
     this.starOrange = this.loader.load(path.resolve(`${modulePath}/app/textures/star_orange.jpg`));
     this.starBlue = this.loader.load(path.resolve(`${modulePath}/app/textures/star_blue.jpg`));
