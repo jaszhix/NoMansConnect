@@ -353,7 +353,13 @@ class LocationBox extends React.Component {
               right: compact ? '143px' : 'initial',
               top: '16px'
             }}>
-            {leftOptions.length > 0 ? <BasicDropdown icon="ellipsis horizontal" showValue={null} persist={p.edit} options={leftOptions} /> : null}
+            {leftOptions.length > 0 ?
+            <BasicDropdown
+            height={200}
+            icon="ellipsis horizontal"
+            showValue={null}
+            persist={p.edit}
+            options={leftOptions} /> : null}
             {location.base ? (
               <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
                 <img className="LocationBox__baseStyle" src={baseIcon} />

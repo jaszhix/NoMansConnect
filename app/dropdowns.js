@@ -21,9 +21,6 @@ const menuContainerStyle = {
 const noDragStyle = {
   WebkitAppRegion: 'no-drag'
 };
-const basicMenuContainerStyle = {
-  fontSize: '16px'
-};
 const trashIconContainerStyle = {
   position: 'relative',
   left: '92%',
@@ -539,7 +536,8 @@ export class BasicDropdown extends React.Component {
     icon: 'dropdown',
     showValue: true,
     persist: false,
-    isGalaxies: true
+    isGalaxies: true,
+    height: 0
   };
   constructor(props) {
     super(props);
@@ -576,8 +574,7 @@ export class BasicDropdown extends React.Component {
     let height = this.props.height ? this.props.height : window.innerHeight;
     return (
       <div
-      style={basicMenuContainerStyle}
-      className={`ui dropdown${this.state.open ? ' active visible' : ''}`}
+      className={`ui dropdown BasicDropdown__root${this.state.open ? ' active visible' : ''}`}
       onClick={this.handleToggleOpen}>
         {this.props.showValue && this.props.options.length > 0 ?
         <div className="text">
@@ -589,7 +586,7 @@ export class BasicDropdown extends React.Component {
           display: this.state.open ? 'block !important' : 'none',
           borderRadius: '0px',
           background: 'rgb(23, 26, 22)',
-          maxHeight: `${height / 2}px`,
+          maxHeight: `${this.props.height ? this.props.height : (height / 2)}px`,
           minWidth: `${this.props.width || '132.469'}px`,
           overflowY: 'auto'
         }}

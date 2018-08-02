@@ -38769,6 +38769,9 @@ Item
   margin-bottom: 8px;
 }
 
+.BasicDropdown__root {
+  font-size: 16px;
+}
 .BasicDropdown__alignRight {
   position: absolute;
   right: 8px;
