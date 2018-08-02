@@ -148,17 +148,13 @@ class ThreeDimScatterChart extends React.Component {
         }, 0);
       }),
       state.connect({
-        selectedLocation: () => this.handlePostMessageSelect()
+        selectedLocation: () => this.handlePostMessageSelect(),
+        mapLines: () => this.forceUpdate()
       })
     ];
     this.handleMapWorker();
     this.handlePostMessage();
     this.handlePostMessageSize();
-  }
-  componentWillReceiveProps(nP) {
-    if (nP.mapLines !== this.props.mapLines) {
-      this.forceUpdate();
-    }
   }
   componentWillUnmount() {
     this.willUnmount = true;
@@ -370,6 +366,7 @@ class ThreeDimScatterChart extends React.Component {
         data={this.state[obj.listKey]}
         fill={obj.color}
         shape="circle"
+        line={label === 'Explored' ? this.props.mapLines : null}
         isAnimationActive={false}
         onClick={nonSelectable.indexOf(label) === -1 ? this.handleSelect : null} />
       );
