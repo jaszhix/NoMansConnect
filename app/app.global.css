@@ -38608,6 +38608,10 @@ body {
   font-family: 'geosanslight-nmsregular';
 }
 
+.hide {
+  display: none !important;
+}
+
 .md-p {
   margin-bottom: 8px;
 }
@@ -38637,6 +38641,27 @@ Components
 
 .cursorPointer {
   cursor: pointer;
+}
+
+/*
+Container
+*/
+
+.Container__root {
+  padding-top: 51px !important;
+  float: left;
+  position: absolute;
+  margin: 0px auto !important;
+  left: 0px;
+  right: 0px;
+}
+.Container__mapAndSelected {
+  display: inline-flex  !important;
+  padding-top: 14px  !important;
+  margin-left: 0px !important;
+}
+.Container__left {
+  max-width: 800px !important;
 }
 
 /*

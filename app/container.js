@@ -12,15 +12,6 @@ import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
 import RemoteLocations from './remoteLocations';
 
-const containerStyle = {
-  paddingTop: '51px',
-  float: 'left',
-  position: 'absolute',
-  margin: '0px auto',
-  left: '0px',
-  right: '0px'
-};
-
 class Container extends React.Component {
   constructor(props) {
     super(props);
@@ -474,10 +465,16 @@ class Container extends React.Component {
       });
     }
     return (
-      <div className="ui grid row" style={containerStyle}>
-        <input ref={this.getScreenshotRef} onChange={this.handleUploadScreen} style={{display: 'none'}} type="file" accept="image/*" multiple={false} />
+      <div className="ui grid row Container__root">
+        <input
+        className="hide"
+        ref={this.getScreenshotRef}
+        onChange={this.handleUploadScreen}
+        type="file"
+        accept="image/*"
+        multiple={false} />
         <div className="columns">
-          <div className="ui segments stackable grid container" style={{maxWidth: '800px !important'}}>
+          <div className="ui segments stackable grid container Container__left">
             <StoredLocations
             onSelect={this.handleSelectLocation}
             storedLocations={storedLocations}
@@ -492,7 +489,7 @@ class Container extends React.Component {
             filterStoredByScreenshot={filterStoredByScreenshot}
             useGAFormat={useGAFormat}
             username={username} />
-            <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
+            <div className="ui segments Container__mapAndSelected">
               {remoteLocationsLoaded ?
               <GalacticMap
               mapLoading={mapLoading}
