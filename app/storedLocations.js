@@ -3,6 +3,7 @@ import React from 'react';
 import {truncate, delay, defer} from 'lodash';
 import {map} from './lang';
 import {whichToShow, cleanUp} from './utils';
+import {sortStoredByKeyMap} from './constants';
 import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
 
@@ -159,30 +160,68 @@ class StoredLocations extends React.Component {
     this.storedLocations = ref;
   }
   render() {
+    let {
+      storedLocations,
+      selectedLocationId,
+      currentLocation,
+      height,
+      filterOthers,
+      showHidden,
+      sortStoredByTime,
+      sortStoredByKey,
+      filterStoredByBase,
+      filterStoredByScreenshot,
+      useGAFormat
+    } = this.props;
     let leftOptions = [
       {
         id: 'hideOthers',
-        label: 'Show All Locations',
-        toggle: !this.props.filterOthers,
-        onClick: () => state.set({filterOthers: !this.props.filterOthers})
+        label: `Show ${filterOthers ? 'My' : 'All'} Locations`,
+        toggle: true,
+        onClick: () => state.set({filterOthers: !filterOthers})
       },
       {
         id: 'showHidden',
         label: 'Show Hidden Locations',
-        toggle: this.props.showHidden,
-        onClick: () => state.set({showHidden: !this.props.showHidden})
+        toggle: showHidden,
+        onClick: () => state.set({showHidden: !showHidden})
+      },
+      {
+        id: 'filterStoredByBase',
+        label: 'Filter by Bases',
+        toggle: filterStoredByBase,
+        onClick: () => state.set({filterStoredByBase: !filterStoredByBase})
+      },
+      {
+        id: 'filterStoredByScreenshot',
+        label: 'Filter by Screenshots',
+        toggle: filterStoredByScreenshot,
+        onClick: () => state.set({filterStoredByScreenshot: !filterStoredByScreenshot})
       },
       {
         id: 'sortTime',
         label: 'Sort by Favorites',
-        toggle: !this.props.sortStoredByTime,
-        onClick: () => state.set({sortStoredByTime: !this.props.sortStoredByTime})
+        toggle: !sortStoredByTime,
+        onClick: () => state.set({sortStoredByTime: !sortStoredByTime})
+      },
+      {
+        id: 'sortName',
+        label: `Sort by ${sortStoredByKeyMap[sortStoredByKey]}`,
+        toggle: sortStoredByKey,
+        onClick: () => state.set({
+          sortStoredByKey: sortStoredByKey === 'timeStamp' ? 'name'
+            : sortStoredByKey === 'name' ? 'description'
+            : sortStoredByKey === 'distanceToCenter' ? 'timeStamp'
+            : sortStoredByKey === 'galaxy' ? 'distanceToCenter'
+            : sortStoredByKey === 'teleports' ? 'galaxy'
+            : 'teleports'
+        })
       },
       {
         id: 'useGAFormat',
         label: 'Show Universe Addresses',
-        toggle: !this.props.useGAFormat,
-        onClick: () => state.set({useGAFormat: !this.props.useGAFormat})
+        toggle: !useGAFormat,
+        onClick: () => state.set({useGAFormat: !useGAFormat})
       }
     ];
     return (
@@ -190,7 +229,7 @@ class StoredLocations extends React.Component {
       className="ui segment"
       style={{display: 'inline-flex', background: 'transparent', WebkitUserSelect: 'none'}}>
         <div className="ui segment" style={this.uiSegmentStyle}>
-          <h3>{`Stored Locations (${this.props.storedLocations.length})`}</h3>
+          <h3>{`Stored Locations (${storedLocations.length})`}</h3>
           <div style={{
             position: 'absolute',
             left: '17px',
@@ -207,11 +246,11 @@ class StoredLocations extends React.Component {
           ref={this.getRef}
           className="ui segments"
           style={{
-            maxHeight: `${this.props.height - (this.props.selectedLocationId ? 404 : 125)}px`,
+            maxHeight: `${height - (selectedLocationId ? 404 : 125)}px`,
             WebkitTransition: 'max-height 0.1s',
             overflowY: 'auto',
             overflowX: 'hidden'}}>
-            {map(this.props.storedLocations, (location, i) => {
+            {map(storedLocations, (location, i) => {
               let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
               if (isVisible) {
                 return (
@@ -220,10 +259,10 @@ class StoredLocations extends React.Component {
                   ref={location.id}
                   i={i}
                   onClick={this.handleSelect}
-                  isSelected={this.props.selectedLocationId === location.id}
-                  isCurrent={this.props.currentLocation === location.id}
+                  isSelected={selectedLocationId === location.id}
+                  isCurrent={currentLocation === location.id}
                   location={location}
-                  useGAFormat={this.props.useGAFormat} />
+                  useGAFormat={useGAFormat} />
                 );
               } else {
                 return (

@@ -157,49 +157,49 @@ class RemoteLocations extends React.Component {
       },
       {
         id: 'showOnlyGalaxy',
-        label: `Show Only Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
+        label: `Filter by Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
         toggle: this.props.s.showOnlyGalaxy,
         onClick: () => state.set({showOnlyGalaxy: !this.props.s.showOnlyGalaxy})
       },
       {
         id: 'showOnlyPC',
-        label: 'Show Only PC Locations',
+        label: 'Filter by PC Locations',
         toggle: this.props.s.showOnlyPC,
         onClick: () => state.set({showOnlyPC: !this.props.s.showOnlyPC})
       },
       {
         id: 'showOnlyScreenshots',
-        label: 'Show Only Locations With Screenshots',
+        label: 'Filter by Screenshots',
         toggle: this.props.s.showOnlyScreenshots,
         onClick: () => state.set({showOnlyScreenshots: !this.props.s.showOnlyScreenshots})
       },
       {
         id: 'showOnlyNames',
-        label: 'Show Only Locations With Names',
+        label: 'Filter by Names',
         toggle: this.props.s.showOnlyNames,
         onClick: () => state.set({showOnlyNames: !this.props.s.showOnlyNames})
       },
       {
         id: 'showOnlyDesc',
-        label: 'Show Only Locations With Descriptions',
+        label: 'Filter by Descriptions',
         toggle: this.props.s.showOnlyDesc,
         onClick: () => state.set({showOnlyDesc: !this.props.s.showOnlyDesc})
       },
       {
         id: 'showOnlyBases',
-        label: 'Show Only Locations With Bases',
+        label: 'Filter by Bases',
         toggle: this.props.s.showOnlyBases,
         onClick: () => state.set({showOnlyBases: !this.props.s.showOnlyBases})
       },
       {
         id: 'showOnlyCompatible',
-        label: 'Show Only Version Compatible Locations',
+        label: 'Filter by Version Compatible Locations',
         toggle: this.props.s.showOnlyCompatible,
         onClick: () => state.set({showOnlyCompatible: !this.props.s.showOnlyCompatible})
       },
       {
         id: 'showOnlyFriends',
-        label: 'Show Only Friends\' Locations',
+        label: 'Filter by Friends',
         toggle: this.props.s.showOnlyFriends,
         onClick: () => state.set({showOnlyFriends: !this.props.s.showOnlyFriends})
       },

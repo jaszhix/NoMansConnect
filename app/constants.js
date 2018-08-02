@@ -4,3 +4,12 @@ export const locationItemStyle = {
   background: 'rgba(23, 26, 22, 0.8)',
   fontSize: '16px'
 };
+
+export const sortStoredByKeyMap = {
+  timeStamp: 'Time',
+  name: 'Name',
+  description: 'Description',
+  distanceToCenter: 'Distance To Center',
+  galaxy: 'Galaxy',
+  teleports: 'Popularity'
+};

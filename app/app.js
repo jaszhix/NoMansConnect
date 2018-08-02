@@ -385,86 +385,170 @@ class Container extends React.Component {
   }
   render() {
     let p = this.props;
-    let isOwnLocation = findIndex(p.s.storedLocations, location => location.id === (p.s.selectedLocation ? p.s.selectedLocation.id : null)) > -1;
-    let remoteLocationsLoaded = p.s.remoteLocations && p.s.remoteLocations.results || p.s.searchCache.results.length > 0;
-    let storedLocations = orderBy(p.s.storedLocations, (location) => {
-      return p.s.favorites.indexOf(location.id) > -1;
-    }, 'desc');
-    if (p.s.filterOthers) {
+    let {
+      storedLocations,
+      favorites,
+      remoteLocations,
+      remoteLocationsColumns,
+      selectedLocation,
+      selectedGalaxy,
+      galaxyOptions,
+      currentLocation,
+      searchCache,
+      sortStoredByKey,
+      sortStoredByTime,
+      filterOthers,
+      showHidden,
+      filterStoredByBase,
+      filterStoredByScreenshot,
+      useGAFormat,
+      showOnlyBases,
+      showOnlyCompatible,
+      showOnlyDesc,
+      showOnlyFriends,
+      showOnlyGalaxy,
+      showOnlyNames,
+      showOnlyPC,
+      showOnlyScreenshots,
+      sortByDistance,
+      sortByModded,
+      username,
+      profile,
+      saveVersion,
+      height,
+      width,
+      installing,
+      ps4User,
+      configDir,
+      mapLoading,
+      map3d,
+      mapDrawDistance,
+      mapLines,
+      show
+    } = p.s;
+
+    let isOwnLocation = findIndex(storedLocations, (location) => location.id === (selectedLocation ? selectedLocation.id : null)) > -1;
+    let remoteLocationsLoaded = remoteLocations && remoteLocations.results || searchCache.results.length > 0;
+
+    let direction = sortStoredByKey === 'timeStamp' || sortStoredByKey === 'description' ? 'desc' : 'asc';
+    let storedFavorites = [];
+    let storedNonFavorites = [];
+
+    each(storedLocations, (location) => {
+      location.timeStamp = new Date(location.timeStamp).getTime();
+      location.description = location.description ? location.description.trim() : '';
+    });
+
+    let storedSortFunction = (location) => {
+      if (sortStoredByKey === 'name') {
+        return location.name || useGAFormat ? location.translatedId : location.id;
+      } else {
+        return location[sortStoredByKey];
+      }
+    };
+
+    if (filterOthers) {
       storedLocations = filter(storedLocations, (location) => {
-        return location.username === p.s.username;
+        return location.username === username;
       });
     }
-    if (!p.s.showHidden) {
+    if (!showHidden) {
       storedLocations = filter(storedLocations, (location) => {
         return !location.isHidden;
       });
     }
-    if (p.s.sortStoredByTime) {
-      storedLocations = orderBy(storedLocations, 'timeStamp', 'desc');
+    if (filterStoredByBase) {
+      storedLocations = filter(storedLocations, (location) => {
+        return location.base && location.baseData;
+      });
     }
+    if (filterStoredByScreenshot) {
+      storedLocations = filter(storedLocations, (location) => {
+        return location.image;
+      });
+    }
+    if (sortStoredByTime) {
+      storedLocations = orderBy(storedLocations, storedSortFunction, direction);
+    } else {
+      storedFavorites = orderBy(
+        filter(storedLocations, (location) => {
+          return favorites.indexOf(location.id) > -1;
+        }),
+        sortStoredByKey,
+        direction
+      );
+      storedNonFavorites = orderBy(
+        filter(storedLocations, (location) => {
+          return favorites.indexOf(location.id) === -1;
+        }),
+        sortStoredByKey,
+        direction
+      );
+      storedLocations = storedFavorites.concat(storedNonFavorites);
+    }
+
     let isSelectedLocationRemovable = false;
     if (p.s.selectedLocation) {
-      let refLocation = findIndex(p.s.storedLocations, location => location.id === p.s.selectedLocation.id);
+      let refLocation = findIndex(storedLocations, location => location.id === selectedLocation.id);
       isSelectedLocationRemovable = refLocation !== -1;
     }
 
     let locations = p.s.remoteLocations.results;
-    if (this.props.s.showOnlyScreenshots) {
+    if (showOnlyScreenshots) {
       locations = filter(locations, (location)=>{
         return location.image.length > 0;
       });
     }
-    if (this.props.s.showOnlyNames) {
+    if (showOnlyNames) {
       locations = filter(locations, (location)=>{
         return location.data.name && location.data.name.length > 0;
       });
     }
-    if (this.props.s.showOnlyDesc) {
+    if (showOnlyDesc) {
       locations = filter(locations, (location)=>{
         return location.data.description && location.data.description.length > 0;
       });
     }
-    if (this.props.s.showOnlyGalaxy) {
+    if (showOnlyGalaxy) {
       locations = filter(locations, (location)=>{
         return location.data.galaxy === p.s.selectedGalaxy;
       });
     }
-    if (this.props.s.showOnlyBases) {
+    if (showOnlyBases) {
       locations = filter(locations, (location)=>{
         return location.data.base;
       });
     }
-    if (this.props.s.showOnlyCompatible && this.props.s.saveVersion) {
+    if (showOnlyCompatible && saveVersion) {
       locations = filter(locations, (location)=>{
-        return location.version === this.props.s.saveVersion || location.data.version === this.props.s.saveVersion;
+        return location.version === saveVersion || location.data.version === saveVersion;
       });
     }
-    if (this.props.s.showOnlyPC) {
+    if (showOnlyPC) {
       locations = filter(locations, (location)=>{
         return location.data.playerPosition && !location.data.manuallyEntered;
       });
     }
-    if (this.props.s.showOnlyFriends) {
+    if (showOnlyFriends) {
       locations = filter(locations, (location)=>{
         return (
-          findIndex(this.props.s.profile.friends, (friend) => {
+          findIndex(profile.friends, (friend) => {
             return (location.profile && friend.username === location.profile.username) || friend.username === location.username;
           }) > -1
-          || (location.profile && location.profile.username === this.props.s.profile.username)
+          || (location.profile && location.profile.username === profile.username)
         );
       });
     }
-    if (this.props.s.sortByDistance || this.state.sortByModded) {
+    if (sortByDistance || sortByModded) {
       locations = orderBy(locations, (location)=>{
         if (!location.data.mods) {
           location.data.mods = [];
         }
-        if (this.props.s.sortByModded && this.props.s.sortByDistance) {
+        if (sortByModded && sortByDistance) {
           return location.data.mods.length + location.data.distanceToCenter;
-        } else if (this.props.s.sortByDistance) {
+        } else if (sortByDistance) {
           return location.data.distanceToCenter;
-        } else if (this.props.s.sortByModded) {
+        } else if (sortByModded) {
           return location.data.mods.length;
         }
       });
@@ -477,54 +561,57 @@ class Container extends React.Component {
             <StoredLocations
             onSelect={this.handleSelectLocation}
             storedLocations={storedLocations}
-            selectedLocationId={p.s.selectedLocation ? p.s.selectedLocation.id : null}
-            currentLocation={p.s.currentLocation}
-            height={p.s.height}
-            filterOthers={p.s.filterOthers}
-            showHidden={p.s.showHidden}
-            sortStoredByTime={p.s.sortStoredByTime}
-            useGAFormat={p.s.useGAFormat}
-            username={p.s.username} />
+            selectedLocationId={selectedLocation ? selectedLocation.id : null}
+            currentLocation={currentLocation}
+            height={height}
+            filterOthers={filterOthers}
+            showHidden={showHidden}
+            sortStoredByTime={sortStoredByTime}
+            sortStoredByKey={sortStoredByKey}
+            filterStoredByBase={filterStoredByBase}
+            filterStoredByScreenshot={filterStoredByScreenshot}
+            useGAFormat={useGAFormat}
+            username={username} />
             <div className="ui segments" style={{display: 'inline-flex', paddingTop: '14px', marginLeft: '0px'}}>
               {remoteLocationsLoaded ?
               <GalacticMap
-              mapLoading={p.s.mapLoading}
-              map3d={p.s.map3d}
-              mapDrawDistance={p.s.mapDrawDistance}
-              mapLines={p.s.mapLines}
-              galaxyOptions={p.s.galaxyOptions}
-              selectedGalaxy={p.s.selectedGalaxy}
-              storedLocations={p.s.storedLocations}
-              width={p.s.width}
-              height={p.s.height}
-              remoteLocationsColumns={p.s.remoteLocationsColumns}
+              mapLoading={mapLoading}
+              map3d={map3d}
+              mapDrawDistance={mapDrawDistance}
+              mapLines={mapLines}
+              galaxyOptions={galaxyOptions}
+              selectedGalaxy={selectedGalaxy}
+              storedLocations={storedLocations}
+              width={width}
+              height={height}
+              remoteLocationsColumns={remoteLocationsColumns}
               remoteLocations={locations}
-              selectedLocation={p.s.selectedLocation}
-              currentLocation={p.s.currentLocation}
+              selectedLocation={selectedLocation}
+              currentLocation={currentLocation}
               username={p.s.username}
-              show={p.s.show}
+              show={show}
               onRestart={p.onRestart}
               onSearch={p.onSearch}
-              searchCache={p.s.searchCache.results}
-              friends={p.s.profile.friends} /> : null}
-              {p.s.selectedLocation ?
+              searchCache={searchCache.results}
+              friends={profile.friends} /> : null}
+              {selectedLocation ?
               <LocationBox
-              name={p.s.selectedLocation.name}
-              description={p.s.selectedLocation.description}
-              username={p.s.username}
+              name={selectedLocation.name}
+              description={selectedLocation.description}
+              username={username}
               selectType={true}
-              currentLocation={p.s.currentLocation}
+              currentLocation={currentLocation}
               isOwnLocation={isOwnLocation}
               isVisible={true}
-              location={p.s.selectedLocation}
-              installing={p.s.installing}
+              location={selectedLocation}
+              installing={installing}
               updating={this.state.updating}
               edit={this.state.edit}
-              favorites={p.s.favorites}
-              image={p.s.selectedLocation.image}
-              version={p.s.selectedLocation.version === p.s.saveVersion}
-              width={p.s.width}
-              height={p.s.height}
+              favorites={favorites}
+              image={selectedLocation.image}
+              version={selectedLocation.version === saveVersion}
+              width={width}
+              height={height}
               isSelectedLocationRemovable={isSelectedLocationRemovable}
               onUploadScreen={this.screenshotRefClick}
               onDeleteScreen={this.handleDeleteScreen}
@@ -535,8 +622,8 @@ class Container extends React.Component {
               onTeleport={p.onTeleport}
               onSubmit={this.handleUpdate}
               onSaveBase={p.onSaveBase}
-              ps4User={p.s.ps4User}
-              configDir={p.s.configDir} /> : null}
+              ps4User={ps4User}
+              configDir={configDir} /> : null}
             </div>
           </div>
         </div>
@@ -545,14 +632,14 @@ class Container extends React.Component {
         s={p.s}
         onSearch={p.onSearch}
         locations={locations}
-        currentLocation={p.s.currentLocation}
+        currentLocation={currentLocation}
         isOwnLocation={isOwnLocation}
         updating={this.state.updating}
         onPagination={p.onPagination}
         onTeleport={p.onTeleport}
         onFav={this.handleFavorite}
         onSaveBase={p.onSaveBase}
-        ps4User={p.s.ps4User} /> : null}
+        ps4User={ps4User} /> : null}
       </div>
     );
   }
@@ -1436,7 +1523,6 @@ class App extends React.Component {
               );
             }
           });
-          storedLocations = orderBy(storedLocations, 'timeStamp', 'desc');
 
           stateUpdate = Object.assign(stateUpdate, {
             storedLocations,
