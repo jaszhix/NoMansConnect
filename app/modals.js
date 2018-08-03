@@ -7,6 +7,7 @@ import moment from 'moment';
 import {assignIn, pick, isString, orderBy} from 'lodash';
 
 import {validateEmail, ajax, fromHex, cleanUp} from './utils';
+import {handleUsernameOverride, handleRestart} from './dialog';
 import {each, findIndex, map, filter} from './lang';
 
 import {BasicDropdown} from './dropdowns';
@@ -62,10 +63,10 @@ export class UsernameOverrideModal extends React.Component {
   }
   handleSave = () => {
     if (this.props.ps4User) {
-      state.set({username: this.state.name}, this.props.onRestart);
+      state.set({username: this.state.name}, handleRestart);
       return;
     }
-    this.props.onSave(this.state.name)
+    handleUsernameOverride(this.state.name)
   }
   componentWillUnmount = () => {
     cleanUp(this);
@@ -133,7 +134,7 @@ export class RecoveryModal extends React.Component {
     request[prop] = this.state.value;
     ajax.post(url, request).then((res)=>{
       if (this.props.type === 'recoveryToken') {
-        this.props.onSuccess();
+        handleRestart();
         return;
       }
       this.props.s.profile[prop] = this.state.value;

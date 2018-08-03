@@ -2,7 +2,7 @@ import {remote, desktopCapturer} from 'electron';
 
 const primaryDisplay = remote.screen.getPrimaryDisplay();
 
-function screenshot(proceed, callback, debug) {
+const screenshot = function(proceed, callback, debug) {
   if (!proceed) {
     callback('');
     return;
@@ -31,4 +31,4 @@ function screenshot(proceed, callback, debug) {
   });
 }
 
-module.exports = screenshot;
+export default screenshot;

@@ -8,6 +8,7 @@ import openExternal from 'open-external';
 import {assignIn, clone, defer, pullAt, upperFirst, last} from 'lodash';
 
 import * as utils from './utils';
+import {handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
 import {findIndex, map, tryFn} from './lang';
 
 const {dialog} = remote;
@@ -280,9 +281,6 @@ You should have received a copy of the GNU General Public License along with thi
   handleSync = () => {
     this.props.onSync();
   }
-  handleWallpaper = () => {
-    this.props.onSetWallpaper()
-  }
   handleAutoCapture = (e) => {
     e.stopPropagation();
     state.set({autoCapture: !this.props.s.autoCapture});
@@ -406,7 +404,7 @@ You should have received a copy of the GNU General Public License along with thi
           {!p.s.ps4User ?
           <div
           className="item"
-          onClick={this.props.onSelectInstallDirectory}
+          onClick={handleSelectInstallDirectory}
           data-place="left"
           data-tip={utils.tip('Optional. Select the location NMS is installed in. This is used to associate your mods with a location, so other players can see a location which may not load properly for them.')}>
             Select NMS Install Directory
@@ -414,7 +412,7 @@ You should have received a copy of the GNU General Public License along with thi
           {!p.s.ps4User ?
           <div
           className="item"
-          onClick={this.props.onSelectSaveDirectory}
+          onClick={handleSelectSaveDirectory}
           data-place="left"
           data-tip={utils.tip('Required. Select the location the save files are in.')}>
             Select NMS Save Directory
@@ -472,7 +470,7 @@ You should have received a copy of the GNU General Public License along with thi
           </div> : null}
           <div
           className="item"
-          onClick={this.handleWallpaper}
+          onClick={handleSetWallpaper}
           data-place="left"
           data-tip={utils.tip('Changes the NMC background.')}>
             {p.s.wallpaper ? 'Reset Wallpaper' : 'Set Wallpaper'}
@@ -509,7 +507,7 @@ You should have received a copy of the GNU General Public License along with thi
           <div className="divider" />
           <div
           className="item"
-          onClick={p.onRestart}
+          onClick={handleRestart}
           data-place="left"
           data-tip={utils.tip('Restarts the NMC process.')}>
             Restart

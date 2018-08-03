@@ -4,7 +4,7 @@ import React from 'react';
 import {assignIn, cloneDeep, orderBy, uniq, pullAt} from 'lodash';
 
 import * as utils from './utils';
-window.utils = utils
+import {handleRestart} from './dialog';
 import {each, find, findIndex, filter} from './lang';
 
 import GalacticMap from './map';
@@ -507,7 +507,7 @@ class Container extends React.Component {
               currentLocation={currentLocation}
               username={p.s.username}
               show={show}
-              onRestart={p.onRestart}
+              onRestart={handleRestart}
               onSearch={p.onSearch}
               searchCache={searchCache.results}
               friends={profile.friends} /> : null}
