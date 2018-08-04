@@ -1,3 +1,11 @@
+# 1.3.0
+
+  * Improved sorting and filtration options for stored locations.
+  * Fixed an issue with the selected location dropdown menu clipping the viewport.
+  * Added zoom functionality to the 2D map. To use, drag a rectangle over the region you would like to zoom in on. Press the right mouse button to zoom out.
+  * Added a waypoint option. If teleporting isn't your cup of tea, you can now select "Set waypoint" from any location's dropdown menu, and it will be added to the galactic map's custom waypoint selection. Note this will override the custom waypoint if its already set.
+  * Added saving of multiple positions on a single planet. Normally the client will ignore changes to the save file if it already has the current location in its cache, but now all unique positions are saved and uploaded. The teleport button now switches to a menu selection of available places. The names of these can be edited by clicking "Edit Places". This can also be useful if a location was previously incompatible and spawned the player in mid-air.
+
 # 1.2.1
 
   * Fixed friend location scatter points not adjusting to galaxy change.
