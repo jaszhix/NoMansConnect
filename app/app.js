@@ -77,6 +77,7 @@ class App extends React.Component {
       restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
       setWaypoint: (location) => this.setWaypoint(location),
       getMonitor: () => this.monitor,
+      handleClearSearch: () => this.handleClearSearch()
     });
 
     this.topAttachedMenuStyle = {

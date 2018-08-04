@@ -358,6 +358,8 @@ class ThreeDimScatterChart extends React.Component {
         searchInProgress: true,
         search: `Sector ${hexSector}`
       };
+    } else if (state.searchInProgress) {
+      state.trigger('handleClearSearch');
     }
 
     state.set(stateUpdate);
