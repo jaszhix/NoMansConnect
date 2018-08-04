@@ -22,9 +22,17 @@ class Container extends React.Component {
       mapRender: '<div />'
     };
     state.connect({
-      selectedLocation: () => this.setState({edit: false}),
+      selectedLocation: () => {
+        if (this.willUnmount || !this.state.edit) {
+          return;
+        }
+        this.setState({edit: false})
+      },
       handleFavorite: (location) => this.handleFavorite(location)
     })
+  }
+  componentWillUnmount() {
+    this.willUnmount = true;
   }
   handleFavorite = (location) => {
     if (this.props.s.offline) {
@@ -106,6 +114,9 @@ class Container extends React.Component {
           remoteLocations: this.props.s.remoteLocations,
           selectedLocation: this.props.s.selectedLocation
         }, () => {
+          if (this.willUnmount) {
+            return;
+          }
           this.setState({
             updating: false,
             edit: false
@@ -172,6 +183,9 @@ class Container extends React.Component {
                 remoteLocations: this.props.s.remoteLocations,
                 selectedLocation: this.props.s.selectedLocation
               }, () => {
+                if (this.willUnmount) {
+                  return;
+                }
                 this.setState({
                   updating: false,
                   edit: false
@@ -215,6 +229,9 @@ class Container extends React.Component {
         remoteLocations: this.props.s.remoteLocations,
         selectedLocation: this.props.s.selectedLocation
       }, () => {
+        if (this.willUnmount) {
+          return;
+        }
         this.setState({
           updating: false,
           edit: false
@@ -250,6 +267,9 @@ class Container extends React.Component {
         remoteLocations: this.props.s.remoteLocations,
         selectedLocation: this.props.s.selectedLocation
       }, () => {
+        if (this.willUnmount) {
+          return;
+        }
         this.setState({
           updating: false,
           edit: false

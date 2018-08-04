@@ -291,7 +291,7 @@ You should have received a copy of the GNU General Public License along with thi
       key: 'remoteLocations'
     });
 
-    this.props.onRestart();
+    handleRestart();
   }
   handleUsernameProtection = () => {
     let helpMessage = 'When you protect your username, the app will associate your computer with your username to prevent impersonation. If you plan on using the app on another computer, you will need to disable protection before switching.';
@@ -323,7 +323,7 @@ You should have received a copy of the GNU General Public License along with thi
     state.set({setEmail: true});
   }
   handlePlatformToggle = () => {
-    state.set({ps4User: !this.props.s.ps4User}, this.props.onRestart);
+    state.set({ps4User: !this.props.s.ps4User}, handleRestart);
   }
   handleModeSwitch = (mode) => {
     state.set({mode: mode});
