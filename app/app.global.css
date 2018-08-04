@@ -38680,6 +38680,12 @@ LocationBox
   max-height: 190px;
   overflow-y: auto;
 }
+.LocationBox__PositionEditContainerTrash {
+  position: absolute;
+  top: 10px;
+  float: right;
+  z-index: 100
+}
 .LocationBox__wrapperStyle {
   min-height: 245px
 }

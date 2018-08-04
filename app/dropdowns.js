@@ -556,8 +556,8 @@ export class BasicDropdown extends React.Component {
     }
     if (typeof option.id === 'number') {
       state.set({selectedGalaxy: option.id});
-    } else {
-      option.onClick(option.id, e);
+    } else if (typeof option.onClick === 'function') {
+      option.onClick(option.id);
     }
     this.setState({open: persist});
   }
@@ -592,8 +592,8 @@ export class BasicDropdown extends React.Component {
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
           {this.props.options.length > 0 ? map(this.props.options, (option, i)=>{
             let tooltip = '';
-            if (option.id === 'teleport') {
-              tooltip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.`;
+            if (option.tooltip) {
+              tooltip = option.tooltip
             }
             return (
               <div

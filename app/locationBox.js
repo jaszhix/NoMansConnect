@@ -56,7 +56,8 @@ class LocationBox extends React.Component {
       profile: null,
       location: this.props.location,
       positionSelect: false,
-      positionEdit: false
+      positionEdit: false,
+      positionEditHover: -1
     };
     this.connections = [
       state.connect({
@@ -65,6 +66,10 @@ class LocationBox extends React.Component {
             ReactTooltip.rebuild();
             this.setState({compactRemote: props.compactRemote}, props.onCompactRemoteSwitch);
           }
+        },
+        selectedLocation: () => {
+          if (!this.props || !this.props.selectType || this.willUnmount) return;
+          setTimeout(() => this.setState({positionEdit: false, positionSelect: false}), 0);
         }
       })
     ];
@@ -170,6 +175,11 @@ class LocationBox extends React.Component {
     location.positions[index].name = e.target.value;
     this.setState({location});
   }
+  handlePositionDelete = (index) => {
+    let {location} = this.state;
+    pullAt(location.positions, index);
+    this.setState({location});
+  }
   handlePositionSave = () => {
     this.setState({positionEdit: false});
     state.trigger('updateLocation', this.state.location);
@@ -267,17 +277,13 @@ class LocationBox extends React.Component {
       }
     } else {
       if (location.id !== p.currentLocation && !p.ps4User) {
+        let saveFileInfoTip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.`;
         leftOptions.push({
           id: 'teleport',
-          tooltip: `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.`,
+          tooltip: saveFileInfoTip,
           label: (p.selectType && p.installing && p.installing === `tselected`) || (p.i && p.installing === `t${p.i}`) ? 'Working...' : 'Teleport To...',
-          onClick: (id, e) => {
-            e.stopPropagation();
-            this.setState({positionSelect: true});
-          }
+          onClick: () => this.setState({positionSelect: true})
         });
-      }
-      if (location.id !== p.currentLocation && !p.ps4User) {
         leftOptions.push({
           id: 'waypoint',
           label: 'Set Waypoint',
@@ -300,7 +306,7 @@ class LocationBox extends React.Component {
         if (location.positions && location.positions.length > 0) {
           leftOptions.push({
             id: 'edit-positions',
-            label: this.state.positionEdit ? 'Cancel' : 'Edit Location Positions',
+            label: this.state.positionEdit ? 'Cancel' : 'Edit Places',
             onClick: () => this.setState({positionEdit: !this.state.positionEdit})
           });
         }
@@ -427,11 +433,15 @@ class LocationBox extends React.Component {
         {this.state.positionEdit ?
         <div className="LocationBox__PositionEditContainer">
           <div className="ui segment LocationBox__uiSegmentEditStyle">
-              {map(location.positions, (position, i) => {
-                return (
-                  <div key={i} className="ui input" style={{width: '200px'}}>
+            {map(location.positions, (position, i) => {
+              return (
+                <div
+                key={i}
+                className="ui input"
+                style={{width: '200px'}}
+                onMouseEnter={() => this.setState({positionEditHover: i})}
+                onMouseLeave={() => this.setState({positionEditHover: -1})}>
                   <div
-
                   className="row">
                     <input
                     className="LocationBox__inputStyle"
@@ -440,10 +450,14 @@ class LocationBox extends React.Component {
                     onChange={(e) => this.handlePositionNameChange(e, i)}
                     maxLength={30}
                     placeholder={`Location ${i + 1}`} />
+                    {this.state.positionEditHover === i && location.positions.length > 1 ?
+                    <i
+                    className="trash icon LocationBox__PositionEditContainerTrash"
+                    onClick={() => this.handlePositionDelete(i)} /> : null}
                   </div>
-                  </div>
-                );
-              })}
+                </div>
+              );
+            })}
 
           </div>
           <div className="row">
