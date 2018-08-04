@@ -21,18 +21,20 @@ class Container extends React.Component {
       edit: false,
       mapRender: '<div />'
     };
-    state.connect({
+    this.connectId = state.connect({
       selectedLocation: () => {
         if (this.willUnmount || !this.state.edit) {
           return;
         }
         this.setState({edit: false})
       },
-      handleFavorite: (location) => this.handleFavorite(location)
+      handleFavorite: (location) => this.handleFavorite(location),
+      updateLocation: (location) => this.updateLocation(location)
     })
   }
   componentWillUnmount() {
     this.willUnmount = true;
+    state.disconnect(this.connectId);
   }
   handleFavorite = (location) => {
     if (this.props.s.offline) {
@@ -141,6 +143,27 @@ class Container extends React.Component {
         log.error(`Failed to update remote location: ${err}`);
       });
     });
+  }
+  updateLocation = (location) => {
+    utils.ajax.put(`/nmslocation/${location.id}/`, {
+      machineId: this.props.s.machineId,
+      username: this.props.s.username,
+      data: location
+    }).then((res) => {
+      let {remoteLocations, storedLocations} = this.props.s;
+      let stateUpdate = {};
+      let refRemote = findIndex(remoteLocations.results, (location) => location.id === res.data.id);
+      let refStored = findIndex(storedLocations, (location) => location.id === res.data.data.id);
+      if (refRemote > -1) {
+        remoteLocations.results[refRemote].data = res.data.data;
+        stateUpdate.remoteLocations = remoteLocations;
+      }
+      if (refStored > -1) {
+        storedLocations[refStored] = res.data.data;
+        stateUpdate.storedLocations = storedLocations;
+      }
+      state.set(stateUpdate);
+    })
   }
   handleUploadScreen = (e) => {
     e.persist();
@@ -416,6 +439,13 @@ class Container extends React.Component {
         direction
       );
       storedLocations = storedFavorites.concat(storedNonFavorites);
+    }
+
+    let storedCurrentLocation = findIndex(storedLocations, (location) => location.id === currentLocation);
+    if (storedCurrentLocation > -1) {
+      let current = cloneDeep(storedLocations[storedCurrentLocation]);
+      pullAt(storedLocations, storedCurrentLocation);
+      storedLocations = [current].concat(storedLocations);
     }
 
     let isSelectedLocationRemovable = false;

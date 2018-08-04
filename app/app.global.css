@@ -38676,6 +38676,10 @@ Button
 LocationBox
 */
 
+.LocationBox__PositionEditContainer {
+  max-height: 190px;
+  overflow-y: auto;
+}
 .LocationBox__wrapperStyle {
   min-height: 245px
 }

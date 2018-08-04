@@ -7,7 +7,7 @@ import {machineId} from 'node-machine-id';
 import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
-import {assignIn, cloneDeep, orderBy, uniqBy, defer, concat, first, isArray, pullAt, throttle, pick} from 'lodash';
+import {assignIn, cloneDeep, orderBy, uniqBy, defer, concat, first, isArray, pullAt, throttle, pick, last} from 'lodash';
 import math from 'mathjs';
 
 import Loader from './loader';
@@ -75,7 +75,8 @@ class App extends React.Component {
       fetchRemoteLocations: () => this.fetchRemoteLocations(1),
       pollSaveData: () => this.pollSaveData(),
       restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
-      getMonitor: () => this.monitor
+      setWaypoint: (location) => this.setWaypoint(location),
+      getMonitor: () => this.monitor,
     });
 
     this.topAttachedMenuStyle = {
@@ -122,7 +123,7 @@ class App extends React.Component {
       this.saveTool = `${modulePath}${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
     } else {
       this.saveJSON = `.${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}saveCache.json`;
-      this.saveTool = `${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
+      this.saveTool = `.${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
     }
 
     if (!this.state.offline) {
@@ -544,7 +545,7 @@ class App extends React.Component {
       // 3-vector
       let upOriginal;
       if (storedBase.Objects.length > 0) {
-        upOriginal = storedBase.Objects[0].Up;
+        upOriginal = last(storedBase.Objects).Up;
       } else {
         dialog.showMessageBox({
           type: 'info',
@@ -569,7 +570,7 @@ class App extends React.Component {
       // 3-vector
       let upNew;
       if (newBase.Objects.length > 0) {
-        upNew = newBase.Objects[0].Up;
+        upNew = last(newBase.Objects).Up;
       } else {
         dialog.showMessageBox({
           type: 'info',
@@ -609,105 +610,150 @@ class App extends React.Component {
       log.error(`Failed to restore base: ${err.message}`);
     });
   }
-  handleTeleport = (location, i, action=null, n=null) => {
+  handleTeleport = (location, i, action = null, n = null, position = null) => {
     const _location = cloneDeep(location);
-    state.set({installing: `t${i}`}, () => {
-      utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+    state.set({installing: `t${i}`, navLoad: true});
+    utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
 
-        if (location.data) {
-          location = location.data;
-        }
+      if (location.data) {
+        location = location.data;
+      }
 
-        if (location.manuallyEntered || !location.playerPosition) {
-          assignIn(_location, {
-            playerPosition: [
-              233.02163696289063,
-              6774.24560546875,
-              115.99118041992188,
-              1
-            ],
-            playerTransform: [
-              0.35815203189849854,
-              0.82056683301925659,
-              0.44541805982589722,
-              1
-            ],
-            shipPosition: [
-              234.85250854492188,
-              6777.2685546875,
-              121.86365509033203,
-              1
-            ],
-            shipTransform: [
-              -0.48167002201080322,
-              -0.84464621543884277,
-              -0.23359590768814087,
-              1
-            ],
-          });
-          saveData.result.SpawnStateData.LastKnownPlayerState = 'InShip';
-        }
+      if (action && typeof action === 'object' && action.playerPosition) {
+        assignIn(_location, action);
+      }
 
-        assignIn(saveData.result.SpawnStateData, {
-          PlayerPositionInSystem: _location.playerPosition,
-          PlayerTransformAt: _location.playerTransform,
-          ShipPositionInSystem: _location.shipPosition,
-          ShipTransformAt: _location.shipTransform
+      if (location.manuallyEntered) {
+        assignIn(_location, {
+          playerPosition: [
+            233.02163696289063,
+            6774.24560546875,
+            115.99118041992188,
+            1
+          ],
+          playerTransform: [
+            0.35815203189849854,
+            0.82056683301925659,
+            0.44541805982589722,
+            1
+          ],
+          shipPosition: [
+            234.85250854492188,
+            6777.2685546875,
+            121.86365509033203,
+            1
+          ],
+          shipTransform: [
+            -0.48167002201080322,
+            -0.84464621543884277,
+            -0.23359590768814087,
+            1
+          ],
         });
+        saveData.result.SpawnStateData.LastKnownPlayerState = 'InShip';
+      }
 
-        assignIn(saveData.result.PlayerStateData.UniverseAddress.GalacticAddress, {
-          PlanetIndex: _location.PlanetIndex,
-          SolarSystemIndex: _location.SolarSystemIndex,
-          VoxelX: _location.VoxelX,
-          VoxelY: _location.VoxelY,
-          VoxelZ: _location.VoxelZ
-        });
-
-        if (action) {
-          saveData.result = utils[action](saveData, n);
-        }
-
-        saveData.result.PlayerStateData.UniverseAddress.RealityIndex = _location.galaxy;
-
-        fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
-          if (err) {
-            log.error('Error occurred while attempting to write save file cache:');
-            log.error(err);
-          }
-          this.signSaveData(saveData.slot);
-          let refStoredLocation = findIndex(this.state.storedLocations, location => location.id === _location.id);
-          if (refStoredLocation !== -1) {
-            state.set({installing: false});
-            return;
-          }
-          utils.ajax.post('/nmslocation/', {
-            machineId: this.state.machineId,
-            username: this.state.username,
-            teleports: true,
-            id: _location.id
-          }).then((res) => {
-            let refRemoteLocation = findIndex(this.state.remoteLocations.results, (remoteLocation) => {
-              return remoteLocation.data.id === _location.id;
-            });
-            if (refRemoteLocation !== -1) {
-              this.state.remoteLocations.results[refRemoteLocation] = res.data;
-            }
-
-            state.set({
-              installing: false,
-              currentLocation: _location.id,
-              remoteLocations: this.state.remoteLocations
-            });
-          }).catch((err) => {
-            log.error(`Unable to send teleport stat to server: ${err}`);
-            state.set({installing: false});
-          });
-        });
-      }).catch((err) => {
-        log.error(err.message);
-        log.error(`Unable to teleport to location: ${err}`);
+      assignIn(saveData.result.SpawnStateData, {
+        PlayerPositionInSystem: _location.playerPosition,
+        PlayerTransformAt: _location.playerTransform,
+        ShipPositionInSystem: _location.shipPosition,
+        ShipTransformAt: _location.shipTransform
       });
+
+      assignIn(saveData.result.PlayerStateData.UniverseAddress.GalacticAddress, {
+        PlanetIndex: _location.PlanetIndex,
+        SolarSystemIndex: _location.SolarSystemIndex,
+        VoxelX: _location.VoxelX,
+        VoxelY: _location.VoxelY,
+        VoxelZ: _location.VoxelZ
+      });
+
+      if (typeof action === 'string') {
+        saveData.result = utils[action](saveData, n);
+      }
+
+      saveData.result.PlayerStateData.UniverseAddress.RealityIndex = _location.galaxy;
+
+      fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
+        if (err) {
+          log.error('Error occurred while attempting to write save file cache:');
+          log.error(err);
+        }
+        this.signSaveData(saveData.slot);
+        let refStoredLocation = findIndex(this.state.storedLocations, location => location.id === _location.id);
+        if (refStoredLocation !== -1) {
+          state.set({installing: false});
+          return;
+        }
+        utils.ajax.post('/nmslocation/', {
+          machineId: this.state.machineId,
+          username: this.state.username,
+          teleports: true,
+          id: _location.id
+        }).then((res) => {
+          let refRemoteLocation = findIndex(this.state.remoteLocations.results, (remoteLocation) => {
+            return remoteLocation.data.id === _location.id;
+          });
+          if (refRemoteLocation !== -1) {
+            this.state.remoteLocations.results[refRemoteLocation] = res.data;
+          }
+
+          state.set({
+            navLoad: false,
+            installing: false,
+            currentLocation: _location.id,
+            remoteLocations: this.state.remoteLocations
+          });
+        }).catch((err) => {
+          log.error(`Unable to send teleport stat to server: ${err}`);
+          state.set({installing: false, navLoad: false});
+        });
+      });
+    }).catch((err) => {
+      log.error(err.message);
+      log.error(`Unable to teleport to location: ${err}`);
     });
+  }
+  setWaypoint = (location) => {
+    console.log('setWaypoint', location);
+    state.set({navLoad: true});//.result.PlayerStateData.MarkerStack
+    utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+      let {PlanetIndex, SolarSystemIndex, VoxelX, VoxelY, VoxelZ} = location;
+      let waypoint = {
+        Address: {
+          PlanetIndex,
+          SolarSystemIndex,
+          VoxelX,
+          VoxelY,
+          VoxelZ
+        },
+        EventId: '^',
+        Type: {
+          GalaxyWaypointType: 'User'
+        }
+      };
+      let userWaypoint = findIndex(saveData.result.GameKnowledgeData.Waypoints, (wp) => {
+        return wp.Type.GalaxyWaypointType === 'User';
+      });
+      if (userWaypoint > -1) {
+        saveData.result.GameKnowledgeData.Waypoints[userWaypoint] = waypoint;
+      } else {
+        saveData.result.GameKnowledgeData.Waypoints.push(waypoint);
+      }
+      console.log('setWaypoint', saveData.result.GameKnowledgeData.Waypoints)
+
+      fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
+        if (err) {
+          log.error('Error occurred while attempting to write save file cache:');
+          log.error(err);
+        }
+        this.signSaveData(saveData.slot);
+        state.set({navLoad: false});
+      });
+    }).catch((err) => {
+      log.error(err.message);
+      log.error(`Unable to teleport to location: ${err}`);
+    })
   }
   pollSaveData = (mode=this.state.mode, init=false, machineId=this.state.machineId) => {
     pollSaveData({mode, init, machineId, next: (error = false, ...args) => {

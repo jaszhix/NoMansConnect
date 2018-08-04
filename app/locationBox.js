@@ -7,7 +7,7 @@ import axios from 'axios';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import ReactTooltip from 'react-tooltip';
-import {defer, truncate, upperFirst, pullAt, isEqual} from 'lodash';
+import {defer, truncate, upperFirst, pullAt, isEqual, last} from 'lodash';
 import moment from 'moment';
 
 import {css, tip, cleanUp, formatForGlyphs, ajax} from './utils';
@@ -55,6 +55,8 @@ class LocationBox extends React.Component {
       image: null,
       profile: null,
       location: this.props.location,
+      positionSelect: false,
+      positionEdit: false
     };
     this.connections = [
       state.connect({
@@ -163,6 +165,15 @@ class LocationBox extends React.Component {
   handleDescriptionChange = (e) => {
     this.setState({description: e.target.value});
   }
+  handlePositionNameChange = (e, index) => {
+    let {location} = this.state;
+    location.positions[index].name = e.target.value;
+    this.setState({location});
+  }
+  handlePositionSave = () => {
+    this.setState({positionEdit: false});
+    state.trigger('updateLocation', this.state.location);
+  }
   getModMarkup = (mods) => {
     return ReactDOMServer.renderToString(
       map(mods, (mod, i) => {
@@ -233,66 +244,107 @@ class LocationBox extends React.Component {
     let leftOptions = [];
     let name = p.edit && this.state.name.length > 0 ? this.state.name : location.username ? (p.name.length > 0 ? p.name : `${location.username} explored`) : 'Selected';
 
-    if (location.id !== p.currentLocation && !p.ps4User) {
+    if (this.state.positionSelect) {
       leftOptions.push({
-        id: 'teleport',
-        label: (p.selectType && p.installing && p.installing === `tselected`) || (p.i && p.installing === `t${p.i}`) ? 'Working...' : 'Teleport Here',
-        onClick: () => p.onTeleport(location, p.selectType ? 'selected' : p.i)
+        id: 'back',
+        label: 'Go back',
+        onClick: () => this.setState({positionSelect: false})
       });
-    }
-    if (location.base && location.baseData) {
-      leftOptions.push({
-        id: 'storeBase',
-        label: 'Store Base',
-        onClick: () => p.onSaveBase(location.baseData)
-      });
-    }
-    if (isOwnLocation) {
-      leftOptions.push({
-        id: 'edit',
-        label: p.edit ? 'Cancel' : 'Edit Details',
-        onClick: () => p.onEdit()
-      });
-      if (!p.version) {
-        leftOptions.push({
-          id: 'markCompatibility',
-          label: 'Mark as Compatible',
-          onClick: () => p.onMarkCompatible()
-        });
-      }
-      leftOptions.push({
-        id: 'uploadScreen',
-        label: 'Upload Screenshot',
-        onClick: () => p.onUploadScreen()
-      });
-      if (deleteArg) {
-        leftOptions.push({
-          id: 'deleteScreen',
-          label: 'Delete Screenshot',
-          onClick: () => p.onDeleteScreen()
+      if (location.positions) {
+        each(location.positions, (position, i) => {
+          leftOptions.push({
+            id: `position-${i}`,
+            label: position.name || `Location ${i + 1}`,
+            onClick: () => p.onTeleport(location, p.selectType ? 'selected' : p.i, position)
+          })
         });
       } else {
-        let refLeftOption = findIndex(leftOptions, opt => opt.id === 'deleteScreen');
-        pullAt(leftOptions, refLeftOption);
+        leftOptions.push({
+          id: 'legacyTeleport',
+          label: `Initial Location`,
+          onClick: () => p.onTeleport(location, p.selectType ? 'selected' : p.i)
+        })
       }
-    }
-    if (p.selectType && location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
+    } else {
+      if (location.id !== p.currentLocation && !p.ps4User) {
+        leftOptions.push({
+          id: 'teleport',
+          tooltip: `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.`,
+          label: (p.selectType && p.installing && p.installing === `tselected`) || (p.i && p.installing === `t${p.i}`) ? 'Working...' : 'Teleport To...',
+          onClick: (id, e) => {
+            e.stopPropagation();
+            this.setState({positionSelect: true});
+          }
+        });
+      }
+      if (location.id !== p.currentLocation && !p.ps4User) {
+        leftOptions.push({
+          id: 'waypoint',
+          label: 'Set Waypoint',
+          onClick: () => state.trigger('setWaypoint', location)
+        });
+      }
+      if (location.base && location.baseData) {
+        leftOptions.push({
+          id: 'storeBase',
+          label: 'Store Base',
+          onClick: () => p.onSaveBase(location.baseData)
+        });
+      }
+      if (isOwnLocation) {
+        leftOptions.push({
+          id: 'edit',
+          label: p.edit ? 'Cancel' : 'Edit Details',
+          onClick: () => p.onEdit()
+        });
+        if (location.positions && location.positions.length > 0) {
+          leftOptions.push({
+            id: 'edit-positions',
+            label: this.state.positionEdit ? 'Cancel' : 'Edit Location Positions',
+            onClick: () => this.setState({positionEdit: !this.state.positionEdit})
+          });
+        }
+        if (!p.version) {
+          leftOptions.push({
+            id: 'markCompatibility',
+            label: 'Mark as Compatible',
+            onClick: () => p.onMarkCompatible()
+          });
+        }
+        leftOptions.push({
+          id: 'uploadScreen',
+          label: 'Upload Screenshot',
+          onClick: () => p.onUploadScreen()
+        });
+        if (deleteArg) {
+          leftOptions.push({
+            id: 'deleteScreen',
+            label: 'Delete Screenshot',
+            onClick: () => p.onDeleteScreen()
+          });
+        } else {
+          let refLeftOption = findIndex(leftOptions, opt => opt.id === 'deleteScreen');
+          pullAt(leftOptions, refLeftOption);
+        }
+      }
+      if (p.selectType && location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
+        leftOptions.push({
+          id: 'removeStored',
+          label: `${isOwnLocation ? location.isHidden ? 'Show In' : 'Hide From' : 'Remove From'} Storage`,
+          onClick: () => p.onRemoveStoredLocation()
+        });
+      }
       leftOptions.push({
-        id: 'removeStored',
-        label: `${isOwnLocation ? location.isHidden ? 'Show In' : 'Hide From' : 'Remove From'} Storage`,
-        onClick: () => p.onRemoveStoredLocation()
+        id: 'copyAddress',
+        label: 'Copy Galactic Address to Clipboard',
+        onClick: () => clipboard.writeText(location.translatedId)
+      });
+      leftOptions.push({
+        id: 'copyAddress',
+        label: 'Copy Universe Address to Clipboard',
+        onClick: () => clipboard.writeText(location.id)
       });
     }
-    leftOptions.push({
-      id: 'copyAddress',
-      label: 'Copy Galactic Address to Clipboard',
-      onClick: () => clipboard.writeText(location.translatedId)
-    });
-    leftOptions.push({
-      id: 'copyAddress',
-      label: 'Copy Universe Address to Clipboard',
-      onClick: () => clipboard.writeText(location.id)
-    });
 
     let visibleStyle = {
       background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
@@ -331,12 +383,12 @@ class LocationBox extends React.Component {
         {this.props.isVisible && !p.detailsOnly ? (
           <h3
           style={{
-              fontSize: name.length > 28 ? '14px' : '17.92px',
-              textAlign: 'center',
-              maxHeight: '23px',
-              color: location.playerPosition && !location.manuallyEntered ? 'inherit' : '#7fa0ff',
-              cursor: p.selectType ? 'default' : 'pointer'
-            }}
+            fontSize: name.length > 28 ? '14px' : '17.92px',
+            textAlign: 'center',
+            maxHeight: '23px',
+            color: (location.playerPosition || (location.positions && location.positions[0].playerPosition)) && !location.manuallyEntered ? 'inherit' : '#7fa0ff',
+            cursor: p.selectType ? 'default' : 'pointer'
+          }}
           onClick={() => state.set({selectedLocation: location, selectedGalaxy: location.galaxy})}>
             {name}
             {this.state.profile ?
@@ -348,31 +400,61 @@ class LocationBox extends React.Component {
         {this.props.isVisible && !p.detailsOnly ? (
           <div
           style={{
-              position: 'absolute',
-              left: '17px',
-              right: compact ? '143px' : 'initial',
-              top: '16px'
-            }}>
-            {leftOptions.length > 0 ?
-            <BasicDropdown
-            height={200}
-            icon="ellipsis horizontal"
-            showValue={null}
-            persist={p.edit}
-            options={leftOptions} /> : null}
-            {location.base ? (
-              <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
-                <img className="LocationBox__baseStyle" src={baseIcon} />
-              </span>
-            ) : null}
-            {isSpaceStation ? (
-              <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
-                <img className="LocationBox__baseStyle" src={spaceStationIcon} />
-              </span>
-            ) : null}
+            position: 'absolute',
+            left: '17px',
+            right: compact ? '143px' : 'initial',
+            top: '16px'
+          }}>
+          {leftOptions.length > 0 ?
+          <BasicDropdown
+          height={200}
+          icon="ellipsis horizontal"
+          showValue={null}
+          persist={p.edit || this.state.positionSelect}
+          options={leftOptions} /> : null}
+          {location.base ? (
+            <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+              <img className="LocationBox__baseStyle" src={baseIcon} />
+            </span>
+          ) : null}
+          {isSpaceStation ? (
+            <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+              <img className="LocationBox__baseStyle" src={spaceStationIcon} />
+            </span>
+          ) : null}
           </div>
         ) : null}
-        {p.edit && this.props.isVisible ? (
+        {this.state.positionEdit ?
+        <div className="LocationBox__PositionEditContainer">
+          <div className="ui segment LocationBox__uiSegmentEditStyle">
+              {map(location.positions, (position, i) => {
+                return (
+                  <div key={i} className="ui input" style={{width: '200px'}}>
+                  <div
+
+                  className="row">
+                    <input
+                    className="LocationBox__inputStyle"
+                    type="text"
+                    value={position.name}
+                    onChange={(e) => this.handlePositionNameChange(e, i)}
+                    maxLength={30}
+                    placeholder={`Location ${i + 1}`} />
+                  </div>
+                  </div>
+                );
+              })}
+
+          </div>
+          <div className="row">
+            <div className="col-xs-6">
+              <Button onClick={() => this.handlePositionSave()}>
+                {p.updating ? 'Updating...' : 'Update Location'}
+              </Button>
+            </div>
+          </div>
+        </div>
+        : p.edit && this.props.isVisible ? (
           <div>
             <div className="ui segment LocationBox__uiSegmentEditStyle">
               <div className="ui input" style={{width: '200px'}}>

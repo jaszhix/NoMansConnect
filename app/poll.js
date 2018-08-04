@@ -1,7 +1,7 @@
 import log from './log';
 const ps = require('win-ps');
 import state from './state';
-import {assignIn, uniqBy} from 'lodash';
+import {assignIn, uniqBy, isEqual} from 'lodash';
 
 import screenshot from 'capture';
 import * as utils from './utils';
@@ -10,7 +10,7 @@ import {handleSaveDataFailure, handleProtectedSession} from './dialog';
 
 
 let processData = (opts, saveData, location, refLocation, username, profile=null) => {
-  let {init, machineId, next} = opts;
+  let {init, machineId, NMSRunning, next} = opts;
   let {storedLocations} = state;
   let stateUpdate = {};
 
@@ -86,13 +86,19 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
   let upvote = refFav !== -1;
 
   screenshot(!init && NMSRunning && state.autoCapture, (image) => {
+    let currentPosition = {
+      name: '',
+      image: '',
+      playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
+      playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
+      shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
+      shipTransform: saveData.result.SpawnStateData.ShipTransformAt,
+    };
+    let isLocationUpdate = false;
     if (refLocation === -1) {
       assignIn(location, {
         username,
-        playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
-        playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
-        shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
-        shipTransform: saveData.result.SpawnStateData.ShipTransformAt,
+        positions: [currentPosition],
         galaxy: saveData.result.PlayerStateData.UniverseAddress.RealityIndex,
         distanceToCenter: Math.sqrt(Math.pow(location.VoxelX, 2) + Math.pow(location.VoxelY, 2) + Math.pow(location.VoxelZ, 2)) * 100,
         translatedX: utils.convertInteger(location.VoxelX, 'x'),
@@ -119,10 +125,45 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         });
         return;
       }
-      if (!location.playerPosition) {
+      if (!location.positions[0].playerPosition) {
         location.manuallyEntered = true;
       }
       storedLocations.push(location);
+    } else {
+      let existingLocation = storedLocations[refLocation];
+      if (existingLocation.positions) {
+        let refPosition = find(existingLocation.positions, (position) => {
+          return (
+            isEqual(position.playerPosition, currentPosition.playerPosition) &&
+            isEqual(position.playerTransform, currentPosition.playerTransform) &&
+            isEqual(position.shipPosition, currentPosition.shipPosition) &&
+            isEqual(position.shipTransform, currentPosition.shipTransform)
+          );
+        });
+        if (!refPosition) {
+          existingLocation.positions.push(currentPosition);
+          isLocationUpdate = true;
+        }
+      } else if (existingLocation.playerPosition) {
+        existingLocation.positions = [
+          {
+            name: '',
+            image: '',
+            playerPosition: existingLocation.playerPosition,
+            playerTransform: existingLocation.playerTransform,
+            shipPosition: existingLocation.shipPosition,
+            shipTransform: existingLocation.shipTransform
+          }
+        ];
+        delete existingLocation.playerPosition;
+        delete existingLocation.playerTransform;
+        delete existingLocation.shipPosition;
+        delete existingLocation.shipTransform;
+        isLocationUpdate = true;
+      }
+      if (isLocationUpdate) {
+        location = storedLocations[refLocation] = existingLocation;
+      }
     }
 
     // Detect player bases
@@ -210,7 +251,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       each(Record, (discovery, i) => {
         discovery.NMCID = utils.uaToObject(discovery.DD.UA).id;
       });
-      if (init || refLocation === -1) {
+      if (init || refLocation === -1 || isLocationUpdate) {
         // Discoveries can change regardless if the location is known
         utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
           machineId: state.machineId,
@@ -221,15 +262,30 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
             next(false);
           }
         }).catch(errorHandler);
-        if (!init) {
-          utils.ajax.post('/nmslocation/', {
+        if (!init || isLocationUpdate) {
+          let route = '/nmslocation/';
+          let method = 'post';
+          if (isLocationUpdate) {
+            method = 'put';
+            route += `${location.id}/`;
+          }
+          utils.ajax[method](route, {
             machineId: state.machineId,
-            username: location.username,
+            username: state.username,
             mode: state.mode,
             image: image,
             version: location.version,
             data: location
-          }).then(() => {
+          }).then((res) => {
+            if (isLocationUpdate) {
+              let {remoteLocations} = state;
+              let refRemote = findIndex(remoteLocations.results, (location) => location.id === res.data.id);
+              if (refRemote > -1) {
+                remoteLocations.results[refRemote].data = res.data.data;
+                state.set({remoteLocations}, () => next(false));
+                return;
+              }
+            }
             next(false);
           }).catch(errorHandler);
         }
@@ -241,7 +297,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
 }
 
 let pollSaveData;
-let getLastSave = (NMSRunning=false, opts) => {
+let getLastSave = (opts) => {
   let {mode, init, machineId} = opts;
   if (mode && mode !== state.mode) {
     state.mode = mode;
@@ -315,7 +371,8 @@ pollSaveData = (opts = {mode: state.mode, init: false, machineId: state.machineI
   } else {
     ps.snapshot(['ProcessName']).then((list) => {
       let NMSRunning = findIndex(list, proc => proc.ProcessName === 'NMS.exe') > -1;
-      getLastSave(NMSRunning, opts);
+      opts.NMSRunning = NMSRunning;
+      getLastSave(opts);
     }).catch((err) => {
       log.error(`Unable to use win-ps: ${err}`);
       getLastSave(false, opts);

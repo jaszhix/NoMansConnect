@@ -550,15 +550,16 @@ export class BasicDropdown extends React.Component {
     this.willUnmount = true;
   }
   handleOptionClick = (e, option) => {
-    if (this.props.persist) {
+    let persist = this.props.persist || option.id === 'teleport';
+    if (persist) {
       e.stopPropagation();
     }
     if (typeof option.id === 'number') {
       state.set({selectedGalaxy: option.id});
     } else {
-      option.onClick(option.id);
+      option.onClick(option.id, e);
     }
-    this.setState({open: this.props.persist});
+    this.setState({open: persist});
   }
   handleClickOutside = () => {
     if (this.state.open && !this.willUnmount) {
