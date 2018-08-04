@@ -1,7 +1,7 @@
 import state from './state';
 import React from 'react';
-import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend} from 'recharts';
-import {isArray, cloneDeep, uniqBy, filter, defer, delay, isEqual} from 'lodash';
+import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend, ReferenceArea} from 'recharts';
+import {isArray, uniqBy, filter, defer, delay, isEqual, last} from 'lodash';
 import v from 'vquery';
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
@@ -96,15 +96,28 @@ class ThreeDimScatterChart extends React.Component {
       baseLocations: [],
       ps4Locations: [],
       center: [{
-        x: 2047,
-        y: 2047,
+        x: 2048,
+        y: 2048,
         z: 127
       }],
       size: 480,
       zRange: [14, 32],
       ticks: [0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096],
-      range: [0, 4096]
+      range: [0, 4096],
+      xDomain: [0, 4096],
+      yDomain: [0, 4096],
+      zoom: 0,
+      zoomHistory: [],
+      startCoordinates: null,
+      scale: 'linear'
     };
+    if (process.env.NODE_ENV === 'development') {
+      let originalSetState = this.setState;
+      this.setState = function(obj, cb) {
+        console.log('__MAP__: ', obj)
+        originalSetState.call(this, ...arguments);
+      };
+    }
     each(props.show, (legendItem, key) => {
       if (state.defaultLegendKeys.indexOf(key) > -1) {
         return;
@@ -121,7 +134,16 @@ class ThreeDimScatterChart extends React.Component {
       right: 20,
       bottom: 20
     };
-    this.tickFormatter = () => '';
+    this.xTickFormatter = (e) => {
+      if (!this.state.zoom) return '';
+      return (e - 2047);
+    };
+    this.yTickFormatter = (e) => {
+      if (!this.state.zoom) return '';
+      return -(e - 2047);
+    };
+    this.allowZoom = true;
+    this.dragCount = 0;
   }
   componentDidMount() {
     this.connections = [
@@ -209,6 +231,7 @@ class ThreeDimScatterChart extends React.Component {
     return locations;
   }
   handlePostMessage = () => {
+    if (this.dragging) return;
     if (!state.navLoad) {
       state.set({navLoad: true});
     }
@@ -229,6 +252,7 @@ class ThreeDimScatterChart extends React.Component {
     });
   }
   handlePostMessageSize = () => {
+    if (this.dragging) return;
     window.mapWorker2.postMessage({
       selectOnly: false,
       p: {
@@ -244,6 +268,7 @@ class ThreeDimScatterChart extends React.Component {
     });
   }
   handlePostMessageSelect = () => {
+    if (this.dragging) return;
     window.mapWorker2.postMessage({
       p: {
         selectedLocation: state.selectedLocation,
@@ -334,6 +359,7 @@ class ThreeDimScatterChart extends React.Component {
         search: `Sector ${hexSector}`
       };
     }
+
     state.set(stateUpdate);
   }
   handleUpdateLegend = () => {
@@ -356,9 +382,84 @@ class ThreeDimScatterChart extends React.Component {
       this.handleUpdateLegend();
     });
   }
+  handleMouseDown = (e) => {
+    let {zoomHistory, zoom} = this.state;
+    if (window.__mouseDown === 2) {
+      zoomHistory.pop();
+      let [xDomain, yDomain] = zoomHistory.length > 0 ? last(zoomHistory) : [[0, 4096], [0, 4096]];
+      this.setState({
+        startCoordinates: null,
+        endCoordinates: null,
+        xDomain,
+        yDomain,
+        zoom: zoom <= 0 ? 0 : zoom - 1
+      });
+      return;
+    }
+    if (!e) return;
+
+    let {xValue, yValue} = e;
+    this.setState({startCoordinates: [xValue, yValue]});
+  }
+  handleMouseUp = () => {
+    if (!this.allowZoom || window.__mouseDown === 2 || this.dragCount < 2) {
+      this.dragCount = 0;
+      return;
+    }
+
+    let {zoom, xDomain, yDomain, range, ticks, startCoordinates, endCoordinates, zoomHistory} = this.state;
+    if (!startCoordinates || !endCoordinates) return;
+
+    ++zoom;
+    range = [0, 4096 * zoom]
+
+    xDomain = [startCoordinates[0], endCoordinates[0]]
+    yDomain = [endCoordinates[1], startCoordinates[1]];
+    startCoordinates = null;
+    endCoordinates = null;
+    zoomHistory.push([xDomain, yDomain])
+
+    this.setState({xDomain, yDomain, zoom, zoomHistory, ticks, startCoordinates, endCoordinates, range}, () => {
+      this.dragging = false;
+      this.dragCount = 0;
+    });
+  }
+  handleMouseMove = (e) => {
+    if (!e || !this.state.startCoordinates || !window.__mouseDown) return;
+
+    ++this.dragCount;
+
+    let now = Date.now();
+    if ((now - this.lastMove) < 60) return;
+    this.lastMove = now;
+
+    this.dragging = true;
+    let {xValue, yValue} = e;
+    this.setState({endCoordinates: [xValue, yValue]});
+  }
+  handleDotMouseEnter = () => {
+    this.allowZoom = false;
+  }
+  handleDotMouseLeave = () => {
+    this.allowZoom = true;
+  }
   render = () => {
+    const {
+      size,
+      scale,
+      ticks,
+      xDomain,
+      yDomain,
+      range,
+      zRange,
+      startCoordinates,
+      endCoordinates,
+      zoom
+    } = this.state
+    const {show, mapLines} = this.props;
+    let isZoom = zoom > 0;
     let legends = [];
-    each(this.props.show, (obj, label) => {
+    each(show, (obj, label) => {
       legends.push(
         <Scatter
         key={label}
@@ -366,20 +467,65 @@ class ThreeDimScatterChart extends React.Component {
         data={this.state[obj.listKey]}
         fill={obj.color}
         shape="circle"
-        line={label === 'Explored' ? this.props.mapLines : null}
+        line={label === 'Explored' ? mapLines : null}
+        lineType="fitting"
         isAnimationActive={false}
-        onClick={nonSelectable.indexOf(label) === -1 ? this.handleSelect : null} />
+        animationDuration={100}
+        animationEasing="linear"
+        onClick={nonSelectable.indexOf(label) === -1 ? this.handleSelect : null}
+        onMouseEnter={this.handleDotMouseEnter}
+        onMouseLeave={this.handleDotMouseLeave} />
       );
     });
+
     return (
-      <ScatterChart width={this.state.size} height={this.state.size} margin={this.chartMargin}>
-        <XAxis tickLine={false} tickFormatter={this.tickFormatter} ticks={this.state.ticks} domain={[0, 4096]} type="number" dataKey="x" range={this.state.range} name="X" label="X"/>
-        <YAxis tickLine={false} tickFormatter={this.tickFormatter} ticks={this.state.ticks} domain={[0, 4096]} type="number" dataKey="y" range={this.state.range} name="Z" label="Z"/>
-        <ZAxis dataKey="z" range={this.state.zRange} name="Y" />
-        <CartesianGrid />
-        <Tooltip cursor={this.tooltipCursor} content={<TooltipChild />} selectedLocation={this.props.selectedLocation}/>
-        <Legend align="right" wrapperStyle={this.legendStyle} iconSize={12} onClick={this.handleLegendClick}/>
+      <ScatterChart
+      width={size}
+      height={size}
+      margin={this.chartMargin}
+      onMouseDown={this.handleMouseDown}
+      onMouseMove={this.handleMouseMove}
+      onMouseUp={this.handleMouseUp}>
+        <XAxis
+        scale={scale}
+        allowDataOverflow={isZoom}
+        tickLine={isZoom}
+        tickFormatter={this.xTickFormatter}
+        ticks={ticks}
+        domain={xDomain}
+        type="number"
+        dataKey="x"
+        range={range}
+        name="X"
+        label="X" />
+        <YAxis
+        scale={scale}
+        allowDataOverflow={isZoom}
+        tickLine={isZoom}
+        tickFormatter={this.yTickFormatter}
+        ticks={ticks}
+        domain={yDomain}
+        type="number"
+        dataKey="y"
+        range={range}
+        name="Z"
+        label="Z" />
+        <ZAxis allowDataOverflow={isZoom} dataKey="z" range={zRange} name="Y" />
+        <CartesianGrid strokeDasharray={`${zoom} ${zoom}`} />
+        <Tooltip cursor={this.tooltipCursor} content={<TooltipChild />} selectedLocation={this.props.selectedLocation} />
+        <Legend align="right" wrapperStyle={this.legendStyle} iconSize={12} onClick={this.handleLegendClick} />
         {map(legends, (l) => l)}
+        {startCoordinates && endCoordinates ?
+        <ReferenceArea
+        y1={startCoordinates[1]}
+        y2={endCoordinates[1]}
+        x1={startCoordinates[0]}
+        x2={endCoordinates[0]}
+        stroke="#FFFFFF"
+        strokeOpacity={0.3}
+        strokeWidth={1}
+        fill="#FFFFFF"
+        fillOpacity={0.2} /> : null}
       </ScatterChart>
     );
   }

@@ -22,3 +22,10 @@ if (module.hot) {
     );
   });
 }
+
+document.body.addEventListener('mousedown', function(e) {
+  window.__mouseDown = e.buttons;
+});
+document.body.addEventListener('mouseup', function() {
+  window.__mouseDown = 0;
+});

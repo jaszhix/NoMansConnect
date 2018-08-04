@@ -81,8 +81,8 @@ onmessage = function(e) {
   }
   let stateUpdate = {};
   let center = e.data.p.show.Center.value ? [{
-    x: 2047,
-    y: 2047,
+    x: 2048,
+    y: 2048,
     z: 127
   }] : [];
 
@@ -111,7 +111,7 @@ onmessage = function(e) {
       });
     }
     assignIn(stateUpdate, {
-      selectedLocation: selectedLocation
+      selectedLocation
     });
   }
 
@@ -192,8 +192,6 @@ onmessage = function(e) {
 
   if (e.data.opts.size) {
     let zRange = [14, 32];
-    let ticks = [0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2304, 2560, 2816, 3072, 3328, 3584, 3840, 4096];
-
     let remoteLocationsWidth;
     if (e.data.p.remoteLocationsColumns === 1) {
       remoteLocationsWidth = 441;
@@ -208,10 +206,9 @@ onmessage = function(e) {
     size = size > maxSize ? maxSize : size < 260 ? 260 : size;
 
     assignIn(stateUpdate, {
-      size: size,
-      center: center,
-      zRange: zRange,
-      ticks: ticks
+      size,
+      center,
+      zRange
     });
   }
 
