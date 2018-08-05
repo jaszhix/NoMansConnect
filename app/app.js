@@ -986,10 +986,7 @@ class App extends React.Component {
             data-tip={utils.tip('Manually Register Location')}>
               <i className="location arrow icon" />
             </a>
-            <DropdownMenu
-            s={s}
-            onSync={this.handleSync}
-            onUsernameOverride={this.handleSetUsernameOverride} />
+            <DropdownMenu s={s} />
           </div>
           <div
           style={this.titleBarControlsStyle}

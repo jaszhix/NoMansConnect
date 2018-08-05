@@ -1,3 +1,11 @@
+# 1.3.1
+
+  * Fixed an issue preventing the app from starting for Windows 7 and Linux users.
+  * Fixed all new locations showing as PS4 locations on the map.
+  * Fixed offline mode.
+  * Added a log modal that displays the contents of NMC.log. Accessible from the tool menu.
+  * Moved all settings menu items in the tool menu to their own modal.
+
 # 1.3.0
 
   * Improved sorting and filtration options for stored locations.
