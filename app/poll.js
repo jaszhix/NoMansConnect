@@ -52,8 +52,9 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       }
     });
 
-    if (remainingFavorites.length > 0) {
-      console.log('REMAINING FAVORITES: ', remainingFavorites)
+    let favoritesLen = remainingFavorites.length;
+    if (favoritesLen > 0) {
+      log.error(`Fetching ${favoritesLen} favorites from the server`);
       utils.ajax.post('/nmsfavoritesync/', {
         machineId: state.machineId,
         username,
@@ -303,7 +304,7 @@ let getLastSave = (opts) => {
     state.mode = mode;
   }
 
-  console.log('SAVE DIRECTORY: ', state.saveDirectory)
+  log.error('SAVE DIRECTORY: ', state.saveDirectory)
 
   utils.getLastGameModeSave(state.saveDirectory, state.ps4User, log).then((saveData) => {
     let refLocation, location, username;
@@ -319,7 +320,7 @@ let getLastSave = (opts) => {
       username = state.username;
     }
 
-    console.log('USERNAME: ', username)
+    log.error('USERNAME: ', username)
 
     if (state.offline) {
       processData(opts, saveData, location, refLocation, username);

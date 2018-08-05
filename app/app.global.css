@@ -38865,6 +38865,14 @@ Friend requests
   z-index: 1002 !important;
 }
 
+.LogModal__container {
+  overflow-y: auto;
+  overflow-x: none;
+}
+.LogModal__button {
+  width: 40px !important;
+}
+
 /*
 Modals
 */

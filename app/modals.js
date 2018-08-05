@@ -1,3 +1,4 @@
+import {clipboard, remote} from 'electron';
 import state from './state';
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -726,3 +727,59 @@ export class BaseRestorationModal extends React.Component {
 };
 
 BaseRestorationModal = onClickOutside(BaseRestorationModal);
+export class LogModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      log: null,
+      height: 0
+    };
+  }
+  componentDidMount() {
+    let fs = require('fs');
+    fs.readFile(`${remote.app.getPath('userData')}/NMC.log`, {encoding: 'utf-8'}, (err, log) => {
+      this.setState({log});
+      console.log('Log loaded...')
+    });
+  }
+  componentWillUnmount = () => {
+    cleanUp(this);
+  }
+  handleClickOutside = () => {
+    state.set({displayLog: null});
+  }
+  handleCopy = () => clipboard.writeText(this.state.log)
+  handleResize = () => {
+    this.setState({height: this.ref.clientHeight});
+  }
+  getRef = (ref) => {
+    if (!this.ref) {
+      this.ref = ref;
+      this.setState({height: ref.clientHeight});
+      ref.addEventListener('resize', this.handleResize);
+    }
+  }
+  render() {
+    return (
+      <div ref={this.getRef} className="ui fullscreen modal active modal__full ImageModal__root">
+        <div className="ui segment LogModal__container" style={{maxHeight: `${this.state.height - 54}px`}}>
+          {this.state.log ?
+          map(this.state.log.split(/[\r\n$]+/), (line, i) => {
+            return <div key={i}>{line}</div>
+          })
+          :
+          <div>Loading, please wait...</div>}
+        </div>
+        {this.state.log ?
+        <div className="LogModal__button">
+          <Button
+          onClick={this.handleCopy}>
+            Copy
+          </Button>
+        </div> : null}
+      </div>
+    );
+  }
+};
+
+LogModal = onClickOutside(LogModal);

@@ -20,6 +20,17 @@ import baseIcon from './assets/images/base_icon.png';
 
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDropdown} from './dropdowns';
 import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification, ProfileModal, FriendRequestModal, BaseRestorationModal} from './modals';
+import {
+  ImageModal,
+  UsernameOverrideModal,
+  LocationRegistrationModal,
+  RecoveryModal,
+  Notification,
+  ProfileModal,
+  FriendRequestModal,
+  BaseRestorationModal,
+  LogModal,
+} from './modals';
 import Search from './search';
 import Container from './container';
 
@@ -504,8 +515,7 @@ class App extends React.Component {
     let command = `${process.platform !== 'win32' ? 'wine ' : ''}${this.saveTool} encrypt -g ${slot} -f ${this.saveJSON} --save-dir "${absoluteSaveDir}"`;
     console.log(command);
     utils.exc(command, (res) => {
-      console.log(res);
-      console.log('sucess');
+      log.error('Successfully signed save data with nmssavetool')
     }).catch((e) => {
       if (process.platform !== 'win32') {
         log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?')
@@ -536,8 +546,9 @@ class App extends React.Component {
       }
       let refIndex = findIndex(PersistentPlayerBases, (base) => base.Name === confirmed.Name);
       let newBase = PersistentPlayerBases[refIndex];
-
       let storedBase = cloneDeep(base);
+
+      log.error(`Restoring base ${base.Name} over ${confirmed.Name}`);
 
       // Base conversion algorithm by monkeyman192
 
@@ -716,8 +727,8 @@ class App extends React.Component {
     });
   }
   setWaypoint = (location) => {
-    console.log('setWaypoint', location);
     state.set({navLoad: true});//.result.PlayerStateData.MarkerStack
+    log.error('Setting waypoint:', location.id);
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
       let {PlanetIndex, SolarSystemIndex, VoxelX, VoxelY, VoxelZ} = location;
       let waypoint = {
@@ -741,7 +752,6 @@ class App extends React.Component {
       } else {
         saveData.result.GameKnowledgeData.Waypoints.push(waypoint);
       }
-      console.log('setWaypoint', saveData.result.GameKnowledgeData.Waypoints)
 
       fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
         if (err) {
@@ -753,7 +763,7 @@ class App extends React.Component {
       });
     }).catch((err) => {
       log.error(err.message);
-      log.error(`Unable to teleport to location: ${err}`);
+      log.error(`Unable to set waypoint for location: ${err}`);
     })
   }
   pollSaveData = (mode=this.state.mode, init=false, machineId=this.state.machineId) => {
@@ -1048,6 +1058,7 @@ class App extends React.Component {
         <BaseRestorationModal
         baseData={this.state.displayBaseRestoration}
         height={this.state.height} /> : null}
+        {this.state.displayLog ? <LogModal  /> : null}
         <ReactTooltip
         className="nmcTip"
         globalEventOff="click mouseleave"
