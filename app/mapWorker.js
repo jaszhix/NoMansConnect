@@ -177,13 +177,17 @@ onmessage = function(e) {
           if (e.data.p.show.Explored.value) {
             stateUpdate.locations.push(obj);
           }
-        } else if (location.username !== e.data.p.username && (!location.data.playerPosition || location.data.manuallyEntered)) {
-          if (e.data.p.show.PS4.value) {
-            stateUpdate.ps4Locations.push(obj);
-          }
-        } else if (location.username !== e.data.p.username) {
+        } else if (location.username !== e.data.p.username
+          && (location.data.playerPosition
+            || (location.data.positions
+              && location.data.positions[0].playerPosition)
+              && !location.data.manuallyEntered)) {
           if (e.data.p.show.Shared.value) {
             stateUpdate.remoteLocations.push(obj);
+          }
+        } else {
+          if (e.data.p.show.PS4.value) {
+            stateUpdate.ps4Locations.push(obj);
           }
         }
       });
