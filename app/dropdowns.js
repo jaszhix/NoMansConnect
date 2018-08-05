@@ -473,7 +473,7 @@ export class NotificationDropdown extends React.Component {
   componentWillUnmount = () => {
     this.willUnmount = true;
   }
-  handleOptionClick = (e, option) => {
+  handleOptionClick = (option) => {
     state.set({displayFriendRequest: option});
   }
   handleClickOutside = () => {
@@ -526,14 +526,14 @@ export class NotificationDropdown extends React.Component {
                     <div
                     key={i}
                     className="item"
-                    onClick={(e) => this.handleOptionClick(e, option)}>
+                    onClick={() => this.handleOptionClick(option)}>
                       {option.content}
                     </div>
                   </div>
                   <div className="ui two wide column right floated">
                     <div
                     style={notificationTrashIconContainerStyle}
-                    onClick={(e) => this.handleDelete(e, option)}
+                    onClick={() => this.handleDelete(option)}
                     data-place="bottom"
                     data-tip={utils.tip('Remove Notification')}>
                       {this.state.hover === i ? <i className="trash outline icon" /> : null}
