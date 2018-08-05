@@ -372,14 +372,14 @@ class Container extends React.Component {
       saveVersion,
       height,
       width,
-      installing,
       ps4User,
       configDir,
       mapLoading,
       map3d,
       mapDrawDistance,
       mapLines,
-      show
+      show,
+      navLoad
     } = p.s;
 
     let isOwnLocation = findIndex(storedLocations, (location) => location.id === (selectedLocation ? selectedLocation.id : null)) > -1;
@@ -572,7 +572,7 @@ class Container extends React.Component {
               isOwnLocation={isOwnLocation}
               isVisible={true}
               location={selectedLocation}
-              installing={installing}
+              navLoad={navLoad}
               updating={this.state.updating}
               edit={this.state.edit}
               favorites={favorites}

@@ -552,7 +552,6 @@ export class ProfileModal extends React.Component {
                           isOwnLocation={false}
                           isVisible={true}
                           location={discovery.location.data}
-                          installing={false}
                           updating={false}
                           edit={false}
                           favorites={this.props.favorites}

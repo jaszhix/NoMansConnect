@@ -73,6 +73,11 @@ class LocationBox extends React.Component {
         }
       })
     ];
+    if (props.selectType) {
+      this.connections.push(
+        state.connect({positionSelect: () => this.setState({positionSelect: !this.state.positionSelect})})
+      );
+    }
   }
   componentDidMount() {
     this.getImage(this.props);
@@ -281,7 +286,7 @@ class LocationBox extends React.Component {
         leftOptions.push({
           id: 'teleport',
           tooltip: saveFileInfoTip,
-          label: (p.selectType && p.installing && p.installing === `tselected`) || (p.i && p.installing === `t${p.i}`) ? 'Working...' : 'Teleport To...',
+          label: p.navLoad ? 'Working...' : 'Teleport To...',
           onClick: () => this.setState({positionSelect: true})
         });
         leftOptions.push({

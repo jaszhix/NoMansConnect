@@ -89,6 +89,7 @@ const state = initStore({
   selectedLocation: null,
   username: 'Explorer',
   profile: null,
+  displayLog: null,
   displayProfile: null,
   displayFriendRequest: null,
   displayBaseRestoration: null,
@@ -151,7 +152,6 @@ const state = initStore({
   error: '',
   closing: false,
   navLoad: false,
-  installing: false,
   settingsKeys: [
     'newsId',
     'maximized',

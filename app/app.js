@@ -624,7 +624,7 @@ class App extends React.Component {
   }
   handleTeleport = (location, i, action = null, n = null, position = null) => {
     const _location = cloneDeep(location);
-    state.set({installing: `t${i}`, navLoad: true});
+    state.set({navLoad: true});
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
 
       if (location.data) {
@@ -694,7 +694,8 @@ class App extends React.Component {
         this.signSaveData(saveData.slot);
         let refStoredLocation = findIndex(this.state.storedLocations, location => location.id === _location.id);
         if (refStoredLocation !== -1) {
-          state.set({installing: false});
+          state.set({navLoad: false});
+          state.trigger('positionSelect');
           return;
         }
         utils.ajax.post('/nmslocation/', {
@@ -712,23 +713,26 @@ class App extends React.Component {
 
           state.set({
             navLoad: false,
-            installing: false,
             currentLocation: _location.id,
             remoteLocations: this.state.remoteLocations
           });
+          state.trigger('positionSelect');
         }).catch((err) => {
           log.error(`Unable to send teleport stat to server: ${err}`);
-          state.set({installing: false, navLoad: false});
+          state.set({navLoad: false});
+          state.trigger('positionSelect');
         });
       });
     }).catch((err) => {
       log.error(err.message);
       log.error(`Unable to teleport to location: ${err}`);
+      state.set({navLoad: false});
+      state.trigger('positionSelect');
     });
   }
   setWaypoint = (location) => {
-    state.set({navLoad: true});//.result.PlayerStateData.MarkerStack
     log.error('Setting waypoint:', location.id);
+    state.set({navLoad: true});
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
       let {PlanetIndex, SolarSystemIndex, VoxelX, VoxelY, VoxelZ} = location;
       let waypoint = {
