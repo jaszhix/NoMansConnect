@@ -365,13 +365,13 @@ pollSaveData = (opts = {mode: state.mode, init: false, machineId: state.machineI
     state.set({usernameOverride: true});
     return;
   }
+  opts.NMSRunning = false;
   if (process.platform !== 'win32' || parseFloat(state.winVersion) <= 6.1) {
-    log.error(`Skipping process scan...`)
+    log.error(`Skipping process scan...`);
     getLastSave(false, opts);
   } else {
     ps.snapshot(['ProcessName']).then((list) => {
-      let NMSRunning = findIndex(list, proc => proc.ProcessName === 'NMS.exe') > -1;
-      opts.NMSRunning = NMSRunning;
+      opts.NMSRunning = findIndex(list, proc => proc.ProcessName === 'NMS.exe') > -1;
       getLastSave(opts);
     }).catch((err) => {
       log.error(`Unable to use win-ps: ${err}`);
