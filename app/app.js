@@ -512,7 +512,7 @@ class App extends React.Component {
     let absoluteSaveDir = this.state.saveFileName.split(utils.dirSep);
     pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
     absoluteSaveDir = absoluteSaveDir.join(utils.dirSep);
-    let command = `${process.platform !== 'win32' ? 'wine ' : ''}${this.saveTool} encrypt -g ${slot} -f ${this.saveJSON} --save-dir "${absoluteSaveDir}"`;
+    let command = `${process.platform !== 'win32' ? 'wine ' : ''}"${this.saveTool}" encrypt -g ${slot} -f "${this.saveJSON}" --save-dir "${absoluteSaveDir}"`;
     console.log(command);
     utils.exc(command, (res) => {
       log.error('Successfully signed save data with nmssavetool')
