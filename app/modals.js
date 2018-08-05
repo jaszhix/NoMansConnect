@@ -16,6 +16,8 @@ import Button from './buttons';
 import LocationBox from './locationBox';
 import Item from './item';
 
+const {dialog} = remote;
+
 export class ImageModal extends React.Component {
   constructor(props) {
     super(props);
