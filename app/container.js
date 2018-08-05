@@ -12,6 +12,8 @@ import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
 import RemoteLocations from './remoteLocations';
 
+const empty = []
+
 class Container extends React.Component {
   constructor(props) {
     super(props);
@@ -561,7 +563,7 @@ class Container extends React.Component {
               onRestart={handleRestart}
               onSearch={p.onSearch}
               searchCache={searchCache.results}
-              friends={profile.friends} /> : null}
+              friends={profile ? profile.friends : empty} /> : null}
               {selectedLocation ?
               <LocationBox
               name={selectedLocation.name}

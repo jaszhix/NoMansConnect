@@ -252,7 +252,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       each(Record, (discovery, i) => {
         discovery.NMCID = utils.uaToObject(discovery.DD.UA).id;
       });
-      if (init || refLocation === -1 || isLocationUpdate) {
+      if (!state.offline && (init || refLocation === -1 || isLocationUpdate)) {
         // Discoveries can change regardless if the location is known
         utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
           machineId: state.machineId,

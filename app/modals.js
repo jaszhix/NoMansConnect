@@ -958,7 +958,7 @@ export class SettingsModal extends React.Component {
           onValueClick={this.props.onUsernameOverride}
           dataTip={utils.tip('Changes your username. This will update all of your locations. You must disable username protection before setting this.')}
           label="Override Username"
-          value={p.s.profile.username} /> : null}
+          value={p.s.username} /> : null}
           <Item
           className="Item__hover"
           onValueClick={handleSetWallpaper}
