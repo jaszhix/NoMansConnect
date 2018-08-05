@@ -38803,6 +38803,9 @@ Item
 .Item__descriptionStyle {
   margin-bottom: 8px;
 }
+.Item__hover:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
 
 .BasicDropdown__root {
   font-size: 16px;
@@ -38873,6 +38876,15 @@ Friend requests
   width: 40px !important;
 }
 
+.SettingsModal__child {
+  margin-top: 0px !important;
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
+.SettingsModal__childHeader {
+  margin-top: 8px !important;
+}
+
 /*
 Modals
 */
@@ -38918,6 +38930,16 @@ Modals
   box-shadow: none !important;
   border: 1px solid #DA2600 !important;
   max-width: 75% !important;
+}
+
+.modal__large {
+  background: rgb(23, 26, 22) !important;
+  border-top: 2px solid #95220E !important;
+  position: fixed !important;
+  z-index: 1000 !important;
+  -webkit-transform-origin: 50% 25% !important;
+  box-shadow: none !important;
+  border: 1px solid #DA2600 !important;
 }
 
 .modal__error {

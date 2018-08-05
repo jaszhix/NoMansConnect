@@ -278,88 +278,20 @@ You should have received a copy of the GNU General Public License along with thi
       `
     });
   }
-  handleSync = () => {
-    this.props.onSync();
-  }
-  handleAutoCapture = (e) => {
-    e.stopPropagation();
-    state.set({autoCapture: !this.props.s.autoCapture});
-  }
-  handleResetRemoteCache = () => {
-    window.jsonWorker.postMessage({
-      method: 'remove',
-      key: 'remoteLocations'
-    });
-
-    handleRestart();
-  }
-  handleUsernameProtection = () => {
-    let helpMessage = 'When you protect your username, the app will associate your computer with your username to prevent impersonation. If you plan on using the app on another computer, you will need to disable protection before switching.';
-    if (this.props.s.profile.protected) {
-      helpMessage = 'Are you sure you want to unprotect your username?'
-    }
-    dialog.showMessageBox({
-      title: 'Important Information',
-      message: helpMessage,
-      buttons: ['Cancel', `${this.props.s.profile.protected ? 'Unp' : 'P'}rotect Username`]
-    }, result=>{
-      if (result === 1) {
-        utils.ajax.post('/nmsprofile/', {
-          username: this.props.s.username,
-          machineId: this.props.s.machineId,
-          protected: !this.props.s.profile.protected
-        }).then(()=>{
-          this.props.s.profile.protected = !this.props.s.profile.protected;
-          state.set({profile: this.props.s.profile});
-        }).catch((err)=>{
-          log.error(`Error enabling username protection: ${err}`);
-        });
-      } else {
-        return;
-      }
-    });
-  }
-  handleSetEmail = () => {
-    state.set({setEmail: true});
-  }
-  handlePlatformToggle = () => {
-    state.set({ps4User: !this.props.s.ps4User}, handleRestart);
-  }
-  handleModeSwitch = (mode) => {
-    state.set({mode: mode});
-  }
-  handlePollRate = (e) => {
-    e.stopPropagation();
-    let rate;
-    if (this.props.s.pollRate === 45000) {
-      rate = 60000;
-    } else if (this.props.s.pollRate === 60000) {
-      rate = 90000;
-    } else {
-      rate = 45000;
-    }
-    state.set({pollRate: rate});
-  }
   handleSupport = () => {
     openExternal('https://neuropuff.com/static/donate.html');
   }
   handleBugReport = () => {
     openExternal('https://github.com/jaszhix/NoMansConnect/issues');
   }
+  handleLog = () => state.set({displayLog: true})
   handleToggleOpen = () => {
     ReactTooltip.hide();
     this.setState({open: !this.state.open});
   }
-  handleOfflineModeToggle = (e) => {
-    e.stopPropagation();
-    state.set({
-      title: `${state.updateAvailable ? 'OLD' : 'NO'} MAN'S ${!this.props.s.offline ? 'DIS' : ''}CONNECT`,
-      offline: !this.props.s.offline
-    });
-  }
+  handleSettings = () => state.set({displaySettings: true})
   render() {
     var p = this.props;
-    let modes = ['permadeath', 'survival', 'normal', 'creative'];
     return (
       <div
       style={noDragStyle}
@@ -372,115 +304,12 @@ You should have received a copy of the GNU General Public License along with thi
         <div
         style={menuContainerStyle}
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
-          {!p.s.ps4User ? map(modes, (mode, i)=>{
-            return (
-              <div
-              key={i}
-              className={`item${p.s.mode === mode ? ' selected' : ''}`}
-              onClick={() => this.handleModeSwitch(mode)}
-              data-place="left"
-              data-tip={utils.tip('Controls which save file is loaded and saved.')}>
-                {upperFirst(mode)}
-              </div>
-            );
-          }) : null}
-          {!p.s.ps4User ? <div className="divider" /> : null}
-          {!p.s.ps4User && !p.s.offline ?
           <div
           className="item"
-          onClick={this.handleAutoCapture}
+          onClick={this.handleSettings}
           data-place="left"
-          data-tip={utils.tip('Automatically grabs your screen when NMS is running and the game is saved. Only works when NMS is in window mode.')}>
-            Screenshots: {p.s.autoCapture ? 'Auto' : 'Manual'}
-          </div> : null}
-          {!p.s.ps4User ? <div className="divider" /> : null}
-          <div
-          className="item"
-          onClick={this.handlePlatformToggle}
-          data-place="left"
-          data-tip={utils.tip('Select which platform you play NMS.')}>
-            {`Platform: ${p.s.ps4User ? 'PS4' : 'PC'}`}
-          </div>
-          {!p.s.ps4User ?
-          <div
-          className="item"
-          onClick={handleSelectInstallDirectory}
-          data-place="left"
-          data-tip={utils.tip('Optional. Select the location NMS is installed in. This is used to associate your mods with a location, so other players can see a location which may not load properly for them.')}>
-            Select NMS Install Directory
-          </div> : null}
-          {!p.s.ps4User ?
-          <div
-          className="item"
-          onClick={handleSelectSaveDirectory}
-          data-place="left"
-          data-tip={utils.tip('Required. Select the location the save files are in.')}>
-            Select NMS Save Directory
-          </div> : null}
-          {!p.s.offline ?
-          <div
-          className="item"
-          onClick={this.handleSync}
-          data-place="left"
-          data-tip={utils.tip('Downloads stored locations belonging to you, that are available on the server, and uploads locations missing on the server.')}>
-            Sync Locations
-          </div> : null}
-          <div
-          className="item"
-          onClick={this.handleResetRemoteCache}
-          data-place="left"
-          data-tip={utils.tip('This clears the remote locations list that is stored locally in Roaming/NoMansConnect.')}>
-            Reset Remote Cache
-          </div>
-          {!p.s.offline ?
-          <div
-          className="item"
-          onClick={this.handlePollRate}
-          data-place="left"
-          data-tip={utils.tip('Controls how often the client will check the server for new locations. If you experience performance issues, consider increasing this value.')}>
-            {`Polling Rate: ${p.s.pollRate / 1000} Seconds`}
-          </div> : null}
-          {p.s.profile ?
-          <div
-          className={`item${!p.s.profile.email ? ' item-disabled' : ''}`}
-          onClick={p.s.profile.email ? this.handleUsernameProtection : null}
-          data-place="left"
-          data-tip={
-            p.s.profile.email ?
-            utils.tip('Highly recommended! Anyone can claim your username and impersonate you if this is not enabled. This associates your username with your Windows installation\'s cryptographic signature, so be sure to disable this when switching computers, upgrading hardware, or reinstalling Windows.')
-            :
-            utils.tip('Please associate an email address with your profile in order to use username protection.')}>
-            {`Username Protection: ${p.s.profile.protected ? 'On' : 'Off'}`}
-          </div> : null}
-          {p.s.profile ?
-          <div
-          className="item"
-          onClick={this.handleSetEmail}
-          data-place="left"
-          data-tip={utils.tip(`Incase you get locked out of your profile, setting a recovery email can assist in unprotecting your username, when enabled. ${p.s.profile.email ? ' Current recovery email: ' + p.s.profile.email : ''}`)}>
-            Set Recovery Email
-          </div> : null}
-          {!p.s.offline ?
-          <div
-          className="item"
-          onClick={this.props.onUsernameOverride}
-          data-place="left"
-          data-tip={utils.tip('Changes your username. This will update all of your locations. You must disable username protection before setting this.')}>
-            Override Username
-          </div> : null}
-          <div
-          className="item"
-          onClick={handleSetWallpaper}
-          data-place="left"
-          data-tip={utils.tip('Changes the NMC background.')}>
-            {p.s.wallpaper ? 'Reset Wallpaper' : 'Set Wallpaper'}
-          </div>
-          <div
-          className="item"
-          onClick={this.handleOfflineModeToggle}
-          data-place="left"
-          data-tip={utils.tip(`Prevents NMC from making network requests to the server, and attempts to keep most features in a functional state.`)}>
-            {`Offline Mode: ${p.s.offline ? 'On' : 'Off'}`}
+          data-tip={utils.tip('Configure NMC.')}>
+            Settings
           </div>
           <div className="divider" />
           <div
@@ -494,7 +323,7 @@ You should have received a copy of the GNU General Public License along with thi
           className="item"
           onClick={this.handleSupport}
           data-place="left"
-          data-tip={utils.tip('Help pay for server time. Total contributions since initial release: $135. Thanks a lot!')}>
+          data-tip={utils.tip('Help pay for server time. Total contributions since initial release: $255. Thanks a lot!')}>
             Support NMC
           </div>
           <div
@@ -503,6 +332,13 @@ You should have received a copy of the GNU General Public License along with thi
           data-place="left"
           data-tip={utils.tip('Bug reports are an important part of this app\'s development.')}>
             Report Bug
+          </div>
+          <div
+          className="item"
+          onClick={this.handleLog}
+          data-place="left"
+          data-tip={utils.tip('View the NMC log.')}>
+            Open Log
           </div>
           <div className="divider" />
           <div

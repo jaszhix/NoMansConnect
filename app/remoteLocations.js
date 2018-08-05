@@ -256,7 +256,7 @@ class RemoteLocations extends React.Component {
           username={p.s.username}
           isOwnLocation={p.isOwnLocation}
           location={location.data}
-          installing={p.s.installing}
+          navLoad={p.s.navLoad}
           updating={p.updating}
           favorites={p.s.favorites}
           image={location.image}

@@ -19,7 +19,6 @@ import {each, find, findIndex, map, filter, tryFn} from './lang';
 import baseIcon from './assets/images/base_icon.png';
 
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDropdown} from './dropdowns';
-import {ImageModal, UsernameOverrideModal, LocationRegistrationModal, RecoveryModal, Notification, ProfileModal, FriendRequestModal, BaseRestorationModal} from './modals';
 import {
   ImageModal,
   UsernameOverrideModal,
@@ -30,6 +29,7 @@ import {
   FriendRequestModal,
   BaseRestorationModal,
   LogModal,
+  SettingsModal
 } from './modals';
 import Search from './search';
 import Container from './container';
@@ -1063,6 +1063,10 @@ class App extends React.Component {
         baseData={this.state.displayBaseRestoration}
         height={this.state.height} /> : null}
         {this.state.displayLog ? <LogModal  /> : null}
+        {this.state.displaySettings ? <SettingsModal
+        s={s}
+        onSync={this.handleSync}
+        onUsernameOverride={this.handleSetUsernameOverride} /> : null}
         <ReactTooltip
         className="nmcTip"
         globalEventOff="click mouseleave"

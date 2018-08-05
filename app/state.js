@@ -89,6 +89,7 @@ const state = initStore({
   selectedLocation: null,
   username: 'Explorer',
   profile: null,
+  displaySettings: null,
   displayLog: null,
   displayProfile: null,
   displayFriendRequest: null,

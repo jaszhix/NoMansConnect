@@ -52,7 +52,7 @@ class Item extends React.Component {
     } else {
       return (
         <div
-        className={`Item__wrapperStyle${this.props.onValueClick ? ' cursorPointer' : ''}`}
+        className={`Item__wrapperStyle${this.props.className ? ` ${this.props.className}` : ''}${this.props.onValueClick ? ' cursorPointer' : ''}`}
         onClick={this.props.onValueClick}
         data-place="top"
         data-tip={this.props.dataTip}>
