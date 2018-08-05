@@ -473,7 +473,6 @@ class ThreeDimScatterChart extends React.Component {
         fill={obj.color}
         shape="circle"
         line={label === 'Explored' ? mapLines : null}
-        lineType="fitting"
         isAnimationActive={false}
         animationDuration={100}
         animationEasing="linear"
