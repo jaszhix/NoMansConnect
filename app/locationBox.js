@@ -282,7 +282,7 @@ class LocationBox extends React.Component {
       }
     } else {
       if (location.id !== p.currentLocation && !p.ps4User) {
-        let saveFileInfoTip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused before teleporting, and afterwards, select "Reload current" from the game\'s options menu.`;
+        let saveFileInfoTip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused first, and afterwards, select "Reload current" from the game's options menu.`;
         leftOptions.push({
           id: 'teleport',
           tooltip: saveFileInfoTip,
@@ -291,6 +291,7 @@ class LocationBox extends React.Component {
         });
         leftOptions.push({
           id: 'waypoint',
+          tooltip: saveFileInfoTip,
           label: 'Set Waypoint',
           onClick: () => state.trigger('setWaypoint', location)
         });
