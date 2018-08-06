@@ -3,7 +3,7 @@ import path from 'path';
 import {StringDecoder} from 'string_decoder';
 const decoder = new StringDecoder('utf8');
 import axios from 'axios';
-import {cloneDeep, assignIn, pullAt, last, orderBy, isString, trimStart, defer} from 'lodash';
+import {cloneDeep, assignIn, last, orderBy, isString, trimStart, defer} from 'lodash';
 import {each, findIndex} from './lang';
 
 var exec = require('child_process').exec;
@@ -422,7 +422,7 @@ export var formatBase = (saveData, knownProducts, i = 0) => {
     }
   });
   each(moddedObjectKeys, (key) => {
-    pullAt(base.Objects, key);
+    base.Objects.splice(key, 1);
   });
   let cachedBase = {
     Objects: base.Objects,

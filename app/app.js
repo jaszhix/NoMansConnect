@@ -7,7 +7,7 @@ import {machineId} from 'node-machine-id';
 import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
-import {assignIn, cloneDeep, orderBy, uniqBy, defer, concat, first, isArray, pullAt, throttle, pick, last} from 'lodash';
+import {assignIn, cloneDeep, orderBy, uniqBy, defer, concat, first, isArray, throttle, pick, last} from 'lodash';
 import math from 'mathjs';
 
 import Loader from './loader';
@@ -510,7 +510,7 @@ class App extends React.Component {
   }
   signSaveData = (slot) => {
     let absoluteSaveDir = this.state.saveFileName.split(utils.dirSep);
-    pullAt(absoluteSaveDir, absoluteSaveDir.length - 1);
+    absoluteSaveDir.splice(absoluteSaveDir.length - 1, 1);
     absoluteSaveDir = absoluteSaveDir.join(utils.dirSep);
     let command = `${process.platform !== 'win32' ? 'wine ' : ''}"${this.saveTool}" encrypt -g ${slot} -f "${this.saveJSON}" --save-dir "${absoluteSaveDir}"`;
     console.log(command);
@@ -812,7 +812,7 @@ class App extends React.Component {
       state.storedLocations[refStoredLocation].isHidden = !state.storedLocations[refStoredLocation].isHidden;
       state.selectedLocation.isHidden = state.storedLocations[refStoredLocation].isHidden;
     } else {
-      pullAt(state.storedLocations, refStoredLocation);
+      state.storedLocations.splice(refStoredLocation, 1);
     }
     state.set({
       storedLocations: state.storedLocations,

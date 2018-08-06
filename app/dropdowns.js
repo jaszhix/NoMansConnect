@@ -1,15 +1,14 @@
 import {remote} from 'electron';
-import log from './log';
 import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
-import {assignIn, clone, defer, pullAt, upperFirst, last} from 'lodash';
+import {assignIn, clone, defer} from 'lodash';
 
 import * as utils from './utils';
-import {handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
-import {findIndex, map, tryFn} from './lang';
+import {handleRestart} from './dialog';
+import {findIndex, map} from './lang';
 
 const {dialog} = remote;
 
@@ -65,7 +64,7 @@ export class BaseDropdownMenu extends React.Component {
     e.stopPropagation();
     let refBase = findIndex(this.props.storedBases, _base => _base.Name === base.Name);
     if (refBase !== -1) {
-      pullAt(this.props.storedBases, refBase);
+      this.props.storedBases.splice(refBase, 1);
       state.set({storedBases: this.props.storedBases});
     }
   }

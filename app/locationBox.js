@@ -7,7 +7,7 @@ import axios from 'axios';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import ReactTooltip from 'react-tooltip';
-import {defer, truncate, upperFirst, pullAt, isEqual, last} from 'lodash';
+import {defer, truncate, upperFirst, isEqual, last} from 'lodash';
 import moment from 'moment';
 
 import {css, tip, cleanUp, formatForGlyphs, ajax} from './utils';
@@ -182,7 +182,7 @@ class LocationBox extends React.Component {
   }
   handlePositionDelete = (index) => {
     let {location} = this.state;
-    pullAt(location.positions, index);
+    location.positions.splice(index, 1);
     this.setState({location});
   }
   handlePositionSave = () => {
@@ -335,7 +335,7 @@ class LocationBox extends React.Component {
           });
         } else {
           let refLeftOption = findIndex(leftOptions, opt => opt.id === 'deleteScreen');
-          pullAt(leftOptions, refLeftOption);
+          leftOptions.splice(refLeftOption, 1);
         }
       }
       if (p.selectType && location.id !== p.currentLocation && p.isSelectedLocationRemovable) {

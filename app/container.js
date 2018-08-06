@@ -1,7 +1,7 @@
 import log from './log';
 import state from './state';
 import React from 'react';
-import {assignIn, cloneDeep, orderBy, uniq, pullAt} from 'lodash';
+import {assignIn, cloneDeep, orderBy, uniq} from 'lodash';
 
 import * as utils from './utils';
 import {handleRestart} from './dialog';
@@ -77,9 +77,9 @@ class Container extends React.Component {
         }
         favorites.push(location.id);
       } else {
-        pullAt(favorites, refFav);
+        favorites.splice(refFav, 1);
         if (refLocation > -1) {
-          pullAt(storedLocations, refLocation)
+          storedLocations.splice(refLocation, 1);
         }
       }
       state.set({
@@ -447,7 +447,7 @@ class Container extends React.Component {
     let storedCurrentLocation = findIndex(storedLocations, (location) => location.id === currentLocation);
     if (storedCurrentLocation > -1) {
       let current = cloneDeep(storedLocations[storedCurrentLocation]);
-      pullAt(storedLocations, storedCurrentLocation);
+      storedLocations.splice(storedCurrentLocation, 1);
       storedLocations = [current].concat(storedLocations);
     }
 
