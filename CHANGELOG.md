@@ -1,3 +1,12 @@
+# 1.3.2
+
+  * Fixed being unable to toggle username protection in the new settings modal.
+  * Fixed being unable to teleport when the Windows username contains spaces.
+  * Fixed friend requests not deleting.
+  * Fixed map paths not showing.
+  * Fixed map not resizing in some cases.
+  * Addressed an issue with discoveries not being uploaded for some users.
+
 # 1.3.1
 
   * Fixed an issue preventing the app from starting for Windows 7 and Linux users.
