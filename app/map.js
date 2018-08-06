@@ -114,7 +114,6 @@ class ThreeDimScatterChart extends React.Component {
     if (process.env.NODE_ENV === 'development') {
       let originalSetState = this.setState;
       this.setState = function(obj, cb) {
-        console.log('__MAP__: ', obj)
         originalSetState.call(this, ...arguments);
       };
     }
@@ -151,7 +150,7 @@ class ThreeDimScatterChart extends React.Component {
         'width',
         'height',
         'remoteLocationsColumns'
-      ], () => setTimeout(() => this.handlePostMessageSize(), 0)),
+      ], () => this.handlePostMessageSize()),
       state.connect([
         'selectedGalaxy',
         'storedLocations',
@@ -356,7 +355,6 @@ class ThreeDimScatterChart extends React.Component {
         searchCache: {
           results: results,
           count: remoteLen,
-          multipleSelectedLocations: true
         },
         searchInProgress: true,
         search: `Sector ${hexSector}`

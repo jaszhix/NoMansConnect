@@ -1,4 +1,4 @@
-import {clone, isEqual, intersection as intersect, difference, pullAt, defer} from 'lodash';
+import {clone, intersection as intersect, difference, defer} from 'lodash';
 import {find, findIndex, filter} from './lang';
 
 function storeError(method, key, message) {
@@ -97,7 +97,7 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
       if (!state.hasOwnProperty(keys[i])) {
         throw storeError('set', keys[i], 'Property not found.');
       }
-      if ((typeof object[keys[i]] === 'object' /* && isEqual(state[keys[i]], object[keys[i]]) */)
+      if ((typeof object[keys[i]] === 'object')
         || state[keys[i]] !== object[keys[i]]) {
         changed = true;
         state[keys[i]] = object[keys[i]];
@@ -107,7 +107,7 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
     if ((changed || cb === true || force) && listeners.length > 0) {
       dispatch(object);
     } /* else {
-      //try {throw new Error()} catch (e) {console.log(`e.stack: `, e.stack);}
+      console.log(`e.stack: `, new Error().stack)
       console.log('NO CHANGE:', keys.join(', '))
     } */
 
@@ -235,7 +235,7 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
     if (listenerIndex === -1) {
       throw storeError('disconnect', key, 'Invalid disconnect key.');
     }
-    pullAt(listeners, listenerIndex);
+    listeners.splice(listenerIndex, 1);
   }
 
   /**
@@ -252,15 +252,13 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
         disconnectByKey(key[i]);
       }
     } else if (typeof key === 'number') {
-      let indexes = [];
       for (let i = 0; i < listeners.length; i++) {
         if (!listeners[i] || listeners[i].id !== key) {
           continue;
         }
-        indexes.push(i);
-      }
-      for (let i = 0; i < indexes.length; i++) {
-        pullAt(listeners, indexes[i]);
+        listeners.splice(findIndex(listeners, function(listener) {
+          return listener.id === key;
+        }), 1);
       }
     }
   }
