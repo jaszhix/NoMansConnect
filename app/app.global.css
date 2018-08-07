@@ -38689,7 +38689,7 @@ LocationBox
 }
 .LocationBox__PositionEditContainerTrash {
   position: absolute;
-  top: 10px;
+  top: 16px;
   float: right;
   z-index: 100
 }
@@ -38710,24 +38710,25 @@ LocationBox
   width: 300px;
   position: relative;
   left: 28px;
-  top: 3px;
+  top: 7px;
   color: #FFF;
-  background: rgba(0, 0, 0, 0);
-  padding: 0.67861429em 0em;
-  border-radius: 0px;
-  border: 0px;
+  background: rgb(23, 26, 22) !important;
+  padding: 0.67861429em !important;
+  border-radius: 0px !important;
+  border: 1px solid #DA2600 !important;
   font-size: 15px;
   letter-spacing: 2px;
+  margin-bottom: 7px !important;
 }
 .LocationBox__textareaStyle {
   width: 300px;
   position: relative;
   left: 28px;
-  top: 3px;
+  top: 7px;
   color: #FFF;
   background: rgba(0, 0, 0, 0);
-  padding: 0.67861429em 0em;
-  border: 0px;
+  padding: 0.67861429em;
+  border: 1px solid #DA2600 !important;
   font-size: 15px;
   letter-spacing: 2px;
   outline-color: none;
@@ -38749,7 +38750,7 @@ LocationBox
   height: 21px;
 }
 .LocationBox__uiSegmentEditStyle {
-  padding: 3px 3px;
+  padding: 3px 3px !important;
   cursor: pointer;
   background: rgba(0, 0, 0, 0);
 }
@@ -38901,6 +38902,7 @@ Friend requests
 /*
 Modals
 */
+
 .modal__InputStyle {
   width: 300px;
   position: relative;
@@ -38912,6 +38914,11 @@ Modals
   border: 1px solid #DA2600;
   font-size: 15px;
   letter-spacing: 2px;
+}
+.modal__InputContainer {
+  position: absolute;
+  top: 35px;
+  left: 50px;
 }
 
 .modal__compact {
@@ -38944,15 +38951,28 @@ Modals
   border: 1px solid #DA2600 !important;
   max-width: 75% !important;
 }
+.modal__full__close {
+  top: 7px !important;
+  right: 6px !important;
+  color: #FFFFFF !important;
+  padding-top: 0px !important;
+}
 
-.modal__large {
+.modal__medium {
   background: rgb(23, 26, 22) !important;
   border-top: 2px solid #95220E !important;
   position: fixed !important;
+  top: 6% !important;
   z-index: 1000 !important;
   -webkit-transform-origin: 50% 25% !important;
   box-shadow: none !important;
   border: 1px solid #DA2600 !important;
+}
+.modal__medium__close {
+  top: 7px !important;
+  right: 0px !important;
+  color: #FFFFFF !important;
+  padding-top: 0px !important;
 }
 
 .modal__error {

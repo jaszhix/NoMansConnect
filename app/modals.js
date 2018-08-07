@@ -76,18 +76,20 @@ export class UsernameOverrideModal extends React.Component {
   }
   render() {
     return (
-      <div className="ui small modal active" style={this.modalStyle}>
+      <div className="ui small modal active modal__compact" style={this.modalStyle}>
         <span className="close" />
-        <input
-        className="modal__InputStyle"
-        type="text"
-        value={this.state.name}
-        onChange={this.handleChange}
-        maxLength={30}
-        placeholder="Username" />
-        <Button onClick={this.handleSave}>
-          Save
-        </Button>
+        <div className="modal__InputContainer">
+          <input
+          className="modal__InputStyle"
+          type="text"
+          value={this.state.name}
+          onChange={this.handleChange}
+          maxLength={30}
+          placeholder="Username" />
+          <Button onClick={this.handleSave}>
+            Save
+          </Button>
+        </div>
       </div>
     );
   }
@@ -155,7 +157,7 @@ export class RecoveryModal extends React.Component {
       <div className="ui small modal active modal__compact">
         <span className="close" />
         {this.state.error ? <div className="modal__error">{this.state.error}</div> : null}
-        <div style={{position: 'absolute', top: '50px', left: '50px'}}>
+        <div className="modal__InputContainer">
           <input
           className="modal__InputStyle"
           type="text"
@@ -457,10 +459,9 @@ export class ProfileModal extends React.Component {
       });
     }
     return (
-      <div ref={this.getRef} className="ui fullscreen modal active modal__full ProfileModal__root">
+      <div ref={this.getRef} className="ui fullscreen modal active modal__full">
         <i
-        className="window close outline icon"
-        style={{paddingTop: '0px'}}
+        className="window close outline icon modal__full__close"
         onClick={this.handleClickOutside} />
         <div
         className="ui segment ProfileModal__content"
@@ -878,7 +879,10 @@ export class SettingsModal extends React.Component {
     return (
       <div
       style={menuContainerStyle}
-      className="ui medium modal active modal__large">
+      className="ui medium modal active modal__medium">
+        <i
+        className="window close outline icon modal__medium__close"
+        onClick={this.handleClickOutside} />
         <div className="ui segment">
           <Item label="Difficulty" />
           <div className="ui segment SettingsModal__child">
