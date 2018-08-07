@@ -74,6 +74,9 @@ const getLocationsByTranslatedId = function(locations) {
   return systems
 }
 
+let lastSelected = null;
+let prevListKey = null;
+
 onmessage = function(e) {
   if (e.data.buildGalaxyOptions) {
     buildGalaxyOptions(e.data.buildGalaxyOptions);
@@ -110,6 +113,29 @@ onmessage = function(e) {
         }
       });
     }
+
+    each(e.data.p.show, (legendItem, key) => {
+      if (!legendItem.value) {
+        return;
+      }
+
+      let refIndex = findIndex(e.data.s[legendItem.listKey], (location) => {
+        return selectedLocation[0] && location.id === selectedLocation[0].id;
+      });
+      if (refIndex > -1) {
+        if (lastSelected && e.data.s[prevListKey]) {
+          e.data.s[prevListKey] = e.data.s[prevListKey].concat(lastSelected);
+          stateUpdate[prevListKey] = e.data.s[prevListKey];
+        }
+        prevListKey = legendItem.listKey;
+        e.data.s[legendItem.listKey].splice(refIndex, 1);
+        stateUpdate[legendItem.listKey] = e.data.s[legendItem.listKey];
+        return;
+      }
+    });
+
+    lastSelected = selectedLocation;
+
     assignIn(stateUpdate, {
       selectedLocation
     });
@@ -134,16 +160,18 @@ onmessage = function(e) {
 
     if (e.data.p.remoteLocations && e.data.p.remoteLocations) {
       each(e.data.p.remoteLocations, (location) => {
-        if (location.data.galaxy !== e.data.p.selectedGalaxy) {
+        if (location.data.galaxy !== e.data.p.selectedGalaxy
+        || (e.data.p.selectedLocation && location.data.id === e.data.p.selectedLocation.id)) {
           return;
         }
         let obj = {
           x: location.data.translatedX,
           y: (0, 4096) - location.data.translatedZ,
           z: location.data.translatedY,
-          id: `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`,
+          id: `${location.data.translatedX}:${location.data.translatedY}:${location.data.translatedZ}`,
           planetData: location.data.planetData
         };
+
         let matchedFriendKey = false;
 
         each(friendKeys, (key, i) => {

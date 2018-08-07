@@ -109,6 +109,7 @@ class ThreeDimScatterChart extends React.Component {
       zoom: 0,
       zoomHistory: [],
       startCoordinates: null,
+      endCoordinates: null,
       scale: 'linear'
     };
     if (process.env.NODE_ENV === 'development') {
@@ -190,48 +191,6 @@ class ThreeDimScatterChart extends React.Component {
   shouldComponentUpdate(nP, nS) {
     return isEqual(this.props, nP) || !isEqual(this.state, nS)
   }
-  getLocationsByTranslatedId = (locations) => {
-    if (isArray(locations)) {
-      locations = {results: locations}
-    }
-    let systems = uniqBy(locations.results, (location) => {
-      location = location.data ? location : {data: location};
-      return location.data.translatedX && location.data.translatedY && location.data.translatedZ;
-    });
-    each(systems, (location, i) => {
-      systems[i] = location.data ? location : {data: location};
-      location = systems[i];
-      let planets = filter(locations.results, (planet) => {
-        planet = planet.data ? planet : {data: planet};
-        return (location.data.translatedX === planet.data.translatedX
-          && location.data.translatedY === planet.data.translatedY
-          && location.data.translatedZ === planet.data.translatedZ);
-      });
-      let planetData = [];
-      each(planets, (planet) => {
-        planet = planet.data ? planet : {data: planet};
-        if (!planetData[planet.data.username]) {
-          planetData[planet.data.username] = [];
-        }
-        let label = planet.data.name ? planet.data.name : planet.data.id;
-        let refPlanetData = findIndex(planetData, item => item.username === planet.data.username);
-        if (refPlanetData > -1) {
-          let refEntry = planetData[refPlanetData].entries.indexOf(label);
-          if (refEntry === -1) {
-            planetData[refPlanetData].entries.push(label);
-          }
-        } else {
-          planetData.push({
-            username: planet.data.username,
-            entries: [label]
-          });
-        }
-      });
-      location.data.planetData = planetData;
-    });
-    locations.results = systems;
-    return locations;
-  }
   handlePostMessage = () => {
     if (this.dragging) return;
     if (!state.navLoad) {
@@ -281,7 +240,8 @@ class ThreeDimScatterChart extends React.Component {
       },
       opts: {
         selectedLocation: true
-      }
+      },
+      s: this.state
     });
   }
   handleMapWorker = () => {
@@ -340,7 +300,7 @@ class ThreeDimScatterChart extends React.Component {
         name: location.name ? location.name : '',
         description: location.description ? location.description : ''
       };
-      sector = `${location.data.translatedZ}:${location.data.translatedY}:${location.data.translatedX}`;
+      sector = `${location.data.translatedX}:${location.data.translatedY}:${location.data.translatedZ}`;
       let hexArr = location.data.translatedId.split(':');
       hexArr.pop();
       hexSector = hexArr.join(':');
@@ -349,16 +309,20 @@ class ThreeDimScatterChart extends React.Component {
       }
     });
     let remoteLen = results.length;
-    stateUpdate = {selectedLocation: results[0].data ? results[0].data : results[0]};
-    if (remoteLen > 1) {
-      stateUpdate = {
+    let multiSelectedLocation = remoteLen > 1;
+    stateUpdate = {
+      selectedLocation: results[0].data ? results[0].data : results[0],
+      multiSelectedLocation
+    };
+    if (multiSelectedLocation) {
+      Object.assign(stateUpdate, {
         searchCache: {
           results: results,
           count: remoteLen,
         },
         searchInProgress: true,
         search: `Sector ${hexSector}`
-      };
+      });
     } else if (state.searchInProgress) {
       state.trigger('handleClearSearch');
     }
@@ -388,6 +352,7 @@ class ThreeDimScatterChart extends React.Component {
   handleMouseDown = (e) => {
     let {zoomHistory, zoom} = this.state;
     if (window.__mouseDown === 2) {
+      this.dragCancelled = false;
       zoomHistory.pop();
       let [xDomain, yDomain] = zoomHistory.length > 0 ? last(zoomHistory) : [[0, 4096], [0, 4096]];
       this.setState({
@@ -407,6 +372,10 @@ class ThreeDimScatterChart extends React.Component {
   handleMouseUp = () => {
     if (!this.allowZoom || window.__mouseDown === 2 || this.dragCount < 2) {
       this.dragCount = 0;
+      this.setState({
+        startCoordinates: null,
+        endCoordinates: null
+      });
       return;
     }
 
@@ -550,7 +519,7 @@ class GalacticMap extends React.Component {
     };
 
   }
-  componentWillMount() {
+  componentDidMount() {
     window.mapWorker3.onmessage = (e) => {
       state.set(e.data.buildGalaxyOptions, () => {
         if (e.data.init) {

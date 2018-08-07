@@ -87,6 +87,7 @@ const state = initStore({
   remoteLength: 0,
   currentLocation: null,
   selectedLocation: null,
+  multiSelectedLocation: false,
   username: 'Explorer',
   profile: null,
   displaySettings: null,

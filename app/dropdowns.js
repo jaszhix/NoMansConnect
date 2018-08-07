@@ -434,7 +434,7 @@ export class BasicDropdown extends React.Component {
               <div
               key={i}
               className={`item${option.disabled ? ' disabled' : ''}`}
-              onClick={(e) => this.handleOptionClick(e, option)}
+              onClick={option.disabled ? null : (e) => this.handleOptionClick(e, option)}
               data-place="left"
               data-tip={utils.tip(tooltip)}>
                 {option.label}

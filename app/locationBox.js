@@ -59,12 +59,14 @@ class LocationBox extends React.Component {
       positionEdit: false,
       positionEditHover: -1
     };
+  }
+  componentDidMount() {
     this.connections = [
       state.connect({
         compactRemote: () => {
-          if (!props.selectType && !this.willUnmount) {
+          if (!this.props.selectType && !this.willUnmount) {
             ReactTooltip.rebuild();
-            this.setState({compactRemote: props.compactRemote}, props.onCompactRemoteSwitch);
+            this.setState({compactRemote: this.props.compactRemote}, this.props.onCompactRemoteSwitch);
           }
         },
         selectedLocation: () => {
@@ -75,13 +77,11 @@ class LocationBox extends React.Component {
         }
       })
     ];
-    if (props.selectType) {
+    if (this.props.selectType) {
       this.connections.push(
         state.connect({positionSelect: () => this.setState({positionSelect: !this.state.positionSelect})})
       );
     }
-  }
-  componentDidMount() {
     this.getImage(this.props);
     if (this.props.id && !this.props.offline) {
       this.updateLocation();

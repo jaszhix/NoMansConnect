@@ -13,16 +13,18 @@ class RemoteLocations extends React.Component {
     this.state = {
       init: true
     };
-    state.connect(['searchCache', 'sort'], () => {
-      if (!this.recentExplorations) {
-        return;
-      }
-      this.recentExplorations.scrollTop = 0;
-    });
-    state.connect(['remoteLocationsColumns', 'compactRemote'], () => defer(() => this.setViewableRange(this.recentExplorations)));
     this.range = {start: 0, length: 0};
   }
   componentDidMount() {
+    this.connections = [
+      state.connect(['searchCache', 'sort'], () => {
+        if (!this.recentExplorations) {
+          return;
+        }
+        this.recentExplorations.scrollTop = 0;
+      }),
+      state.connect(['remoteLocationsColumns', 'compactRemote'], () => defer(() => this.setViewableRange(this.recentExplorations)))
+    ];
     this.uiSegmentStyle = {
       background: 'rgba(23, 26, 22, 0.9)',
       display: 'inline-table',
@@ -47,6 +49,7 @@ class RemoteLocations extends React.Component {
     if (this.recentExplorations) {
       this.recentExplorations.removeEventListener('scroll', this.handleScroll);
     }
+    each(this.connections, (id) => state.disconnect(id));
   }
   setViewableRange = (node) => {
     if (!node) {

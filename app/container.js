@@ -327,9 +327,15 @@ class Container extends React.Component {
       }
     }
     location = undefined;
+
+    if (state.searchInProgress) {
+      state.trigger('handleClearSearch');
+    }
+
     state.set({
       selectedLocation: deselected ? null : _location,
-      selectedGalaxy: deselected ? 0 : _location.galaxy
+      selectedGalaxy: deselected ? 0 : _location.galaxy,
+      multiSelectedLocation: false
     });
   }
   toggleEdit = () => {
@@ -348,6 +354,7 @@ class Container extends React.Component {
       favorites,
       remoteLocations,
       remoteLocationsColumns,
+      multiSelectedLocation,
       selectedLocation,
       selectedGalaxy,
       galaxyOptions,
@@ -533,6 +540,7 @@ class Container extends React.Component {
             onSelect={this.handleSelectLocation}
             storedLocations={storedLocations}
             selectedLocationId={selectedLocation ? selectedLocation.id : null}
+            multiSelectedLocation={multiSelectedLocation}
             currentLocation={currentLocation}
             height={height}
             filterOthers={filterOthers}
@@ -565,7 +573,7 @@ class Container extends React.Component {
               onSearch={p.onSearch}
               searchCache={searchCache.results}
               friends={profile ? profile.friends : empty} /> : null}
-              {selectedLocation ?
+              {selectedLocation && !multiSelectedLocation ?
               <LocationBox
               name={selectedLocation.name}
               description={selectedLocation.description}

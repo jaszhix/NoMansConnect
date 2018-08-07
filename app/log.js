@@ -21,7 +21,7 @@ class log {
       for (let i = 0; i < args.length; i++) {
         argsString += `${JSON.stringify(args[i])} `;
       }
-      let output = `${ts}:    ${argsString}`;
+      let output = `${ts}:    ${argsString.replace(/"/g, '').replace(/\\\\/g, '\\')}`;
       let configPath = path.resolve(this.location, 'NMC.log');
       fs.appendFile(configPath, output + lineEnding, {
         flags: 'w'
