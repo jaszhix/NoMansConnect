@@ -68,8 +68,10 @@ class LocationBox extends React.Component {
           }
         },
         selectedLocation: () => {
-          if (!this.props || !this.props.selectType || this.willUnmount) return;
-          setTimeout(() => this.setState({positionEdit: false, positionSelect: false}), 0);
+          setTimeout(() => {
+            if (!this.props || !this.props.selectType || this.willUnmount) return;
+            this.setState({positionEdit: false, positionSelect: false})
+          }, 0);
         }
       })
     ];
@@ -121,8 +123,12 @@ class LocationBox extends React.Component {
     });
     cleanUp(this);
   }
-  handleCancel = () => {
+  toggleEditDetails = () => {
+    this.setState({positionEdit: false});
     this.props.onEdit();
+  }
+  togglePositionEdit = () => {
+    this.setState({positionEdit: !this.state.positionEdit})
   }
   updateLocation = () => {
     ajax.get(`/nmslocation/${this.props.id}/`).then((res) => {
@@ -262,13 +268,15 @@ class LocationBox extends React.Component {
     if (this.state.positionSelect) {
       leftOptions.push({
         id: 'back',
-        label: 'Go back',
+        label: p.navLoad ? 'Working...' : 'Go back',
+        disabled: p.navLoad,
         onClick: () => this.setState({positionSelect: false})
       });
       if (location.positions) {
         each(location.positions, (position, i) => {
           leftOptions.push({
             id: `position-${i}`,
+            disabled: p.navLoad,
             label: position.name || `Location ${i + 1}`,
             onClick: () => p.onTeleport(location, p.selectType ? 'selected' : p.i, position)
           })
@@ -287,12 +295,14 @@ class LocationBox extends React.Component {
           id: 'teleport',
           tooltip: saveFileInfoTip,
           label: p.navLoad ? 'Working...' : 'Teleport To...',
+          disabled: p.navLoad,
           onClick: () => this.setState({positionSelect: true})
         });
         leftOptions.push({
           id: 'waypoint',
           tooltip: saveFileInfoTip,
           label: 'Set Waypoint',
+          disabled: p.navLoad,
           onClick: () => state.trigger('setWaypoint', location)
         });
       }
@@ -307,13 +317,13 @@ class LocationBox extends React.Component {
         leftOptions.push({
           id: 'edit',
           label: p.edit ? 'Cancel' : 'Edit Details',
-          onClick: () => p.onEdit()
+          onClick: this.toggleEditDetails
         });
         if (location.positions && location.positions.length > 0) {
           leftOptions.push({
             id: 'edit-positions',
             label: this.state.positionEdit ? 'Cancel' : 'Edit Places',
-            onClick: () => this.setState({positionEdit: !this.state.positionEdit})
+            onClick: this.togglePositionEdit
           });
         }
         if (!p.version) {
