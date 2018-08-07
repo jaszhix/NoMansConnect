@@ -323,11 +323,6 @@ class LocationBox extends React.Component {
             onClick: () => p.onMarkCompatible()
           });
         }
-        leftOptions.push({
-          id: 'uploadScreen',
-          label: 'Upload Screenshot',
-          onClick: () => p.onUploadScreen()
-        });
         if (deleteArg) {
           leftOptions.push({
             id: 'deleteScreen',
@@ -335,8 +330,11 @@ class LocationBox extends React.Component {
             onClick: () => p.onDeleteScreen()
           });
         } else {
-          let refLeftOption = findIndex(leftOptions, opt => opt.id === 'deleteScreen');
-          leftOptions.splice(refLeftOption, 1);
+          leftOptions.push({
+            id: 'uploadScreen',
+            label: 'Upload Screenshot',
+            onClick: () => p.onUploadScreen()
+          });
         }
       }
       if (p.selectType && location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
