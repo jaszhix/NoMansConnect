@@ -320,6 +320,7 @@ class Container extends React.Component {
         refRemoteLocation.data.description = refRemoteLocation.description;
         refRemoteLocation.data.isHidden = location.isHidden;
         refRemoteLocation.data.positions = location.positions;
+        refRemoteLocation.data.version = location.version;
         _location = refRemoteLocation.data;
       } else {
         _location = location;
