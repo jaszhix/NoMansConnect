@@ -1,7 +1,7 @@
 import log from './log';
 import state from './state';
 import React from 'react';
-import {assignIn, cloneDeep, orderBy, uniq} from 'lodash';
+import {assignIn, cloneDeep, orderBy, uniq, uniqBy} from 'lodash';
 
 import * as utils from './utils';
 import {handleRestart} from './dialog';
@@ -309,12 +309,7 @@ class Container extends React.Component {
       let refRemoteLocation = find(this.props.s.remoteLocations.results, (remoteLocation) => {
         return remoteLocation.data.id === location.id;
       });
-      if (!refRemoteLocation) {
-        log.error(`Unable to find reference remote location from stored locations cache: ${JSON.stringify(location)}`)
-        return;
-      }
-      console.log('SELECTED: ', cloneDeep(location));
-      if (refRemoteLocation !== undefined && refRemoteLocation) {
+      if (refRemoteLocation) {
         refRemoteLocation.data.image = refRemoteLocation.image;
         refRemoteLocation.data.name = refRemoteLocation.name;
         refRemoteLocation.data.description = refRemoteLocation.description;
@@ -323,7 +318,30 @@ class Container extends React.Component {
         refRemoteLocation.data.version = location.version;
         _location = refRemoteLocation.data;
       } else {
-        _location = location;
+        log.error(`Unable to find reference remote location from stored locations cache: ${location.id} (fetching)`);
+        if (this.props.s.offline) {
+          _location = location;
+        } else {
+          utils.ajax.post('/nmsfavoritesync/', {
+            machineId: state.machineId,
+            username: state.username,
+            locations: [location.id]
+          }).then((res) => {
+            _location = res.data[0].data;
+            let {remoteLocations} = this.props.s;
+            remoteLocations.results.push(res.data[0]);
+            remoteLocations.results = uniqBy(remoteLocations.results, 'id');
+            state.set({
+              remoteLocations,
+              remoteLength: remoteLocations.results.length,
+              selectedLocation: deselected ? null : _location,
+              selectedGalaxy: deselected ? 0 : _location.galaxy,
+              multiSelectedLocation: false
+            });
+          }).catch((err) => log.error(err));
+          return;
+        }
+
       }
     }
     location = undefined;

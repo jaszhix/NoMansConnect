@@ -310,7 +310,7 @@ const state = initStore({
           && location.data.VoxelX > -2048 && location.data.VoxelX < 2047));
       });
       locations = uniqBy(locations, (location) => {
-        return location.data.id;
+        return location.id;
       });
       obj.remoteLocations.results = locations;
       obj.remoteLocations.count = locations.length;

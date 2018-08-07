@@ -58,7 +58,6 @@ class App extends React.Component {
         state.displayErrorDialog(obj.error);
         state.error = '';
       }
-
       if (!obj.search
         && obj.remoteLocations
         && obj.remoteLength > 0
@@ -866,7 +865,7 @@ class App extends React.Component {
         }
       });
       this.state.remoteLocations.results = concat(this.state.remoteLocations.results, uniqBy(diff, (location) => {
-        return location.data.id;
+        return location.id;
       }));
     }
 
