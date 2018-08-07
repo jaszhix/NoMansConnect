@@ -1,7 +1,7 @@
 import state from './state';
 import React from 'react';
-import {truncate, delay, defer} from 'lodash';
-import {map} from './lang';
+import {truncate, delay} from 'lodash';
+import {map, findIndex} from './lang';
 import {whichToShow, cleanUp} from './utils';
 import {sortStoredByKeyMap} from './constants';
 import baseIcon from './assets/images/base_icon.png';
@@ -20,7 +20,7 @@ class StoredLocationItem extends React.Component {
     cleanUp(this);
   }
   handleClick = () => {
-    this.props.onClick(this.props.location, this.props.i);
+    this.props.onClick(this.props.location);
   }
   render() {
     let uiSegmentStyle = {
@@ -101,6 +101,24 @@ class StoredLocations extends React.Component {
     this.range = {start: 0, length: 0};
   }
   componentDidMount() {
+    this.connectId = state.connect({
+      selectedLocation: ({selectedLocation}) => {
+        if (!this.storedLocations || !selectedLocation) {
+          if (this.storedLocations) {
+            this.handleScroll();
+          }
+          return;
+        }
+        let refIndex = findIndex(this.props.storedLocations, (location) => {
+          return location.id === selectedLocation.id;
+        });
+        if (!this.selecting && refIndex > -1) {
+          this.storedLocations.scrollTop = refIndex * 29;
+        }
+        this.selecting = false;
+        this.setViewableRange(this.storedLocations);
+      }
+    });
     let checkStored = () => {
       if (this.storedLocations) {
         this.storedLocations.addEventListener('scroll', this.handleScroll);
@@ -122,6 +140,7 @@ class StoredLocations extends React.Component {
     if (this.storedLocations) {
       this.storedLocations.removeEventListener('scroll', this.handleScroll);
     }
+    state.disconnect(this.connectId);
   }
   setViewableRange = (node) => {
     if (!node) {
@@ -135,23 +154,18 @@ class StoredLocations extends React.Component {
     });
     this.forceUpdate();
   }
-  handleScroll = () => {
+  handleScroll = (timeout = 25) => {
     if (this.scrollTimeout) {
       clearTimeout(this.scrollTimeout);
     }
-    this.scrollTimeout = setTimeout(this.scrollListener, 25);
+    this.scrollTimeout = setTimeout(this.scrollListener, timeout);
   }
   scrollListener = () => {
     this.setViewableRange(this.storedLocations);
   }
-  handleSelect = (location, i) => {
-    let hasSelectedId = this.props.selectedLocationId;
+  handleSelect = (location) => {
+    this.selecting = true;
     this.props.onSelect(location);
-    defer(() => {
-      if (location.id === this.props.selectedLocationId && !hasSelectedId) {
-        this.storedLocations.scrollTop = i * 29;
-      }
-    });
   }
   getRef = (ref) => {
     this.storedLocations = ref;
@@ -160,6 +174,7 @@ class StoredLocations extends React.Component {
     let {
       storedLocations,
       selectedLocationId,
+      multiSelectedLocation,
       currentLocation,
       height,
       filterOthers,
@@ -243,7 +258,7 @@ class StoredLocations extends React.Component {
           ref={this.getRef}
           className="ui segments"
           style={{
-            maxHeight: `${height - (selectedLocationId ? 404 : 125)}px`,
+            maxHeight: `${height - (selectedLocationId && !multiSelectedLocation ? 404 : 125)}px`,
             WebkitTransition: 'max-height 0.1s',
             overflowY: 'auto',
             overflowX: 'hidden'}}>
