@@ -87,9 +87,6 @@ class StoredLocationItem extends React.Component {
 class StoredLocations extends React.Component {
   constructor(props) {
     super(props);
-    this.invisibleStyle = {
-      height: '29px'
-    };
     this.uiSegmentStyle = {
       background: 'rgba(23, 26, 22, 0.9)',
       display: 'inline-table',
@@ -268,7 +265,7 @@ class StoredLocations extends React.Component {
                 return (
                   <div
                   key={location.id}
-                  style={this.invisibleStyle} />
+                  className="StoredLocations__spacer" />
                 );
               }
             })}

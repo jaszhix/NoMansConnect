@@ -38633,6 +38633,13 @@ body {
   border-color: rgba(0, 0, 0, 0);
 }
 
+.StoredLocations__spacer {
+  height: 29px;
+  padding: 3px 8px;
+  border: 8px solid rgba(23, 26, 22, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 /*
 
 Components
@@ -38770,6 +38777,12 @@ LocationBox
   color: rgba(255, 255, 255, 0.61);
   border: 1px solid rgba(255, 255, 255, 0.27) !important;
   z-index: 0 !important;
+}
+.LocationBox__spacer {
+  padding: 3px 8px;
+  width: 386px;
+  border: 8px solid rgba(23, 26, 22, 0.9);
+  border-top: 2px solid rgb(149, 34, 14);
 }
 
 /*
