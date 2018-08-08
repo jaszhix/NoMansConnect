@@ -513,8 +513,8 @@ class App extends React.Component {
     absoluteSaveDir = absoluteSaveDir.join(utils.dirSep);
     let command = `${process.platform !== 'win32' ? 'wine ' : ''}"${this.saveTool}" encrypt -g ${slot} -f "${this.saveJSON}" --save-dir "${absoluteSaveDir}"`;
     console.log(command);
-    utils.exc(command, (res) => {
-      log.error('Successfully signed save data with nmssavetool')
+    utils.exc(command).then((res) => {
+      log.error('Successfully signed save data with nmssavetool');
     }).catch((e) => {
       if (process.platform !== 'win32') {
         log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?')

@@ -252,7 +252,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       each(Record, (discovery, i) => {
         discovery.NMCID = utils.uaToObject(discovery.DD.UA).id;
       });
-      if (!state.offline && (init || refLocation === -1 || isLocationUpdate)) {
+      if (profile && !state.offline && (init || refLocation === -1 || isLocationUpdate)) {
         // Discoveries can change regardless if the location is known
         utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
           machineId: state.machineId,
@@ -367,7 +367,14 @@ pollSaveData = (opts = {mode: state.mode, init: false, machineId: state.machineI
     return;
   }
   opts.NMSRunning = false;
-  if (process.platform !== 'win32' || parseFloat(state.winVersion) <= 6.1) {
+  if (process.platform !== 'win32') {
+    utils.exc('pidof NMS.exe').then((res) => {
+      opts.NMSRunning = true;
+      getLastSave(opts);
+    }).catch((e) => {
+      getLastSave(opts);
+    });
+  } else if (parseFloat(state.winVersion) <= 6.1) {
     log.error(`Skipping process scan...`);
     getLastSave(opts);
   } else {
