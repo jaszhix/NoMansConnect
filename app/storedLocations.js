@@ -104,9 +104,7 @@ class StoredLocations extends React.Component {
     this.connectId = state.connect({
       selectedLocation: ({selectedLocation}) => {
         if (!this.storedLocations || !selectedLocation) {
-          if (this.storedLocations) {
-            this.handleScroll();
-          }
+          if (this.storedLocations) this.handleScroll();
           return;
         }
         let refIndex = findIndex(this.props.storedLocations, (location) => {
@@ -116,7 +114,11 @@ class StoredLocations extends React.Component {
           this.storedLocations.scrollTop = refIndex * 29;
         }
         this.selecting = false;
-        this.setViewableRange(this.storedLocations);
+        if (state.multiSelectedLocation) {
+          this.handleScroll();
+        } else {
+          this.setViewableRange(this.storedLocations);
+        }
       }
     });
     let checkStored = () => {
