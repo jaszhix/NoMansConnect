@@ -219,7 +219,7 @@ class ThreeDimScatterChart extends React.Component {
       p: {
         width: state.width,
         height: state.height,
-        remoteLocationsColumns: this.props.remoteLocationsColumns,
+        remoteLocationsColumns: state.remoteLocationsColumns,
         show: this.props.show,
         defaultLegendKeys: state.defaultLegendKeys
       },
