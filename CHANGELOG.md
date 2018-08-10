@@ -1,3 +1,14 @@
+# 1.3.3
+
+  * Fixed version compatibility changes to a location not propagating to the cache.
+  * Fixed the Upload/Delete screenshot options not appearing in the selected location dropdown menu.
+  * Fixed the settings modal clipping outside of the viewport on lower resolutions.
+  * Fixed selected locations not always being reflected on the map.
+  * Fixed an issue that can cause stored locations to become unselectable when the remote cache gets stale.
+  * Fixed an issue with the stored location list scroll position jumping after selecting from it.
+  * Fixed a rendering issue with the stored location list not updating correctly after deselecting a location.
+  * Fixed screenshot capturing on Linux.
+
 # 1.3.2
 
   * Fixed being unable to toggle username protection in the new settings modal.
