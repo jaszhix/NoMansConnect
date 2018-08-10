@@ -279,7 +279,6 @@ class RemoteLocations extends React.Component {
         _locations[i] = (
           <div
           key={location.id}
-          className="LocationBox__spacer"
           style={invisibleStyle} />
         );
       }

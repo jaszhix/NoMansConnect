@@ -38779,11 +38779,6 @@ LocationBox
   border: 1px solid rgba(255, 255, 255, 0.27) !important;
   z-index: 0 !important;
 }
-.LocationBox__spacer {
-  width: 386px;
-  border: 1px solid rgba(23, 26, 22, 0.9);
-  border-top: 2px solid rgb(149, 34, 14);
-}
 
 /*
 Item
