@@ -88,6 +88,10 @@ export var convertHex = (int, axis) => {
   return Math.floor(((((int - oldMin) * newRange) / oldRange) + newMin) + offset)
 };
 
+export const calculateDistanceToCenter = function(x, y, z) {
+  return (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2)) * 100) * 4;
+};
+
 var setDefaultValueIfNull = (variable, defaultVal) => {
   if (variable == null) {
     variable = defaultVal;
@@ -134,7 +138,7 @@ export var fromHex = (str, username, galaxy) => {
       shipPosition: false,
       shipTransform: false,
       galaxy: galaxy,
-      distanceToCenter: Math.sqrt(Math.pow(result.x, 2) + Math.pow(result.y, 2) + Math.pow(result.z, 2)) * 100,
+      distanceToCenter: calculateDistanceToCenter(result.x, result.y, result.z),
       VoxelY: result.y,
       VoxelX: result.x,
       VoxelZ: result.z,
@@ -150,6 +154,7 @@ export var fromHex = (str, username, galaxy) => {
       mods: [],
       manuallyEntered: true,
       timeStamp: Date.now(),
+      apiVersion: 1
     };
 
     if (isNaN(manualLocation.SolarSystemIndex)

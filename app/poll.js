@@ -101,7 +101,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         username,
         positions: [currentPosition],
         galaxy: saveData.result.PlayerStateData.UniverseAddress.RealityIndex,
-        distanceToCenter: Math.sqrt(Math.pow(location.VoxelX, 2) + Math.pow(location.VoxelY, 2) + Math.pow(location.VoxelZ, 2)) * 100,
+        distanceToCenter: utils.calculateDistanceToCenter(location.VoxelX, location.VoxelY, location.VoxelZ),
         translatedX: utils.convertInteger(location.VoxelX, 'x'),
         translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
         translatedY: utils.convertInteger(location.VoxelY, 'y'),
@@ -112,7 +112,8 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         mods: state.mods,
         manuallyEntered: false,
         timeStamp: Date.now(),
-        version: saveData.result.Version
+        version: saveData.result.Version,
+        apiVersion: 1
       });
 
       location.jumps = Math.ceil(location.distanceToCenter / 400);
