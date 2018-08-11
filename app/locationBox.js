@@ -230,7 +230,7 @@ class LocationBox extends React.Component {
         <Item label="Galactic Address" value={location.translatedId} />
         <Item label="Universe Address" value={location.id} />
         <Item label="Portal Address">
-          {map(formatForGlyphs(location.translatedId), (glyph, i) => {
+          {map(formatForGlyphs(location.translatedId, location.PlanetIndex), (glyph, i) => {
             return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
           })}
         </Item>

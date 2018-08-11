@@ -509,7 +509,7 @@ export function convertRange(value, r1, r2) {
   return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
 };
 
-export const formatForGlyphs = function(translatedId) {
+export const formatForGlyphs = function(translatedId, planetIndex) {
   if (!translatedId || typeof translatedId !== 'string') {
     return [];
   }
@@ -546,7 +546,7 @@ export const formatForGlyphs = function(translatedId) {
     C = '0' + C;
   }
   D = D.slice(1);
-  let result = [0, D, B, C, A].join('').split('');
+  let result = [planetIndex, D, B, C, A].join('').split('');
   return result;
 };
 
