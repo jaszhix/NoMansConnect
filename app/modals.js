@@ -31,7 +31,9 @@ export class ImageModal extends React.Component {
   render() {
     return (
       <div className="ui fullscreen modal active modal__full ImageModal__root">
-        <span className="close" />
+        <i
+        className="window close outline icon modal__full__close"
+        onClick={this.handleClickOutside} />
         <img className="image content" src={this.props.image} />
       </div>
     );
