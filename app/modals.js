@@ -409,7 +409,7 @@ class EventItem extends React.Component {
           username={profile ? profile.username : ''}
           selectType={false}
           currentLocation={state.currentLocation}
-          isOwnLocation={isOwnLocation}
+          isOwnLocation={false}
           isVisible={true}
           location={data}
           updating={false}
@@ -939,6 +939,9 @@ export class SettingsModal extends React.Component {
     e.stopPropagation();
     state.set({autoCapture: !this.props.s.autoCapture}, () => ReactTooltip.rebuild());
   }
+  handleAutoCaptureSpaceStations = (e) => {
+    e.stopPropagation();
+    state.set({autoCaptureSpaceStations: !this.props.s.autoCaptureSpaceStations});
   }
   handleResetRemoteCache = () => {
     window.jsonWorker.postMessage({
@@ -1036,6 +1039,15 @@ export class SettingsModal extends React.Component {
           onValueClick={this.handleAutoCapture}
           label="Screenshot Capturer"
           value={p.s.autoCapture ? 'Auto' : 'Manual'} /> : null}
+          {!p.s.ps4User && !p.s.offline && p.s.autoCapture ?
+          <div className="ui segment SettingsModal__child">
+            <Item
+            className="Item__hover"
+            dataTip={utils.tip('Disable this to prevent the screenshot capturer from taking screenshots of space stations, atlas stations, and freighters.')}
+            onValueClick={this.handleAutoCaptureSpaceStations}
+            label="Capture Screenshots of Space Stations"
+            icon={p.s.autoCaptureSpaceStations ? 'check' : 'remove'} />
+          </div> : null}
           {!p.s.ps4User ? <div className="divider" /> : null}
           <Item
           className="Item__hover"

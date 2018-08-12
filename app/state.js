@@ -100,6 +100,7 @@ const state = initStore({
   mods: [],
   selectedImage: null,
   autoCapture: false,
+  autoCaptureSpaceStations: false,
   selectedGalaxy: 0,
   galaxyOptions: [],
   pollRate: 60000,
@@ -181,6 +182,7 @@ const state = initStore({
     'storedLocations',
     'favorites',
     'autoCapture',
+    'autoCaptureSpaceStations',
     'ps4User',
     'compactRemote',
     'offline',
@@ -339,5 +341,7 @@ const state = initStore({
   },
 });
 state._init();
-window.state = state;
+if (process.env.NODE_ENV === 'development') {
+  window.state = state;
+}
 export default state;

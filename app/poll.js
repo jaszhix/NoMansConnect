@@ -86,8 +86,9 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     return fav === location.id;
   });
   let upvote = refFav !== -1;
+  let {PlanetIndex} = saveData.result.PlayerStateData.UniverseAddress.GalacticAddress;
 
-  screenshot(!init && NMSRunning && state.autoCapture, (image) => {
+  screenshot(!init && NMSRunning && state.autoCapture && (state.autoCaptureSpaceStations || PlanetIndex > 0), (image) => {
     let currentPosition = {
       playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
       playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,

@@ -38825,7 +38825,7 @@ Item
 }
 .BasicDropdown__profile {
   position: absolute !important;
-  top: -22px;
+  top: 0px;
   left: -43px;
 }
 
