@@ -6,7 +6,7 @@ import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import ReactMarkdown from 'react-markdown';
 import moment from 'moment';
-import {assignIn, pick, isString, orderBy, upperFirst, clone} from 'lodash';
+import {assignIn, pick, isString, orderBy, upperFirst, clone, last} from 'lodash';
 
 import {validateEmail, ajax, fromHex, cleanUp, uaToObject, formatTranslatedID} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
@@ -336,6 +336,7 @@ const organicIcon = require('./assets/images/organic_discovery.png');
 const mineralIcon = require('./assets/images/mineral_discovery.png');
 const interactableIcon = require('./assets/images/interactable_discovery.png');
 const dividerTypes = ['Sector', 'SolarSystem', 'Planet'];
+const planetDividerTypes = ['SolarSystem', 'Planet'];
 
 const discoveryIconMap = {
   Animal: organicIcon,
@@ -367,10 +368,19 @@ class EventItem extends React.Component {
       groupClass += ` ProfileModal__eventGroupStart${!data ? 'Unidentified' : ''}`;
     }
     if (isEnd) {
-      groupClass += ` ProfileModal__eventGroupEnd${data && !created  ? 'Unidentified' : ''}`;
+      if (isLocation) {
+        groupClass += ' ProfileModal__eventGroupEndRegistered';
+      } else {
+        groupClass += ` ProfileModal__eventGroupEnd${data && !created  ? 'Unidentified' : ''}`;
+      }
     }
     if (!isStart && !isEnd) {
-      groupClass += ' ProfileModal__eventGroup';
+      if (isLocation) {
+        groupClass += ' ProfileModal__eventGroupRegistered';
+      } else {
+        groupClass += ' ProfileModal__eventGroup';
+      }
+
     }
     return (
       <div className="event">
@@ -591,7 +601,10 @@ export class ProfileModal extends React.Component {
         return location.id === discovery.location.id
       });
       if (refLocation) {
-        refLocation.discoveries.push(discovery);
+        if (discovery.type !== 'Planet') {
+          refLocation.discoveries.push(discovery);
+        }
+
       } else {
         locations.push({
           ...discovery.location,
@@ -658,30 +671,47 @@ export class ProfileModal extends React.Component {
                   {map(locations, (location, i) => {
                     let locationsLen = locations.length;
                     let discoveriesLen = location.discoveries.length;
+                    let nextLocation = locations[i + 1];
+                    let nextDiscovery = null;
+                    let previousDiscovery = null;
+                    if (nextLocation) {
+                      nextDiscovery = filter(nextLocation.discoveries, (d) => d.type !== 'Planet')[0];
+                    }
+                    previousDiscovery = last(filter(location.discoveries, (d) => d.type !== 'Planet'));
+                    let isStart = !previousDiscovery || (dividerTypes.includes(previousDiscovery.type) || planetDividerTypes.includes(previousDiscovery.type));
+                    let isEnd = (!nextDiscovery || !dividerTypes.includes(nextDiscovery.type)
+                      || (planetDividerTypes.includes(nextDiscovery.type) && nextDiscovery.type !== 'SolarSystem'))
                     return (
                       <React.Fragment key={i}>
-                        {location.id ?
-                        <EventItem
-                        {...location}
-                        isStart={true}
-                        isEnd={discoveriesLen === 0 || !location.created}
-                        type="Planet"
-                        isLocation={location.created != null} /> : null}
                         {map(location.discoveries, (discovery, d) => {
                           let nextDiscovery = location.discoveries[d + 1];
                           let previousDiscovery = location.discoveries[d - 1];
+                          let dIsStart = (d === 0 && !dividerTypes.includes(discovery.type))
+                            || (!location.created && (discovery.type === 'Planet' || (previousDiscovery && dividerTypes.includes(previousDiscovery.type))))
+                            || (!dividerTypes.includes(discovery.type) && previousDiscovery && dividerTypes.includes(previousDiscovery.type));
+                          let dIsEnd = (!location.created && (d === (discoveriesLen - 1) && i !== (locationsLen - 1)))
+                            || (discovery.type === 'Planet'
+                              && !location.created && nextDiscovery && (nextDiscovery.type === 'Planet' && nextDiscovery.type !== 'SolarSystem'))
+                            || (dividerTypes.includes(discovery.type)
+                              && nextDiscovery
+                              && (dividerTypes.includes(nextDiscovery.type)
+                            || (d !== (discoveriesLen - 1) && !dividerTypes.includes(nextDiscovery.type))));
                           return (
                             <EventItem
                             key={d} {...discovery}
                             profile={pick(profile, 'username', 'exp', 'id')}
                             shouldShowPlanetType={!location.id}
-                            isStart={!location.id && (discovery.type === 'Planet' || (previousDiscovery && dividerTypes.indexOf(previousDiscovery.type) > -1))}
-                            isEnd={
-                              ((d === (discoveriesLen - 1) && i !== (locationsLen - 1)))
-                              || (discovery.type === 'Planet' && !location.id && nextDiscovery && (nextDiscovery.type === 'Planet' && nextDiscovery.type !== 'SolarSystem'))
-                            } />
+                            isStart={dIsStart}
+                            isEnd={dIsEnd} />
                           );
                         })}
+                        {location.id ?
+                        <EventItem
+                        {...location}
+                        isStart={isStart}
+                        isEnd={isEnd}
+                        type="Planet"
+                        isLocation={location.created != null} /> : null}
                       </React.Fragment>
                     );
                   })}

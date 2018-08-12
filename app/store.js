@@ -270,13 +270,10 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
    *
    */
   function destroy() {
-    let keys = Object.keys(state);
-    for (let i = 0; i < keys.length; i++) {
-      state[keys[i]] = undefined;
-    }
     for (let i = 0; i < listeners.length; i++) {
       listeners[i] = undefined;
     }
+    listeners = [];
   }
 
   return getAPIWithObject(state);

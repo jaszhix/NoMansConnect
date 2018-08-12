@@ -190,11 +190,13 @@ class LocationBox extends React.Component {
     this.setState({positionEdit: false});
     state.trigger('updateLocation', this.state.location);
   }
-  handleTeleport = () => {
-    if (this.state.positionSelect) {
+  handleTeleport = (position) => {
+    let {location, positionSelect} = this.state;
+    let {selectType, i} = this.props;
+    if (positionSelect) {
       this.setState({positionSelect: false});
     }
-    state.trigger('teleport', this.state.location, this.props.selectType ? 'selected' : this.props.i);
+    state.trigger('teleport', location, selectType ? 'selected' : i, position);
   }
   getModMarkup = (mods) => {
     return ReactDOMServer.renderToString(
@@ -278,7 +280,7 @@ class LocationBox extends React.Component {
             id: `position-${i}`,
             disabled: p.navLoad,
             label: position.name || `Location ${i + 1}`,
-            onClick: this.handleTeleport
+            onClick: () => this.handleTeleport(position)
           })
         });
       } else {

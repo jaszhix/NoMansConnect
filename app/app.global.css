@@ -38869,9 +38869,16 @@ Profile
 .ProfileModal__eventGroup {
   border-right: 1px dashed #5399c2;
 }
+.ProfileModal__eventGroupRegistered {
+  border-right: 1px dashed #95220E;
+}
 .ProfileModal__eventGroupStart {
   border-top: 1px solid #95220E;
   border-right: 1px solid #95220E;
+}
+.ProfileModal__eventGroupEnd {
+  border-bottom: 1px dashed #5399c2;
+  border-right: 1px dashed #5399c2;
 }
 .ProfileModal__eventGroupStartUnidentified {
   border-top: 1px dashed #5399c2;
@@ -38882,9 +38889,9 @@ Profile
   border-right: 1px dashed #95220E;
   border-bottom: 1px dashed #95220E;
 }
-.ProfileModal__eventGroupEnd {
-  border-bottom: 1px dashed #5399c2;
-  border-right: 1px dashed #5399c2;
+.ProfileModal__eventGroupEndRegistered {
+  border-bottom: 1px solid #95220E;
+  border-right: 1px solid #95220E;
 }
 /*
 Friend requests

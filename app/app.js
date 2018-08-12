@@ -233,6 +233,7 @@ class App extends React.Component {
     if (this.monitor) {
       this.monitor.stop();
     }
+    state.destroy();
   }
   handleWorkers = () => {
     window.ajaxWorker.onmessage = (e) => {
