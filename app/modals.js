@@ -459,7 +459,7 @@ export class ProfileModal extends React.Component {
       });
     }
     return (
-      <div ref={this.getRef} className="ui fullscreen modal active modal__full">
+      <div ref={this.getRef} className="ui large modal active modal__large">
         <i
         className="window close outline icon modal__full__close"
         onClick={this.handleClickOutside} />

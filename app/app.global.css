@@ -38962,6 +38962,20 @@ Modals
   box-shadow: none !important;
   border: 1px solid #DA2600 !important;
 }
+.modal__large {
+  background: rgb(23, 26, 22) !important;
+  border-top: 2px solid #95220E !important;
+  position: fixed !important;
+  top: 6% !important;
+  z-index: 1000 !important;
+  -webkit-transform-origin: 50% 25% !important;
+  box-shadow: none !important;
+  border: 1px solid #DA2600 !important;
+  min-width: 1156px !important;
+  width: 75% !important;
+  max-width: 1343px !important;
+  height: 90% !important;
+}
 .modal__medium__close {
   top: 7px !important;
   right: 0px !important;
