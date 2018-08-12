@@ -252,7 +252,6 @@ class LocationBox extends React.Component {
     e.preventDefault();
     e.stopPropagation();
     state.set({displayProfile: this.state.profile.id});
-    this.props.onSearch();
   }
   render() {
     let p = this.props;

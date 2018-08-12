@@ -289,6 +289,7 @@ You should have received a copy of the GNU General Public License along with thi
     this.setState({open: !this.state.open});
   }
   handleSettings = () => state.set({displaySettings: true})
+  handleProfileClick = () => state.set({displayProfile: this.props.s.profile.id})
   render() {
     var p = this.props;
     return (
@@ -303,6 +304,18 @@ You should have received a copy of the GNU General Public License along with thi
         <div
         style={menuContainerStyle}
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
+          {this.props.s.profile ?
+          <React.Fragment>
+            <div
+            className="item"
+            onClick={this.handleProfileClick}
+            data-place="left"
+            data-tip={utils.tip('Access your profile.')}>
+              Profile
+            </div>
+            <div className="divider" />
+          </React.Fragment>
+          : null}
           <div
           className="item"
           onClick={this.handleSettings}
