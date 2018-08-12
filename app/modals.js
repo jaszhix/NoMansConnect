@@ -923,6 +923,9 @@ export class SettingsModal extends React.Component {
   constructor(props) {
     super(props);
   }
+  componentDidMount() {
+    ReactTooltip.rebuild();
+  }
   handleClickOutside = () => {
     if (this.props.s.setEmail) {
       return;
@@ -934,7 +937,8 @@ export class SettingsModal extends React.Component {
   }
   handleAutoCapture = (e) => {
     e.stopPropagation();
-    state.set({autoCapture: !this.props.s.autoCapture});
+    state.set({autoCapture: !this.props.s.autoCapture}, () => ReactTooltip.rebuild());
+  }
   }
   handleResetRemoteCache = () => {
     window.jsonWorker.postMessage({
