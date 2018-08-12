@@ -530,11 +530,11 @@ export class ProfileModal extends React.Component {
                               {moment(discovery.created).format('MMMM D, Y')}
                             </div>
                             <div className="meta ProfileModal__meta">
-                              {discovery.location && discovery.location.score ?
+                              {discovery.location ?
                               <div
                               className={`like${this.props.favorites.indexOf(discovery.location.data.id) > -1 ? ' active' : ''}`}
                               onClick={() => state.trigger('handleFavorite', discovery.location.data)}>
-                                <i className="like icon" /> {`${discovery.location.score}`}
+                                <i className="like icon" /> {`${discovery.location.score || ''}`}
                               </div> : null}
                             </div>
                           </div>
