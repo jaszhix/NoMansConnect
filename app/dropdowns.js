@@ -1,5 +1,7 @@
 import {remote} from 'electron';
+import moment from 'moment';
 import state from './state';
+import log from './log';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
@@ -154,6 +156,9 @@ export class SaveEditorDropdownMenu extends React.Component {
     }
   }
   handleClick = (e) => {
+    if (Date.now() < this.props.profile.data.lastSaveEditorModification + 86400000) {
+      return;
+    }
     let id = e.target.id;
     let requirement;
     if (e.target.id.indexOf('|') !== -1) {
@@ -167,7 +172,15 @@ export class SaveEditorDropdownMenu extends React.Component {
       if (isUnits) {
         args.push(this.props.profile.exp * 1000);
       }
-      this.props.onCheat(...args);
+      utils.ajax.put(`/nmsprofile/${this.props.profile.id}/`, {
+        username: state.username,
+        machineId: state.machineId,
+        data: {
+          lastSaveEditorModification: Date.now()
+        }
+      }).then((res) => {
+        state.set({profile: res.data}, () => this.props.onCheat(...args));
+      }).catch((err) => log.error(err.message));
     }
   }
   handleToggleOpen = () => {
@@ -175,7 +188,16 @@ export class SaveEditorDropdownMenu extends React.Component {
     this.setState({open: !this.state.open});
   }
   render() {
-    var p = this.props;
+    let p = this.props;
+    let {lastSaveEditorModification} = p.profile.data;
+    if (!lastSaveEditorModification) {
+      lastSaveEditorModification = 0;
+    }
+    let now = Date.now();
+    let disabled = now < (lastSaveEditorModification + 86400000);
+    let getTip = (n) => utils.tip(
+      `Requires ${n} registered locations. ${disabled ? `Cheat menu will be available again ${moment(now).to(lastSaveEditorModification + 86400000)}.` : 'Limited to one use per day.'}`
+    );
     return (
       <div
       style={noDragStyle}
@@ -190,33 +212,33 @@ export class SaveEditorDropdownMenu extends React.Component {
           <div
           id="repairInventory|50"
           style={{opacity: p.profile.exp >= 50 ? '1' : '0.5'}}
-          className="item"
+          className={`item${disabled ? ' item-disabled' : ''}`}
           onClick={this.handleClick}
           data-place="left"
-          data-tip={utils.tip('Requires 50 registered locations.')}>
+          data-tip={getTip(50)}>
             Repair Inventory
           </div>
           <div
           id="stockInventory|100"
           style={{opacity: p.profile.exp >= 100 ? '1' : '0.5'}}
-          className="item"
+          className={`item${disabled ? ' item-disabled' : ''}`}
           onClick={this.handleClick}
           data-place="left"
-          data-tip={utils.tip('Requires 100 registered locations.')}>
+          data-tip={getTip(100)}>
             Fully Stock Inventory
           </div>
           <div
           id="refuelEnergy|200"
           style={{opacity: p.profile.exp >= 200 ? '1' : '0.5'}}
-          className="item"
+          className={`item${disabled ? ' item-disabled' : ''}`}
           onClick={this.handleClick}
           data-place="left"
-          data-tip={utils.tip('Requires 200 registered locations.')}>
+          data-tip={getTip(200)}>
             Refuel Energies/Shields
           </div>
           <div
           id="modifyUnits"
-          className="item"
+          className={`item${disabled ? ' item-disabled' : ''}`}
           onClick={this.handleClick}
           data-place="left"
           data-tip={utils.tip('Explore more to increase your units allowance.')}>

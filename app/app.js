@@ -945,7 +945,7 @@ class App extends React.Component {
             baseIcon={baseIcon}
             storedBases={this.state.storedBases}
             /> : null}
-            {s.profile && !s.ps4User ?
+            {s.profile && !s.ps4User && s.displaySaveEditor ?
             <SaveEditorDropdownMenu
             onSaveBase={this.handleSaveBase}
             onRestoreBase={this.handleRestoreBase}

@@ -2,6 +2,7 @@ import React from 'react';
 import { render } from 'react-dom';
 import { AppContainer } from 'react-hot-loader';
 import App from './app';
+import konami from 'konami';
 import './app.global.css';
 
 render(
@@ -29,3 +30,4 @@ document.body.addEventListener('mousedown', function(e) {
 document.body.addEventListener('mouseup', function() {
   window.__mouseDown = 0;
 });
+new konami(() => state.set({displaySaveEditor: true}));

@@ -95,6 +95,7 @@ const state = initStore({
   displayProfile: null,
   displayFriendRequest: null,
   displayBaseRestoration: null,
+  displaySaveEditor: false,
   favorites: [],
   mods: [],
   selectedImage: null,
