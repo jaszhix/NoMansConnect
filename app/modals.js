@@ -417,6 +417,9 @@ export class ProfileModal extends React.Component {
     }
   }
   handleClickOutside = () => {
+    if (state.selectedImage) {
+      return;
+    }
     state.set({
       displayProfile: null
     });
@@ -437,6 +440,9 @@ export class ProfileModal extends React.Component {
   handleSwitchProfile = (friend) => {
     setTimeout(() => state.set({displayProfile: friend.id}), 0);
     state.set({displayProfile: ''});
+  }
+  handleImageModalOpen = (discovery) => {
+    state.set({selectedImage: `https://neuropuff.com/${discovery.location.image}`});
   }
   getRef = (ref) => {
     if (!this.ref) {
@@ -540,7 +546,7 @@ export class ProfileModal extends React.Component {
                           </div>
                           {discovery.location && discovery.location.image ?
                           <div className="extra images">
-                            <a onClick={() => state.set({selectedImage: `https://neuropuff.com/${discovery.location.image}`})}>
+                            <a onClick={() => this.handleImageModalOpen(discovery)}>
                               <img src={`https://neuropuff.com/${discovery.location.image}`} />
                             </a>
                           </div> : null}
