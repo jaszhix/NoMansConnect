@@ -421,7 +421,7 @@ export class BasicDropdown extends React.Component {
     let height = this.props.height ? this.props.height : window.innerHeight;
     return (
       <div
-      className={`ui dropdown BasicDropdown__root${this.state.open ? ' active visible' : ''}`}
+      className={`ui dropdown BasicDropdown__root${this.state.open ? ' active visible' : ''}${this.props.detailsOnly ? ' BasicDropdown__profile' : ''}`}
       onClick={this.handleToggleOpen}>
         {this.props.showValue && this.props.options.length > 0 ?
         <div className="text">

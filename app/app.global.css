@@ -38822,6 +38822,11 @@ Item
   position: absolute;
   right: 8px;
 }
+.BasicDropdown__profile {
+  position: absolute !important;
+  top: -22px;
+  left: -43px;
+}
 
 .item-disabled {
   opacity: 0.7;
@@ -38858,6 +38863,29 @@ Profile
   margin-bottom: 25px !important;
 }
 
+.ProfileModal__eventGroupCommon {
+  padding: 6px;
+}
+.ProfileModal__eventGroup {
+  border-right: 1px dashed #5399c2;
+}
+.ProfileModal__eventGroupStart {
+  border-top: 1px solid #95220E;
+  border-right: 1px solid #95220E;
+}
+.ProfileModal__eventGroupStartUnidentified {
+  border-top: 1px dashed #5399c2;
+  border-right: 1px dashed #5399c2;
+}
+.ProfileModal__eventGroupEndUnidentified {
+  border-top: 1px dashed #95220E;
+  border-right: 1px dashed #95220E;
+  border-bottom: 1px dashed #95220E;
+}
+.ProfileModal__eventGroupEnd {
+  border-bottom: 1px dashed #5399c2;
+  border-right: 1px dashed #5399c2;
+}
 /*
 Friend requests
 */

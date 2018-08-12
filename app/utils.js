@@ -48,7 +48,10 @@ export var exc = (cmd) => {
 
 export var formatID = (location) => {
   location.GalacticAddress.id = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
-  return location.GalacticAddress;
+  return {
+    ...location.GalacticAddress,
+    RealityIndex: location.RealityIndex
+  };
 };
 
 export var parseID = (id) => {
@@ -105,6 +108,19 @@ export const toHex = (str, totalChars) => {
   return str;
 }
 
+export const formatTranslatedID = (location) => {
+  let translatedX = convertInteger(location.VoxelX, 'x');
+  let translatedZ = convertInteger(location.VoxelZ, 'z');
+  let translatedY = convertInteger(location.VoxelY, 'y');
+  return {
+    ...location,
+    translatedX,
+    translatedY,
+    translatedZ,
+    translatedId: `${toHex(translatedX, 4)}:${toHex(translatedY, 4)}:${toHex(translatedZ, 4)}:${toHex(location.SolarSystemIndex, 4)}`
+  };
+}
+
 export var fromHex = (str, username, galaxy) => {
   try {
     let result = {x: 0, y: 0, z: 0, SolarSystemIndex: 0};
@@ -144,9 +160,6 @@ export var fromHex = (str, username, galaxy) => {
       VoxelZ: result.z,
       SolarSystemIndex: result.SolarSystemIndex,
       PlanetIndex: 0,
-      translatedX: convertInteger(result.x, 'x'),
-      translatedZ: convertInteger(result.z, 'z'),
-      translatedY: convertInteger(result.y, 'y'),
       base: false,
       baseData: false,
       upvote: false,
@@ -156,6 +169,8 @@ export var fromHex = (str, username, galaxy) => {
       timeStamp: Date.now(),
       apiVersion: 1
     };
+
+    manualLocation = formatTranslatedID(manualLocation);
 
     if (isNaN(manualLocation.SolarSystemIndex)
       || isNaN(manualLocation.translatedX)
@@ -175,7 +190,6 @@ export var fromHex = (str, username, galaxy) => {
     }
     assignIn(manualLocation, {
       jumps: Math.ceil(manualLocation.distanceToCenter / 400),
-      translatedId: `${toHex(manualLocation.translatedX, 4)}:${toHex(manualLocation.translatedY, 4)}:${toHex(manualLocation.translatedZ, 4)}:${toHex(manualLocation.SolarSystemIndex, 4)}`,
       GalacticAddress: {
         VoxelY: result.y,
         VoxelX: result.x,
@@ -494,7 +508,7 @@ export const uaToObject = (x) => {
       VoxelZ,
       VoxelX
     },
-    RealityIndex,
+    RealityIndex: RealityIndex || 0,
   };
   return formatID(result);
 }

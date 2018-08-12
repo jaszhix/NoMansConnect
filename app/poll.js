@@ -7,6 +7,7 @@ import screenshot from 'capture';
 import * as utils from './utils';
 import {each, find, findIndex, tryFn} from './lang';
 import {handleSaveDataFailure, handleProtectedSession} from './dialog';
+import {defaultPosition} from './constants';
 
 
 let processData = (opts, saveData, location, refLocation, username, profile=null) => {
@@ -88,13 +89,16 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
 
   screenshot(!init && NMSRunning && state.autoCapture, (image) => {
     let currentPosition = {
-      name: '',
-      image: '',
       playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
       playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
       shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
       shipTransform: saveData.result.SpawnStateData.ShipTransformAt,
     };
+    let manuallyEntered = isEqual(defaultPosition, currentPosition);
+    assignIn(currentPosition, {
+      name: '',
+      image: '',
+    });
     let isLocationUpdate = false;
     if (refLocation === -1) {
       assignIn(location, {
@@ -102,23 +106,19 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         positions: [currentPosition],
         galaxy: saveData.result.PlayerStateData.UniverseAddress.RealityIndex,
         distanceToCenter: utils.calculateDistanceToCenter(location.VoxelX, location.VoxelY, location.VoxelZ),
-        translatedX: utils.convertInteger(location.VoxelX, 'x'),
-        translatedZ: utils.convertInteger(location.VoxelZ, 'z'),
-        translatedY: utils.convertInteger(location.VoxelY, 'y'),
         base: false,
         baseData: null,
         upvote: upvote,
         image: image,
         mods: state.mods,
-        manuallyEntered: false,
+        manuallyEntered,
         timeStamp: Date.now(),
         version: saveData.result.Version,
         apiVersion: 1
       });
 
       location.jumps = Math.ceil(location.distanceToCenter / 400);
-
-      location.translatedId = `${utils.toHex(location.translatedX, 4)}:${utils.toHex(location.translatedY, 4)}:${utils.toHex(location.translatedZ, 4)}:${utils.toHex(location.SolarSystemIndex, 4)}`;
+      location = utils.formatTranslatedID(location);
 
       if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
         log.error(`translatedId formatting is NaN: ${location}`);
@@ -311,6 +311,7 @@ let getLastSave = (opts) => {
     let refLocation, location, username;
     if (!state.ps4User) {
       location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
+      delete location.RealityIndex;
       refLocation = findIndex(state.storedLocations, _location => _location.id === location.id);
       if (!state.username || state.username === 'Explorer') {
         username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;

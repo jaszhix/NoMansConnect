@@ -616,7 +616,6 @@ class Container extends React.Component {
               onEdit={this.toggleEdit}
               onMarkCompatible={this.handleCompatibility}
               onRemoveStoredLocation={p.onRemoveStoredLocation}
-              onTeleport={p.onTeleport}
               onSubmit={this.handleUpdate}
               onSaveBase={p.onSaveBase}
               ps4User={ps4User}
@@ -633,7 +632,6 @@ class Container extends React.Component {
         isOwnLocation={isOwnLocation}
         updating={this.state.updating}
         onPagination={p.onPagination}
-        onTeleport={p.onTeleport}
         onFav={this.handleFavorite}
         onSaveBase={p.onSaveBase}
         ps4User={ps4User} /> : null}

@@ -77,11 +77,6 @@ class LocationBox extends React.Component {
         }
       })
     ];
-    if (this.props.selectType) {
-      this.connections.push(
-        state.connect({positionSelect: () => this.setState({positionSelect: !this.state.positionSelect})})
-      );
-    }
     this.getImage(this.props);
     if (this.props.id && !this.props.offline) {
       this.updateLocation();
@@ -195,6 +190,12 @@ class LocationBox extends React.Component {
     this.setState({positionEdit: false});
     state.trigger('updateLocation', this.state.location);
   }
+  handleTeleport = () => {
+    if (this.state.positionSelect) {
+      this.setState({positionSelect: false});
+    }
+    state.trigger('teleport', this.state.location, this.props.selectType ? 'selected' : this.props.i);
+  }
   getModMarkup = (mods) => {
     return ReactDOMServer.renderToString(
       map(mods, (mod, i) => {
@@ -237,7 +238,7 @@ class LocationBox extends React.Component {
         {location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[location.galaxy]} /> : null}
         {location.distanceToCenter ? <Item label="Distance to Center" value={`${location.distanceToCenter.toFixed(0)} LY / ${location.jumps} Jumps`} /> : null}
         {location.mode ? <Item label="Mode" value={upperFirst(location.mode)} /> : null}
-        {p.name.length > 0 || location.baseData ? <Item label="Explored by" value={location.username} /> : null}
+        {(p.name.length > 0 || location.baseData) && !p.detailsOnly ? <Item label="Explored by" value={location.username} /> : null}
         {location.teleports ? <Item label="Teleports" value={location.teleports} /> : null}
         {location.score ? <Item label="Favorites" value={location.score} /> : null}
         {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
@@ -277,14 +278,14 @@ class LocationBox extends React.Component {
             id: `position-${i}`,
             disabled: p.navLoad,
             label: position.name || `Location ${i + 1}`,
-            onClick: () => p.onTeleport(location, p.selectType ? 'selected' : p.i, position)
+            onClick: this.handleTeleport
           })
         });
       } else {
         leftOptions.push({
           id: 'legacyTeleport',
           label: `Initial Location`,
-          onClick: () => p.onTeleport(location, p.selectType ? 'selected' : p.i)
+          onClick: this.handleTeleport
         })
       }
     } else {
@@ -393,6 +394,16 @@ class LocationBox extends React.Component {
       });
     }
 
+    let dropdown = (
+      <BasicDropdown
+      height={200}
+      icon="ellipsis horizontal"
+      showValue={null}
+      persist={p.edit || this.state.positionSelect}
+      options={leftOptions}
+      detailsOnly={p.detailsOnly} />
+    );
+
     return (
       <div
       className="ui segment"
@@ -415,7 +426,7 @@ class LocationBox extends React.Component {
           </h3>
         ) : null}
 
-        {this.props.isVisible ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => p.onFav(location)} /> : null}
+        {this.props.isVisible && !p.detailsOnly ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => p.onFav(location)} /> : null}
         {this.props.isVisible && !p.detailsOnly ? (
           <div
           style={{
@@ -424,23 +435,17 @@ class LocationBox extends React.Component {
             right: compact ? '143px' : 'initial',
             top: '16px'
           }}>
-          {leftOptions.length > 0 ?
-          <BasicDropdown
-          height={200}
-          icon="ellipsis horizontal"
-          showValue={null}
-          persist={p.edit || this.state.positionSelect}
-          options={leftOptions} /> : null}
-          {location.base ? (
-            <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
-              <img className="LocationBox__baseStyle" src={baseIcon} />
-            </span>
-          ) : null}
-          {isSpaceStation ? (
-            <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
-              <img className="LocationBox__baseStyle" src={spaceStationIcon} />
-            </span>
-          ) : null}
+            {leftOptions.length > 0 ? dropdown : null}
+            {location.base ? (
+              <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+                <img className="LocationBox__baseStyle" src={baseIcon} />
+              </span>
+            ) : null}
+            {isSpaceStation ? (
+              <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+                <img className="LocationBox__baseStyle" src={spaceStationIcon} />
+              </span>
+            ) : null}
           </div>
         ) : null}
         {this.state.positionEdit ?
@@ -510,7 +515,10 @@ class LocationBox extends React.Component {
             </div>
           </div>
         ) : p.selectType || (this.props.isVisible && !p.compactRemote) ? (
-          <div>{this.renderDetails()}</div>
+          <div>
+            {p.detailsOnly ? dropdown : null}
+            {this.renderDetails()}
+          </div>
         ) : null}
       </div>
     );

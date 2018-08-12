@@ -2,14 +2,15 @@ import {clipboard, remote} from 'electron';
 import state from './state';
 import React from 'react';
 import PropTypes from 'prop-types';
+import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import ReactMarkdown from 'react-markdown';
 import moment from 'moment';
-import {assignIn, pick, isString, orderBy, upperFirst} from 'lodash';
+import {assignIn, pick, isString, orderBy, upperFirst, clone} from 'lodash';
 
-import {validateEmail, ajax, fromHex, cleanUp} from './utils';
+import {validateEmail, ajax, fromHex, cleanUp, uaToObject, formatTranslatedID} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
-import {each, findIndex, map, filter} from './lang';
+import {each, findIndex, find, map, filter} from './lang';
 
 import {BasicDropdown} from './dropdowns';
 import Button from './buttons';
@@ -334,6 +335,7 @@ const planetIcon = require('./assets/images/planet_discovery.png');
 const organicIcon = require('./assets/images/organic_discovery.png');
 const mineralIcon = require('./assets/images/mineral_discovery.png');
 const interactableIcon = require('./assets/images/interactable_discovery.png');
+const dividerTypes = ['Sector', 'SolarSystem', 'Planet'];
 
 const discoveryIconMap = {
   Animal: organicIcon,
@@ -344,6 +346,97 @@ const discoveryIconMap = {
   Sector: planetIcon,
   Interactable: interactableIcon
 };
+
+class EventItem extends React.Component {
+  static defaultProps = {
+    shouldShowPlanetType: true,
+  };
+  constructor(props) {
+    super(props);
+  }
+  componentDidMount() {
+    ReactTooltip.rebuild();
+  }
+  render() {
+    let {profile, name, description, type, created, image, data, score, shouldShowPlanetType, isStart, isEnd, isLocation} = this.props;
+    if (type === 'Planet' && !shouldShowPlanetType) {
+      return null;
+    }
+    let groupClass = 'label ProfileModal__eventGroupCommon';
+    if (isStart) {
+      groupClass += ` ProfileModal__eventGroupStart${!data ? 'Unidentified' : ''}`;
+    }
+    if (isEnd) {
+      groupClass += ` ProfileModal__eventGroupEnd${data && !created  ? 'Unidentified' : ''}`;
+    }
+    if (!isStart && !isEnd) {
+      groupClass += ' ProfileModal__eventGroup';
+    }
+    return (
+      <div className="event">
+        <div className={groupClass}>
+          <img src={discoveryIconMap[type]} />
+        </div>
+        <div className="content">
+          <div className="summary">
+            {`${isLocation ? 'Registered' : 'Discovered'} ${type === 'SolarSystem' ? 'Solar System' : type}`}
+            <div className="date">
+              {moment(created).format('MMMM D, Y')}
+            </div>
+            <div className="meta ProfileModal__meta">
+              {data && created ?
+              <div
+              className={`like${state.favorites.indexOf(data.id) > -1 ? ' active' : ''}`}
+              onClick={() => state.trigger('handleFavorite', data)}>
+                <i className="like icon" /> {`${score || ''}`}
+              </div> : null}
+            </div>
+          </div>
+          {image ?
+          <div className="extra images">
+            <a onClick={() => state.set({selectedImage: `https://neuropuff.com/${image}`})}>
+              <img src={`https://neuropuff.com/${image}`} />
+            </a>
+          </div> : null}
+          <div
+          className="extra text"
+          data-tip={description ? description : ''}>
+            <Item label="Name" value={name || 'Unknown'} />
+          </div>
+          {data ?
+          <LocationBox
+          name={name}
+          description={''}
+          username={profile ? profile.username : ''}
+          selectType={false}
+          currentLocation={''}
+          isOwnLocation={false}
+          isVisible={true}
+          location={data}
+          updating={false}
+          edit={false}
+          favorites={state.favorites}
+          image={image}
+          version={/* p.s.selectedLocation.version === p.s.saveVersion */true}
+          width={800}
+          height={800}
+          isSelectedLocationRemovable={false}
+          onUploadScreen={null}
+          onDeleteScreen={null}
+          onFav={null}
+          onEdit={null}
+          onMarkCompatible={null}
+          onRemoveStoredLocation={null}
+          onSubmit={null}
+          onSaveBase={null}
+          ps4User={false}
+          configDir={''}
+          detailsOnly={true} /> : null}
+        </div>
+      </div>
+    );
+  }
+}
 
 export class ProfileModal extends React.Component {
   static propTypes = {
@@ -371,13 +464,17 @@ export class ProfileModal extends React.Component {
     this.ref.removeEventListener('resize', this.handleResize);
     each(this.connections, (id) => state.disconnect(id));
   }
-  fetchProfile = (discoveriesPage = 1) => {
+  fetchProfile = (discoveriesPage = 1, isPagination = false) => {
     utils.ajax.get(`/nmsprofile/${this.props.profileId}/`, {
       params: {discoveriesPage}
     }).then((profile) => {
       this.setState({
         profile: profile.data,
         discoveriesPage
+      }, () => {
+        if (isPagination) {
+          this.eventRef.scrollTop = 0;
+        }
       });
     }).catch((err) => {
       console.log(err);
@@ -429,20 +526,19 @@ export class ProfileModal extends React.Component {
   }
   handleNextPage = () => {
     this.fetchProfile(
-      this.state.discoveriesPage + 1
+      this.state.discoveriesPage + 1,
+      true
     );
   }
   handlePreviousPage = () => {
     this.fetchProfile(
-      this.state.discoveriesPage - 1
+      this.state.discoveriesPage - 1,
+      true
     );
   }
   handleSwitchProfile = (friend) => {
     setTimeout(() => state.set({displayProfile: friend.id}), 0);
     state.set({displayProfile: ''});
-  }
-  handleImageModalOpen = (discovery) => {
-    state.set({selectedImage: `https://neuropuff.com/${discovery.location.image}`});
   }
   getRef = (ref) => {
     if (!this.ref) {
@@ -450,6 +546,9 @@ export class ProfileModal extends React.Component {
       this.setState({height: ref.clientHeight});
       ref.addEventListener('resize', this.handleResize);
     }
+  }
+  getEventRef = (ref) => {
+    if (ref && !this.eventRef) this.eventRef = ref;
   }
   render() {
     const {profile, error, discoveriesPage, height} = this.state;
@@ -466,6 +565,41 @@ export class ProfileModal extends React.Component {
         }
       });
     }
+    // Group discoveries by location
+    let locations = [];
+    each(profile.discoveries, (discovery) => {
+      discovery = clone(discovery);
+      if (!discovery.location) {
+        if (discovery.type === 'Planet') {
+          // Reconstruct the location data so teleporting works
+          let uaObject = uaToObject(discovery.universe_address);
+          let {RealityIndex} = clone(uaObject);
+          let data = formatTranslatedID(uaObject);
+          discovery.location = {
+            data: {
+              ...data,
+              manuallyEntered: true,
+              galaxy: RealityIndex
+            }
+          }
+          discovery.location.id = discovery.location.data.id;
+        } else {
+          discovery.location = {}
+        }
+      }
+      let refLocation = find(locations, (location) => {
+        return location.id === discovery.location.id
+      });
+      if (refLocation) {
+        refLocation.discoveries.push(discovery);
+      } else {
+        locations.push({
+          ...discovery.location,
+          discoveries: [discovery]
+        });
+      }
+      if (discovery.location.id) delete discovery.location;
+    });
     return (
       <div ref={this.getRef} className="ui large modal active modal__large">
         <i
@@ -516,79 +650,43 @@ export class ProfileModal extends React.Component {
               </div>
             </div>
             <div
-            className="ui six wide column right floated ProfileModal__container ProfileModal__mdColumn"
+            ref={this.getEventRef}
+            className="ui eight wide column right floated ProfileModal__container ProfileModal__mdColumn"
             style={{maxHeight: `${height - 1}px`}}>
               <React.Fragment>
-                {map(profile.discoveries, (discovery, i) => {
-                  let name = discovery.name ? discovery.name
-                  : discovery.type === 'planet' && discovery.location && discovery.location.name ? discovery.location.name
-                  : 'Unknown';
-                  return (
-                    <div key={i} className="ui feed ProfileModal__feed">
-                      <div className="event">
-                        <div className="label">
-                          <img src={discoveryIconMap[discovery.type]} />
-                        </div>
-                        <div className="content">
-                          <div className="summary">
-                            {`Discovered ${discovery.type === 'SolarSystem' ? 'Solar System' : discovery.type}`}
-                            <div className="date">
-                              {moment(discovery.created).format('MMMM D, Y')}
-                            </div>
-                            <div className="meta ProfileModal__meta">
-                              {discovery.location ?
-                              <div
-                              className={`like${this.props.favorites.indexOf(discovery.location.data.id) > -1 ? ' active' : ''}`}
-                              onClick={() => state.trigger('handleFavorite', discovery.location.data)}>
-                                <i className="like icon" /> {`${discovery.location.score || ''}`}
-                              </div> : null}
-                            </div>
-                          </div>
-                          {discovery.location && discovery.location.image ?
-                          <div className="extra images">
-                            <a onClick={() => this.handleImageModalOpen(discovery)}>
-                              <img src={`https://neuropuff.com/${discovery.location.image}`} />
-                            </a>
-                          </div> : null}
-                          <div className="extra text">
-                            <Item label="Name" value={name} />
-                          </div>
-                          {discovery.location ?
-                          <LocationBox
-                          name={discovery.location.name}
-                          description={discovery.location.description}
-                          username={discovery.profile.username}
-                          selectType={false}
-                          currentLocation={''}
-                          isOwnLocation={false}
-                          isVisible={true}
-                          location={discovery.location.data}
-                          updating={false}
-                          edit={false}
-                          favorites={this.props.favorites}
-                          image={discovery.location.image}
-                          version={/* p.s.selectedLocation.version === p.s.saveVersion */true}
-                          width={800}
-                          height={800}
-                          isSelectedLocationRemovable={false}
-                          onUploadScreen={null}
-                          onDeleteScreen={null}
-                          onFav={null}
-                          onEdit={null}
-                          onMarkCompatible={null}
-                          onRemoveStoredLocation={null}
-                          onTeleport={null}
-                          onSubmit={null}
-                          onSaveBase={null}
-                          ps4User={false}
-                          configDir={''}
-                          detailsOnly={true} /> : null}
+                <div className="ui feed ProfileModal__feed">
+                  {map(locations, (location, i) => {
+                    let locationsLen = locations.length;
+                    let discoveriesLen = location.discoveries.length;
+                    return (
+                      <React.Fragment key={i}>
+                        {location.id ?
+                        <EventItem
+                        {...location}
+                        isStart={true}
+                        isEnd={discoveriesLen === 0 || !location.created}
+                        type="Planet"
+                        isLocation={location.created != null} /> : null}
+                        {map(location.discoveries, (discovery, d) => {
+                          let nextDiscovery = location.discoveries[d + 1];
+                          let previousDiscovery = location.discoveries[d - 1];
+                          return (
+                            <EventItem
+                            key={d} {...discovery}
+                            profile={pick(profile, 'username', 'exp', 'id')}
+                            shouldShowPlanetType={!location.id}
+                            isStart={!location.id && (discovery.type === 'Planet' || (previousDiscovery && dividerTypes.indexOf(previousDiscovery.type) > -1))}
+                            isEnd={
+                              ((d === (discoveriesLen - 1) && i !== (locationsLen - 1)))
+                              || (discovery.type === 'Planet' && !location.id && nextDiscovery && (nextDiscovery.type === 'Planet' && nextDiscovery.type !== 'SolarSystem'))
+                            } />
+                          );
+                        })}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
 
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
                 {profile.discoveries && profile.discoveries.length > 0 ?
                 <div className="ui two column grid">
                   <div className="column">

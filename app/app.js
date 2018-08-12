@@ -33,6 +33,7 @@ import {
 } from './modals';
 import Search from './search';
 import Container from './container';
+import {defaultPosition} from './constants';
 
 const {dialog} = remote;
 
@@ -87,7 +88,8 @@ class App extends React.Component {
       restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
       setWaypoint: (location) => this.setWaypoint(location),
       getMonitor: () => this.monitor,
-      handleClearSearch: () => this.handleClearSearch()
+      handleClearSearch: () => this.handleClearSearch(),
+      teleport: (...args) => this.handleTeleport(...args)
     });
 
     this.topAttachedMenuStyle = {
@@ -621,7 +623,7 @@ class App extends React.Component {
       log.error(`Failed to restore base: ${err.message}`);
     });
   }
-  handleTeleport = (location, i, action = null, n = null, position = null) => {
+  handleTeleport = (location, i, action = null, n = null) => {
     const _location = cloneDeep(location);
     state.set({navLoad: true});
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
@@ -635,32 +637,7 @@ class App extends React.Component {
       }
 
       if (location.manuallyEntered) {
-        assignIn(_location, {
-          playerPosition: [
-            233.02163696289063,
-            6774.24560546875,
-            115.99118041992188,
-            1
-          ],
-          playerTransform: [
-            0.35815203189849854,
-            0.82056683301925659,
-            0.44541805982589722,
-            1
-          ],
-          shipPosition: [
-            234.85250854492188,
-            6777.2685546875,
-            121.86365509033203,
-            1
-          ],
-          shipTransform: [
-            -0.48167002201080322,
-            -0.84464621543884277,
-            -0.23359590768814087,
-            1
-          ],
-        });
+        assignIn(_location, defaultPosition);
         saveData.result.SpawnStateData.LastKnownPlayerState = 'InShip';
       }
 
@@ -694,7 +671,6 @@ class App extends React.Component {
         let refStoredLocation = findIndex(this.state.storedLocations, location => location.id === _location.id);
         if (refStoredLocation !== -1) {
           state.set({navLoad: false});
-          state.trigger('positionSelect');
           return;
         }
         utils.ajax.post('/nmslocation/', {
@@ -715,18 +691,15 @@ class App extends React.Component {
             currentLocation: _location.id,
             remoteLocations: this.state.remoteLocations
           });
-          state.trigger('positionSelect');
         }).catch((err) => {
           log.error(`Unable to send teleport stat to server: ${err}`);
           state.set({navLoad: false});
-          state.trigger('positionSelect');
         });
       });
     }).catch((err) => {
       log.error(err.message);
       log.error(`Unable to teleport to location: ${err}`);
       state.set({navLoad: false});
-      state.trigger('positionSelect');
     });
   }
   setWaypoint = (location) => {
@@ -1037,7 +1010,6 @@ class App extends React.Component {
         :
         <Container
         s={s}
-        onTeleport={this.handleTeleport}
         onPagination={this.handlePagination}
         onRemoveStoredLocation={this.handleRemoveStoredLocation}
         onSaveBase={this.handleSaveBase}

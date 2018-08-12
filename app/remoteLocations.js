@@ -265,7 +265,6 @@ class RemoteLocations extends React.Component {
           image={location.image}
           version={p.s.saveVersion ? location.version === p.s.saveVersion || location.data.version === p.s.saveVersion : null}
           onFav={this.handleFavorite}
-          onTeleport={p.onTeleport}
           onSaveBase={p.onSaveBase}
           onCompactRemoteSwitch={this.setViewableRange}
           onSearch={p.onSearch}
