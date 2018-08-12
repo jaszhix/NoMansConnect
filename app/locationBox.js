@@ -229,6 +229,7 @@ class LocationBox extends React.Component {
             {this.state.image ? <img className="LocationBox__imageStyle" src={this.state.image} onClick={() => state.set({selectedImage: this.state.image})} /> : null}
           </div>
         ) : null}
+        {this.props.detailsOnly ? <Item label="Name" value={name || 'Unknown'} /> : null}
         {location.description || this.props.description ? <Item label="Description" value={this.props.description ? this.props.description : location.description} /> : null}
         <Item label="Galactic Address" value={location.translatedId} />
         <Item label="Universe Address" value={location.id} />
@@ -287,7 +288,7 @@ class LocationBox extends React.Component {
         leftOptions.push({
           id: 'legacyTeleport',
           label: `Initial Location`,
-          onClick: this.handleTeleport
+          onClick: () => this.handleTeleport()
         })
       }
     } else {

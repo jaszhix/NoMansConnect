@@ -359,7 +359,8 @@ class EventItem extends React.Component {
     ReactTooltip.rebuild();
   }
   render() {
-    let {profile, name, description, type, created, image, data, score, shouldShowPlanetType, isStart, isEnd, isLocation} = this.props;
+    let {profile, name, description, type, created, image, data, score, version, shouldShowPlanetType, isStart, isEnd, isLocation} = this.props;
+    let isOwnLocation = profile ? profile.username === state.username : false;
     if (type === 'Planet' && !shouldShowPlanetType) {
       return null;
     }
@@ -380,7 +381,6 @@ class EventItem extends React.Component {
       } else {
         groupClass += ' ProfileModal__eventGroup';
       }
-
     }
     return (
       <div className="event">
@@ -402,32 +402,21 @@ class EventItem extends React.Component {
               </div> : null}
             </div>
           </div>
-          {image ?
-          <div className="extra images">
-            <a onClick={() => state.set({selectedImage: `https://neuropuff.com/${image}`})}>
-              <img src={`https://neuropuff.com/${image}`} />
-            </a>
-          </div> : null}
-          <div
-          className="extra text"
-          data-tip={description ? description : ''}>
-            <Item label="Name" value={name || 'Unknown'} />
-          </div>
           {data ?
           <LocationBox
           name={name}
           description={''}
           username={profile ? profile.username : ''}
           selectType={false}
-          currentLocation={''}
-          isOwnLocation={false}
+          currentLocation={state.currentLocation}
+          isOwnLocation={isOwnLocation}
           isVisible={true}
           location={data}
           updating={false}
           edit={false}
           favorites={state.favorites}
           image={image}
-          version={/* p.s.selectedLocation.version === p.s.saveVersion */true}
+          version={version === state.saveVersion}
           width={800}
           height={800}
           isSelectedLocationRemovable={false}
@@ -440,7 +429,7 @@ class EventItem extends React.Component {
           onSubmit={null}
           onSaveBase={null}
           ps4User={false}
-          configDir={''}
+          configDir={state.configDir}
           detailsOnly={true} /> : null}
         </div>
       </div>
@@ -1007,7 +996,7 @@ export class SettingsModal extends React.Component {
     state.set({
       title: `${state.updateAvailable ? 'OLD' : 'NO'} MAN'S ${!this.props.s.offline ? 'DIS' : ''}CONNECT`,
       offline: !this.props.s.offline
-    });
+    }, handleRestart);
   }
   render() {
     var p = this.props;

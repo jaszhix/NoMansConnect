@@ -38764,6 +38764,7 @@ LocationBox
 .LocationBox__scrollBoxProfileStyle {
   width: unset !important;
   min-height: unset !important;
+  max-height: unset !important;
   overflow-y: unset;
   overflow-x: unset;
 }
@@ -38829,7 +38830,7 @@ Item
 }
 
 .item-disabled {
-  opacity: 0.7;
+  opacity: 0.7 !important;
 }
 
 /*
