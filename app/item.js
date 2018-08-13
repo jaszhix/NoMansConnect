@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import openExternal from 'open-external';
-import {defer} from 'lodash';
 import {cleanUp} from './utils';
 
 const iconStyle = {
@@ -23,11 +22,11 @@ class Item extends React.Component {
   }
   componentDidMount(){
     if (this.props.label === 'Description') {
-      defer(()=>{
+      setTimeout(() => {
         if (this.descriptionRef) {
           this.descriptionRef.addEventListener('click', this.handleDescClick);
         }
-      });
+      }, 0);
     }
   }
   componentWillUnmount(){

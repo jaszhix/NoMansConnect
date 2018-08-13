@@ -2,6 +2,7 @@ import {remote} from 'electron';
 import os from 'os';
 import fs from 'graceful-fs';
 import {assignIn, pick, uniqBy, cloneDeep} from 'lodash';
+import log from './log';
 import {each, filter} from './lang';
 import initStore from './store';
 import galaxies from './static/galaxies.json';
@@ -53,13 +54,15 @@ const showDefault = {
   }
 };
 
+let cb;
+
 const state = initStore({
   // Core
   knownProducts,
   galaxies,
   defaultLegendKeys: Object.keys(showDefault),
   completedMigration: false,
-  version: '1.3.3',
+  version: '1.4.0',
   notification: {
     message: '',
     type: 'info'
@@ -69,6 +72,7 @@ const state = initStore({
   winVersion: os.release(),
   machineId: null,
   protected: false,
+  ready: false,
   init: true,
   homedir: remote.app.getPath('home'),
   configDir: remote.app.getPath('userData'),
@@ -197,8 +201,8 @@ const state = initStore({
     'sortByDistance',
     'sortByModded'
   ],
-  _init: () => {
-
+  _init: (_cb) => {
+    cb = _cb;
     if (process.env.NODE_ENV === 'production') {
       Raven
         .config('https://9729d511f78f40d0ae5ebdeabc9217fc@sentry.io/180778', {
@@ -224,35 +228,38 @@ const state = initStore({
     let basePath = state.configDir.split('\\AppData')[0];
     let steamPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS`;
     let gogPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS\\DefaultUser`;
-    if (fs.existsSync(steamPath)) {
-      saveDirPath = steamPath;
-    } else if (fs.existsSync(gogPath)) {
-      saveDirPath = gogPath;
-    }
+    fs.exists(steamPath, (sExists) => {
+      fs.exists(gogPath, (gExists) => {
+        if (sExists) {
+          saveDirPath = steamPath;
+        } else if (gExists) {
+          saveDirPath = gogPath;
+        }
 
-    console.log(saveDirPath);
+        console.log(saveDirPath);
 
-    state.saveDirectory = saveDirPath;
+        state.saveDirectory = saveDirPath;
 
-    state.handleJsonWorker();
-    window.jsonWorker.postMessage({
-      method: 'new',
-      default: {
-        remoteLocations: []
-      },
-      fileName: 'cache.json',
-      configDir: state.configDir,
-      pageSize: state.pageSize
+        state.handleJsonWorker();
+        window.jsonWorker.postMessage({
+          method: 'new',
+          default: {
+            remoteLocations: []
+          },
+          fileName: 'cache.json',
+          configDir: state.configDir,
+          pageSize: state.pageSize
+        });
+        state.handleSettingsWorker();
+        const settings = pick(state, state.settingsKeys);
+        window.settingsWorker.postMessage({
+          method: 'new',
+          default: settings,
+          fileName: 'settings.json',
+          configDir: state.configDir,
+        });
+      });
     });
-    state.handleSettingsWorker();
-    const settings = pick(state, state.settingsKeys);
-    window.settingsWorker.postMessage({
-      method: 'new',
-      default: settings,
-      fileName: 'settings.json',
-      configDir: state.configDir,
-    });
-
   },
   handleJsonWorker: () => {
     window.jsonWorker.onmessage = (e) => {
@@ -286,6 +293,14 @@ const state = initStore({
             }
           });
         });
+      }
+
+      if (!state.ready) {
+        stateUpdate.ready = true;
+        log.error('State initialized');
+        if (typeof cb === 'function') {
+          cb();
+        }
       }
 
       state.set(stateUpdate, true);
@@ -340,7 +355,7 @@ const state = initStore({
     dialog.showErrorBox('NMC Error', error);
   },
 });
-state._init();
+
 if (process.env.NODE_ENV === 'development') {
   window.state = state;
 }

@@ -456,15 +456,15 @@ export class ProfileModal extends React.Component {
   componentDidMount() {
     this.fetchProfile();
     this.connections = [
-      state.connect({favorites: () => this.fetchProfile(this.state.discoveriesPage)})
+      state.connect({favorites: () => this.fetchProfile(undefined, this.state.discoveriesPage)})
     ];
   }
   componentWillUnmount() {
     this.ref.removeEventListener('resize', this.handleResize);
     each(this.connections, (id) => state.disconnect(id));
   }
-  fetchProfile = (discoveriesPage = 1, isPagination = false) => {
-    utils.ajax.get(`/nmsprofile/${this.props.profileId}/`, {
+  fetchProfile = (id = this.props.profileId, discoveriesPage = 1, isPagination = false) => {
+    utils.ajax.get(`/nmsprofile/${id}/`, {
       params: {discoveriesPage}
     }).then((profile) => {
       this.setState({
@@ -525,19 +525,20 @@ export class ProfileModal extends React.Component {
   }
   handleNextPage = () => {
     this.fetchProfile(
+      undefined,
       this.state.discoveriesPage + 1,
       true
     );
   }
   handlePreviousPage = () => {
     this.fetchProfile(
+      undefined,
       this.state.discoveriesPage - 1,
       true
     );
   }
   handleSwitchProfile = (friend) => {
-    setTimeout(() => state.set({displayProfile: friend.id}), 0);
-    state.set({displayProfile: ''});
+    this.fetchProfile(friend.id);
   }
   getRef = (ref) => {
     if (!this.ref) {

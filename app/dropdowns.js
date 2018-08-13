@@ -6,7 +6,7 @@ import React from 'react';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
-import {assignIn, clone, defer} from 'lodash';
+import {assignIn, clone} from 'lodash';
 
 import * as utils from './utils';
 import {handleRestart} from './dialog';
@@ -51,7 +51,7 @@ export class BaseDropdownMenu extends React.Component {
     });
   }
   componentDidMount() {
-    defer(ReactTooltip.rebuild);
+    ReactTooltip.rebuild();
   }
   handleClickOutside = () => {
     if (this.state.open) {
@@ -148,7 +148,7 @@ export class SaveEditorDropdownMenu extends React.Component {
     };
   }
   componentDidMount() {
-    defer(ReactTooltip.rebuild);
+    ReactTooltip.rebuild();
   }
   handleClickOutside = () => {
     if (this.state.open) {
@@ -414,7 +414,7 @@ export class BasicDropdown extends React.Component {
     };
   }
   componentDidMount() {
-    defer(ReactTooltip.rebuild);
+    ReactTooltip.rebuild();
   }
   componentWillUnmount = () => {
     this.willUnmount = true;
@@ -502,7 +502,7 @@ export class NotificationDropdown extends React.Component {
     };
   }
   componentDidMount() {
-    defer(ReactTooltip.rebuild);
+    ReactTooltip.rebuild();
   }
   componentWillUnmount = () => {
     this.willUnmount = true;

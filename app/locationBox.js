@@ -7,7 +7,7 @@ import axios from 'axios';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import ReactTooltip from 'react-tooltip';
-import {defer, truncate, upperFirst, isEqual, last} from 'lodash';
+import {truncate, upperFirst, isEqual, last} from 'lodash';
 import moment from 'moment';
 
 import {css, tip, cleanUp, formatForGlyphs, ajax} from './utils';
@@ -148,8 +148,8 @@ class LocationBox extends React.Component {
     if (p.image) {
       let img = p.image.replace(/:/g, '~').replace(/NMSLocation-/, '');
       let file = path.resolve(`${this.props.configDir}${img}`);
-      if (!fs.existsSync(file)) {
-        defer(() => {
+      fs.exists(file, (exists) => {
+        if (!exists) {
           axios
           .get(`https://neuropuff.com/${this.props.image}`, {
             responseType: 'arraybuffer'
@@ -164,10 +164,10 @@ class LocationBox extends React.Component {
             });
           })
           .catch(() => {});
-        });
-      } else {
-        this.setState({image: `${file}`});
-      }
+        } else {
+          this.setState({image: `${file}`});
+        }
+      });
     }
   }
   handleNameChange = (e) => {

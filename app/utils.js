@@ -3,8 +3,8 @@ import path from 'path';
 import {StringDecoder} from 'string_decoder';
 const decoder = new StringDecoder('utf8');
 import axios from 'axios';
-import {cloneDeep, assignIn, last, orderBy, isString, trimStart, defer} from 'lodash';
-import {each, findIndex} from './lang';
+import {cloneDeep, assignIn, last, orderBy, isString, trimStart} from 'lodash';
+import {each, rEach, findIndex, tryFn} from './lang';
 
 var exec = require('child_process').exec;
 export var msToTime = (s) => {
@@ -272,63 +272,77 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log) => {
 
       let saves = [];
       let saveInts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-      each(saveInts, (int) => {
-        each(results, (result) => {
+
+      let next = () => {
+        let lastModifiedSave = last(orderBy(saves, 'mtime', 'asc'));
+        if (!lastModifiedSave) {
+          reject();
+          return;
+        }
+        lastModifiedSave.path = lastModifiedSave.result;
+
+        fs.readFile(lastModifiedSave.result, {}, (err, json) => {
+          if (err) {
+            log.error(err);
+            if (e.message.indexOf('EBUSY') > -1) {
+              log.error(`Unable to read your last modified save file because it is in use by another program. Please make sure you are only teleporting, restoring bases, or using the cheat menu while the game is closed or paused.`);
+            }
+            reject();
+            return;
+          }
+
+          if (json instanceof Buffer) {
+            const decodedJson = decoder.write(json);
+            if (decodedJson.indexOf('\0') > -1) {
+              lastModifiedSave.result = decodedJson.replace(/\0$/, '');
+            } else {
+              lastModifiedSave.result = decodedJson;
+            }
+          } else if (isString(json)) {
+            lastModifiedSave.result = json;
+          }
+          tryFn(() => {
+            lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
+            let {int} = lastModifiedSave;
+            if (lastModifiedSave.result.version <= 4104) {
+              lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
+            } else {
+              lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
+            }
+          }, (e) => {
+            lastModifiedSave.result = null;
+            log.error(e);
+            log.error(`There was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`);
+            reject();
+          });
+          resolve(lastModifiedSave);
+        });
+      }
+
+      rEach(saveInts, (int, i, next1) => {
+        rEach(results, (result, r, next2) => {
           let fileName = last(result.split('\\'));
           if (((int === 0 && fileName.indexOf('save.hg') > -1) || result.indexOf(`save${int + 1}.hg`) > -1)
-          || ((int === 0 && fileName.indexOf('storage.hg') > -1) || result.indexOf(`storage${int + 1}.hg`) > -1)) {
-            saves.push({
-              fileName: fileName,
-              result: result,
-              mtime: fs.statSync(result).mtime,
-              int: int
+            || ((int === 0 && fileName.indexOf('storage.hg') > -1) || result.indexOf(`storage${int + 1}.hg`) > -1)) {
+            // TODO: Move these fs calls out of the renderer.
+            fs.stat(result, (err, stats) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+              saves.push({
+                fileName: fileName,
+                result: result,
+                mtime: stats.mtime,
+                int: int
+              });
+              next2();
             });
+          } else {
+            next2();
           }
-        });
-      });
-
-      let lastModifiedSave = last(orderBy(saves, 'mtime', 'asc'));
-      if (!lastModifiedSave) {
-        reject();
-        return;
-      }
-      lastModifiedSave.path = lastModifiedSave.result;
-
-      let json;
-      try {
-        json = fs.readFileSync(lastModifiedSave.result);
-      } catch (e) {
-        if (e.message.indexOf('EBUSY') > -1) {
-          log.error(`Unable to read your last modified save file because it is in use by another program. Please make sure you are only teleporting, restoring bases, or using the cheat menu while the game is closed or paused.`);
-        }
-        reject();
-        return;
-      }
-      if (json instanceof Buffer) {
-        const decodedJson = decoder.write(json);
-        if (decodedJson.indexOf('\0') > -1) {
-          lastModifiedSave.result = decodedJson.replace(/\0$/, '');
-        } else {
-          lastModifiedSave.result = decodedJson;
-        }
-      } else if (isString(json)) {
-        lastModifiedSave.result = json;
-      }
-      try {
-        lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
-        let {int} = lastModifiedSave;
-        if (lastModifiedSave.result.version <= 4104) {
-          lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
-        } else {
-          lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
-        }
-      } catch (e) {
-        lastModifiedSave.result = null;
-        log.error(`There was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`);
-        reject();
-        return;
-      }
-      resolve(lastModifiedSave);
+        }, next1);
+      }, next);
     });
   });
 };
@@ -605,15 +619,17 @@ if (process.env.NODE_ENV === 'development') {
 export const ajax = axios.create(opts);
 
 // Cleans up the left over object references after a component unmounts, helps with garbage collection
-export const cleanUp = (obj) => {
-  defer(() => {
-    let contextProps = Object.keys(obj);
-    each(contextProps, (key) => {
-      if (key === 'willUnmount') {
-        return;
-      }
-      obj[key] = undefined;
-    })
+export const cleanUp = (obj, defer = false) => {
+  if (defer) {
+    setTimeout(() => cleanUp(obj), 0);
+    return;
+  }
+  let contextProps = Object.keys(obj);
+  each(contextProps, (key) => {
+    if (key === 'willUnmount') {
+      return;
+    }
+    obj[key] = undefined;
   });
 }
 

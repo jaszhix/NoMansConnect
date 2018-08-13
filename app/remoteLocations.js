@@ -1,9 +1,9 @@
 import state from './state';
 import React from 'react';
-import {delay, defer, throttle, orderBy} from 'lodash';
+import {delay, throttle} from 'lodash';
 import log from './log';
 import {whichToShow} from './utils';
-import {each, filter, findIndex} from './lang';
+import {each, findIndex} from './lang';
 import {BasicDropdown} from './dropdowns';
 import LocationBox from './locationBox';
 
@@ -23,7 +23,7 @@ class RemoteLocations extends React.Component {
         }
         this.recentExplorations.scrollTop = 0;
       }),
-      state.connect(['remoteLocationsColumns', 'compactRemote'], () => defer(() => this.setViewableRange(this.recentExplorations)))
+      state.connect(['remoteLocationsColumns', 'compactRemote'], () => setTimeout(() => this.setViewableRange(this.recentExplorations), 0))
     ];
     this.uiSegmentStyle = {
       background: 'rgba(23, 26, 22, 0.9)',

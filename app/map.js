@@ -1,12 +1,12 @@
 import state from './state';
 import React from 'react';
 import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend, ReferenceArea} from 'recharts';
-import {isArray, uniqBy, filter, defer, delay, isEqual, last} from 'lodash';
+import {delay, isEqual, last} from 'lodash';
 import v from 'vquery';
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
 import {uuidV4, cleanUp} from './utils';
-import {each, map, findIndex} from './lang';
+import {each, map} from './lang';
 
 const toolTipHeaderStyle = {
   padding: '3px 5px',
@@ -37,7 +37,7 @@ class TooltipChild extends React.Component {
     super(props);
   }
   componentWillReceiveProps() {
-    cleanUp(this);
+    cleanUp(this, true);
   }
   render() {
     if (this.props.active || this.props.isSelected) {
@@ -251,30 +251,35 @@ class ThreeDimScatterChart extends React.Component {
       }
       let setState = (data) => {
         this.setState(data, () => {
+          let stateUpdate = {navLoad: false};
           if (this.props.init) {
-            defer(() => {
-              v('.recharts-legend-item-text').css({position: 'relative', top: '3px'});
-              each(this.props.show, (obj, key) => {
-                v('.recharts-legend-item').each(function(el){
-                  let _el = v(el);
-                  if (_el.text()[0] === key) {
-                    _el.addClass(key);
-                  }
-                });
+            let legendItemText = v('.recharts-legend-item-text');
+            let legendItem = v('.recharts-legend-item');
+            if (!legendItemText.n || !legendItem.n) {
+              setTimeout(() => setState(data), 0);
+              return;
+            }
+            legendItemText.css({position: 'relative', top: '3px'});
+            each(this.props.show, (obj, key) => {
+              legendItem.each(function(el){
+                let _el = v(el);
+                if (_el.text()[0] === key) {
+                  _el.addClass(key);
+                }
               });
-              this.handleUpdateLegend();
             });
+            this.handleUpdateLegend();
             this.props.onInit();
           }
-          state.set({navLoad: false});
+          stateUpdate.navLoad = false;
+          if (e.data.fromSelected && e.data.fromSelected.globalState) {
+            Object.assign(stateUpdate, e.data.fromSelected.globalState);
+          }
+          state.set(stateUpdate);
         });
       };
       if (e.data.fromSelected) {
-        if (e.data.fromSelected.globalState) {
-          state.set(e.data.fromSelected.globalState, () => setState({selectedLocation: e.data.fromSelected.selectedLocation}));
-        } else {
-          setState({selectedLocation: e.data.fromSelected.selectedLocation})
-        }
+        setState({selectedLocation: e.data.fromSelected.selectedLocation});
       } else {
         setState(e.data);
       }
@@ -326,7 +331,6 @@ class ThreeDimScatterChart extends React.Component {
     } else if (state.searchInProgress) {
       state.trigger('handleClearSearch');
     }
-
     state.set(stateUpdate);
   }
   handleUpdateLegend = () => {
@@ -338,16 +342,15 @@ class ThreeDimScatterChart extends React.Component {
   }
   handleLegendClick = (e) => {
     this.props.show[e.payload.name].value = !this.props.show[e.payload.name].value;
-    state.set({show: this.props.show, navLoad: true}, () => {
-      if (e.payload.name === 'Center') {
-        this.handlePostMessageSize(this.props);
-      } else if (e.payload.name.indexOf('Selected') > -1) {
-        this.handlePostMessageSelect(this.props);
-      } else {
-        this.handlePostMessage(this.props);
-      }
-      this.handleUpdateLegend();
-    });
+    state.set({show: this.props.show, navLoad: true});
+    if (e.payload.name === 'Center') {
+      this.handlePostMessageSize(this.props);
+    } else if (e.payload.name.indexOf('Selected') > -1) {
+      this.handlePostMessageSelect(this.props);
+    } else {
+      this.handlePostMessage(this.props);
+    }
+    this.handleUpdateLegend();
   }
   handleMouseDown = (e) => {
     let {zoomHistory, zoom} = this.state;
@@ -573,7 +576,7 @@ class GalacticMap extends React.Component {
       delay(() => this.handleInit(), 25);
       return;
     }
-    this.setState({init: false}, () => defer(() => this.buildGalaxyOptions(true)));
+    this.setState({init: false}, () => this.buildGalaxyOptions(true));
   }
   travelToCenter = () => {
     window.travelTo = [0, 2, 0];

@@ -254,13 +254,15 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         // Discoveries can change regardless if the location is known
         let {Record} = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store;
         let newDiscoveries = [];
-        each(Record, (discovery) => {
-          let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
-          if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) {
-            discovery.NMCID = utils.uaToObject(discovery.DD.UA).id;
-            newDiscoveries.push(discovery);
-          }
-        });
+        if (profile.data.discoveryIds) {
+          each(Record, (discovery) => {
+            let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
+            if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) {
+              discovery.NMCID = utils.uaToObject(discovery.DD.UA).id;
+              newDiscoveries.push(discovery);
+            }
+          });
+        }
         utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
           machineId: state.machineId,
           username: state.username,
@@ -358,7 +360,6 @@ let getLastSave = (opts) => {
     }
 
   }).catch((err) => {
-    log.error(err);
     log.error(`Unable to retrieve NMS save file: ${err}`)
     log.error(`${state.saveDirectory}, ${state.saveFileName}`);
     tryFn(() => log.error(err.stack));

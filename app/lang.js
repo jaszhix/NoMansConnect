@@ -13,6 +13,16 @@ const each = (obj, cb)=>{
   }
 };
 
+const rEach = (array, cb, finishCb, i = -1) => {
+  i++;
+  if (array[i] === undefined) {
+    if (typeof finishCb === 'function') finishCb();
+    return;
+  }
+  let next = () => rEach(array, cb, finishCb, i);
+  cb(array[i], i, next);
+}
+
 const findIndex = function(arr, cb) {
 	for (let i = 0, len = arr.length; i < len; i++) {
 		if (cb(arr[i], i, arr)) {
@@ -86,4 +96,4 @@ const tryFn = function(fn, errCb) {
   }
 };
 
-module.exports = {each, findIndex, find, filter, map, includes, merge, tryFn};
+module.exports = {each, rEach, findIndex, find, filter, map, includes, merge, tryFn};

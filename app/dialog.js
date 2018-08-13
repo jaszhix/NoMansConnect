@@ -3,7 +3,7 @@ import fs from 'graceful-fs';
 import log from './log';
 import state from './state';
 import openExternal from 'open-external';
-import {defer, delay, last} from 'lodash';
+import {delay, last} from 'lodash';
 import v from 'vquery';
 import * as utils from './utils';
 import {each, tryFn} from './lang';
@@ -99,7 +99,7 @@ export const handleUpgrade = (nextVersion) => {
   log.error(upgradeMessage);
   let infoUrl = 'https://github.com/jaszhix/NoMansConnect/releases';
 
-  defer(() => {
+  setTimeout(() => {
     dialog.showMessageBox({
       title: 'No Man\'s Connect Upgrade',
       message: upgradeMessage,
@@ -111,7 +111,7 @@ export const handleUpgrade = (nextVersion) => {
         return;
       }
     });
-  });
+  }, 0);
 }
 
 export const handleSaveDataFailure = (mode=state.mode, init=false, cb) => {

@@ -29,12 +29,14 @@ class Json {
         this.data = JSON.parse(data);
         this.callback(cb);
       }, (e) => {
-        if (fs.existsSync(this.backupPath) && !fromFailure) {
-          this.init(this.backupPath, cb, true);
-          return;
-        }
-        console.log(e)
-        this.callback(cb);
+        fs.exists(this.backupPath, (exists) => {
+          if (exists && !fromFailure) {
+            this.init(this.backupPath, cb, true);
+            return;
+          }
+          console.log(e)
+          this.callback(cb);
+        });
       });
     });
   }

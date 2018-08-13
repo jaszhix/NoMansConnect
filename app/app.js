@@ -7,7 +7,7 @@ import {machineId} from 'node-machine-id';
 import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
-import {assignIn, cloneDeep, orderBy, uniqBy, defer, concat, first, isArray, throttle, pick, last} from 'lodash';
+import {assignIn, cloneDeep, orderBy, uniqBy, concat, first, isArray, throttle, pick, last} from 'lodash';
 import math from 'mathjs';
 
 import Loader from './loader';
@@ -117,6 +117,9 @@ class App extends React.Component {
     this.headerItemClasses = 'ui dropdown icon item';
   }
   componentDidMount() {
+    state._init(() => this.init());
+  }
+  init() {
     window.addEventListener('resize', this.onWindowResize);
     log.init(this.state.configDir);
     log.error(`Initializing No Man's Connect ${this.state.version}`);
@@ -165,22 +168,23 @@ class App extends React.Component {
       });
     };
 
-    let indexMods = () => {
-      let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
-      let indexModsInUse = (_path, modPath) => {
-        fs.readFile(`${_path}\\Binaries\\SETTINGS\\TKGRAPHICSSETTINGS.MXML`, (err, data) => {
-          let fullscreen = null;
-          if (data) {
-            fullscreen = data.toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
-          }
-          if (fullscreen === 'true' || err) {
-            state.set({autoCapture: false, loading: 'Checking for mods...'});
-          }
-          if (!fs.existsSync(`${_path}${modPath}`)) {
+    let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
+    let indexModsInUse = (_path, modPath) => {
+      fs.readFile(`${_path}\\Binaries\\SETTINGS\\TKGRAPHICSSETTINGS.MXML`, (err, data) => {
+        let fullscreen = null;
+        if (data) {
+          fullscreen = data.toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
+        }
+        if (fullscreen === 'true' || err) {
+          state.set({autoCapture: false, loading: 'Checking for mods...'});
+        }
+        let _modPath = `${_path}${modPath}`;
+        fs.exists(_modPath, (exists) => {
+          if (!exists) {
             initialize();
             return;
           }
-          fs.readdir(`${_path}${modPath}`, (err, list) => {
+          fs.readdir(_modPath, (err, list) => {
             if (err) {
               log.error(`Failed to read mods directory: ${err}`);
               return;
@@ -193,41 +197,54 @@ class App extends React.Component {
             }, true);
           });
         });
-      };
-
-      let paths = [
-        `/Program Files (x86)/GalaxyClient/Games/No Man's Sky`,
-        `/Program Files (x86)/Steam/steamapps/common/No Man's Sky`,
-        `/Steam/steamapps/common/No Man's Sky`,
-        `/steamapps/common/No Man's Sky`,
-        `/Program Files/No Man's Sky`,
-        `/GOG Games/No Man's Sky`,
-        `/Games/No Man's Sky`,
-      ];
-
-      if (this.state.installDirectory) {
-        paths = [this.state.installDirectory.split(':\\')[1]];
-      }
-
-      let modPath = `\\GAMEDATA\\PCBANKS\\MODS`;
-
-      let hasPath = false;
-      each(letters, (drive, key) => {
-        each(paths, (_path) => {
-          let __path = `${drive}:${_path}`;
-          if (fs.existsSync(__path)) {
-            hasPath = true;
-            indexModsInUse(__path, modPath);
-            return;
-          }
-        });
       });
-      if (!hasPath) {
-        log.error('Failed to locate NMS install: path doesn\'t exist.')
-        initialize();
-      }
     };
-    defer(indexMods);
+
+    let paths = [
+      `/Program Files (x86)/GalaxyClient/Games/No Man's Sky`,
+      `/Program Files (x86)/Steam/steamapps/common/No Man's Sky`,
+      `/Steam/steamapps/common/No Man's Sky`,
+      `/steamapps/common/No Man's Sky`,
+      `/Program Files/No Man's Sky`,
+      `/GOG Games/No Man's Sky`,
+      `/Games/No Man's Sky`,
+    ];
+
+    if (this.state.installDirectory) {
+      paths = [this.state.installDirectory.split(':\\')[1]];
+    }
+
+
+    let modPath = `\\GAMEDATA\\PCBANKS\\MODS`;
+
+    if (process.platform === 'linux') {
+      indexModsInUse(this.state.installDirectory, modPath);
+      return;
+    }
+
+    let hasPath = false;
+    let args = [];
+    let shouldReturn = false;
+    each(letters, (drive, key) => {
+      each(paths, (_path) => {
+        let __path = `${drive}:${_path}`;
+        if (fs.existsSync(__path)) {
+          hasPath = true;
+          args = [__path, modPath];
+          shouldReturn = true;
+          return false;
+        }
+      });
+      if (shouldReturn) {
+        return false;
+      }
+    });
+    if (!hasPath) {
+      log.error('Failed to locate NMS install: path doesn\'t exist.')
+      initialize();
+    } else {
+      indexModsInUse(...args);
+    }
   }
   componentWillUnmount() {
     if (this.monitor) {
@@ -414,7 +431,7 @@ class App extends React.Component {
     });
 
     if (cb) {
-      defer(cb);
+      cb();
     }
   }
   pollRemoteLocations = (init=false) => {
@@ -744,6 +761,9 @@ class App extends React.Component {
     })
   }
   pollSaveData = (mode=this.state.mode, init=false, machineId=this.state.machineId) => {
+    if (!state.ready) {
+      return;
+    }
     pollSaveData({mode, init, machineId, next: (error = false, ...args) => {
       if (error) {
         log.error(`getLastSave -> next -> ${error}`);
@@ -879,9 +899,7 @@ class App extends React.Component {
       this.monitor.stop();
     }
     state.set({closing: true});
-    defer(() => {
-      win.close();
-    });
+    setTimeout(() => win.close(), 500);
   }
   handleSearchIconClick = () => {
     if (this.state.searchInProgress) {

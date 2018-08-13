@@ -1,4 +1,4 @@
-import {clone, intersection as intersect, difference, defer} from 'lodash';
+import {clone, intersection as intersect, difference} from 'lodash';
 import {find, findIndex, filter} from './lang';
 
 function storeError(method, key, message) {
@@ -112,7 +112,7 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
     } */
 
     if (typeof cb === 'function') {
-      defer(cb);
+      cb();
     }
 
     return publicAPI;
