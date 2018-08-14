@@ -11,7 +11,7 @@ import {assignIn, cloneDeep, orderBy, uniqBy, concat, first, isArray, throttle, 
 import math from 'mathjs';
 
 import Loader from './loader';
-import * as utils from './utils';
+import {dirSep, ajax, getLastGameModeSave, exc, formatBase, copyMetadata, css, tip} from './utils';
 import pollSaveData from './poll';
 import {handleWallpaper, handleUpgrade, baseError} from './dialog';
 import {each, find, findIndex, map, filter, tryFn} from './lang';
@@ -129,17 +129,17 @@ class App extends React.Component {
     this.handleWorkers();
 
     // TBD: Work around electron starting in the home directory on Linux
-    let modulePath = remote.app.getPath('module').split(utils.dirSep);
+    let modulePath = remote.app.getPath('module').split(dirSep);
     modulePath.pop();
-    modulePath = modulePath.join(utils.dirSep);
+    modulePath = modulePath.join(dirSep);
     window.modulePath = modulePath;
 
     if (process.env.NODE_ENV === 'production') {
-      this.saveJSON = `${remote.app.getPath('userData')}${utils.dirSep}saveCache.json`;
-      this.saveTool = `${modulePath}${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
+      this.saveJSON = `${remote.app.getPath('userData')}${dirSep}saveCache.json`;
+      this.saveTool = `${modulePath}${dirSep}nmssavetool${dirSep}nmssavetool.exe`;
     } else {
-      this.saveJSON = `.${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}saveCache.json`;
-      this.saveTool = `.${utils.dirSep}app${utils.dirSep}nmssavetool${utils.dirSep}nmssavetool.exe`;
+      this.saveJSON = `.${dirSep}app${dirSep}nmssavetool${dirSep}saveCache.json`;
+      this.saveTool = `.${dirSep}app${dirSep}nmssavetool${dirSep}nmssavetool.exe`;
     }
 
     if (!this.state.offline) {
@@ -170,7 +170,11 @@ class App extends React.Component {
 
     let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
     let indexModsInUse = (_path, modPath) => {
-      fs.readFile(`${_path}\\Binaries\\SETTINGS\\TKGRAPHICSSETTINGS.MXML`, (err, data) => {
+
+      fs.readFile(`${_path}${dirSep}Binaries${dirSep}SETTINGS${dirSep}TKGRAPHICSSETTINGS.MXML`, (err, data) => {
+        if (err) {
+          console.log('err__', err, _path, state.installDirectory, state)
+        }
         let fullscreen = null;
         if (data) {
           fullscreen = data.toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
@@ -200,6 +204,13 @@ class App extends React.Component {
       });
     };
 
+    let modPath = `\\GAMEDATA\\PCBANKS\\MODS`;
+
+    if (process.platform === 'linux') {
+      indexModsInUse(state.installDirectory, modPath);
+      return;
+    }
+
     let paths = [
       `/Program Files (x86)/GalaxyClient/Games/No Man's Sky`,
       `/Program Files (x86)/Steam/steamapps/common/No Man's Sky`,
@@ -210,16 +221,8 @@ class App extends React.Component {
       `/Games/No Man's Sky`,
     ];
 
-    if (this.state.installDirectory) {
-      paths = [this.state.installDirectory.split(':\\')[1]];
-    }
-
-
-    let modPath = `\\GAMEDATA\\PCBANKS\\MODS`;
-
-    if (process.platform === 'linux') {
-      indexModsInUse(this.state.installDirectory, modPath);
-      return;
+    if (state.installDirectory) {
+      paths = [state.installDirectory.split(':\\')[1]];
     }
 
     let hasPath = false;
@@ -250,7 +253,7 @@ class App extends React.Component {
     if (this.monitor) {
       this.monitor.stop();
     }
-    state.destroy();
+    //state.destroy();
   }
   handleWorkers = () => {
     window.ajaxWorker.onmessage = (e) => {
@@ -390,7 +393,7 @@ class App extends React.Component {
         locations.push(location);
       }
     });
-    utils.ajax.post('/nmslocationremotecheck/', {
+    ajax.post('/nmslocationremotecheck/', {
         locations: map(locations, (location) => location.id),
         mode: state.mode,
         username: state.username,
@@ -525,12 +528,12 @@ class App extends React.Component {
       state.set({storedBases});
       return;
     }
-    utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
       each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
         if (!base.GalacticAddress || !base.Name) {
           return;
         }
-        base = utils.formatBase(saveData, state.knownProducts, i);
+        base = formatBase(saveData, state.knownProducts, i);
         let refBase = findIndex(storedBases, _base => _base.Name === base.Name);
         if (refBase === -1 && isArray(storedBases)) {
           storedBases.push(base);
@@ -542,12 +545,12 @@ class App extends React.Component {
     }).catch(baseError);
   }
   signSaveData = (slot, cb) => {
-    let absoluteSaveDir = this.state.saveFileName.split(utils.dirSep);
+    let absoluteSaveDir = this.state.saveFileName.split(dirSep);
     absoluteSaveDir.splice(absoluteSaveDir.length - 1, 1);
-    absoluteSaveDir = absoluteSaveDir.join(utils.dirSep);
+    absoluteSaveDir = absoluteSaveDir.join(dirSep);
     let command = `${process.platform !== 'win32' ? 'wine ' : ''}"${this.saveTool}" encrypt -g ${slot} -f "${this.saveJSON}" --save-dir "${absoluteSaveDir}"`;
     console.log(command);
-    utils.exc(command).then((res) => {
+    exc(command).then((res) => {
       log.error('Successfully signed save data with nmssavetool');
       if (typeof cb === 'function') {
         cb();
@@ -561,7 +564,7 @@ class App extends React.Component {
   }
   handleRestoreBase = (base, confirmed = false) => {
     state.set({navLoad: true});
-    utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
       const {PersistentPlayerBases} = saveData.result.PlayerStateData
       if (confirmed === false) {
         state.set({
@@ -663,7 +666,7 @@ class App extends React.Component {
   handleTeleport = (location, i, action = null, n = null) => {
     const _location = cloneDeep(location);
     state.set({navLoad: true});
-    utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
 
       if (location.data) {
         location = location.data;
@@ -708,7 +711,7 @@ class App extends React.Component {
         }
         this.signSaveData(saveData.slot, () => {
           state.set({currentLocation: _location.id});
-          utils.ajax.post('/nmslocation/', {
+          ajax.post('/nmslocation/', {
             machineId: this.state.machineId,
             username: this.state.username,
             teleports: true,
@@ -722,7 +725,7 @@ class App extends React.Component {
               remoteLocations.results[refRemoteLocation] = res.data;
             }
             if (selectedLocation && selectedLocation.id === _location.id) {
-              res.data.data = utils.copyMetadata(selectedLocation, res.data);
+              res.data.data = copyMetadata(selectedLocation, res.data);
               selectedLocation = Object.assign(selectedLocation, res.data.data);
             }
 
@@ -746,7 +749,7 @@ class App extends React.Component {
   setWaypoint = (location) => {
     log.error('Setting waypoint:', location.id);
     state.set({navLoad: true});
-    utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
       let {PlanetIndex, SolarSystemIndex, VoxelX, VoxelY, VoxelZ} = location;
       let waypoint = {
         Address: {
@@ -992,11 +995,11 @@ class App extends React.Component {
             profile={s.profile}
             onCheat={this.handleCheat} /> : null}
             <a
-            style={utils.css(this.noDragStyle, {cursor: 'default'})}
+            style={css(this.noDragStyle, {cursor: 'default'})}
             className={`ui icon item`}
             onClick={this.handleLocationRegistrationToggle}
             data-place="bottom"
-            data-tip={utils.tip('Manually Register Location')}>
+            data-tip={tip('Manually Register Location')}>
               <i className="location arrow icon" />
             </a>
             <DropdownMenu s={s} />

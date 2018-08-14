@@ -15,6 +15,8 @@
   * Fixed teleporting and other save file operations toggling the loading state before nmssavetool writes the save file. The current location is also updated more quickly after teleporting.
   * Fixed teleport stats not incrementing.
   * Fixed inability to click through to an associated profile from a selected location.
+  * Fixed offline mode not working when the server is unavailable.
+    * Client will now switch to offline mode automatically if the server is unavailable.
 
 # 1.3.3
 

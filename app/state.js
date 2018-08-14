@@ -297,13 +297,14 @@ const state = initStore({
 
       if (!state.ready) {
         stateUpdate.ready = true;
+      }
+
+      state.set(stateUpdate, () => {
         log.error('State initialized');
         if (typeof cb === 'function') {
           cb();
         }
-      }
-
-      state.set(stateUpdate, true);
+      }, true);
     }
   },
   handleMaintenance: (obj, cb) => {
@@ -338,6 +339,7 @@ const state = initStore({
     cb(obj);
   },
   handleState: (obj) => {
+    if (!obj.hasOwnProperty('init') && state.init) return;
     each(obj, (value, key) => {
       if (state.settingsKeys.indexOf(key) > -1) {
         window.settingsWorker.postMessage({
