@@ -107,6 +107,9 @@ export class RecoveryModal extends React.Component {
       value: '',
     };
   }
+  componentWillUnmount() {
+    cleanUp(this);
+  }
   handleClickOutside = () => {
     let obj = {};
     obj[this.props.type] = false;
@@ -201,6 +204,9 @@ export class LocationRegistrationModal extends React.Component {
       });
     });
     this.setState({galaxies: this.state.galaxies});
+  }
+  componentWillUnmount() {
+    cleanUp(this);
   }
   handleClickOutside = () => {
     state.set({registerLocation: false});
@@ -303,6 +309,9 @@ export class Notification extends React.Component {
       margin: 'auto'
     };
   }
+  componentWillUnmount() {
+    cleanUp(this);
+  }
   handleDismiss = () => {
     state.set({
       notification: {
@@ -357,6 +366,9 @@ class EventItem extends React.Component {
   }
   componentDidMount() {
     ReactTooltip.rebuild();
+  }
+  componentWillUnmount() {
+    cleanUp(this);
   }
   render() {
     let {profile, name, description, type, created, image, data, score, version, shouldShowPlanetType, isStart, isEnd, isLocation} = this.props;
@@ -456,12 +468,17 @@ export class ProfileModal extends React.Component {
   componentDidMount() {
     this.fetchProfile();
     this.connections = [
-      state.connect({favorites: () => this.fetchProfile(undefined, this.state.discoveriesPage)})
+      state.connect({favorites: () => {
+        if (this.willUnmount) return;
+        this.fetchProfile(undefined, this.state.discoveriesPage);
+      }})
     ];
   }
   componentWillUnmount() {
+    this.willUnmount = true;
     this.ref.removeEventListener('resize', this.handleResize);
     each(this.connections, (id) => state.disconnect(id));
+    cleanUp(this);
   }
   fetchProfile = (id = this.props.profileId, discoveriesPage = 1, isPagination = false) => {
     utils.ajax.get(`/nmsprofile/${id}/`, {
@@ -541,6 +558,7 @@ export class ProfileModal extends React.Component {
     this.fetchProfile(friend.id);
   }
   getRef = (ref) => {
+    if (this.willUnmount) return;
     if (!this.ref) {
       this.ref = ref;
       this.setState({height: ref.clientHeight});
@@ -740,6 +758,9 @@ export class FriendRequestModal extends React.Component {
       error: ''
     };
   }
+  componentWillUnmount() {
+    cleanUp(this);
+  }
   handleClickOutside = () => {
     state.set({displayFriendRequest: null});
   }
@@ -824,6 +845,9 @@ export class BaseRestorationModal extends React.Component {
     }].concat(baseOptions);
     this.setState({baseOptions});
   }
+  componentWillUnmount() {
+    cleanUp(this);
+  }
   handleClickOutside = () => {
     state.set({displayBaseRestoration: null});
   }
@@ -868,10 +892,11 @@ export class LogModal extends React.Component {
     let fs = require('fs');
     fs.readFile(`${remote.app.getPath('userData')}/NMC.log`, {encoding: 'utf-8'}, (err, log) => {
       this.setState({log});
-      console.log('Log loaded...')
+      console.log('Log loaded...');
     });
   }
   componentWillUnmount = () => {
+    this.willUnmount = true;
     cleanUp(this);
   }
   handleClickOutside = () => {
@@ -882,6 +907,7 @@ export class LogModal extends React.Component {
     this.setState({height: this.ref.clientHeight});
   }
   getRef = (ref) => {
+    if (this.willUnmount) return;
     if (!this.ref) {
       this.ref = ref;
       this.setState({height: ref.clientHeight});
@@ -927,6 +953,10 @@ export class SettingsModal extends React.Component {
   componentDidMount() {
     ReactTooltip.rebuild();
   }
+  componentWillUnmount() {
+    this.willUnmount = true;
+    cleanUp(this);
+  }
   handleClickOutside = () => {
     if (this.props.s.setEmail) {
       return;
@@ -938,7 +968,7 @@ export class SettingsModal extends React.Component {
   }
   handleAutoCapture = (e) => {
     e.stopPropagation();
-    state.set({autoCapture: !this.props.s.autoCapture}, () => ReactTooltip.rebuild());
+    state.set({autoCapture: !this.props.s.autoCapture}, () => setTimeout(() => ReactTooltip.rebuild(), 0));
   }
   handleAutoCaptureSpaceStations = (e) => {
     e.stopPropagation();

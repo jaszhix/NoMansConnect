@@ -8,7 +8,7 @@ import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
 import {assignIn, clone} from 'lodash';
 
-import * as utils from './utils';
+import {tip, ajax, cleanUp} from './utils';
 import {handleRestart} from './dialog';
 import {findIndex, map} from './lang';
 
@@ -88,7 +88,7 @@ export class BaseDropdownMenu extends React.Component {
       className={`ui dropdown icon item${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
-      data-tip={utils.tip('Save/Restore Bases')}>
+      data-tip={tip('Save/Restore Bases')}>
         <img
         style={{width: '19px'}}
         src={p.baseIcon} />
@@ -99,7 +99,7 @@ export class BaseDropdownMenu extends React.Component {
           className="item"
           onClick={this.handleSave}
           data-place="left"
-          data-tip={utils.tip('Saves all active bases found in the save file to NMC\'s storage.')}>
+          data-tip={tip('Saves all active bases found in the save file to NMC\'s storage.')}>
             Save Bases
           </div>
           {p.storedBases && p.storedBases.length > 0 ? <div className="divider" /> : null}
@@ -119,14 +119,14 @@ export class BaseDropdownMenu extends React.Component {
                 <div
                 onClick={() => this.props.onRestoreBase(base)}
                 data-place="left"
-                data-tip={utils.tip('Import this base over a currently existing base from the save. Choose the base to import, and then you will be prompted to choose which base to write over.')}>
+                data-tip={tip('Import this base over a currently existing base from the save. Choose the base to import, and then you will be prompted to choose which base to write over.')}>
                   {baseName}
                 </div>
                 <div
                 style={trashIconContainerStyle}
                 onClick={(e) => this.handleDelete(e, base)}
                 data-place="bottom"
-                data-tip={utils.tip('Remove Base')}>
+                data-tip={tip('Remove Base')}>
                   {this.state.hover === i ? <i className="trash outline icon" /> : null}
                 </div>
               </div>
@@ -172,7 +172,7 @@ export class SaveEditorDropdownMenu extends React.Component {
       if (isUnits) {
         args.push(this.props.profile.exp * 1000);
       }
-      utils.ajax.put(`/nmsprofile/${this.props.profile.id}/`, {
+      ajax.put(`/nmsprofile/${this.props.profile.id}/`, {
         username: state.username,
         machineId: state.machineId,
         data: {
@@ -195,7 +195,7 @@ export class SaveEditorDropdownMenu extends React.Component {
     }
     let now = Date.now();
     let disabled = now < (lastSaveEditorModification + 86400000);
-    let getTip = (n) => utils.tip(
+    let getTip = (n) => tip(
       `Requires ${n} registered locations. ${disabled ? `Cheat menu will be available again ${moment(now).to(lastSaveEditorModification + 86400000)}.` : 'Limited to one use per day.'}`
     );
     return (
@@ -204,7 +204,7 @@ export class SaveEditorDropdownMenu extends React.Component {
       className={`ui dropdown icon item${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
-      data-tip={utils.tip('Save Editor')}>
+      data-tip={tip('Save Editor')}>
         <i className="database icon" />
         <div
         style={menuContainerStyle}
@@ -241,7 +241,7 @@ export class SaveEditorDropdownMenu extends React.Component {
           className={`item${disabled ? ' item-disabled' : ''}`}
           onClick={this.handleClick}
           data-place="left"
-          data-tip={utils.tip('Explore more to increase your units allowance.')}>
+          data-tip={tip('Explore more to increase your units allowance.')}>
             {`Add ${p.profile.exp * 1000}k Units`}
           </div>
         </div>
@@ -275,6 +275,9 @@ Please back up your save files.
 
 Special Thanks
 
+- Grimolfr
+- z1sidcr1
+- Ulyssis
 - rysulliv
 - ViktorKrugar
 - Artimec_w
@@ -287,9 +290,10 @@ Special Thanks
 - monkeyman192
 - pgrace
 - rayrod118
+- Hello Games
 
 No Man's Connect - Online Location Manager
-Copyright (C) 2017 Jason Hicks and Contributors
+Copyright (C) 2018 Jason Hicks and Contributors
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
@@ -320,7 +324,7 @@ You should have received a copy of the GNU General Public License along with thi
       className={`ui dropdown icon item${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
-      data-tip={utils.tip('Options')}>
+      data-tip={tip('Options')}>
         <i className="wrench icon" />
         {p.s.username.length > 0 ? <span style={{paddingLeft: '12px'}}>{p.s.username}</span> : null}
         <div
@@ -332,7 +336,7 @@ You should have received a copy of the GNU General Public License along with thi
             className="item"
             onClick={this.handleProfileClick}
             data-place="left"
-            data-tip={utils.tip('Access your profile.')}>
+            data-tip={tip('Access your profile.')}>
               Profile
             </div>
             <div className="divider" />
@@ -342,7 +346,7 @@ You should have received a copy of the GNU General Public License along with thi
           className="item"
           onClick={this.handleSettings}
           data-place="left"
-          data-tip={utils.tip('Configure NMC.')}>
+          data-tip={tip('Configure NMC.')}>
             Settings
           </div>
           <div className="divider" />
@@ -350,28 +354,28 @@ You should have received a copy of the GNU General Public License along with thi
           className="item"
           onClick={this.handleAbout}
           data-place="left"
-          data-tip={utils.tip('NMC info.')}>
+          data-tip={tip('NMC info.')}>
             About
           </div>
           <div
           className="item"
           onClick={this.handleSupport}
           data-place="left"
-          data-tip={utils.tip('Help pay for server time. Total contributions since initial release: $255. Thanks a lot!')}>
+          data-tip={tip('Help pay for server time. Total contributions since initial release: $280. Thanks a lot!')}>
             Support NMC
           </div>
           <div
           className="item"
           onClick={this.handleBugReport}
           data-place="left"
-          data-tip={utils.tip('Bug reports are an important part of this app\'s development.')}>
+          data-tip={tip('Bug reports are an important part of this app\'s development.')}>
             Report Bug
           </div>
           <div
           className="item"
           onClick={this.handleLog}
           data-place="left"
-          data-tip={utils.tip('View the NMC log.')}>
+          data-tip={tip('View the NMC log.')}>
             Open Log
           </div>
           <div className="divider" />
@@ -379,14 +383,14 @@ You should have received a copy of the GNU General Public License along with thi
           className="item"
           onClick={handleRestart}
           data-place="left"
-          data-tip={utils.tip('Restarts the NMC process.')}>
+          data-tip={tip('Restarts the NMC process.')}>
             Restart
           </div>
           <div
           className="item"
           onClick={window.close}
           data-place="left"
-          data-tip={utils.tip('Exit NMC.')}>
+          data-tip={tip('Exit NMC.')}>
             Quit
           </div>
         </div>
@@ -418,6 +422,7 @@ export class BasicDropdown extends React.Component {
   }
   componentWillUnmount = () => {
     this.willUnmount = true;
+    cleanUp(this);
   }
   handleOptionClick = (e, option) => {
     let persist = this.props.persist || option.id === 'teleport';
@@ -471,7 +476,7 @@ export class BasicDropdown extends React.Component {
               className={`item${option.disabled ? ' disabled' : ''}`}
               onClick={option.disabled ? null : (e) => this.handleOptionClick(e, option)}
               data-place="left"
-              data-tip={utils.tip(tooltip)}>
+              data-tip={tip(tooltip)}>
                 {option.label}
                 {option.hasOwnProperty('toggle') ?
                 <span className="BasicDropdown__alignRight"><i className={`${option.toggle ? 'checkmark' : 'remove'} icon`} /></span>
@@ -506,6 +511,7 @@ export class NotificationDropdown extends React.Component {
   }
   componentWillUnmount = () => {
     this.willUnmount = true;
+    cleanUp(this);
   }
   handleOptionClick = (option) => {
     state.set({displayFriendRequest: option});
@@ -519,7 +525,7 @@ export class NotificationDropdown extends React.Component {
     this.setState({open: !this.state.open});
   }
   handleDelete = (option) => {
-    utils.ajax.delete(`/nmsnotification/${option.id}/`, {
+    ajax.delete(`/nmsnotification/${option.id}/`, {
       machineId: this.props.machineId,
       username: this.props.username
     }).then(() => {
@@ -535,7 +541,7 @@ export class NotificationDropdown extends React.Component {
       style={noDragStyle}
       className={`ui dropdown icon item${this.state.open ? ' active visible' : ''}`}
       onClick={this.handleToggleOpen}
-      data-tip={!this.state.open ? utils.tip(`${this.props.options.length} new message${this.props.options.length > 1 ? 's' : ''}`) : ''}>
+      data-tip={!this.state.open ? tip(`${this.props.options.length} new message${this.props.options.length > 1 ? 's' : ''}`) : ''}>
         <i className="envelope icon" />
         <div
         style={{
@@ -569,7 +575,7 @@ export class NotificationDropdown extends React.Component {
                     style={notificationTrashIconContainerStyle}
                     onClick={() => this.handleDelete(option)}
                     data-place="bottom"
-                    data-tip={utils.tip('Remove Notification')}>
+                    data-tip={tip('Remove Notification')}>
                       {this.state.hover === i ? <i className="trash outline icon" /> : null}
                     </div>
                   </div>

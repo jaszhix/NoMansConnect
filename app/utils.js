@@ -509,7 +509,7 @@ export const uaToObject = (x) => {
   x = formatIntAddress(x);
   const PlanetIndex = parseInt(x.substring(0, 1), 16);
   const SolarSystemIndex = parseInt(x.substring(1, 4), 16);
-  const RealityIndex = parseInt(x.substring(4, 6), 16)
+  const RealityIndex = parseInt(x.substring(4, 6), 16);
   const VoxelY = signInt(x.substring(6, 8), 2);
   const VoxelZ = signInt(x.substring(8, 11), 3);
   const VoxelX = signInt(x.substring(11, x.length), 3);
@@ -585,8 +585,7 @@ export const formatForGlyphs = function(translatedId, planetIndex) {
 
 export function uuidV4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
+    return Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8).toString(16);
   });
 }
 

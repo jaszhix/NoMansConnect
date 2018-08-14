@@ -151,12 +151,18 @@ class ThreeDimScatterChart extends React.Component {
         'width',
         'height',
         'remoteLocationsColumns'
-      ], () => this.handlePostMessageSize()),
+      ], () => {
+        if (this.willUnmount) return;
+        this.handlePostMessageSize();
+      }),
       state.connect([
         'selectedGalaxy',
         'storedLocations',
         'remoteLocations'
-      ], () => this.handlePostMessage()),
+      ], () => {
+        if (this.willUnmount) return;
+        this.handlePostMessage()
+      }),
       state.connect([
         'showOnlyNames',
         'showOnlyDesc',
@@ -167,6 +173,7 @@ class ThreeDimScatterChart extends React.Component {
         'showOnlyCompatible',
         'showOnlyFriends',
       ], () => {
+        if (this.willUnmount) return;
         setTimeout(() => {
           this.handlePostMessage();
           this.handlePostMessageSize();
@@ -192,7 +199,7 @@ class ThreeDimScatterChart extends React.Component {
     return isEqual(this.props, nP) || !isEqual(this.state, nS)
   }
   handlePostMessage = () => {
-    if (this.dragging) return;
+    if (this.dragging || this.willUnmount) return;
     if (!state.navLoad) {
       state.set({navLoad: true});
     }
@@ -213,7 +220,7 @@ class ThreeDimScatterChart extends React.Component {
     });
   }
   handlePostMessageSize = () => {
-    if (this.dragging) return;
+    if (this.dragging || this.willUnmount) return;
     window.mapWorker2.postMessage({
       selectOnly: false,
       p: {
@@ -229,7 +236,7 @@ class ThreeDimScatterChart extends React.Component {
     });
   }
   handlePostMessageSelect = () => {
-    if (this.dragging) return;
+    if (this.dragging || this.willUnmount) return;
     window.mapWorker2.postMessage({
       p: {
         selectedLocation: state.selectedLocation,
@@ -246,9 +253,7 @@ class ThreeDimScatterChart extends React.Component {
   }
   handleMapWorker = () => {
     const handler = (e) => {
-      if (this.willUnmount) {
-        return;
-      }
+      if (this.willUnmount) return;
       let setState = (data) => {
         this.setState(data, () => {
           let stateUpdate = {navLoad: false};

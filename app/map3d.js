@@ -149,9 +149,7 @@ class Map3D extends React.Component {
   }
   componentDidMount() {
     window.map3DWorker.onmessage = (e) => {
-      if (this.willUnmount) {
-        return;
-      }
+      if (this.willUnmount) return;
       this.setState({locations: e.data.locations});
     };
     this.updateLocations(this.props, true);
@@ -197,9 +195,7 @@ class Map3D extends React.Component {
     }
   }
   handleAnimation = (c, time) => {
-    if (this.willUnmount) {
-      return;
-    }
+    if (this.willUnmount) return;
     TWEEN.update(time)
 
     if (this.props.selectedLocation && this.selected) {

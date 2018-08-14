@@ -1,4 +1,5 @@
 import React from 'react';
+import {cleanUp} from './utils';
 
 let style = {
   left: '9px',
@@ -18,6 +19,9 @@ class Button extends React.Component {
     this.state = {
       hover: false,
     };
+  }
+  componentWillUnmount() {
+    cleanUp(this);
   }
   render() {
     return (

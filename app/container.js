@@ -118,9 +118,7 @@ class Container extends React.Component {
           remoteLocations: this.props.s.remoteLocations,
           selectedLocation: this.props.s.selectedLocation
         }, () => {
-          if (this.willUnmount) {
-            return;
-          }
+          if (this.willUnmount) return;
           this.setState({
             updating: false,
             edit: false
@@ -208,9 +206,7 @@ class Container extends React.Component {
                 remoteLocations: this.props.s.remoteLocations,
                 selectedLocation: this.props.s.selectedLocation
               }, () => {
-                if (this.willUnmount) {
-                  return;
-                }
+                if (this.willUnmount) return;
                 this.setState({
                   updating: false,
                   edit: false
@@ -254,9 +250,7 @@ class Container extends React.Component {
         remoteLocations: this.props.s.remoteLocations,
         selectedLocation: this.props.s.selectedLocation
       }, () => {
-        if (this.willUnmount) {
-          return;
-        }
+        if (this.willUnmount) return;
         this.setState({
           updating: false,
           edit: false
@@ -292,9 +286,7 @@ class Container extends React.Component {
         remoteLocations: this.props.s.remoteLocations,
         selectedLocation: this.props.s.selectedLocation
       }, () => {
-        if (this.willUnmount) {
-          return;
-        }
+        if (this.willUnmount) return;
         this.setState({
           updating: false,
           edit: false
