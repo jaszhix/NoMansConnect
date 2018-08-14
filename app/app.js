@@ -272,6 +272,9 @@ class App extends React.Component {
             navLoad: false
           });
         }
+        if (this.state.offline && this.state.init) {
+          state.set({init: false}, true);
+        }
         return;
       }
       console.log('AJAX WORKER: ', e.data);

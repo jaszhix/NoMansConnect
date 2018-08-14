@@ -7,6 +7,9 @@ const buildGalaxyOptions = function(state) {
   let selectedGalaxy = state.selectedGalaxy;
   if (state.remoteLocations) {
     each(state.remoteLocations, (location) => {
+      if (!location) {
+        return;
+      }
       if (location.data.galaxy == null || location.data.galaxy < 0) {
         location.data.galaxy = 0;
       }
@@ -33,7 +36,7 @@ const buildGalaxyOptions = function(state) {
 };
 
 const getLocationsByTranslatedId = function(locations) {
-  if (!locations) {
+  if (!locations || !locations[0]) {
     return null;
   }
   let systems = uniqBy(locations, (location) => {

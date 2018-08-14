@@ -338,7 +338,7 @@ const state = initStore({
     cb(obj);
   },
   handleState: (obj) => {
-    if (state.closing || obj.search) {
+    if (obj.search) {
       return;
     }
     each(obj, (value, key) => {

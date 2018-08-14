@@ -243,6 +243,12 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       log.error(`Current location: ${stateUpdate.currentLocation}`);
     }
 
+    if (state.offline) {
+      state.set(stateUpdate);
+      next();
+      return;
+    }
+
     state.set(stateUpdate, () => {
       let errorHandler = (err) => {
         if (err.response && err.response.data && err.response.data.status) {

@@ -23,7 +23,7 @@ export const baseError = () => {
 export const handleRestart = () => {
   let monitor = state.trigger('getMonitor');
   state.set({closing: true});
-  delay(() => {
+  setTimeout(() => {
     if (process.env.NODE_ENV === 'production') {
       remote.app.relaunch();
       if (process.platform === 'darwin') {

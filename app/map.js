@@ -577,10 +577,6 @@ class GalacticMap extends React.Component {
     });
   }
   handleInit = () => {
-    if (!state.currentLocation && !state.ps4User) {
-      delay(() => this.handleInit(), 25);
-      return;
-    }
     this.setState({init: false}, () => this.buildGalaxyOptions(true));
   }
   travelToCenter = () => {

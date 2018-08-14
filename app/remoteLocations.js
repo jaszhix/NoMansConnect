@@ -245,6 +245,7 @@ class RemoteLocations extends React.Component {
     };
     let _locations = Array(locations.length);
     each(locations, (location, i)=>{
+      if (!location) return null;
       location.data.teleports = location.teleports;
       location.upvote = location.data.upvote;
       let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
