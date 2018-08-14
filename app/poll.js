@@ -266,7 +266,8 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
           machineId: state.machineId,
           username: state.username,
-          discoveries: newDiscoveries
+          discoveries: newDiscoveries,
+          apiVersion: 1
         }).then(() => {
           if (init) {
             next(false);
