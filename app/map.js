@@ -110,7 +110,8 @@ class ThreeDimScatterChart extends React.Component {
       zoomHistory: [],
       startCoordinates: null,
       endCoordinates: null,
-      scale: 'linear'
+      scale: 'linear',
+      mapLines: props.mapLines
     };
     if (process.env.NODE_ENV === 'development') {
       let originalSetState = this.setState;
@@ -181,7 +182,11 @@ class ThreeDimScatterChart extends React.Component {
       }),
       state.connect({
         selectedLocation: () => this.handlePostMessageSelect(),
-        mapLines: () => this.forceUpdate()
+        mapLines: () => {
+          if (state.mapLines !== this.props.mapLines) {
+            this.setState({mapLines: state.mapLines});
+          }
+        }
       })
     ];
     this.handleMapWorker();
@@ -434,9 +439,10 @@ class ThreeDimScatterChart extends React.Component {
       zRange,
       startCoordinates,
       endCoordinates,
-      zoom
+      zoom,
+      mapLines
     } = this.state
-    const {show, mapLines} = this.props;
+    const {show} = this.props;
     let isZoom = zoom > 0;
     let legends = [];
     each(show, (obj, label) => {
