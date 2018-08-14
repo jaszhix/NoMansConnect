@@ -527,7 +527,7 @@ class App extends React.Component {
       });
     }).catch(baseError);
   }
-  signSaveData = (slot) => {
+  signSaveData = (slot, cb) => {
     let absoluteSaveDir = this.state.saveFileName.split(utils.dirSep);
     absoluteSaveDir.splice(absoluteSaveDir.length - 1, 1);
     absoluteSaveDir = absoluteSaveDir.join(utils.dirSep);
@@ -535,6 +535,9 @@ class App extends React.Component {
     console.log(command);
     utils.exc(command).then((res) => {
       log.error('Successfully signed save data with nmssavetool');
+      if (typeof cb === 'function') {
+        cb();
+      }
     }).catch((e) => {
       if (process.platform !== 'win32') {
         log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?')
@@ -543,7 +546,7 @@ class App extends React.Component {
     });
   }
   handleRestoreBase = (base, confirmed = false) => {
-    console.log({base, confirmed})
+    state.set({navLoad: true});
     utils.getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
       const {PersistentPlayerBases} = saveData.result.PlayerStateData
       if (confirmed === false) {
@@ -551,7 +554,8 @@ class App extends React.Component {
           displayBaseRestoration: {
             savedBases: PersistentPlayerBases,
             restoreBase: base
-          }
+          },
+          navLoad: false
         });
         return;
       }
@@ -584,6 +588,7 @@ class App extends React.Component {
           title: 'Base Restore',
           message: 'In order to restore your base correctly, at least one base building object must be placed on the new base first.'
         });
+        state.set({navLoad: false});
         return;
       }
       // cross is defined in the math.js library.
@@ -634,11 +639,11 @@ class App extends React.Component {
           log.error(`Failed to restore base: ${err.message}`);
           return;
         }
-        this.signSaveData(saveData.slot);
-        state.set({displayBaseRestoration: null});
+        this.signSaveData(saveData.slot, () => state.set({displayBaseRestoration: null, navLoad: false}));
       });
     }).catch((err) => {
       log.error(`Failed to restore base: ${err.message}`);
+      state.set({navLoad: false});
     });
   }
   handleTeleport = (location, i, action = null, n = null) => {
@@ -684,34 +689,37 @@ class App extends React.Component {
         if (err) {
           log.error('Error occurred while attempting to write save file cache:');
           log.error(err);
-        }
-        this.signSaveData(saveData.slot);
-        let refStoredLocation = findIndex(this.state.storedLocations, location => location.id === _location.id);
-        if (refStoredLocation !== -1) {
           state.set({navLoad: false});
           return;
         }
-        utils.ajax.post('/nmslocation/', {
-          machineId: this.state.machineId,
-          username: this.state.username,
-          teleports: true,
-          id: _location.id
-        }).then((res) => {
-          let refRemoteLocation = findIndex(this.state.remoteLocations.results, (remoteLocation) => {
-            return remoteLocation.data.id === _location.id;
-          });
-          if (refRemoteLocation !== -1) {
-            this.state.remoteLocations.results[refRemoteLocation] = res.data;
+        this.signSaveData(saveData.slot, () => {
+          state.set({currentLocation: _location.id});
+          let refStoredLocation = findIndex(this.state.storedLocations, location => location.id === _location.id);
+          if (refStoredLocation !== -1) {
+            state.set({navLoad: false});
+            return;
           }
+          utils.ajax.post('/nmslocation/', {
+            machineId: this.state.machineId,
+            username: this.state.username,
+            teleports: true,
+            id: _location.id
+          }).then((res) => {
+            let refRemoteLocation = findIndex(this.state.remoteLocations.results, (remoteLocation) => {
+              return remoteLocation.data.id === _location.id;
+            });
+            if (refRemoteLocation !== -1) {
+              this.state.remoteLocations.results[refRemoteLocation] = res.data;
+            }
 
-          state.set({
-            navLoad: false,
-            currentLocation: _location.id,
-            remoteLocations: this.state.remoteLocations
+            state.set({
+              navLoad: false,
+              remoteLocations: this.state.remoteLocations
+            });
+          }).catch((err) => {
+            log.error(`Unable to send teleport stat to server: ${err}`);
+            state.set({navLoad: false});
           });
-        }).catch((err) => {
-          log.error(`Unable to send teleport stat to server: ${err}`);
-          state.set({navLoad: false});
         });
       });
     }).catch((err) => {
@@ -752,8 +760,7 @@ class App extends React.Component {
           log.error('Error occurred while attempting to write save file cache:');
           log.error(err);
         }
-        this.signSaveData(saveData.slot);
-        state.set({navLoad: false});
+        this.signSaveData(saveData.slot, () => state.set({navLoad: false}));
       });
     }).catch((err) => {
       log.error(err.message);
