@@ -338,9 +338,6 @@ const state = initStore({
     cb(obj);
   },
   handleState: (obj) => {
-    if (obj.search) {
-      return;
-    }
     each(obj, (value, key) => {
       if (state.settingsKeys.indexOf(key) > -1) {
         window.settingsWorker.postMessage({

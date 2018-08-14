@@ -261,6 +261,17 @@ class App extends React.Component {
         if (!this.state.offline) {
           log.error(`AJAX Worker failure: ${e.data.func}`);
         }
+        if (e.data.func === 'syncRemoteOwned' && e.data.status === 503) {
+          state.set({
+            offline: true,
+            init: false,
+            notification: {
+              message: 'Server is temporarily unavailable. Sorry for the inconvenience.',
+              type: 'info'
+            }
+          }, true);
+          return;
+        }
         if (e.data.func === 'handleSync') {
           this.fetchRemoteLocations(state.page, state.sort, state.init, false);
         } else if (e.data.func === 'pollRemoteLocations') {
