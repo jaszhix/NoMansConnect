@@ -633,3 +633,9 @@ export const cleanUp = (obj, defer = false) => {
 }
 
 export const dirSep = process.platform === 'win32' ? '\\' : '/';
+
+const syncedKeys = ['image', 'name', 'description', 'teleports', 'profile'];
+export const copyMetadata = (a, b, keys = syncedKeys) => {
+  each(keys, (key) => a[key] = b[key]);
+  return a;
+}

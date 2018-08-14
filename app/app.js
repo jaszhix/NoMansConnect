@@ -694,27 +694,28 @@ class App extends React.Component {
         }
         this.signSaveData(saveData.slot, () => {
           state.set({currentLocation: _location.id});
-          let refStoredLocation = findIndex(this.state.storedLocations, location => location.id === _location.id);
-          if (refStoredLocation !== -1) {
-            state.set({navLoad: false});
-            return;
-          }
           utils.ajax.post('/nmslocation/', {
             machineId: this.state.machineId,
             username: this.state.username,
             teleports: true,
             id: _location.id
           }).then((res) => {
-            let refRemoteLocation = findIndex(this.state.remoteLocations.results, (remoteLocation) => {
+            let {remoteLocations, selectedLocation} = this.state;
+            let refRemoteLocation = findIndex(remoteLocations.results, (remoteLocation) => {
               return remoteLocation.data.id === _location.id;
             });
-            if (refRemoteLocation !== -1) {
-              this.state.remoteLocations.results[refRemoteLocation] = res.data;
+            if (refRemoteLocation > -1) {
+              remoteLocations.results[refRemoteLocation] = res.data;
+            }
+            if (selectedLocation && selectedLocation.id === _location.id) {
+              res.data.data = utils.copyMetadata(selectedLocation, res.data);
+              selectedLocation = Object.assign(selectedLocation, res.data.data);
             }
 
             state.set({
               navLoad: false,
-              remoteLocations: this.state.remoteLocations
+              remoteLocations,
+              selectedLocation
             });
           }).catch((err) => {
             log.error(`Unable to send teleport stat to server: ${err}`);
@@ -959,7 +960,7 @@ class App extends React.Component {
             navLoad={s.navLoad} /> : null}
             {this.state.profile && this.state.profile.notifications && this.state.profile.notifications.length > 0 ?
             <NotificationDropdown
-            machineId={this.state.profile.machine_id}
+            machineId={this.state.machineId}
             username={this.state.username}
             options={this.state.profile.notifications}
             height={this.state.height} /> : null}
@@ -1042,6 +1043,8 @@ class App extends React.Component {
         onSearch={this.handleSearch} />}
         {this.state.displayProfile ?
         <ProfileModal
+        username={this.state.username}
+        machineId={this.state.machineId}
         profileId={this.state.displayProfile}
         profile={this.state.profile}
         height={this.state.height}

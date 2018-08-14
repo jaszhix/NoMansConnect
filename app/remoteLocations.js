@@ -23,7 +23,10 @@ class RemoteLocations extends React.Component {
         }
         this.recentExplorations.scrollTop = 0;
       }),
-      state.connect(['remoteLocationsColumns', 'compactRemote'], () => setTimeout(() => this.setViewableRange(this.recentExplorations), 0))
+      state.connect(['remoteLocationsColumns', 'compactRemote'], () => setTimeout(() => this.setViewableRange(this.recentExplorations), 0)),
+      state.connect({
+        updateRemoteLocation: (...args) => this.handleUpdate(...args)
+      })
     ];
     this.uiSegmentStyle = {
       background: 'rgba(23, 26, 22, 0.9)',
@@ -80,7 +83,7 @@ class RemoteLocations extends React.Component {
       return;
     }
 
-    if (this.props.s.remoteLength >= this.props.s.remoteLocations.count - this.props.s.pageSize) {
+    if (this.props.s.remoteLength >= (this.props.s.remoteLocations.count - this.props.s.pageSize)) {
       return;
     }
 
@@ -95,21 +98,21 @@ class RemoteLocations extends React.Component {
     this.props.onFav(location, upvote);
   }
   handleUpdate = (id, location, remove = false) => {
-    let refIndex = findIndex(this.props.s.remoteLocations.results, (_location) => _location.id === id);
+    let {remoteLocations} = this.props.s;
+    let refIndex = findIndex(remoteLocations.results, (_location) => _location.id === id);
     if (refIndex === -1) {
-      log.error(`Unable to find reference remote location to be updated: ${id}`);
-      return;
+      remoteLocations.results.push(location);
+    } else {
+      if (remove) {
+        remoteLocations.results.splice(refIndex, 1);
+      } else if (location) {
+        remoteLocations.results[refIndex] = location;
+      }
     }
-    if (remove) {
-      this.props.s.remoteLocations.results.splice(refIndex, 1);
-      state.set({remoteLocations: this.props.s.remoteLocations});
-      return;
-    }
-    this.props.s.remoteLocations.results[refIndex] = location;
     window.jsonWorker.postMessage({
       method: 'set',
       key: 'remoteLocations',
-      value: this.props.s.remoteLocations,
+      value: remoteLocations,
     });
   }
   getRef = (ref) => {

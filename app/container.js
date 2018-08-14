@@ -302,13 +302,9 @@ class Container extends React.Component {
         return remoteLocation.data.id === location.id;
       });
       if (refRemoteLocation) {
-        refRemoteLocation.data.image = refRemoteLocation.image;
-        refRemoteLocation.data.name = refRemoteLocation.name;
-        refRemoteLocation.data.description = refRemoteLocation.description;
-        refRemoteLocation.data.isHidden = location.isHidden;
-        refRemoteLocation.data.positions = location.positions;
-        refRemoteLocation.data.version = location.version;
-        _location = refRemoteLocation.data;
+        refRemoteLocation.data = utils.copyMetadata(refRemoteLocation.data, refRemoteLocation);
+        refRemoteLocation.data.remoteId = refRemoteLocation.id;
+        _location = utils.copyMetadata(refRemoteLocation.data, location, ['isHidden', 'positions', 'version']);
       } else {
         log.error(`Unable to find reference remote location from stored locations cache: ${location.id} (fetching)`);
         if (this.props.s.offline) {
@@ -592,6 +588,7 @@ class Container extends React.Component {
               currentLocation={currentLocation}
               isOwnLocation={isOwnLocation}
               isVisible={true}
+              id={selectedLocation.remoteId}
               location={selectedLocation}
               navLoad={navLoad}
               updating={this.state.updating}

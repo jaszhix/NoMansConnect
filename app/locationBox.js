@@ -126,10 +126,14 @@ class LocationBox extends React.Component {
     this.setState({positionEdit: !this.state.positionEdit})
   }
   updateLocation = () => {
+    let {onUpdate} = this.props;
+    if (!onUpdate) {
+      onUpdate = (...args) => state.trigger('updateRemoteLocation', ...args);
+    }
     ajax.get(`/nmslocation/${this.props.id}/`).then((res) => {
       if (!this.willUnmount) {
         if (!isEqual(this.props.location, res.data.data) || !isEqual(this.props.profile, res.data.profile)) {
-          this.props.onUpdate(this.props.id, res.data);
+          onUpdate(this.props.id, res.data);
           this.setState({
             location: res.data.data,
             profile: res.data.profile
@@ -137,12 +141,13 @@ class LocationBox extends React.Component {
         }
       }
     }).catch((err) => {
-      if (!this.props || err.response.status === 404) {
+      console.log(err)
+      if (!this.props || (err.response && err.response.status === 404)) {
         // cleanUp was already called
         return;
       }
-      this.props.onUpdate(this.props.id, null, true);
-    })
+      onUpdate(this.props.id, null, true);
+    });
   }
   getImage = (p) => {
     if (p.image) {

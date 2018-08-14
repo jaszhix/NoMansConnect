@@ -1,3 +1,21 @@
+# 1.4.0
+
+  * Fixed an issue with old discoveries getting re-uploaded on intitialization.
+  * Fixed the first glyph in the portal address being incorrect.
+  * Adjusted the distance to center calculation to be more accurate.
+    * Distances are calculated at the time of location creation and stay cached. Old locations have been corrected on the server, but you may need to clear the contents of AppData/Roaming/NoMansConnect for the changes to propagate.
+  * Cleaned up the profile view, and made the discovery timeline more readable. Discoveries are now grouped by location, and discovery data that is unidentified by NMC can now be teleported to, and registered as a result.
+  * Added an option to disable automatic screenshot capturing of space stations, atlas stations, and freighters.
+  * Added a close button to the image modal.
+  * Added a shortcut to one's own profile. Select the tool drop-down menu, and select the first option, "Profile".
+  * Fixed an issue with closing image modals opened from the profile causing the profile to close as well.
+  * Fixed tooltips not rendering in the settings modal.
+  * The cheat menu is now deprecated to prevent encouraging multiplayer cheating. It can still be accessed by using the Konami code, but is now limited to one use per-day. Dedicated save editors are available on modding sites.
+  * Performance improvements.
+  * Fixed teleporting and other save file operations toggling the loading state before nmssavetool writes the save file. The current location is also updated more quickly after teleporting.
+  * Fixed teleport stats not incrementing.
+  * Fixed inability to click through to an associated profile from a selected location.
+
 # 1.3.3
 
   * Fixed version compatibility changes to a location not propagating to the cache.

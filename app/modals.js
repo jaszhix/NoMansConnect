@@ -499,8 +499,8 @@ export class ProfileModal extends React.Component {
   handleFriendRequest = (isFriend) => {
     if (isFriend) {
       utils.ajax.post('/nmsfriendremove/', {
-        username: this.props.profile.username,
-        machineId: this.props.profile.machine_id,
+        username: this.props.username,
+        machineId: this.props.machineId,
         friend: this.state.profile.username,
       }).then((profile) => {
         profile = Object.assign(this.state.profile, profile.data)
@@ -513,12 +513,12 @@ export class ProfileModal extends React.Component {
     } else {
       utils.ajax.post('/nmsfriendrequest/', {
         from: {
-          username: this.props.profile.username
+          username: this.props.username
         },
         to: {
           username: this.state.profile.username
         },
-        machineId: this.props.profile.machine_id
+        machineId: this.props.machineId
       }).then((profile) => {
         profile = Object.assign(this.state.profile, profile.data)
         this.setState({profile});
