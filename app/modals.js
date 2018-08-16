@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import moment from 'moment';
 import {assignIn, pick, isString, orderBy, upperFirst, clone, last} from 'lodash';
 
-import {validateEmail, ajax, fromHex, cleanUp, uaToObject, formatTranslatedID} from './utils';
+import {validateEmail, ajax, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
 import {each, findIndex, find, map, filter} from './lang';
 
@@ -903,8 +903,7 @@ export class LogModal extends React.Component {
     };
   }
   componentDidMount() {
-    let fs = require('fs');
-    fs.readFile(`${remote.app.getPath('userData')}/NMC.log`, {encoding: 'utf-8'}, (err, log) => {
+    fsWorker.readFile(`${remote.app.getPath('userData')}/NMC.log`, {encoding: 'utf-8'}, (err, log) => {
       this.setState({log});
       console.log('Log loaded...');
     });

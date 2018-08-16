@@ -11,10 +11,10 @@ import {assignIn, cloneDeep, orderBy, uniqBy, concat, first, isArray, throttle, 
 import math from 'mathjs';
 
 import Loader from './loader';
-import {dirSep, ajax, getLastGameModeSave, exc, formatBase, copyMetadata, css, tip} from './utils';
+import {dirSep, ajax, getLastGameModeSave, exc, formatBase, css, tip, fsWorker} from './utils';
 import pollSaveData from './poll';
 import {handleWallpaper, handleUpgrade, baseError} from './dialog';
-import {each, find, findIndex, map, filter, tryFn} from './lang';
+import {each, find, findIndex, map, filter} from './lang';
 
 import baseIcon from './assets/images/base_icon.png';
 
@@ -171,7 +171,7 @@ class App extends React.Component {
     let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
     let indexModsInUse = (_path, modPath) => {
 
-      fs.readFile(`${_path}${dirSep}Binaries${dirSep}SETTINGS${dirSep}TKGRAPHICSSETTINGS.MXML`, (err, data) => {
+      fsWorker.readFile(`${_path}${dirSep}Binaries${dirSep}SETTINGS${dirSep}TKGRAPHICSSETTINGS.MXML`, (err, data) => {
         if (err) {
           console.log('err__', err, _path, state.installDirectory, state)
         }
@@ -183,12 +183,12 @@ class App extends React.Component {
           state.set({autoCapture: false, loading: 'Checking for mods...'});
         }
         let _modPath = `${_path}${modPath}`;
-        fs.exists(_modPath, (exists) => {
+        fsWorker.exists(_modPath, (exists) => {
           if (!exists) {
             initialize();
             return;
           }
-          fs.readdir(_modPath, (err, list) => {
+          fsWorker.readdir(_modPath, (err, list) => {
             if (err) {
               log.error(`Failed to read mods directory: ${err}`);
               return;
@@ -253,7 +253,7 @@ class App extends React.Component {
     if (this.monitor) {
       this.monitor.stop();
     }
-    //state.destroy();
+    state.destroy();
   }
   handleWorkers = () => {
     window.ajaxWorker.onmessage = (e) => {
@@ -642,7 +642,7 @@ class App extends React.Component {
 
       saveData.result.PlayerStateData.PersistentPlayerBases[refIndex].Objects = storedBase.Objects;
 
-      fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
+      fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
         if (err) {
           log.error(`Failed to restore base: ${err.message}`);
           return;
@@ -689,7 +689,7 @@ class App extends React.Component {
 
       saveData.result.PlayerStateData.UniverseAddress.RealityIndex = _location.galaxy;
 
-      fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
+      fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
         if (err) {
           log.error('Error occurred while attempting to write save file cache:');
           log.error(err);
@@ -759,7 +759,7 @@ class App extends React.Component {
         saveData.result.GameKnowledgeData.Waypoints.push(waypoint);
       }
 
-      fs.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
+      fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
         if (err) {
           log.error('Error occurred while attempting to write save file cache:');
           log.error(err);

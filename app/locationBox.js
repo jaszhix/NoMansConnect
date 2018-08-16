@@ -1,5 +1,4 @@
 import {clipboard} from 'electron';
-import fs from 'graceful-fs';
 import path from 'path';
 import log from './log';
 import state from './state';
@@ -10,8 +9,8 @@ import ReactTooltip from 'react-tooltip';
 import {truncate, upperFirst, isEqual, last} from 'lodash';
 import moment from 'moment';
 
-import {css, tip, cleanUp, formatForGlyphs, ajax} from './utils';
-import {each, findIndex, map, tryFn} from './lang';
+import {css, tip, cleanUp, formatForGlyphs, ajax, fsWorker} from './utils';
+import {each, map, tryFn} from './lang';
 
 import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
@@ -154,14 +153,14 @@ class LocationBox extends React.Component {
     if (image) {
       let img = p.image.replace(/:/g, '~').replace(/NMSLocation-/, '');
       let file = path.resolve(`${this.props.configDir}${img}`);
-      fs.exists(file, (exists) => {
+      fsWorker.exists(file, (exists) => {
         if (!exists) {
           axios
           .get(`https://neuropuff.com/${image}`, {
             responseType: 'arraybuffer'
           })
           .then(res => {
-            fs.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
+            fsWorker.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
               if (!err && !this.willUnmount && this.scrollBox) {
                 tryFn(() => this.setState({image: `${file}`}));
               } else {

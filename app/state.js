@@ -1,9 +1,9 @@
 import {remote} from 'electron';
 import os from 'os';
-import fs from 'graceful-fs';
 import {assignIn, pick, uniqBy, cloneDeep} from 'lodash';
 import {handleRestart} from './dialog';
 import log from './log';
+import {fsWorker} from './utils';
 import {each, filter} from './lang';
 import initStore from './store';
 import galaxies from './static/galaxies.json';
@@ -231,8 +231,8 @@ const state = initStore({
     let basePath = state.configDir.split('\\AppData')[0];
     let steamPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS`;
     let gogPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS\\DefaultUser`;
-    fs.exists(steamPath, (sExists) => {
-      fs.exists(gogPath, (gExists) => {
+    fsWorker.exists(steamPath, (sExists) => {
+      fsWorker.exists(gogPath, (gExists) => {
         if (sExists) {
           saveDirPath = steamPath;
         } else if (gExists) {
