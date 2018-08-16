@@ -38868,32 +38868,30 @@ Profile
 .ProfileModal__eventGroupCommon {
   padding: 6px;
 }
-.ProfileModal__eventGroup {
-  border-right: 1px dashed #5399c2;
+
+.ProfileModal__eventGroupStartDashed {
+  border-top: 1px dashed;
 }
-.ProfileModal__eventGroupRegistered {
-  border-right: 1px dashed #95220E;
+.ProfileModal__eventGroupStartSolid {
+  border-top: 1px solid;
 }
-.ProfileModal__eventGroupStart {
-  border-top: 1px solid #95220E;
-  border-right: 1px solid #95220E;
+.ProfileModal__eventGroupMidDashed {
+  border-right: 1px dashed;
 }
-.ProfileModal__eventGroupEnd {
-  border-bottom: 1px dashed #5399c2;
-  border-right: 1px dashed #5399c2;
+.ProfileModal__eventGroupMidSolid {
+  border-right: 1px solid;
 }
-.ProfileModal__eventGroupStartUnidentified {
-  border-top: 1px dashed #5399c2;
-  border-right: 1px dashed #5399c2;
+.ProfileModal__eventGroupEndDashed {
+  border-bottom: 1px dashed;
 }
-.ProfileModal__eventGroupEndUnidentified {
-  border-top: 1px dashed #95220E;
-  border-right: 1px dashed #95220E;
-  border-bottom: 1px dashed #95220E;
+.ProfileModal__eventGroupEndSolid {
+  border-bottom: 1px solid;
 }
-.ProfileModal__eventGroupEndRegistered {
-  border-bottom: 1px solid #95220E;
-  border-right: 1px solid #95220E;
+.ProfileModal__eventGroupIsPlanet {
+  border-color: #95220E;
+}
+.ProfileModal__eventGroupIsNonPlanet {
+  border-color: #5399c2;
 }
 /*
 Friend requests

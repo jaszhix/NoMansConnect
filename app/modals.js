@@ -344,8 +344,6 @@ const planetIcon = require('./assets/images/planet_discovery.png');
 const organicIcon = require('./assets/images/organic_discovery.png');
 const mineralIcon = require('./assets/images/mineral_discovery.png');
 const interactableIcon = require('./assets/images/interactable_discovery.png');
-const dividerTypes = ['Sector', 'SolarSystem', 'Planet'];
-const planetDividerTypes = ['SolarSystem', 'Planet'];
 
 const discoveryIconMap = {
   Animal: organicIcon,
@@ -355,6 +353,15 @@ const discoveryIconMap = {
   SolarSystem: planetIcon,
   Sector: planetIcon,
   Interactable: interactableIcon
+};
+const discoveryLevelMap = {
+  Animal: 1,
+  Flora: 1,
+  Mineral: 1,
+  Planet: 2,
+  SolarSystem: 3,
+  Sector: 4,
+  Interactable: 1
 };
 
 class EventItem extends React.Component {
@@ -371,28 +378,18 @@ class EventItem extends React.Component {
     cleanUp(this);
   }
   render() {
-    let {profile, name, description, type, created, image, id, dataId, score, version, shouldShowPlanetType, isStart, isEnd, isLocation} = this.props;
+    let {profile, name, type, created, image, dataId, score, version, shouldShowPlanetType, isStart, isEnd, isLocation, location} = this.props;
     let isOwnLocation = profile ? profile.username === state.username : false;
     if (type === 'Planet' && !shouldShowPlanetType) {
       return null;
     }
-    let groupClass = 'label ProfileModal__eventGroupCommon';
+    let groupClass = `label ProfileModal__eventGroupCommon ProfileModal__eventGroupIs${type !== 'Planet' ? 'Non' : ''}Planet`;
+    groupClass += ` ProfileModal__eventGroupMid${isLocation ? 'Solid' : 'Dashed'}`;
     if (isStart) {
-      groupClass += ` ProfileModal__eventGroupStart${!id ? 'Unidentified' : ''}`;
+      groupClass += ` ProfileModal__eventGroupStart${isLocation ? 'Solid' : 'Dashed'}`;
     }
     if (isEnd) {
-      if (isLocation) {
-        groupClass += ' ProfileModal__eventGroupEndRegistered';
-      } else {
-        groupClass += ` ProfileModal__eventGroupEnd${!id  ? 'Unidentified' : ''}`;
-      }
-    }
-    if (!isStart && !isEnd) {
-      if (isLocation) {
-        groupClass += ' ProfileModal__eventGroupRegistered';
-      } else {
-        groupClass += ' ProfileModal__eventGroup';
-      }
+      groupClass += ` ProfileModal__eventGroupEnd${isLocation ? 'Solid' : 'Dashed'}`;
     }
     return (
       <div className="event">
@@ -406,7 +403,7 @@ class EventItem extends React.Component {
               {moment(created).format('MMMM D, Y')}
             </div>
             <div className="meta ProfileModal__meta">
-              {id ?
+              {dataId ?
               <div
               className={`like${state.favorites.indexOf(dataId) > -1 ? ' active' : ''}`}
               onClick={() => state.trigger('handleFavorite', this.props)}>
@@ -414,16 +411,16 @@ class EventItem extends React.Component {
               </div> : null}
             </div>
           </div>
-          {dataId ?
+          {dataId || (type === 'Planet' && location) ?
           <LocationBox
           name={name}
           description={''}
           username={profile ? profile.username : ''}
           selectType={false}
           currentLocation={state.currentLocation}
-          isOwnLocation={false}
+          isOwnLocation={isOwnLocation}
           isVisible={true}
-          location={this.props}
+          location={dataId ? this.props : location}
           updating={false}
           edit={false}
           favorites={state.favorites}
@@ -596,7 +593,8 @@ export class ProfileModal extends React.Component {
           discovery.location = {
             ...data,
             manuallyEntered: true,
-            galaxy: RealityIndex
+            galaxy: RealityIndex,
+            unidentified: true
           }
         } else {
           discovery.location = {}
@@ -616,8 +614,9 @@ export class ProfileModal extends React.Component {
           discoveries: [discovery]
         });
       }
-      if (discovery.location.dataId) delete discovery.location;
+      if (discovery.type !== 'Planet') delete discovery.location;
     });
+    let isStart;
     return (
       <div ref={this.getRef} className="ui large modal active modal__large">
         <i
@@ -677,37 +676,55 @@ export class ProfileModal extends React.Component {
                     let locationsLen = locations.length;
                     let discoveriesLen = location.discoveries.length;
                     let nextLocation = locations[i + 1];
+                    let previousLocation = locations[i - 1];
                     let nextDiscovery = null;
                     let previousDiscovery = null;
                     if (nextLocation) {
                       nextDiscovery = filter(nextLocation.discoveries, (d) => d.type !== 'Planet')[0];
                     }
-                    previousDiscovery = last(filter(location.discoveries, (d) => d.type !== 'Planet'));
-                    let isStart = !previousDiscovery || (dividerTypes.includes(previousDiscovery.type) || planetDividerTypes.includes(previousDiscovery.type));
-                    let isEnd = (!nextDiscovery || !dividerTypes.includes(nextDiscovery.type)
-                      || (planetDividerTypes.includes(nextDiscovery.type) && nextDiscovery.type !== 'SolarSystem'))
+                    previousDiscovery = filter(location.discoveries, (d) => d.type !== 'Planet')[0]
+
+                    isStart = !previousDiscovery || discoveryLevelMap[previousDiscovery.type] > 1;
+                    let isEnd = i === locationsLen - 1
+                      || !nextDiscovery
+                      || discoveryLevelMap[nextDiscovery.type] < 2;
+
                     return (
                       <React.Fragment key={i}>
                         {map(location.discoveries, (discovery, d) => {
                           let nextDiscovery = location.discoveries[d + 1];
                           let previousDiscovery = location.discoveries[d - 1];
-                          let dIsStart = (d === 0 && !dividerTypes.includes(discovery.type))
-                            || (!location.id && (discovery.type === 'Planet' || (previousDiscovery && dividerTypes.includes(previousDiscovery.type))))
-                            || (!dividerTypes.includes(discovery.type) && previousDiscovery && dividerTypes.includes(previousDiscovery.type));
-                          let dIsEnd = (!location.id && (d === (discoveriesLen - 1) && i !== (locationsLen - 1)))
-                            || (discovery.type === 'Planet'
-                              && !location.id && nextDiscovery && (nextDiscovery.type === 'Planet' && nextDiscovery.type !== 'SolarSystem'))
-                            || (dividerTypes.includes(discovery.type)
-                              && nextDiscovery
-                              && (dividerTypes.includes(nextDiscovery.type)
-                            || (d !== (discoveriesLen - 1) && !dividerTypes.includes(nextDiscovery.type))));
+
+                          let thisLevel = discoveryLevelMap[discovery.type];
+                          let nextLevel = 0;
+                          let prevLevel = 0;
+                          if (nextDiscovery) {
+                            nextLevel = discoveryLevelMap[nextDiscovery.type];
+                          } else  {
+                            nextLevel = 2;
+                          }
+                          if (previousDiscovery) {
+                            prevLevel = discoveryLevelMap[previousDiscovery.type];
+                          } else if (previousLocation) {
+                            let previousLocationDiscovery = last(previousLocation.discoveries);
+                            if (previousLocationDiscovery) {
+                              prevLevel = discoveryLevelMap[previousLocationDiscovery.type];
+                            }
+                          }
+
+                          let dIsStart = d === 0 || prevLevel > thisLevel || (thisLevel > 2 && thisLevel === prevLevel);
+                          let dIsEnd = nextLevel < thisLevel
+                            || (thisLevel > 1 && thisLevel === nextLevel)
+                            || (d === discoveriesLen - 1 && isStart);
                           return (
                             <EventItem
-                            key={d} {...discovery}
+                            key={d}
+                            {...discovery}
                             profile={pick(profile, 'username', 'exp', 'id')}
-                            shouldShowPlanetType={!location.id}
+                            shouldShowPlanetType={location.unidentified}
                             isStart={dIsStart}
-                            isEnd={dIsEnd} />
+                            isEnd={dIsEnd}
+                            isLocation={discovery.type === 'Planet' && !location.unidentified} />
                           );
                         })}
                         {location.id ?
