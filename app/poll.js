@@ -32,24 +32,23 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     state.set({loading: 'Syncing favorites...'});
     let remainingFavorites = profile.data.favorites.slice();
     each(storedLocations, (location) => {
-      if (favorites.indexOf(location.id) > -1) {
+      if (favorites.indexOf(location.dataId) > -1) {
         location.upvote = true;
         if (location.username === username) {
-          remainingFavorites.splice(remainingFavorites.indexOf(location.id), 1);
+          remainingFavorites.splice(remainingFavorites.indexOf(location.dataId), 1);
         }
       }
     });
     each(remoteLocations.results, (location) => {
-      if (favorites.indexOf(location.data.id) > -1) {
-        location.data.score = location.score;
-        location.data.upvote = true;
-        let refStored = findIndex(storedLocations, (l) => l.id === location.data.id) === -1;
+      if (favorites.indexOf(location.dataId) > -1) {
+        location.upvote = true;
+        let refStored = findIndex(storedLocations, (l) => l.dataId === location.dataId) === -1;
         if (refStored === -1) {
-          storedLocations.push(location.data);
+          storedLocations.push(location);
         } else {
-          storedLocations[refStored] = location.data;
+          storedLocations[refStored] = location;
         }
-        remainingFavorites.splice(remainingFavorites.indexOf(location.data.id), 1);
+        remainingFavorites.splice(remainingFavorites.indexOf(location.dataId), 1);
       }
     });
 
@@ -66,24 +65,24 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         let missingFromStored = [];
         let missingFromRemote = [];
         each(res.data, (location) => {
-          location.data.score = res.data.score;
-          location.data.upvote = true;
-          if (!find(storedLocations, (l) => l.id === location.data.id)) {
-            missingFromStored.push(location.data);
+          location.score = res.data.score;
+          location.upvote = true;
+          if (!find(storedLocations, (l) => l.dataId === location.dataId)) {
+            missingFromStored.push(location);
           }
-          if (!find(remoteLocations.results, (l) => l.id === location.data.id)) {
+          if (!find(remoteLocations.results, (l) => l.dataId === location.dataId)) {
             missingFromRemote.push(location);
           }
         });
-        remoteLocations.results = uniqBy(remoteLocations.results.concat(missingFromRemote), 'id');
-        storedLocations = uniqBy(storedLocations.concat(missingFromStored), 'id');
+        remoteLocations.results = uniqBy(remoteLocations.results.concat(missingFromRemote), 'dataId');
+        storedLocations = uniqBy(storedLocations.concat(missingFromStored), 'dataId');
         state.set({remoteLocations, storedLocations});
       }).catch((err) => log.error(`Error syncing favorites: ${err.message}`));
     }
   }
 
   let refFav = findIndex(favorites, (fav) => {
-    return fav === location.id;
+    return fav === location.dataId;
   });
   let upvote = refFav !== -1;
   let {PlanetIndex} = saveData.result.PlayerStateData.UniverseAddress.GalacticAddress;
@@ -110,12 +109,12 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         base: false,
         baseData: null,
         upvote: upvote,
-        image: image,
+        image: '',
         mods: state.mods,
         manuallyEntered,
-        timeStamp: Date.now(),
+        created: Date.now(),
         version: saveData.result.Version,
-        apiVersion: 1
+        apiVersion: 2
       });
 
       location.jumps = Math.ceil(location.distanceToCenter / 400);
@@ -178,7 +177,8 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       galacticAddress = utils.gaToObject(base.GalacticAddress);
       let refStoredLocation = findIndex(storedLocations, (storedLocation) => {
         return (
-          galacticAddress.VoxelX === storedLocation.VoxelX
+          storedLocation
+          && galacticAddress.VoxelX === storedLocation.VoxelX
           && galacticAddress.VoxelY === storedLocation.VoxelY
           && galacticAddress.VoxelZ === storedLocation.VoxelZ
           && galacticAddress.SolarSystemIndex === storedLocation.SolarSystemIndex
@@ -199,15 +199,15 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
 
     stateUpdate = Object.assign(stateUpdate, {
       storedLocations,
-      currentLocation: location.id,
-      selectedGalaxy: tryFn(() => parseInt(location.id.split(':')[3])),
+      currentLocation: location.dataId,
+      selectedGalaxy: tryFn(() => parseInt(location.dataId.split(':')[3])),
       username,
       favorites,
       saveDirectory: state.saveDirectory,
       saveFileName: saveData.path,
       saveVersion: saveData.result.Version,
       machineId,
-      loading: 'Syncing discoveries...'
+      loading: 'Syncing discoveries...',
     });
 
     if (profile) {
@@ -219,7 +219,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
           return;
         }
         show[friend.username] = {
-          color: `#${(Math.random()*0xFFFFFF<<0).toString(16)}`,
+          color: `#${(Math.random() * 0xFFFFFF << 0).toString(16)}`,
           value: true,
           listKey: `${friend.username}Locations`
         };
@@ -264,7 +264,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
           each(Record, (discovery) => {
             let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
             if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) {
-              discovery.NMCID = utils.uaToObject(discovery.DD.UA).id;
+              discovery.NMCID = utils.uaToObject(discovery.DD.UA).dataId;
               newDiscoveries.push(discovery);
             }
           });
@@ -273,7 +273,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
           machineId: state.machineId,
           username: state.username,
           discoveries: newDiscoveries,
-          apiVersion: 1
+          apiVersion: 2
         }).then(() => {
           if (init) {
             next(false);
@@ -284,21 +284,20 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
           let method = 'post';
           if (isLocationUpdate) {
             method = 'put';
-            route += `${location.id}/`;
+            route += `${location.dataId}/`;
           }
           utils.ajax[method](route, {
             machineId: state.machineId,
             username: state.username,
             mode: state.mode,
-            image: image,
-            version: location.version,
-            data: location
+            image,
+            ...location
           }).then((res) => {
             if (isLocationUpdate) {
               let {remoteLocations} = state;
-              let refRemote = findIndex(remoteLocations.results, (location) => location.id === res.data.id);
+              let refRemote = findIndex(remoteLocations.results, (location) => location.dataId === res.data.dataId);
               if (refRemote > -1) {
-                remoteLocations.results[refRemote].data = res.data.data;
+                remoteLocations.results[refRemote] = res.data;
                 state.set({remoteLocations}, () => next(false));
                 return;
               }
@@ -327,7 +326,7 @@ let getLastSave = (opts) => {
     if (!state.ps4User) {
       location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
       delete location.RealityIndex;
-      refLocation = findIndex(state.storedLocations, _location => _location.id === location.id);
+      refLocation = findIndex(state.storedLocations, _location => _location.dataId === location.dataId);
       if (!state.username || state.username === 'Explorer') {
         username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
       }
@@ -337,15 +336,13 @@ let getLastSave = (opts) => {
       username = state.username;
     }
 
-    log.error('USERNAME: ', username)
-
     if (state.offline) {
       processData(opts, saveData, location, refLocation, username);
     } else {
       utils.ajax.get('/nmsprofile', {
         params: {
-          username: username,
-          machineId: machineId
+          username,
+          machineId
         }
       }).then((profile) => {
         if (typeof profile.data.username !== 'undefined') {

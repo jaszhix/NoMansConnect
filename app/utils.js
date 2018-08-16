@@ -47,7 +47,7 @@ export var exc = (cmd) => {
 };
 
 export var formatID = (location) => {
-  location.GalacticAddress.id = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
+  location.GalacticAddress.dataId = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
   return {
     ...location.GalacticAddress,
     RealityIndex: location.RealityIndex
@@ -166,8 +166,8 @@ export var fromHex = (str, username, galaxy) => {
       image: '',
       mods: [],
       manuallyEntered: true,
-      timeStamp: Date.now(),
-      apiVersion: 1
+      created: Date.now(),
+      apiVersion: 2
     };
 
     manualLocation = formatTranslatedID(manualLocation);

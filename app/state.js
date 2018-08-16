@@ -2,6 +2,7 @@ import {remote} from 'electron';
 import os from 'os';
 import fs from 'graceful-fs';
 import {assignIn, pick, uniqBy, cloneDeep} from 'lodash';
+import {handleRestart} from './dialog';
 import log from './log';
 import {each, filter} from './lang';
 import initStore from './store';
@@ -70,6 +71,7 @@ const state = initStore({
   newsId: '',
   apiBase: 'https://neuropuff.com/api/',
   winVersion: os.release(),
+  apiVersion: 2,
   machineId: null,
   protected: false,
   ready: false,
@@ -139,7 +141,7 @@ const state = initStore({
   recoveryToken: false,
   remoteLocationsColumns: 1,
   sortStoredByTime: false,
-  sortStoredByKey: 'timeStamp',
+  sortStoredByKey: 'created',
   filterStoredByBase: false,
   filterStoredByScreenshot: false,
   showHidden: false,
@@ -161,6 +163,7 @@ const state = initStore({
   closing: false,
   navLoad: false,
   settingsKeys: [
+    'apiVersion',
     'newsId',
     'maximized',
     'maintenanceTS',
@@ -269,6 +272,34 @@ const state = initStore({
   handleSettingsWorker: () => {
     window.settingsWorker.onmessage = (e) => {
       let stateUpdate = {};
+
+      // Clear all cache for major API change
+      if (!e.data.apiVersion || e.data.apiVersion !== state.apiVersion) {
+        window.settingsWorker.postMessage({
+          method: 'set',
+          key: 'apiVersion',
+          value: state.apiVersion
+        });
+        window.settingsWorker.postMessage({
+          method: 'set',
+          key: 'sortStoredByKey',
+          value: 'created'
+        });
+        window.settingsWorker.postMessage({
+          method: 'set',
+          key: 'storedLocations',
+          value: []
+        });
+        window.jsonWorker.postMessage({
+          method: 'set',
+          key: 'remoteLocations',
+          value: []
+        });
+        state.set({loading: 'Performing migration, restarting NMC in 4 seconds...'});
+        setTimeout(handleRestart, 4000);
+        return;
+      }
+
       if (!e.data.maintenanceTS) {
         stateUpdate.maintenanceTS = state.maintenanceTS - 6.048e+8;
       }
@@ -297,14 +328,13 @@ const state = initStore({
 
       if (!state.ready) {
         stateUpdate.ready = true;
-      }
-
-      state.set(stateUpdate, () => {
         log.error('State initialized');
         if (typeof cb === 'function') {
           cb();
         }
-      }, true);
+      }
+
+      state.set(stateUpdate, true);
     }
   },
   handleMaintenance: (obj, cb) => {
@@ -323,13 +353,13 @@ const state = initStore({
       }
 
       let locations = filter(obj.remoteLocations.results, (location) => {
-        return (location.data.upvote
-          || (location.data.VoxelY > -128 && location.data.VoxelY < 127
-          && location.data.VoxelZ > -2048 && location.data.VoxelZ < 2047
-          && location.data.VoxelX > -2048 && location.data.VoxelX < 2047));
+        return (location.upvote
+          || (location.VoxelY > -128 && location.VoxelY < 127
+          && location.VoxelZ > -2048 && location.VoxelZ < 2047
+          && location.VoxelX > -2048 && location.VoxelX < 2047));
       });
       locations = uniqBy(locations, (location) => {
-        return location.id;
+        return location.dataId;
       });
       obj.remoteLocations.results = locations;
       obj.remoteLocations.count = locations.length;
@@ -339,9 +369,9 @@ const state = initStore({
     cb(obj);
   },
   handleState: (obj) => {
-    if (!obj.hasOwnProperty('init') && state.init) return;
     each(obj, (value, key) => {
       if (state.settingsKeys.indexOf(key) > -1) {
+        console.log('Storing: ', key)
         window.settingsWorker.postMessage({
           method: 'set',
           key,

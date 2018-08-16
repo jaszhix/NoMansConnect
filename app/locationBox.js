@@ -83,7 +83,7 @@ class LocationBox extends React.Component {
     }
   }
   componentWillReceiveProps(nextProps) {
-    if (nextProps.location.id !== this.props.location.id) {
+    if (nextProps.location.dataId !== this.props.location.dataId) {
       if ((nextProps.selectType && this.scrollBox)
         || (nextProps.updating !== this.props.updating && nextProps.updating)) {
         if (this.scrollBox) {
@@ -132,10 +132,10 @@ class LocationBox extends React.Component {
     }
     ajax.get(`/nmslocation/${this.props.id}/`).then((res) => {
       if (!this.willUnmount) {
-        if (!isEqual(this.props.location, res.data.data) || !isEqual(this.props.profile, res.data.profile)) {
+        if (!isEqual(this.props.location, res.data) || !isEqual(this.props.profile, res.data.profile)) {
           onUpdate(this.props.id, res.data);
           this.setState({
-            location: res.data.data,
+            location: res.data,
             profile: res.data.profile
           });
         }
@@ -150,13 +150,14 @@ class LocationBox extends React.Component {
     });
   }
   getImage = (p) => {
-    if (p.image) {
+    const {image} = p;
+    if (image) {
       let img = p.image.replace(/:/g, '~').replace(/NMSLocation-/, '');
       let file = path.resolve(`${this.props.configDir}${img}`);
       fs.exists(file, (exists) => {
         if (!exists) {
           axios
-          .get(`https://neuropuff.com/${this.props.image}`, {
+          .get(`https://neuropuff.com/${image}`, {
             responseType: 'arraybuffer'
           })
           .then(res => {
@@ -237,7 +238,7 @@ class LocationBox extends React.Component {
         {this.props.detailsOnly ? <Item label="Name" value={name || 'Unknown'} /> : null}
         {location.description || this.props.description ? <Item label="Description" value={this.props.description ? this.props.description : location.description} /> : null}
         <Item label="Galactic Address" value={location.translatedId} />
-        <Item label="Universe Address" value={location.id} />
+        <Item label="Universe Address" value={location.dataId} />
         <Item label="Portal Address">
           {map(formatForGlyphs(location.translatedId, location.PlanetIndex), (glyph, i) => {
             return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
@@ -250,7 +251,7 @@ class LocationBox extends React.Component {
         {location.teleports ? <Item label="Teleports" value={location.teleports} /> : null}
         {location.score ? <Item label="Favorites" value={location.score} /> : null}
         {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
-        <Item label="Created" value={moment(location.timeStamp).format('MMMM D, Y')} />
+        <Item label="Created" value={moment(location.created).format('MMMM D, Y')} />
         {location.mods && location.mods.length > 0 && !p.compactRemote ? (
           <Item label={`Mods Used (${location.mods.length})`} dataPlace="top" dataTip={utils.tip(this.getModMarkup(location.mods))} />
         ) : null}
@@ -265,11 +266,11 @@ class LocationBox extends React.Component {
   render() {
     let p = this.props;
     let {location} = this.state;
-    let upvote = p.favorites.indexOf(location.id) > -1;
+    let upvote = p.favorites.indexOf(location.dataId) > -1;
     let isOwnLocation = p.isOwnLocation && p.selectType && location.username === p.username;
     let deleteArg = location.image && location.image.length > 0;
     let compact = p.width && p.width <= 1212;
-    let isSpaceStation = location.id[location.id.length - 1] === '0';
+    let isSpaceStation = location.dataId[location.dataId.length - 1] === '0';
     let leftOptions = [];
     let name = p.edit && this.state.name.length > 0 ? this.state.name : location.username ? (p.name.length > 0 ? p.name : `${location.username} explored`) : 'Selected';
 
@@ -297,7 +298,7 @@ class LocationBox extends React.Component {
         })
       }
     } else {
-      if (location.id !== p.currentLocation && !p.ps4User) {
+      if (location.dataId !== p.currentLocation && !p.ps4User) {
         let saveFileInfoTip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused first, and afterwards, select "Reload current" from the game's options menu.`;
         leftOptions.push({
           id: 'teleport',
@@ -355,7 +356,7 @@ class LocationBox extends React.Component {
           });
         }
       }
-      if (p.selectType && location.id !== p.currentLocation && p.isSelectedLocationRemovable) {
+      if (p.selectType && location.dataId !== p.currentLocation && p.isSelectedLocationRemovable) {
         leftOptions.push({
           id: 'removeStored',
           label: `${isOwnLocation ? location.isHidden ? 'Show In' : 'Hide From' : 'Remove From'} Storage`,
@@ -370,7 +371,7 @@ class LocationBox extends React.Component {
       leftOptions.push({
         id: 'copyAddress',
         label: 'Copy Universe Address to Clipboard',
-        onClick: () => clipboard.writeText(location.id)
+        onClick: () => clipboard.writeText(location.dataId)
       });
     }
 

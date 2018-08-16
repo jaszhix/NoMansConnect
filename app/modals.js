@@ -236,17 +236,17 @@ export class LocationRegistrationModal extends React.Component {
 
     this.props.s.storedLocations.push(location);
     each(this.props.s.storedLocations, (storedLocation, i)=>{
-      if (isString(storedLocation.timeStamp)) {
-        this.props.s.storedLocations[i].timeStamp = new Date(storedLocation.timeStamp).getTime()
+      if (isString(storedLocation.created)) {
+        this.props.s.storedLocations[i].created = new Date(storedLocation.created).getTime()
       }
     });
-    this.props.s.storedLocations = orderBy(this.props.s.storedLocations, 'timeStamp', 'desc');
+    this.props.s.storedLocations = orderBy(this.props.s.storedLocations, 'created', 'desc');
 
     state.set({storedLocations: this.props.s.storedLocations}, ()=>{
       ajax.post('/nmslocation/', {
         machineId: this.props.s.machineId,
         username: location.username,
-        data: location
+        ...location
       }).then((res)=>{
         state.trigger('fetchRemoteLocations');
         this.handleClickOutside();
@@ -371,20 +371,20 @@ class EventItem extends React.Component {
     cleanUp(this);
   }
   render() {
-    let {profile, name, description, type, created, image, data, score, version, shouldShowPlanetType, isStart, isEnd, isLocation} = this.props;
+    let {profile, name, description, type, created, image, id, dataId, score, version, shouldShowPlanetType, isStart, isEnd, isLocation} = this.props;
     let isOwnLocation = profile ? profile.username === state.username : false;
     if (type === 'Planet' && !shouldShowPlanetType) {
       return null;
     }
     let groupClass = 'label ProfileModal__eventGroupCommon';
     if (isStart) {
-      groupClass += ` ProfileModal__eventGroupStart${!data ? 'Unidentified' : ''}`;
+      groupClass += ` ProfileModal__eventGroupStart${!id ? 'Unidentified' : ''}`;
     }
     if (isEnd) {
       if (isLocation) {
         groupClass += ' ProfileModal__eventGroupEndRegistered';
       } else {
-        groupClass += ` ProfileModal__eventGroupEnd${data && !created  ? 'Unidentified' : ''}`;
+        groupClass += ` ProfileModal__eventGroupEnd${!id  ? 'Unidentified' : ''}`;
       }
     }
     if (!isStart && !isEnd) {
@@ -406,15 +406,15 @@ class EventItem extends React.Component {
               {moment(created).format('MMMM D, Y')}
             </div>
             <div className="meta ProfileModal__meta">
-              {data && created ?
+              {id ?
               <div
-              className={`like${state.favorites.indexOf(data.id) > -1 ? ' active' : ''}`}
-              onClick={() => state.trigger('handleFavorite', data)}>
+              className={`like${state.favorites.indexOf(dataId) > -1 ? ' active' : ''}`}
+              onClick={() => state.trigger('handleFavorite', this.props)}>
                 <i className="like icon" /> {`${score || ''}`}
               </div> : null}
             </div>
           </div>
-          {data ?
+          {dataId ?
           <LocationBox
           name={name}
           description={''}
@@ -423,7 +423,7 @@ class EventItem extends React.Component {
           currentLocation={state.currentLocation}
           isOwnLocation={false}
           isVisible={true}
-          location={data}
+          location={this.props}
           updating={false}
           edit={false}
           favorites={state.favorites}
@@ -594,19 +594,16 @@ export class ProfileModal extends React.Component {
           let {RealityIndex} = clone(uaObject);
           let data = formatTranslatedID(uaObject);
           discovery.location = {
-            data: {
-              ...data,
-              manuallyEntered: true,
-              galaxy: RealityIndex
-            }
+            ...data,
+            manuallyEntered: true,
+            galaxy: RealityIndex
           }
-          discovery.location.id = discovery.location.data.id;
         } else {
           discovery.location = {}
         }
       }
       let refLocation = find(locations, (location) => {
-        return location.id === discovery.location.id
+        return location.dataId === discovery.location.dataId
       });
       if (refLocation) {
         if (discovery.type !== 'Planet') {
@@ -619,7 +616,7 @@ export class ProfileModal extends React.Component {
           discoveries: [discovery]
         });
       }
-      if (discovery.location.id) delete discovery.location;
+      if (discovery.location.dataId) delete discovery.location;
     });
     return (
       <div ref={this.getRef} className="ui large modal active modal__large">
@@ -695,11 +692,11 @@ export class ProfileModal extends React.Component {
                           let nextDiscovery = location.discoveries[d + 1];
                           let previousDiscovery = location.discoveries[d - 1];
                           let dIsStart = (d === 0 && !dividerTypes.includes(discovery.type))
-                            || (!location.created && (discovery.type === 'Planet' || (previousDiscovery && dividerTypes.includes(previousDiscovery.type))))
+                            || (!location.id && (discovery.type === 'Planet' || (previousDiscovery && dividerTypes.includes(previousDiscovery.type))))
                             || (!dividerTypes.includes(discovery.type) && previousDiscovery && dividerTypes.includes(previousDiscovery.type));
-                          let dIsEnd = (!location.created && (d === (discoveriesLen - 1) && i !== (locationsLen - 1)))
+                          let dIsEnd = (!location.id && (d === (discoveriesLen - 1) && i !== (locationsLen - 1)))
                             || (discovery.type === 'Planet'
-                              && !location.created && nextDiscovery && (nextDiscovery.type === 'Planet' && nextDiscovery.type !== 'SolarSystem'))
+                              && !location.id && nextDiscovery && (nextDiscovery.type === 'Planet' && nextDiscovery.type !== 'SolarSystem'))
                             || (dividerTypes.includes(discovery.type)
                               && nextDiscovery
                               && (dividerTypes.includes(nextDiscovery.type)
@@ -719,7 +716,7 @@ export class ProfileModal extends React.Component {
                         isStart={isStart}
                         isEnd={isEnd}
                         type="Planet"
-                        isLocation={location.created != null} /> : null}
+                        isLocation={location.id != null} /> : null}
                       </React.Fragment>
                     );
                   })}

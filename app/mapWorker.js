@@ -10,10 +10,10 @@ const buildGalaxyOptions = function(state) {
       if (!location) {
         return;
       }
-      if (location.data.galaxy == null || location.data.galaxy < 0) {
-        location.data.galaxy = 0;
+      if (location.galaxy == null || location.galaxy < 0) {
+        location.galaxy = 0;
       }
-      ids.push(location.data.galaxy);
+      ids.push(location.galaxy);
     });
   }
   if (state.selectedLocation && state.selectedLocation.galaxy) {
@@ -40,26 +40,22 @@ const getLocationsByTranslatedId = function(locations) {
     return null;
   }
   let systems = uniqBy(locations, (location) => {
-    location = location.data ? location : {data: location};
-    return location.data.translatedX && location.data.translatedY && location.data.translatedZ;
+    return location.translatedX && location.translatedY && location.translatedZ;
   });
   each(systems, (location, i) => {
-    systems[i] = location.data ? location : {data: location};
-    location = systems[i];
     let planets = filter(locations, (planet) => {
-      planet = planet.data ? planet : {data: planet};
-      return (location.data.translatedX === planet.data.translatedX
-        && location.data.translatedY === planet.data.translatedY
-        && location.data.translatedZ === planet.data.translatedZ);
+      return (location.translatedX === planet.translatedX
+        && location.translatedY === planet.translatedY
+        && location.translatedZ === planet.translatedZ);
     });
     let planetData = [];
     each(planets, (planet) => {
-      planet = planet.data ? planet : {data: planet};
-      if (!planetData[planet.data.username]) {
-        planetData[planet.data.username] = [];
+      planet = planet ? planet : {data: planet};
+      if (!planetData[planet.username]) {
+        planetData[planet.username] = [];
       }
-      let label = planet.data.name ? planet.data.name : planet.data.id;
-      let refPlanetData = findIndex(planetData, item => item && item.username === planet.data.username);
+      let label = planet.name ? planet.name : planet.dataId;
+      let refPlanetData = findIndex(planetData, item => item && item.username === planet.username);
       if (refPlanetData > -1) {
         let refEntry = planetData[refPlanetData].entries.indexOf(label);
         if (refEntry === -1) {
@@ -67,12 +63,12 @@ const getLocationsByTranslatedId = function(locations) {
         }
       } else {
         planetData.push({
-          username: planet.data.username,
+          username: planet.username,
           entries: [label]
         });
       }
     });
-    location.data.planetData = planetData;
+    location.planetData = planetData;
   });
   return systems
 }
@@ -98,20 +94,20 @@ onmessage = function(e) {
     let selectedLocation = [];
     if (e.data.p.remoteLocations && e.data.p.remoteLocations) {
       each(e.data.p.remoteLocations, (location) => {
-        if (location.data.galaxy !== e.data.p.selectedGalaxy) {
+        if (location.galaxy !== e.data.p.selectedGalaxy) {
           return;
         }
         if (e.data.p.selectedLocation && e.data.p.show.Selected.value
-          && location.data.translatedX === e.data.p.selectedLocation.translatedX
-          && location.data.translatedY === e.data.p.selectedLocation.translatedY
-          && location.data.translatedZ === e.data.p.selectedLocation.translatedZ) {
+          && location.translatedX === e.data.p.selectedLocation.translatedX
+          && location.translatedY === e.data.p.selectedLocation.translatedY
+          && location.translatedZ === e.data.p.selectedLocation.translatedZ) {
           selectedLocation[0] = {
-            x: location.data.translatedX,
-            y: (0, 4096) - location.data.translatedZ,
-            z: location.data.translatedY,
+            x: location.translatedX,
+            y: (0, 4096) - location.translatedZ,
+            z: location.translatedY,
             selected: true,
-            id: `${location.data.translatedX}:${location.data.translatedY}:${location.data.translatedZ}`,
-            planetData: location.data.planetData
+            id: `${location.translatedX}:${location.translatedY}:${location.translatedZ}`,
+            planetData: location.planetData
           };
         }
       });
@@ -123,7 +119,7 @@ onmessage = function(e) {
       }
 
       let refIndex = findIndex(e.data.s[legendItem.listKey], (location) => {
-        return selectedLocation[0] && location.id === selectedLocation[0].id;
+        return selectedLocation[0] && location.dataId === selectedLocation[0].dataId;
       });
       if (refIndex > -1) {
         if (lastSelected && e.data.s[prevListKey]) {
@@ -163,16 +159,16 @@ onmessage = function(e) {
 
     if (e.data.p.remoteLocations && e.data.p.remoteLocations) {
       each(e.data.p.remoteLocations, (location) => {
-        if (location.data.galaxy !== e.data.p.selectedGalaxy
-        || (e.data.p.selectedLocation && location.data.id === e.data.p.selectedLocation.id)) {
+        if (location.galaxy !== e.data.p.selectedGalaxy
+        || (e.data.p.selectedLocation && location.dataId === e.data.p.selectedLocation.dataId)) {
           return;
         }
         let obj = {
-          x: location.data.translatedX,
-          y: (0, 4096) - location.data.translatedZ,
-          z: location.data.translatedY,
-          id: `${location.data.translatedX}:${location.data.translatedY}:${location.data.translatedZ}`,
-          planetData: location.data.planetData
+          x: location.translatedX,
+          y: (0, 4096) - location.translatedZ,
+          z: location.translatedY,
+          id: `${location.translatedX}:${location.translatedY}:${location.translatedZ}`,
+          planetData: location.planetData
         };
 
         let matchedFriendKey = false;
@@ -192,27 +188,27 @@ onmessage = function(e) {
         if (matchedFriendKey) {
           return;
         }
-        if (location.data.upvote) {
+        if (location.upvote) {
           if (e.data.p.show.Favorite.value) {
             stateUpdate.favLocations.push(obj);
           }
-        } else if (location.data.id === e.data.p.currentLocation) {
+        } else if (location.dataId === e.data.p.currentLocation) {
           if (e.data.p.show.Current.value) {
             stateUpdate.currentLocation.push(obj);
           }
-        } else if (location.data.base) {
+        } else if (location.base) {
           if (e.data.p.show.Base.value) {
             stateUpdate.baseLocations.push(obj);
           }
-        } else if (location.data.username === e.data.p.username) {
+        } else if (location.username === e.data.p.username) {
           if (e.data.p.show.Explored.value) {
             stateUpdate.locations.push(obj);
           }
         } else if (location.username !== e.data.p.username
-          && (location.data.playerPosition
-            || (location.data.positions
-              && location.data.positions[0].playerPosition)
-              && !location.data.manuallyEntered)) {
+          && (location.playerPosition
+            || (location.positions
+              && location.positions[0].playerPosition)
+              && !location.manuallyEntered)) {
           if (e.data.p.show.Shared.value) {
             stateUpdate.remoteLocations.push(obj);
           }

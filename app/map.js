@@ -307,16 +307,8 @@ class ThreeDimScatterChart extends React.Component {
       if (!location) {
         return;
       }
-      location = location.data ? location : {
-        data: location,
-        teleports: location.teleports ? location.teleports : 0,
-        id: uuidV4(),
-        image: location.image ? location.image : '',
-        name: location.name ? location.name : '',
-        description: location.description ? location.description : ''
-      };
-      sector = `${location.data.translatedX}:${location.data.translatedY}:${location.data.translatedZ}`;
-      let hexArr = location.data.translatedId.split(':');
+      sector = `${location.translatedX}:${location.translatedY}:${location.translatedZ}`;
+      let hexArr = location.translatedId.split(':');
       hexArr.pop();
       hexSector = hexArr.join(':');
       if (sector === symbol.id) {
@@ -326,7 +318,7 @@ class ThreeDimScatterChart extends React.Component {
     let remoteLen = results.length;
     let multiSelectedLocation = remoteLen > 1;
     stateUpdate = {
-      selectedLocation: results[0].data ? results[0].data : results[0],
+      selectedLocation: results[0],
       multiSelectedLocation
     };
     if (multiSelectedLocation) {

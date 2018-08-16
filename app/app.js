@@ -46,12 +46,8 @@ class App extends React.Component {
       .setMergeKeys(['remoteLocations'])
       .connect('*', (obj) => {
       if (process.env.NODE_ENV === 'development') {
-        tryFn(() => {
-          throw new Error('STATE STACK');
-        }, (e) => {
-          let stackParts = e.stack.split('\n');
-          console.log('STATE CALLEE: ', stackParts[6].trim());
-        });
+        let stackParts = new Error().stack.split('\n');
+        console.log('STATE CALLEE: ', stackParts[6]);
       }
       console.log('STATE INPUT: ', obj);
 
@@ -156,6 +152,10 @@ class App extends React.Component {
     }
     let initialized = false;
     let initialize = () => {
+      if (!state.saveDirectory) {
+        setTimeout(() => initialize(), 200);
+        return;
+      }
       if (initialized) {
         return;
       }
@@ -306,19 +306,10 @@ class App extends React.Component {
           });
         }
       } else if (e.data.func === 'syncRemoteOwned') {
-        each(e.data.results, (location, i) => {
-          assignIn(location.data, {
-            name: location.name,
-            description: location.description,
-            teleports: location.teleports,
-            score: location.score,
-            image: location.image
-          });
-          e.data.data.results[i] = location;
-        });
-        this.state.storedLocations = uniqBy(concat(this.state.storedLocations, map(e.data.data.results, res => res.data)), 'id');
+        let {storedLocations} = this.state;
+        storedLocations = uniqBy(concat(storedLocations, e.data.data.results), 'dataId');
         state.set({
-          storedLocations: this.state.storedLocations,
+          storedLocations,
           loading: 'Syncing locations...'
         }, () => {
           this.formatRemoteLocations(e.data, state.page, state.sort, state.init, false);
@@ -338,10 +329,10 @@ class App extends React.Component {
       } else if (e.data.func === 'pollRemoteLocations') {
         if (e.data.data.results.length > 0 && this.state.search.length === 0) {
           this.formatRemoteLocations(e.data, ...e.data.params, () => {
-            this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
+            this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
           });
         } else {
-          this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
+          this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
         }
       }
     }
@@ -383,26 +374,26 @@ class App extends React.Component {
     each(state.storedLocations, (location) => {
       let existsInRemoteLocations = false;
       each(state.remoteLocations.results, (remoteLocation) => {
-        if (remoteLocation.data.id === location.id) {
+        if (location && remoteLocation.dataId === location.dataId) {
           existsInRemoteLocations = true;
           return false;
         };
       });
-      if (!existsInRemoteLocations && location.username === this.state.username) {
-        location.timeStamp = new Date(location.timeStamp);
+      if (!existsInRemoteLocations && location && location.username === this.state.username) {
         locations.push(location);
       }
     });
     ajax.post('/nmslocationremotecheck/', {
-        locations: map(locations, (location) => location.id),
+        locations: map(locations, (location) => location.dataId),
         mode: state.mode,
         username: state.username,
     }).then((missing) => {
       missing = missing.data;
       let missingLocations = [];
-      each(missing, (id) => {
-        let location = find(locations, (location) => location.id === id);
+      each(missing, (dataId) => {
+        let location = find(locations, (location) => location.dataId === dataId);
         if (location) {
+          if (typeof location) {}
           missingLocations.push(location);
         }
       });
@@ -461,7 +452,7 @@ class App extends React.Component {
     }
 
     if (this.state.sort !== '-created' || (this.state.remoteLocations.results && this.state.remoteLocations.results.length === 0) || init) {
-      this.timeout = setTimeout(()=>this.pollRemoteLocations(), this.state.pollRate);
+      this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
       return;
     }
 
@@ -478,7 +469,7 @@ class App extends React.Component {
         params: {
           start: start,
           end: end,
-          id: lastRemoteLocation.data.id
+          dataId: lastRemoteLocation.dataId
         }
       },
       params: [state.page ? state.page : 1, state.sort, false, true, state.pagination]
@@ -515,10 +506,10 @@ class App extends React.Component {
       params: [page, sort, init, false, pagination]
     });
   }
-  handleCheat = (id, n) => {
-    let currentLocation = find(this.state.storedLocations, location => location.id === this.state.currentLocation);
+  handleCheat = (dataId, n) => {
+    let currentLocation = find(this.state.storedLocations, location => location.dataId === this.state.currentLocation);
     if (currentLocation) {
-      this.handleTeleport(currentLocation, 0, id, n);
+      this.handleTeleport(currentLocation, 0, dataId, n);
     }
   }
   handleSaveBase = (baseData=null) => {
@@ -668,10 +659,6 @@ class App extends React.Component {
     state.set({navLoad: true});
     getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
 
-      if (location.data) {
-        location = location.data;
-      }
-
       if (action && typeof action === 'object' && action.playerPosition) {
         assignIn(_location, action);
       }
@@ -710,23 +697,22 @@ class App extends React.Component {
           return;
         }
         this.signSaveData(saveData.slot, () => {
-          state.set({currentLocation: _location.id});
+          state.set({currentLocation: _location.dataId});
           ajax.post('/nmslocation/', {
             machineId: this.state.machineId,
             username: this.state.username,
             teleports: true,
-            id: _location.id
+            dataId: _location.dataId
           }).then((res) => {
             let {remoteLocations, selectedLocation} = this.state;
             let refRemoteLocation = findIndex(remoteLocations.results, (remoteLocation) => {
-              return remoteLocation.data.id === _location.id;
+              return remoteLocation.dataId === _location.dataId;
             });
             if (refRemoteLocation > -1) {
               remoteLocations.results[refRemoteLocation] = res.data;
             }
-            if (selectedLocation && selectedLocation.id === _location.id) {
-              res.data.data = copyMetadata(selectedLocation, res.data);
-              selectedLocation = Object.assign(selectedLocation, res.data.data);
+            if (selectedLocation && selectedLocation.dataId === _location.dataId) {
+              selectedLocation = res.data;
             }
 
             state.set({
@@ -747,7 +733,7 @@ class App extends React.Component {
     });
   }
   setWaypoint = (location) => {
-    log.error('Setting waypoint:', location.id);
+    log.error('Setting waypoint:', location.dataId);
     state.set({navLoad: true});
     getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
       let {PlanetIndex, SolarSystemIndex, VoxelX, VoxelY, VoxelZ} = location;
@@ -820,11 +806,11 @@ class App extends React.Component {
     }});
   }
   handleRemoveStoredLocation = () => {
-    if (this.state.selectedLocation.id === this.state.currentLocation) {
+    if (this.state.selectedLocation.dataId === this.state.currentLocation) {
       log.error('Failed to remove stored location: cannot remove the player\'s current location.');
       return;
     }
-    let refStoredLocation = findIndex(state.storedLocations, location => location.id === state.selectedLocation.id);
+    let refStoredLocation = findIndex(state.storedLocations, location => location.dataId === state.selectedLocation.dataId);
     let isOwnLocation = state.storedLocations[refStoredLocation].username === state.username;
     if (isOwnLocation) {
       state.storedLocations[refStoredLocation].isHidden = !state.storedLocations[refStoredLocation].isHidden;
@@ -855,8 +841,8 @@ class App extends React.Component {
   handleSearch = () => {
     if (this.state.offline) {
       let searchCache = filter(this.state.remoteLocations.results, (location) => {
-        return (location.data.id === this.state.search
-          || location.data.translatedId === this.state.search
+        return (location.dataId === this.state.search
+          || location.translatedId === this.state.search
           || location.username === this.state.search
           || location.name.indexOf(this.state.search) > -1
           || location.description.indexOf(this.state.search) > -1)
@@ -878,13 +864,13 @@ class App extends React.Component {
     if (!this.state.offline) {
       let diff = [];
       each(this.state.searchCache.results, (location) => {
-        let refRemoteLocation = findIndex(this.state.remoteLocations.results, _location => _location.id === location.id);
+        let refRemoteLocation = findIndex(this.state.remoteLocations.results, _location => _location.dataId === location.dataId);
         if (refRemoteLocation === -1) {
           diff.push(location);
         }
       });
       this.state.remoteLocations.results = concat(this.state.remoteLocations.results, uniqBy(diff, (location) => {
-        return location.id;
+        return location.dataId;
       }));
     }
 
@@ -951,21 +937,21 @@ class App extends React.Component {
             <div
             style={this.noDragStyle}
             className={`${this.headerItemClasses}${s.sort === '-created' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
-            onClick={this.handleSort}>
+            onClick={(e) => this.handleSort(e, '-created')}>
               Recent
             </div> : null}
             {!s.init && !s.offline ?
             <div
             style={this.noDragStyle}
             className={`${this.headerItemClasses}${s.sort === '-teleports' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
-            onClick={(e)=>this.handleSort(e, '-teleports')}>
+            onClick={(e) => this.handleSort(e, '-teleports')}>
               Popular
             </div> : null}
             {!s.init  && !s.offline ?
             <div
             style={this.noDragStyle}
             className={`${this.headerItemClasses}${s.sort === '-score' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
-            onClick={(e)=>this.handleSort(e, '-score')}>
+            onClick={(e) => this.handleSort(e, '-score')}>
               Favorites
             </div> : null}
             {!s.init ?

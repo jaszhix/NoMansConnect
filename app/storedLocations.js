@@ -35,11 +35,11 @@ class StoredLocationItem extends React.Component {
       opacity: this.props.location.isHidden ? '0.5' : '1'
     };
     let usesName = this.props.location.name && this.props.location.name.length > 0;
-    let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.id}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
+    let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.dataId}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
     let name = usesName ? this.props.location.name : idFormat;
     let isMarquee = (this.state.hover || this.props.isSelected) && name.length >= 25;
     name = isMarquee ? name : truncate(name, {length: 23});
-    let isSpaceStation = this.props.location.id[this.props.location.id.length - 1] === '0';
+    let isSpaceStation = this.props.location.dataId[this.props.location.dataId.length - 1] === '0';
     let iconShown = this.props.location.upvote || this.props.isCurrent || this.props.location.isHidden;
     return (
       <div
@@ -108,7 +108,7 @@ class StoredLocations extends React.Component {
           return;
         }
         let refIndex = findIndex(this.props.storedLocations, (location) => {
-          return location.id === selectedLocation.id;
+          return location.dataId === selectedLocation.dataId;
         });
         if (!this.selecting && refIndex > -1) {
           this.storedLocations.scrollTop = refIndex * 29;
@@ -223,9 +223,9 @@ class StoredLocations extends React.Component {
         label: `Sort by ${sortStoredByKeyMap[sortStoredByKey]}`,
         toggle: sortStoredByKey,
         onClick: () => state.set({
-          sortStoredByKey: sortStoredByKey === 'timeStamp' ? 'name'
+          sortStoredByKey: sortStoredByKey === 'created' ? 'name'
             : sortStoredByKey === 'name' ? 'description'
-            : sortStoredByKey === 'distanceToCenter' ? 'timeStamp'
+            : sortStoredByKey === 'distanceToCenter' ? 'created'
             : sortStoredByKey === 'galaxy' ? 'distanceToCenter'
             : sortStoredByKey === 'teleports' ? 'galaxy'
             : 'teleports'
@@ -269,19 +269,19 @@ class StoredLocations extends React.Component {
               if (isVisible) {
                 return (
                   <StoredLocationItem
-                  key={location.id}
-                  ref={location.id}
+                  key={location.dataId}
+                  ref={location.dataId}
                   i={i}
                   onClick={this.handleSelect}
-                  isSelected={selectedLocationId === location.id}
-                  isCurrent={currentLocation === location.id}
+                  isSelected={selectedLocationId === location.dataId}
+                  isCurrent={currentLocation === location.dataId}
                   location={location}
                   useGAFormat={useGAFormat} />
                 );
               } else {
                 return (
                   <div
-                  key={location.id}
+                  key={location.dataId}
                   className="StoredLocations__spacer" />
                 );
               }

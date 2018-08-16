@@ -6,7 +6,7 @@ export const locationItemStyle = {
 };
 
 export const sortStoredByKeyMap = {
-  timeStamp: 'Time',
+  created: 'Time',
   name: 'Name',
   description: 'Description',
   distanceToCenter: 'Distance To Center',

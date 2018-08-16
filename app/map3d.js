@@ -200,14 +200,14 @@ class Map3D extends React.Component {
 
     if (this.props.selectedLocation && this.selected) {
       this.selected = false;
-      this.travelTo = {data: this.props.selectedLocation};
+      this.travelTo = this.props.selectedLocation;
     }
 
     if (this.galaxyChanged) {
       this.galaxyChanged = false;
       each(this.scene.children, (child) => {
         if (child.type === 'Mesh' && child.name !== 'Center') {
-          child.visible = child.userData.data.galaxy === state.selectedGalaxy;
+          child.visible = child.userData.galaxy === state.selectedGalaxy;
           if (!child.visible && child.el) {
             child.el.remove();
             child.el = null;
@@ -226,13 +226,13 @@ class Map3D extends React.Component {
 
     if (window.travelToCurrent) {
       window.travelToCurrent = null;
-      let currentLocation = find(this.props.storedLocations, location => location.id === this.props.currentLocation);
+      let currentLocation = find(this.props.storedLocations, location => location.dataId === this.props.currentLocation);
       if (currentLocation) {
         if (state.selectedGalaxy !== currentLocation.galaxy) {
           state.set({selectedGalaxy: currentLocation.galaxy});
         }
         let refMesh = findIndex(this.scene.children, (child) => {
-          return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === currentLocation.translatedId;
+          return child.type === 'Mesh' && child.name !== 'Center' && child.userData.translatedId === currentLocation.translatedId;
         });
         if (refMesh > -1) {
           this.handleTravel(this.scene.children[refMesh].position);
@@ -242,7 +242,7 @@ class Map3D extends React.Component {
 
     if (this.travelTo) {
       let refMesh = findIndex(this.scene.children, (child) => {
-        return child.type === 'Mesh' && child.name !== 'Center' && child.userData.data.translatedId === this.travelTo.data.translatedId;
+        return child.type === 'Mesh' && child.name !== 'Center' && child.userData.translatedId === this.travelTo.translatedId;
       });
       this.travelTo = false;
       if (refMesh > -1 && !isEqual(this.scene.children[refMesh].position, this.lastTraveled)) {
@@ -306,9 +306,9 @@ class Map3D extends React.Component {
         return;
       }
 
-      state.set({selectedLocation: intersects[0].object.userData.data}, () => {
-        if (intersects[0].object.userData.data
-          && intersects[0].object.userData.data.translatedId !== this.props.selectedLocation.translatedId) {
+      state.set({selectedLocation: intersects[0].object.userData}, () => {
+        if (intersects[0].object.userData
+          && intersects[0].object.userData.translatedId !== this.props.selectedLocation.translatedId) {
           this.handleTravel(intersects[0].object.position);
         }
       });
@@ -359,7 +359,7 @@ class Map3D extends React.Component {
   }
   getHUDElement = (instance, screen) => {
     let planets = '';
-    each(instance.userData.data.planetData, (array, key) => {
+    each(instance.userData.planetData, (array, key) => {
       planets += `<div style="border-bottom: 1px solid rgb(149, 34, 14);">${key}</div>`
       each(array, (planetLabel) => {
         planets += `<div class="planetLabel" style="cursor: pointer;">${planetLabel}</div>`;
@@ -382,10 +382,10 @@ class Map3D extends React.Component {
           return;
         }
         let refLocation = find(this.props.remoteLocations.results, (location) => {
-          return location.name === label.innerText || location.data.id === label.innerText;
+          return location.name === label.innerText || location.dataId === label.innerText;
         });
         if (refLocation) {
-          state.set({selectedLocation: refLocation.data});
+          state.set({selectedLocation: refLocation});
         }
       });
       label.addEventListener('mouseenter', () => {
@@ -410,14 +410,14 @@ class Map3D extends React.Component {
     each(dupePositions, (child) => {
       let pos = ['x', 'y', 'z']
 
-      if (!child.userData.data) {
+      if (!child.userData) {
         return;
       }
 
       each(pos, (key, i) => {
         let div = key === 'y' ? 1 : 2;
-        let rng = new RNG((child.position[key] * child.userData.data.SolarSystemIndex) / div);
-        let value = Math.ceil((rng.uniform() * child.userData.data.SolarSystemIndex) / div);
+        let rng = new RNG((child.position[key] * child.userData.SolarSystemIndex) / div);
+        let value = Math.ceil((rng.uniform() * child.userData.SolarSystemIndex) / div);
         let arg = rng.uniform() > 0.5;
         if (arg) {
           pos[key] = child.position[key] + value;
@@ -428,13 +428,13 @@ class Map3D extends React.Component {
 
       child.position.copy(new THREE.Vector3(pos.x, pos.y, pos.z));
 
-      if (child.userData.data.id === this.props.currentLocation && !this.mounted) {
+      if (child.userData.dataId === this.props.currentLocation && !this.mounted) {
         currentCentered = true;
         this.handleTravel(c.instance.position);
       }
     });
 
-    if (location.data.id === this.props.currentLocation && !currentCentered && !this.mounted) {
+    if (location.dataId === this.props.currentLocation && !currentCentered && !this.mounted) {
       this.handleTravel(c.instance.position);
     }
   }
@@ -450,21 +450,21 @@ class Map3D extends React.Component {
     } else {
       if (!c.material) {
         let refSelected = findIndex(this.props.storedLocations, (location) => {
-          return c.instance.userData.data.id === location.id;
+          return c.instance.userData.dataId === location.dataId;
         });
         let refCurrent = findIndex(this.props.storedLocations, (location) => {
-          return c.instance.userData.data.id === this.props.currentLocation;
+          return c.instance.userData.dataId === this.props.currentLocation;
         });
         if (refCurrent > -1) {
           c.material = this.orangeMaterial;
-        } else if (c.instance.userData.data.upvote) {
+        } else if (c.instance.userData.upvote) {
           c.material = this.redMaterial;
         } else if (refSelected > -1) {
           c.material = this.greenMaterial;
-        } else if (c.instance.userData.data.playerPosition
-          || (c.instance.userData.data.positions
-            && c.instance.userData.data.positions[0].playerPosition)
-            && !c.instance.userData.data.manuallyEntered) {
+        } else if (c.instance.userData.playerPosition
+          || (c.instance.userData.positions
+            && c.instance.userData.positions[0].playerPosition)
+            && !c.instance.userData.manuallyEntered) {
           c.material = this.blueMaterial;
         } else {
           c.material = this.purpleMaterial;
@@ -475,7 +475,7 @@ class Map3D extends React.Component {
     }
     if (distance < 76
       && this.props.selectedLocation
-      && c.instance.userData.data.translatedId === this.props.selectedLocation.translatedId) {
+      && c.instance.userData.translatedId === this.props.selectedLocation.translatedId) {
       let screen = toScreenPosition(c.instance, c.camera, c.controls, this.renderer.domElement)
       let rect = this.renderer.domElement.getBoundingClientRect();
       if (screen.x < rect.left || screen.y + 250 < rect.left || screen.x < rect.top || screen.x - 50 > rect.bottom) {
@@ -533,10 +533,10 @@ class Map3D extends React.Component {
             c.instance.rotation.y += 0.0002;
           }}  />
           {map(this.state.locations, (location) => {
-            let position = [location.data.VoxelX * 4, location.data.VoxelY * 174, location.data.VoxelZ * 4]
+            let position = [location.VoxelX * 4, location.VoxelY * 174, location.VoxelZ * 4]
             return (
               <Mesh
-              key={location.data.id}
+              key={location.dataId}
               geometry={this.sphere}
               material={this.blueMaterial}
               position={position}

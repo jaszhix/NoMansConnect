@@ -12,7 +12,7 @@ const isDifferent = function(objA, objB, keys = ['username', 'name', 'descriptio
 let lastSort = null;
 onmessage = function(e) {
   let stateUpdate = {navLoad: false};
-  let order = e.data.sort === '-teleports' ? 'teleports' : e.data.sort === '-score' ? 'score' : 'created';
+  let order = e.data.sort === '-teleports' ? 'teleports' : e.data.sort === '-score' ? 'score' : e.data.sort === '-modified' ? 'modified' : 'created';
   let shouldMerge = e.data.state.search.length === 0 && (lastSort === e.data.sort || e.data.sort === '-created' || e.data.partial);
   let changed = false;
   let isSearch = e.data.state.search.length > 0;
@@ -22,21 +22,15 @@ onmessage = function(e) {
     }
 
     let refFav = findIndex(e.data.state.favorites, (fav)=>{
-      return fav === remoteLocation.data.id;
+      return fav === remoteLocation.dataId;
     });
-    let upvote = refFav !== -1;
 
-    e.data.res.data.results[key].data.username = e.data.res.data.results[key].username;
-    e.data.res.data.results[key].data.name = e.data.res.data.results[key].name;
-    e.data.res.data.results[key].data.description = e.data.res.data.results[key].description;
-    e.data.res.data.results[key].data.score = e.data.res.data.results[key].score;
-    e.data.res.data.results[key].data.upvote = upvote;
-    e.data.res.data.results[key].data.image = e.data.res.data.results[key].image;
+    e.data.res.data.results[key].upvote = refFav !== -1;
 
     if (shouldMerge) {
       let refNewLocation = findIndex(e.data.state.remoteLocations.results, location => location.id === remoteLocation.id);
-      if (refNewLocation !== -1) {
-        if (isDifferent(e.data.state.remoteLocations.results[refNewLocation].data, e.data.res.data.results[key].data)) {
+      if (refNewLocation > -1) {
+        if (isDifferent(e.data.state.remoteLocations.results[refNewLocation], e.data.res.data.results[key])) {
           changed = true;
           e.data.state.remoteLocations.results[refNewLocation] = e.data.res.data.results[key];
         }
@@ -45,14 +39,11 @@ onmessage = function(e) {
         e.data.state.remoteLocations.results.push(remoteLocation);
       }
     }
-    let refStoredLocation = findIndex(e.data.state.storedLocations, location => location.id === remoteLocation.data.id);
-    if (refStoredLocation !== -1 && isDifferent(e.data.state.storedLocations[refStoredLocation], e.data.res.data.results[key].data)) {
+    let refStoredLocation = findIndex(e.data.state.storedLocations, location => location && location.dataId === remoteLocation.dataId);
+    if (refStoredLocation !== -1 && isDifferent(e.data.state.storedLocations[refStoredLocation], e.data.res.data.results[key])) {
       changed = true;
-      e.data.state.storedLocations[refStoredLocation].image = e.data.res.data.results[key].image;
-      e.data.state.storedLocations[refStoredLocation].username = e.data.res.data.results[key].username;
-      e.data.state.storedLocations[refStoredLocation].name = e.data.res.data.results[key].name;
-      e.data.state.storedLocations[refStoredLocation].description = e.data.res.data.results[key].description;
-      e.data.state.storedLocations[refStoredLocation].score = e.data.res.data.results[key].score;
+      // TODO: We need to checksum this or determine which one is newer, or centralize the functions for formatting the offline schema.
+      e.data.state.storedLocations[refStoredLocation] = e.data.res.data.results[key];
     }
   });
   let remoteLength = e.data.state.remoteLocations.results.length;
@@ -97,7 +88,5 @@ onmessage = function(e) {
     }
   }
 
-  postMessage({
-    stateUpdate: stateUpdate
-  });
+  postMessage({stateUpdate});
 }

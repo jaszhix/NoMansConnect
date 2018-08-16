@@ -44,7 +44,7 @@ class Container extends React.Component {
       return;
     }
     let refFav = findIndex(this.props.s.favorites, (fav) => {
-      return fav === location.id;
+      return fav === location.dataId;
     });
     let upvote = refFav === -1;
     let {storedLocations, remoteLocations, machineId, username, favorites} = this.props.s;
@@ -54,28 +54,24 @@ class Container extends React.Component {
       username: username,
       score: location.score,
       upvote: upvote,
-      id: location.id
+      dataId: location.dataId
     }).then((res) => {
-      res.data.data.score = res.data.score;
-      res.data.data.upvote = upvote;
+      res.data.upvote = upvote;
 
       let refRemoteLocation = findIndex(remoteLocations.results, (location) => {
-        return location.data.id === location.id;
+        return location.dataId === res.data.dataId;
       });
       if (refRemoteLocation > -1) {
-        assignIn(remoteLocations.results[refRemoteLocation].data, {
-          score: res.data.score,
-          upvote: upvote,
-        });
+        remoteLocations.results[refRemoteLocation] = res.data;
       }
-      let refLocation = findIndex(storedLocations, _location => _location.id === location.id);
+      let refLocation = findIndex(storedLocations, _location => _location.dataId === location.dataId);
       if (upvote) {
         if (refLocation > -1) {
-          storedLocations[refLocation] = res.data.data;
+          storedLocations[refLocation] = res.data;
         } else {
-          storedLocations.push(res.data.data);
+          storedLocations.push(res.data);
         }
-        favorites.push(location.id);
+        favorites.push(location.dataId);
       } else {
         favorites.splice(refFav, 1);
         if (refLocation > -1) {
@@ -98,17 +94,16 @@ class Container extends React.Component {
         return;
       }
       const update = () => {
-        let refLocation = findIndex(this.props.s.storedLocations, location => location.id === this.props.s.selectedLocation.id);
+        let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
         if (refLocation !== -1) {
           this.props.s.storedLocations[refLocation].name = name;
           this.props.s.storedLocations[refLocation].description = description;
         }
         let refRemoteLocation = findIndex(this.props.s.remoteLocations.results, (location) => {
-          return location.data.id === this.props.s.selectedLocation.id;
+          return location.dataId === this.props.s.selectedLocation.dataId;
         });
         if (refRemoteLocation !== -1) {
           this.props.s.remoteLocations.results[refRemoteLocation].name = name;
-          this.props.s.remoteLocations.results[refRemoteLocation].data.description = description;
           this.props.s.remoteLocations.results[refRemoteLocation].description = description;
         }
         this.props.s.selectedLocation.name = name;
@@ -134,9 +129,9 @@ class Container extends React.Component {
       utils.ajax.post('/nmslocation/', {
         machineId: this.props.s.machineId,
         username: this.props.s.username,
-        name: name,
-        description: description,
-        id: this.props.s.selectedLocation.id
+        name,
+        description,
+        dataId: this.props.s.selectedLocation.dataId
       }).then((res) => {
         update();
       }).catch((err) => {
@@ -145,21 +140,21 @@ class Container extends React.Component {
     });
   }
   updateLocation = (location) => {
-    utils.ajax.put(`/nmslocation/${location.id}/`, {
+    utils.ajax.put(`/nmslocation/${location.dataId}/`, {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
-      data: location
+      ...location
     }).then((res) => {
       let {remoteLocations, storedLocations} = this.props.s;
       let stateUpdate = {};
-      let refRemote = findIndex(remoteLocations.results, (location) => location.id === res.data.id);
-      let refStored = findIndex(storedLocations, (location) => location.id === res.data.data.id);
+      let refRemote = findIndex(remoteLocations.results, (location) => location.dataId === res.data.dataId);
+      let refStored = findIndex(storedLocations, (location) => location.dataId === res.data.dataId);
       if (refRemote > -1) {
-        remoteLocations.results[refRemote].data = res.data.data;
+        remoteLocations.results[refRemote] = res.data;
         stateUpdate.remoteLocations = remoteLocations;
       }
       if (refStored > -1) {
-        storedLocations[refStored] = res.data.data;
+        storedLocations[refStored] = res.data;
         stateUpdate.storedLocations = storedLocations;
       }
       state.set(stateUpdate);
@@ -188,14 +183,14 @@ class Container extends React.Component {
               machineId: this.props.s.machineId,
               username: this.props.s.username,
               imageU: newDataUri,
-              id: this.props.s.selectedLocation.id
+              dataId: this.props.s.selectedLocation.dataId
             }).then((res) => {
-              let refLocation = findIndex(this.props.s.storedLocations, location => location.id === this.props.s.selectedLocation.id);
+              let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
               if (refLocation !== -1) {
                 this.props.s.storedLocations[refLocation].image = res.data.image;
               }
               let refRemoteLocation = findIndex(this.props.s.remoteLocations.results, (location) => {
-                return location.data.id === this.props.s.selectedLocation.id;
+                return location.dataId === this.props.s.selectedLocation.dataId;
               });
               if (refRemoteLocation !== -1) {
                 this.props.s.remoteLocations.results[refRemoteLocation].image = res.data.image;
@@ -232,14 +227,14 @@ class Container extends React.Component {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
       imageD: true,
-      id: this.props.s.selectedLocation.id
+      dataId: this.props.s.selectedLocation.dataId
     }).then((res) => {
-      let refLocation = findIndex(this.props.s.storedLocations, location => location.id === this.props.s.selectedLocation.id);
+      let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
       if (refLocation !== -1) {
         this.props.s.storedLocations[refLocation].image = res.data.image;
       }
       let refRemoteLocation = findIndex(this.props.s.remoteLocations.results, (location) => {
-        return location.data.id === this.props.s.selectedLocation.id;
+        return location.dataId === this.props.s.selectedLocation.dataId;
       });
       if (refRemoteLocation !== -1) {
         this.props.s.remoteLocations.results[refRemoteLocation].image = res.data.image;
@@ -267,18 +262,17 @@ class Container extends React.Component {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
       version: this.props.s.saveVersion,
-      id: this.props.s.selectedLocation.id
+      dataId: this.props.s.selectedLocation.dataId
     }).then((res) => {
-      let refLocation = findIndex(this.props.s.storedLocations, location => location.id === this.props.s.selectedLocation.id);
+      let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
       if (refLocation !== -1) {
         this.props.s.storedLocations[refLocation].version = res.data.version;
       }
       let refRemoteLocation = findIndex(this.props.s.remoteLocations.results, (location) => {
-        return location.data.id === this.props.s.selectedLocation.id;
+        return location.dataId === this.props.s.selectedLocation.dataId;
       });
       if (refRemoteLocation !== -1) {
         this.props.s.remoteLocations.results[refRemoteLocation].version = res.data.version;
-        this.props.s.remoteLocations.results[refRemoteLocation].data.version = res.data.version;
       }
       this.props.s.selectedLocation.version = res.data.version;
       state.set({
@@ -295,30 +289,28 @@ class Container extends React.Component {
     });
   }
   handleSelectLocation = (location) => {
-    let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.id === location.id;
+    let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.dataId === location.dataId;
     let _location = null;
     if (!deselected) {
       let refRemoteLocation = find(this.props.s.remoteLocations.results, (remoteLocation) => {
-        return remoteLocation.data.id === location.id;
+        return remoteLocation.dataId === location.dataId;
       });
       if (refRemoteLocation) {
-        refRemoteLocation.data = utils.copyMetadata(refRemoteLocation.data, refRemoteLocation);
-        refRemoteLocation.data.remoteId = refRemoteLocation.id;
-        _location = utils.copyMetadata(refRemoteLocation.data, location, ['isHidden', 'positions', 'version']);
+        _location = utils.copyMetadata(refRemoteLocation, location, ['isHidden', 'positions', 'version']);
       } else {
-        log.error(`Unable to find reference remote location from stored locations cache: ${location.id} (fetching)`);
+        log.error(`Unable to find reference remote location from stored locations cache: ${location.dataId} (fetching)`);
         if (this.props.s.offline) {
           _location = location;
         } else {
           utils.ajax.post('/nmsfavoritesync/', {
             machineId: state.machineId,
             username: state.username,
-            locations: [location.id]
+            locations: [location.dataId]
           }).then((res) => {
-            _location = res.data[0].data;
+            _location = res.data[0];
             let {remoteLocations} = this.props.s;
             remoteLocations.results.push(res.data[0]);
-            remoteLocations.results = uniqBy(remoteLocations.results, 'id');
+            remoteLocations.results = uniqBy(remoteLocations.results, 'dataId');
             state.set({
               remoteLocations,
               remoteLength: remoteLocations.results.length,
@@ -398,21 +390,22 @@ class Container extends React.Component {
       navLoad
     } = p.s;
 
-    let isOwnLocation = findIndex(storedLocations, (location) => location.id === (selectedLocation ? selectedLocation.id : null)) > -1;
+    let isOwnLocation = findIndex(storedLocations, (location) => location && location.dataId === (selectedLocation ? selectedLocation.dataId : null)) > -1;
     let remoteLocationsLoaded = remoteLocations && remoteLocations.results || searchCache.results.length > 0;
 
-    let direction = sortStoredByKey === 'timeStamp' || sortStoredByKey === 'description' ? 'desc' : 'asc';
+    let direction = sortStoredByKey === 'created' || sortStoredByKey === 'description' ? 'desc' : 'asc';
     let storedFavorites = [];
     let storedNonFavorites = [];
 
     each(storedLocations, (location) => {
-      location.timeStamp = new Date(location.timeStamp).getTime();
+      if (!location) return;
+      location.created = new Date(location.created).getTime();
       location.description = location.description ? location.description.trim() : '';
     });
 
     let storedSortFunction = (location) => {
       if (sortStoredByKey === 'name') {
-        return location.name || useGAFormat ? location.translatedId : location.id;
+        return location.name || useGAFormat ? location.translatedId : location.dataId;
       } else {
         return location[sortStoredByKey];
       }
@@ -443,14 +436,14 @@ class Container extends React.Component {
     } else {
       storedFavorites = orderBy(
         filter(storedLocations, (location) => {
-          return favorites.indexOf(location.id) > -1;
+          return favorites.indexOf(location.dataId) > -1;
         }),
         sortStoredByKey,
         direction
       );
       storedNonFavorites = orderBy(
         filter(storedLocations, (location) => {
-          return favorites.indexOf(location.id) === -1;
+          return favorites.indexOf(location.dataId) === -1;
         }),
         sortStoredByKey,
         direction
@@ -458,7 +451,7 @@ class Container extends React.Component {
       storedLocations = storedFavorites.concat(storedNonFavorites);
     }
 
-    let storedCurrentLocation = findIndex(storedLocations, (location) => location.id === currentLocation);
+    let storedCurrentLocation = findIndex(storedLocations, (location) => location.dataId === currentLocation);
     if (storedCurrentLocation > -1) {
       let current = cloneDeep(storedLocations[storedCurrentLocation]);
       storedLocations.splice(storedCurrentLocation, 1);
@@ -467,7 +460,7 @@ class Container extends React.Component {
 
     let isSelectedLocationRemovable = false;
     if (p.s.selectedLocation) {
-      let refLocation = findIndex(storedLocations, location => location.id === selectedLocation.id);
+      let refLocation = findIndex(storedLocations, location => location.dataId === selectedLocation.dataId);
       isSelectedLocationRemovable = refLocation !== -1;
     }
 
@@ -479,32 +472,32 @@ class Container extends React.Component {
     }
     if (showOnlyNames) {
       locations = filter(locations, (location)=>{
-        return location.data.name && location.data.name.length > 0;
+        return location.name && location.name.length > 0;
       });
     }
     if (showOnlyDesc) {
       locations = filter(locations, (location)=>{
-        return location.data.description && location.data.description.length > 0;
+        return location.description && location.description.length > 0;
       });
     }
     if (showOnlyGalaxy) {
       locations = filter(locations, (location)=>{
-        return location.data.galaxy === p.s.selectedGalaxy;
+        return location.galaxy === p.s.selectedGalaxy;
       });
     }
     if (showOnlyBases) {
       locations = filter(locations, (location)=>{
-        return location.data.base;
+        return location.base;
       });
     }
     if (showOnlyCompatible && saveVersion) {
       locations = filter(locations, (location)=>{
-        return location.version === saveVersion || location.data.version === saveVersion;
+        return location.version === saveVersion || location.version === saveVersion;
       });
     }
     if (showOnlyPC) {
       locations = filter(locations, (location)=>{
-        return location.data.playerPosition && !location.data.manuallyEntered;
+        return location.playerPosition && !location.manuallyEntered;
       });
     }
     if (showOnlyFriends) {
@@ -519,15 +512,15 @@ class Container extends React.Component {
     }
     if (sortByDistance || sortByModded) {
       locations = orderBy(locations, (location)=>{
-        if (!location.data.mods) {
-          location.data.mods = [];
+        if (!location.mods) {
+          location.mods = [];
         }
         if (sortByModded && sortByDistance) {
-          return location.data.mods.length + location.data.distanceToCenter;
+          return location.mods.length + location.distanceToCenter;
         } else if (sortByDistance) {
-          return location.data.distanceToCenter;
+          return location.distanceToCenter;
         } else if (sortByModded) {
-          return location.data.mods.length;
+          return location.mods.length;
         }
       });
     }
@@ -545,7 +538,7 @@ class Container extends React.Component {
             <StoredLocations
             onSelect={this.handleSelectLocation}
             storedLocations={storedLocations}
-            selectedLocationId={selectedLocation ? selectedLocation.id : null}
+            selectedLocationId={selectedLocation ? selectedLocation.dataId : null}
             multiSelectedLocation={multiSelectedLocation}
             currentLocation={currentLocation}
             height={height}
@@ -588,7 +581,7 @@ class Container extends React.Component {
               currentLocation={currentLocation}
               isOwnLocation={isOwnLocation}
               isVisible={true}
-              id={selectedLocation.remoteId}
+              id={selectedLocation.dataId}
               location={selectedLocation}
               navLoad={navLoad}
               updating={this.state.updating}

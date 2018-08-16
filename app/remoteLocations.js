@@ -97,9 +97,9 @@ class RemoteLocations extends React.Component {
   handleFavorite = (location, upvote) => {
     this.props.onFav(location, upvote);
   }
-  handleUpdate = (id, location, remove = false) => {
+  handleUpdate = (dataId, location, remove = false) => {
     let {remoteLocations} = this.props.s;
-    let refIndex = findIndex(remoteLocations.results, (_location) => _location.id === id);
+    let refIndex = findIndex(remoteLocations.results, (_location) => _location.dataId === dataId);
     if (refIndex === -1) {
       remoteLocations.results.push(location);
     } else {
@@ -246,28 +246,26 @@ class RemoteLocations extends React.Component {
     let _locations = Array(locations.length);
     each(locations, (location, i)=>{
       if (!location) return null;
-      location.data.teleports = location.teleports;
-      location.upvote = location.data.upvote;
       let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
       if (isVisible) {
         _locations[i] = (
           <LocationBox
-          key={location.id}
+          key={location.dataId}
           i={i}
           scrollTop={this.recentExplorations ? this.recentExplorations.scrollTop : 0}
           isVisible={true}
-          id={location.id}
+          id={location.dataId}
           name={location.name}
           profile={location.profile}
           description={location.description}
           username={p.s.username}
           isOwnLocation={p.isOwnLocation}
-          location={location.data}
+          location={location}
           navLoad={p.s.navLoad}
           updating={p.updating}
           favorites={p.s.favorites}
           image={location.image}
-          version={p.s.saveVersion ? location.version === p.s.saveVersion || location.data.version === p.s.saveVersion : null}
+          version={p.s.saveVersion ? location.version === p.s.saveVersion : null}
           onFav={this.handleFavorite}
           onSaveBase={p.onSaveBase}
           onCompactRemoteSwitch={this.setViewableRange}
@@ -281,7 +279,7 @@ class RemoteLocations extends React.Component {
       } else {
         _locations[i] = (
           <div
-          key={location.id}
+          key={location.dataId}
           style={invisibleStyle} />
         );
       }
