@@ -1,5 +1,4 @@
 import {remote} from 'electron';
-const win = remote.getCurrentWindow();
 import fs from 'graceful-fs';
 import log from './log';
 import watch from 'watch';
@@ -36,6 +35,7 @@ import Container from './container';
 import {defaultPosition} from './constants';
 
 const {dialog} = remote;
+const win = state.trigger('window');
 
 let formatCount = 1;
 
@@ -70,6 +70,8 @@ class App extends React.Component {
     this.headerItemClasses = 'ui dropdown icon item';
   }
   componentDidMount() {
+    win.on('maximize', this.handleMaximizeEvent);
+    win.on('unmaximize', this.handleMaximizeEvent);
     this.connections = [
       state
         .setMergeKeys(['remoteLocations'])
@@ -188,6 +190,8 @@ class App extends React.Component {
 
   }
   componentWillUnmount() {
+    win.off('maximize', this.handleMaximizeEvent);
+    win.off('unmaximize', this.handleMaximizeEvent);
     if (this.monitor) {
       this.monitor.stop();
     }
@@ -887,13 +891,16 @@ class App extends React.Component {
     });
   }
   handleMaximize = () => {
-    state.set({maximized: !this.state.maximized}, () => {
-      if (this.state.maximized) {
-        win.unmaximize();
-      } else {
-        win.maximize();
-      }
-    });
+    let maximized = win.isMaximized();
+    if (maximized) {
+      win.unmaximize();
+    } else {
+      win.maximize();
+    }
+  }
+  handleMaximizeEvent = () => {
+    let maximized = win.isMaximized();
+    state.set({maximized})
   }
   handleMinimize = () => {
     win.minimize();
@@ -994,7 +1001,7 @@ class App extends React.Component {
                 </svg>
               </div>
               <div className="titlebar-resize" onClick={this.handleMaximize}>
-                {s.maximized ?
+                {!s.maximized ?
                 <svg className="fullscreen-svg" x="0px" y="0px" viewBox="0 0 10 10">
                   <path fill="#FFFFFF" d="M 0 0 L 0 10 L 10 10 L 10 0 L 0 0 z M 1 1 L 9 1 L 9 9 L 1 9 L 1 1 z " />
                 </svg>

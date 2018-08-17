@@ -11,6 +11,7 @@ import knownProducts from './static/knownProducts.json';
 import Raven from 'raven-js';
 
 const {dialog} = remote;
+const win = remote.getCurrentWindow();
 
 const showDefault = {
   Shared: {
@@ -129,7 +130,7 @@ const state = initStore({
   pageSize: 60,
   paginationEnabled: true,
   loading: 'Loading...',
-  maximized: false,
+  maximized: win.isMaximized(),
   mapLines: false,
   map3d: false,
   mapDrawDistance: false,
@@ -384,6 +385,8 @@ const state = initStore({
     dialog.showErrorBox('NMC Error', error);
   },
 });
+
+state.connect('window', () => win);
 
 if (process.env.NODE_ENV === 'development') {
   window.state = state;
