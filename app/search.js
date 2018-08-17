@@ -45,7 +45,7 @@ class Search extends React.Component {
     return (
       <div className="item">
         <div
-        className={`ui transparent icon input${this.props.navLoad ? ' disabled' : ''}`}
+        className="ui transparent icon input"
         style={transparentIconInputStyle}>
           <input
           type="text"

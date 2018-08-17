@@ -936,21 +936,21 @@ class App extends React.Component {
             {!s.init && !s.offline ?
             <div
             style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-created' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
+            className={`${this.headerItemClasses}${s.sort === '-created' ? ' selected' : ''}`}
             onClick={(e) => this.handleSort(e, '-created')}>
               Recent
             </div> : null}
             {!s.init && !s.offline ?
             <div
             style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-teleports' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
+            className={`${this.headerItemClasses}${s.sort === '-teleports' ? ' selected' : ''}`}
             onClick={(e) => this.handleSort(e, '-teleports')}>
               Popular
             </div> : null}
             {!s.init  && !s.offline ?
             <div
             style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-score' ? ' selected' : ''}${s.navLoad ? ' disabled' : ''}`}
+            className={`${this.headerItemClasses}${s.sort === '-score' ? ' selected' : ''}`}
             onClick={(e) => this.handleSort(e, '-score')}>
               Favorites
             </div> : null}
@@ -959,8 +959,7 @@ class App extends React.Component {
             onKeyDown={this.handleSearch}
             style={this.searchIconStyle}
             onClick={this.handleSearchIconClick}
-            search={s.search}
-            navLoad={s.navLoad} /> : null}
+            search={s.search} /> : null}
             {this.state.profile && this.state.profile.notifications && this.state.profile.notifications.length > 0 ?
             <NotificationDropdown
             machineId={this.state.machineId}
