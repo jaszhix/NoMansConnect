@@ -43,18 +43,7 @@ export const handleRestart = () => {
 export const handleWallpaper = () => {
   let wallpaper = defaultWallpaper;
   if (state.wallpaper) {
-    fsWorker.readFile(state.wallpaper, (err, data) => {
-      tryFn(
-        () => wallpaper = `data:${last(state.wallpaper.split('.'))};base64,${data}`,
-        () => log.error(`Unable to set wallpaper: ${err}`)
-      );
-      v(document.body).css({
-        backgroundImage: `url(${wallpaper})`,
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat'
-      });
-    });
-    return;
+    wallpaper = `'file://${state.wallpaper}'`;
   }
   v(document.body).css({
     backgroundImage: `url(${wallpaper})`,
