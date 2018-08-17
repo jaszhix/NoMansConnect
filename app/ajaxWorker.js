@@ -13,22 +13,18 @@ if (process.env.NODE_ENV === 'development') {
 const ajax = axios.create(opts);
 
 onmessage = function(e) {
-  let method = e.data.method;
-  let url = e.data.url;
-  let obj = e.data.obj ? e.data.obj : {};
-  let params = e.data.params ? e.data.params : [];
-  ajax[method](url, obj).then((res)=>{
-    postMessage({
-      data: res.data,
-      func: e.data.func,
-      params: params
-    });
-  }).catch((err)=>{
-    postMessage({
-      func: e.data.func,
-      params: e.data.params,
-      err: 'err',
-      status: err.response ? err.response.status : 503
-    });
-  });
+  let [method, ...args] = e.data;
+  ajax[method](...args)
+    .then((res) => postMessage([null, {data: res.data}]))
+    .catch((err) => {
+
+      let errObject = {
+        response: err. response ? {
+          status: err.response.status,
+          data: err.response.data,
+        } : null
+      };
+      let {message} = err;
+      postMessage([{message, ...errObject}])
+    })
 }

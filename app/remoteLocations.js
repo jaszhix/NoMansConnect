@@ -87,7 +87,8 @@ class RemoteLocations extends React.Component {
       return;
     }
 
-    if (this.recentExplorations.scrollTop + window.innerHeight >= this.recentExplorations.scrollHeight + this.recentExplorations.offsetTop - 180) {
+    if (this.props.s.remoteNext
+      && this.recentExplorations.scrollTop + window.innerHeight >= this.recentExplorations.scrollHeight + this.recentExplorations.offsetTop - 180) {
       this.throttledPagination(this.props.s.page);
       delay(()=>{
         this.recentExplorations.scrollTop = Math.floor(this.recentExplorations.scrollHeight - this.props.s.pageSize * 271);
@@ -99,7 +100,8 @@ class RemoteLocations extends React.Component {
   }
   handleUpdate = (dataId, location, remove = false) => {
     let {remoteLocations} = this.props.s;
-    let refIndex = findIndex(remoteLocations.results, (_location) => _location.dataId === dataId);
+    dataId = location ? location.dataId : dataId;
+    let refIndex = findIndex(remoteLocations.results, (_location) => _location.dataId === location.dataId);
     if (refIndex === -1) {
       remoteLocations.results.push(location);
     } else {
@@ -224,7 +226,7 @@ class RemoteLocations extends React.Component {
     ];
     if (p.s.remoteLocations
       && !p.s.searchInProgress
-      && p.s.remoteLocations.next) {
+      && p.s.remoteNext) {
       leftOptions.push({
         id: 'loadMore',
         disabled: p.s.navLoad || p.s.pagination,
@@ -233,7 +235,7 @@ class RemoteLocations extends React.Component {
       });
     }
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.locations;
-    let parenthesis = p.s.offline || p.s.remoteLength === 0 ? '' : `(${locations.length})`;
+    let parenthesis = `(${locations.length})`;
     let criteria = p.s.offline ? 'Cached' : p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular';
     let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count > 2000 ? 2000 : p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
     if (title.substr(0, 5) === 'user:') {

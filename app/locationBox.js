@@ -9,7 +9,7 @@ import ReactTooltip from 'react-tooltip';
 import {truncate, upperFirst, isEqual, last} from 'lodash';
 import moment from 'moment';
 
-import {css, tip, cleanUp, formatForGlyphs, ajax, fsWorker} from './utils';
+import {css, tip, cleanUp, formatForGlyphs, ajaxWorker, fsWorker} from './utils';
 import {each, map, tryFn} from './lang';
 
 import baseIcon from './assets/images/base_icon.png';
@@ -52,7 +52,7 @@ class LocationBox extends React.Component {
       name: this.props.name,
       description: this.props.description,
       image: null,
-      profile: null,
+      profile: props.profile,
       location: this.props.location,
       positionSelect: false,
       positionEdit: false,
@@ -101,9 +101,9 @@ class LocationBox extends React.Component {
       this.setState({description: nextProps.description});
     }
 
-    if (nextProps.image !== this.props.image) {
+    /* if (nextProps.image !== this.props.image) {
       this.getImage(nextProps);
-    }
+    } */
 
     if (nextProps.compactRemote !== this.props.compactRemote && !nextProps.selectType) {
       ReactTooltip.rebuild();
@@ -125,13 +125,14 @@ class LocationBox extends React.Component {
     this.setState({positionEdit: !this.state.positionEdit})
   }
   updateLocation = () => {
+    if (state.offline) return;
     let {onUpdate} = this.props;
     if (!onUpdate) {
       onUpdate = (...args) => state.trigger('updateRemoteLocation', ...args);
     }
-    ajax.get(`/nmslocation/${this.props.id}/`).then((res) => {
+    ajaxWorker.get(`/nmslocation/${this.props.id}/`).then((res) => {
       if (!this.willUnmount) {
-        if (!isEqual(this.props.location, res.data) || !isEqual(this.props.profile, res.data.profile)) {
+        if (this.props.location.modified !== res.data.modified || !isEqual(this.props.profile, res.data.profile)) {
           onUpdate(this.props.id, res.data);
           this.setState({
             location: res.data,
@@ -140,6 +141,7 @@ class LocationBox extends React.Component {
         }
       }
     }).catch((err) => {
+      if (!err.response) return;
       console.log(err)
       if (!this.props || (err.response && err.response.status === 404)) {
         // cleanUp was already called
@@ -157,7 +159,7 @@ class LocationBox extends React.Component {
         if (!exists) {
           axios
           .get(`https://neuropuff.com/${image}`, {
-            responseType: 'arraybuffer'
+            responseType: 'arraybuffer',
           })
           .then(res => {
             fsWorker.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
@@ -168,7 +170,7 @@ class LocationBox extends React.Component {
               }
             });
           })
-          .catch(() => {});
+          .catch((err) => log.error(err));
         } else {
           this.setState({image: `${file}`});
         }
@@ -265,6 +267,7 @@ class LocationBox extends React.Component {
   render() {
     let p = this.props;
     let {location} = this.state;
+    if (location.results) return null;
     let upvote = p.favorites.indexOf(location.dataId) > -1;
     let isOwnLocation = p.isOwnLocation && p.selectType && location.username === p.username;
     let deleteArg = location.image && location.image.length > 0;

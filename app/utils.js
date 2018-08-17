@@ -2,6 +2,7 @@ import fs from 'graceful-fs';
 import axios from 'axios';
 import {cloneDeep, assignIn, last, trimStart} from 'lodash';
 import {each, findIndex, filter} from './lang';
+import state from './state';
 
 var exec = require('child_process').exec;
 export var msToTime = (s) => {
@@ -46,17 +47,59 @@ export var exc = (cmd) => {
 const fsKeys = filter(Object.keys(fs), (key) => !key.includes('Sync')).concat(['walk', 'getLastGameModeSave']);
 export const fsWorker = {};
 
+let fsCount = 1;
+let ajaxCount = 1;
+
 const fsWorkerCaller = (method, ...args) => {
+  if (fsCount > window.coreCount) {
+    fsCount = 1;
+  }
+  let worker = `fsWorker${fsCount}`;
   let cb = last(args);
   args.splice(-1);
-  window.fsWorker.onmessage = (e) => {
+  window[worker].onmessage = (e) => {
+    window[worker].onmessage = null;
     let [err, data] = e.data;
     cb(err, data);
   }
-  window.fsWorker.postMessage([method, ...args]);
+  each(args, (arg, i) => {
+    if (arg instanceof Buffer) {
+      args[i] = {buffer: args[i].toString('binary')};
+    }
+  })
+  window[worker].postMessage([method, ...args]);
+  fsCount++;
 }
 each(fsKeys, (key) => {
   fsWorker[key] = (...args) => fsWorkerCaller(key, ...args);
+});
+
+const axiosKeys = Object.keys(axios);
+export const ajaxWorker = {};
+
+const ajaxWorkerCaller = (method, ...args) => {
+  state.set({navLoad: true});
+  if (ajaxCount > window.coreCount) {
+    ajaxCount = 1;
+  }
+  let worker = `ajaxWorker${ajaxCount}`;
+  return new Promise((resolve, reject) => {
+    window[worker].onmessage = (e) => {
+      window[worker].onmessage = null;
+      let [err, data] = e.data;
+      state.set({navLoad: false});
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(data);
+    }
+    window[worker].postMessage([method, ...args]);
+    ajaxCount++;
+  });
+}
+each(axiosKeys, (key) => {
+  ajaxWorker[key] = (...args) => ajaxWorkerCaller(key, ...args);
 });
 
 export var formatID = (location) => {
@@ -495,18 +538,6 @@ export var tip = (content) => {
   }
   return `<div style="font-size:14px;border-radius:0px; max-width: 200px;">${content}</div>`
 }
-
-const opts = {
-  baseURL: 'https://neuropuff.com/api/',
-  timeout: 60000,
-  xsrfCookieName: 'csrftoken'
-};
-
-if (process.env.NODE_ENV === 'development') {
-  opts.baseURL = 'http://z.npff.co:8000/api/'
-}
-
-export const ajax = axios.create(opts);
 
 // Cleans up the left over object references after a component unmounts, helps with garbage collection
 export const cleanUp = (obj, defer = false) => {

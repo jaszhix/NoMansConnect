@@ -4,7 +4,17 @@ import state from './state';
 import {assignIn, uniqBy, isEqual} from 'lodash';
 
 import screenshot from 'capture';
-import * as utils from './utils';
+import {
+  exc,
+  ajaxWorker,
+  getLastGameModeSave,
+  formatID,
+  formatTranslatedID,
+  formatBase,
+  calculateDistanceToCenter,
+  gaToObject,
+  uaToObject
+} from './utils';
 import {each, find, findIndex, tryFn} from './lang';
 import {handleSaveDataFailure, handleProtectedSession} from './dialog';
 import {defaultPosition} from './constants';
@@ -55,7 +65,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     let favoritesLen = remainingFavorites.length;
     if (favoritesLen > 0) {
       log.error(`Fetching ${favoritesLen} favorites from the server`);
-      utils.ajax.post('/nmsfavoritesync/', {
+      ajaxWorker.post('/nmsfavoritesync/', {
         machineId: state.machineId,
         username,
         locations: remainingFavorites
@@ -105,7 +115,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         username,
         positions: [currentPosition],
         galaxy: saveData.result.PlayerStateData.UniverseAddress.RealityIndex,
-        distanceToCenter: utils.calculateDistanceToCenter(location.VoxelX, location.VoxelY, location.VoxelZ),
+        distanceToCenter: calculateDistanceToCenter(location.VoxelX, location.VoxelY, location.VoxelZ),
         base: false,
         baseData: null,
         upvote: upvote,
@@ -118,7 +128,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       });
 
       location.jumps = Math.ceil(location.distanceToCenter / 400);
-      location = utils.formatTranslatedID(location);
+      location = formatTranslatedID(location);
 
       if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
         log.error(`translatedId formatting is NaN: ${location}`);
@@ -174,7 +184,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       if (!base.GalacticAddress || base.BaseType.PersistentBaseTypes !== 'HomePlanetBase') {
         return;
       }
-      galacticAddress = utils.gaToObject(base.GalacticAddress);
+      galacticAddress = gaToObject(base.GalacticAddress);
       let refStoredLocation = findIndex(storedLocations, (storedLocation) => {
         return (
           storedLocation
@@ -191,7 +201,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
           storedLocations[refStoredLocation],
           {
             base: true,
-            baseData: utils.formatBase(saveData, state.knownProducts, i)
+            baseData: formatBase(saveData, state.knownProducts, i)
           }
         );
       }
@@ -264,12 +274,12 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
           each(Record, (discovery) => {
             let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
             if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) {
-              discovery.NMCID = utils.uaToObject(discovery.DD.UA).dataId;
+              discovery.NMCID = uaToObject(discovery.DD.UA).dataId;
               newDiscoveries.push(discovery);
             }
           });
         }
-        utils.ajax.put(`/nmsprofile/${profile.data.id}/`, {
+        ajaxWorker.put(`/nmsprofile/${profile.data.id}/`, {
           machineId: state.machineId,
           username: state.username,
           discoveries: newDiscoveries,
@@ -286,7 +296,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
             method = 'put';
             route += `${location.dataId}/`;
           }
-          utils.ajax[method](route, {
+          ajaxWorker[method](route, {
             machineId: state.machineId,
             username: state.username,
             mode: state.mode,
@@ -321,10 +331,10 @@ let getLastSave = (opts) => {
 
   log.error('SAVE DIRECTORY: ', state.saveDirectory)
 
-  utils.getLastGameModeSave(state.saveDirectory, state.ps4User, log).then((saveData) => {
+  getLastGameModeSave(state.saveDirectory, state.ps4User, log).then((saveData) => {
     let refLocation, location, username;
     if (!state.ps4User) {
-      location = utils.formatID(saveData.result.PlayerStateData.UniverseAddress);
+      location = formatID(saveData.result.PlayerStateData.UniverseAddress);
       delete location.RealityIndex;
       refLocation = findIndex(state.storedLocations, _location => _location.dataId === location.dataId);
       if (!state.username || state.username === 'Explorer') {
@@ -339,7 +349,7 @@ let getLastSave = (opts) => {
     if (state.offline) {
       processData(opts, saveData, location, refLocation, username);
     } else {
-      utils.ajax.get('/nmsprofile', {
+      ajaxWorker.get('/nmsprofile', {
         params: {
           username,
           machineId
@@ -381,7 +391,7 @@ pollSaveData = (opts = {mode: state.mode, init: false, machineId: state.machineI
   }
   opts.NMSRunning = false;
   if (process.platform !== 'win32') {
-    utils.exc('pidof NMS.exe').then((res) => {
+    exc('pidof NMS.exe').then((res) => {
       opts.NMSRunning = true;
       getLastSave(opts);
     }).catch((e) => {

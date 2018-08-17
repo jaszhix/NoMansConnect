@@ -1,9 +1,9 @@
 import log from './log';
 import state from './state';
 import React from 'react';
-import {assignIn, cloneDeep, orderBy, uniq, uniqBy} from 'lodash';
+import {cloneDeep, orderBy, uniq, uniqBy} from 'lodash';
 
-import * as utils from './utils';
+import {ajaxWorker, copyMetadata} from './utils';
 import {handleRestart} from './dialog';
 import {each, find, findIndex, filter} from './lang';
 
@@ -49,7 +49,7 @@ class Container extends React.Component {
     let upvote = refFav === -1;
     let {storedLocations, remoteLocations, machineId, username, favorites} = this.props.s;
 
-    utils.ajax.post('/nmslocation/', {
+    ajaxWorker.post('/nmslocation/', {
       machineId: machineId,
       username: username,
       score: location.score,
@@ -126,7 +126,7 @@ class Container extends React.Component {
         return;
       }
 
-      utils.ajax.post('/nmslocation/', {
+      ajaxWorker.post('/nmslocation/', {
         machineId: this.props.s.machineId,
         username: this.props.s.username,
         name,
@@ -140,7 +140,7 @@ class Container extends React.Component {
     });
   }
   updateLocation = (location) => {
-    utils.ajax.put(`/nmslocation/${location.dataId}/`, {
+    ajaxWorker.put(`/nmslocation/${location.dataId}/`, {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
       ...location
@@ -179,7 +179,7 @@ class Container extends React.Component {
           canvas.getContext('2d').drawImage(sourceImage, 0, 0, imgWidth, imgHeight);
           var newDataUri = canvas.toDataURL('image/jpeg', 0.75);
           if (newDataUri) {
-            utils.ajax.post('/nmslocation/', {
+            ajaxWorker.post('/nmslocation/', {
               machineId: this.props.s.machineId,
               username: this.props.s.username,
               imageU: newDataUri,
@@ -223,7 +223,7 @@ class Container extends React.Component {
       state.set({error: `Unable to delete screenshot in offline mode.`});
       return;
     }
-    utils.ajax.post('/nmslocation/', {
+    ajaxWorker.post('/nmslocation/', {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
       imageD: true,
@@ -258,7 +258,7 @@ class Container extends React.Component {
       state.set({error: `Unable to mark compatibility in offline mode.`});
       return;
     }
-    utils.ajax.post('/nmslocation/', {
+    ajaxWorker.post('/nmslocation/', {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
       version: this.props.s.saveVersion,
@@ -296,13 +296,13 @@ class Container extends React.Component {
         return remoteLocation.dataId === location.dataId;
       });
       if (refRemoteLocation) {
-        _location = utils.copyMetadata(refRemoteLocation, location, ['isHidden', 'positions', 'version']);
+        _location = copyMetadata(refRemoteLocation, location, ['isHidden', 'positions', 'version']);
       } else {
         log.error(`Unable to find reference remote location from stored locations cache: ${location.dataId} (fetching)`);
         if (this.props.s.offline) {
           _location = location;
         } else {
-          utils.ajax.post('/nmsfavoritesync/', {
+          ajaxWorker.post('/nmsfavoritesync/', {
             machineId: state.machineId,
             username: state.username,
             locations: [location.dataId]

@@ -91,6 +91,7 @@ const state = initStore({
   storedLocations: [],
   remoteLocations: [],
   remoteLength: 0,
+  remoteNext: null,
   currentLocation: null,
   selectedLocation: null,
   multiSelectedLocation: false,
@@ -305,7 +306,7 @@ const state = initStore({
       }
 
       if (e.data.offline) {
-        stateUpdate.title = `${state.updateAvailable ? 'OLD' : 'NO'} MAN'S DISCONNECT`;
+        stateUpdate.title = state.title.replace(/CONNECT/, 'DISCONNECT');
         stateUpdate.init = false;
       }
 
@@ -326,15 +327,14 @@ const state = initStore({
         });
       }
 
-      if (!state.ready) {
-        stateUpdate.ready = true;
+      if (!state.ready) stateUpdate.ready = true;
+
+      state.set(stateUpdate, () => {
         log.error('State initialized');
         if (typeof cb === 'function') {
-          cb();
+          setTimeout(cb, 0);
         }
-      }
-
-      state.set(stateUpdate, true);
+      }, true);
     }
   },
   handleMaintenance: (obj, cb) => {

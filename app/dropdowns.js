@@ -8,7 +8,7 @@ import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
 import {assignIn, clone} from 'lodash';
 
-import {tip, ajax, cleanUp} from './utils';
+import {tip, ajaxWorker, cleanUp} from './utils';
 import {handleRestart} from './dialog';
 import {findIndex, map} from './lang';
 
@@ -172,7 +172,7 @@ export class SaveEditorDropdownMenu extends React.Component {
       if (isUnits) {
         args.push(this.props.profile.exp * 1000);
       }
-      ajax.put(`/nmsprofile/${this.props.profile.id}/`, {
+      ajaxWorker.put(`/nmsprofile/${this.props.profile.id}/`, {
         username: state.username,
         machineId: state.machineId,
         data: {
@@ -525,7 +525,7 @@ export class NotificationDropdown extends React.Component {
     this.setState({open: !this.state.open});
   }
   handleDelete = (option) => {
-    ajax.delete(`/nmsnotification/${option.id}/`, {
+    ajaxWorker.delete(`/nmsnotification/${option.id}/`, {
       machineId: this.props.machineId,
       username: this.props.username
     }).then(() => {

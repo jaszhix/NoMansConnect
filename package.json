@@ -49,6 +49,7 @@
       "main.js.map",
       "package.json",
       "ajaxWorker.js",
+      "fsWorker.js",
       "formatWorker.js",
       "jsonWorker.js",
       "settingsWorker.js",
@@ -57,7 +58,8 @@
       "json.js",
       "each.js",
       "copy.js",
-      "lang.js"
+      "lang.js",
+      "log.js"
     ],
     "extraFiles": [
       {
@@ -81,6 +83,10 @@
       {
         "from": "node_modules/is-buffer",
         "to": "node_modules/is-buffer"
+      },
+      {
+        "from": "node_modules/graceful-fs",
+        "to": "node_modules/graceful-fs"
       }
     ],
     "dmg": {
@@ -212,7 +218,7 @@
     "express": "4.16.3",
     "fbjs-scripts": "0.8.3",
     "file-loader": "1.1.11",
-    "html-webpack-plugin": "^2.30.1",
+    "html-webpack-plugin": "^3.2.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^21.2.1",
     "jsdom": "^11.3.0",

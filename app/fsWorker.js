@@ -151,6 +151,14 @@ onmessage = function(e) {
   } else if (method === 'getLastGameModeSave') {
     getLastGameModeSave(...args, (err, data) => next(err, data));
   } else {
-    fs[method](...args, (err, data) => next(err, data));
+
+    each(args, (arg, i) => {
+      if (arg.buffer) {
+        args[i] = new Buffer.from(arg.buffer, 'binary');
+      }
+    });
+    fs[method](...args, (err, data) => {
+      next(err, data)
+    });
   }
 }

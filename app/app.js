@@ -11,9 +11,9 @@ import {assignIn, cloneDeep, orderBy, uniqBy, concat, first, isArray, throttle, 
 import math from 'mathjs';
 
 import Loader from './loader';
-import {dirSep, ajax, getLastGameModeSave, exc, formatBase, css, tip, fsWorker} from './utils';
+import {dirSep, getLastGameModeSave, exc, formatBase, css, tip, fsWorker, ajaxWorker} from './utils';
 import pollSaveData from './poll';
-import {handleWallpaper, handleUpgrade, baseError} from './dialog';
+import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
 import {each, find, findIndex, map, filter} from './lang';
 
 import baseIcon from './assets/images/base_icon.png';
@@ -37,56 +37,13 @@ import {defaultPosition} from './constants';
 
 const {dialog} = remote;
 
+let formatCount = 1;
+
 class App extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = state.get();
-    state
-      .setMergeKeys(['remoteLocations'])
-      .connect('*', (obj) => {
-      if (process.env.NODE_ENV === 'development') {
-        let stackParts = new Error().stack.split('\n');
-        console.log('STATE CALLEE: ', stackParts[6]);
-      }
-      console.log('STATE INPUT: ', obj);
-
-      if (obj.error) {
-        state.displayErrorDialog(obj.error);
-        state.error = '';
-      }
-      if (!obj.search
-        && obj.remoteLocations
-        && obj.remoteLength > 0
-        && state.search.length === 0
-        && state.remoteLocations
-        && state.remoteLocations.results
-        && state.remoteLocations.results.length > 0
-        && !state.closing) {
-        state.handleMaintenance(obj, (nextObject) => {
-          window.jsonWorker.postMessage({
-            method: 'set',
-            key: 'remoteLocations',
-            value: nextObject.remoteLocations,
-          });
-          this.setState(nextObject, () => state.handleState(obj));
-        });
-        return;
-      }
-      this.setState(obj, () => {
-        state.handleState(obj);
-      });
-      console.log(`STATE: `, this.state);
-    });
-    state.connect({
-      fetchRemoteLocations: () => this.fetchRemoteLocations(1),
-      pollSaveData: () => this.pollSaveData(),
-      restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
-      setWaypoint: (location) => this.setWaypoint(location),
-      getMonitor: () => this.monitor,
-      handleClearSearch: () => this.handleClearSearch(),
-      teleport: (...args) => this.handleTeleport(...args)
-    });
 
     this.topAttachedMenuStyle = {
       position: 'absolute',
@@ -113,16 +70,62 @@ class App extends React.Component {
     this.headerItemClasses = 'ui dropdown icon item';
   }
   componentDidMount() {
+    this.connections = [
+      state
+        .setMergeKeys(['remoteLocations'])
+        .connect('*', (obj) => {
+        if (process.env.NODE_ENV === 'development') {
+          let stackParts = new Error().stack.split('\n');
+          console.log('STATE CALLEE: ', stackParts[6]);
+        }
+        console.log('STATE INPUT: ', obj);
+
+        if (obj.error) {
+          state.displayErrorDialog(obj.error);
+          state.error = '';
+        }
+        if (!obj.search
+          && obj.remoteLocations
+          && obj.remoteLength > 0
+          && state.search.length === 0
+          && state.remoteLocations
+          && state.remoteLocations.results
+          && state.remoteLocations.results.length > 0
+          && !state.closing) {
+          state.handleMaintenance(obj, (nextObject) => {
+            window.jsonWorker.postMessage({
+              method: 'set',
+              key: 'remoteLocations',
+              value: nextObject.remoteLocations,
+            });
+            this.setState(nextObject, () => state.handleState(obj));
+          });
+          return;
+        }
+        this.setState(obj, () => {
+          state.handleState(obj);
+        });
+        console.log(`STATE: `, this.state);
+      }),
+      state.connect({
+        fetchRemoteLocations: () => this.fetchRemoteLocations(1),
+        pollSaveData: () => this.pollSaveData(),
+        restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
+        setWaypoint: (location) => this.setWaypoint(location),
+        getMonitor: () => this.monitor,
+        handleClearSearch: () => this.handleClearSearch(),
+        teleport: (...args) => this.handleTeleport(...args)
+      })
+    ];
     state._init(() => this.init());
   }
-  init() {
+  init = () => {
     window.addEventListener('resize', this.onWindowResize);
     log.init(this.state.configDir);
     log.error(`Initializing No Man's Connect ${this.state.version}`);
     if (this.state.offline) {
       log.error(`Offline mode enabled.`);
     }
-    this.handleWorkers();
 
     // TBD: Work around electron starting in the home directory on Linux
     let modulePath = remote.app.getPath('module').split(dirSep);
@@ -138,42 +141,80 @@ class App extends React.Component {
       this.saveTool = `.${dirSep}app${dirSep}nmssavetool${dirSep}nmssavetool.exe`;
     }
 
-    if (!this.state.offline) {
-      window.ajaxWorker.postMessage({
-        method: 'get',
-        func: 'version',
-        url: '/nmslocation',
-        obj: {
-          params: {
-            version: true
-          }
+    handleWallpaper();
+
+    machineId().then((machineId) => {
+      ajaxWorker.post('/nmsversion/', {
+        version: true,
+        machineId,
+        username: state.username
+      }).then((res) => {
+        let {username, version, news, id} = res.data;
+        if (version !== this.state.version) {
+          handleUpgrade(res.data.version);
         }
+        if (news && id !== this.state.newsId) {
+          state.set({
+            notification: {
+              message: news,
+              type: 'info'
+            },
+            newsId: id
+          });
+        }
+        state.set({username, machineId});
+        console.log({username})
+        this.syncRemoteOwned(username);
+      }).catch((err) => {
+        if (!err.response && !state.offline) {
+          let {title} = state;
+          title = title.replace(/CONNECT/, 'DISCONNECT');
+          log.error('No response from the server was received, switching to offline mode.');
+          state.set({
+            title,
+            offline: true,
+            init: false,
+            notification: {
+              message: 'Server is temporarily unavailable. Offline mode is now enabled. Sorry for the inconvenience.',
+              type: 'info'
+            }
+          }, true);
+          return;
+        }
+        log.error('Failed to check for newer version: ', err.response);
       });
+    });
+
+
+  }
+  componentWillUnmount() {
+    if (this.monitor) {
+      this.monitor.stop();
     }
+    state.destroy();
+  }
+  checkMods = (cb) => {
     let initialized = false;
     let initialize = () => {
       if (!state.saveDirectory) {
-        setTimeout(() => initialize(), 200);
+        handleSaveDataFailure();
         return;
       }
       if (initialized) {
         return;
       }
       initialized = true;
-      machineId().then((id) => {
-        this.pollSaveData(this.state.mode, true, id);
-      }).catch((err) => {
-        log.error(err.message);
-        this.pollSaveData(this.state.mode, true, null);
-      });
+      this.pollSaveData(this.state.mode, true);
+      if (cb) cb();
     };
 
     let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
     let indexModsInUse = (_path, modPath) => {
-
       fsWorker.readFile(`${_path}${dirSep}Binaries${dirSep}SETTINGS${dirSep}TKGRAPHICSSETTINGS.MXML`, (err, data) => {
         if (err) {
-          console.log('err__', err, _path, state.installDirectory, state)
+          log.error('Unable to check NMS settings: ', _path);
+          initialize();
+          return;
         }
         let fullscreen = null;
         if (data) {
@@ -185,12 +226,14 @@ class App extends React.Component {
         let _modPath = `${_path}${modPath}`;
         fsWorker.exists(_modPath, (exists) => {
           if (!exists) {
+            log.error('Unable to find mods directory: ', err.message)
             initialize();
             return;
           }
           fsWorker.readdir(_modPath, (err, list) => {
             if (err) {
               log.error(`Failed to read mods directory: ${err}`);
+              initialize();
               return;
             }
             list = filter(list, (item) => {
@@ -249,117 +292,33 @@ class App extends React.Component {
       indexModsInUse(...args);
     }
   }
-  componentWillUnmount() {
-    if (this.monitor) {
-      this.monitor.stop();
-    }
-    state.destroy();
-  }
-  handleWorkers = () => {
-    window.ajaxWorker.onmessage = (e) => {
-      if (this.state.closing) {
-        return;
-      }
-      if (e.data.err) {
-        if (!this.state.offline) {
-          log.error(`AJAX Worker failure: ${e.data.func}`);
-        }
-        if (e.data.func === 'syncRemoteOwned' && e.data.status === 503) {
-          state.set({
-            offline: true,
-            init: false,
-            notification: {
-              message: 'Server is temporarily unavailable. Sorry for the inconvenience.',
-              type: 'info'
-            }
-          }, true);
-          return;
-        }
-        if (e.data.func === 'handleSync') {
-          this.fetchRemoteLocations(state.page, state.sort, state.init, false);
-        } else if (e.data.func === 'pollRemoteLocations') {
-          this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
-        } else if (e.data.func === 'fetchRemoteLocations' && e.data.status === 404) {
-          state.remoteLocations.next = null;
-          state.set({
-            remoteLocations: state.remoteLocations,
-            navLoad: false
-          });
-        }
-        if (this.state.offline && this.state.init) {
-          state.set({init: false}, true);
-        }
-        return;
-      }
-      console.log('AJAX WORKER: ', e.data);
-      if (e.data.func === 'version') {
-        if (e.data.data.version !== this.state.version) {
-          handleUpgrade(e.data.data.version);
-        }
-        if (e.data.data.news && e.data.data.id !== this.state.newsId) {
-          state.set({
-            notification: {
-              message: e.data.data.news,
-              type: 'info'
-            },
-            newsId: e.data.data.id
-          });
-        }
-      } else if (e.data.func === 'syncRemoteOwned') {
-        let {storedLocations} = this.state;
-        storedLocations = uniqBy(concat(storedLocations, e.data.data.results), 'dataId');
-        state.set({
-          storedLocations,
-          loading: 'Syncing locations...'
-        }, () => {
-          this.formatRemoteLocations(e.data, state.page, state.sort, state.init, false);
-        });
-      } else if (e.data.func === 'handleSync') {
-        if (!e.data.params) {
-          e.data.params = [state.page, state.sort, state.init, false];
-        }
-        this.fetchRemoteLocations(...e.data.params);
-      } else if (e.data.func === 'fetchRemoteLocations') {
-        this.formatRemoteLocations(e.data, ...e.data.params, () => {
-          if (state.init) {
-            state.set({init: false}, true);
-            this.pollRemoteLocations(e.data.params[2]);
-          }
-        });
-      } else if (e.data.func === 'pollRemoteLocations') {
-        if (e.data.data.results.length > 0 && this.state.search.length === 0) {
-          this.formatRemoteLocations(e.data, ...e.data.params, () => {
-            this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
-          });
-        } else {
-          this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
-        }
-      }
-    }
-    window.formatWorker.onmessage = (e) => {
-      console.log('FORMAT WORKER: ', e.data);
-      if (e.data.stateUpdate.pagination) {
-        this.handlePagination();
-      } else if (state.init) {
-        this.handleSync(1, state.sort, state.init);
-      }
-      state.set(e.data.stateUpdate);
-    };
-  }
-  syncRemoteOwned = () => {
+  syncRemoteOwned = (username) => {
     if (this.state.offline || this.state.closing) {
       return;
     }
-    window.ajaxWorker.postMessage({
-      method: 'get',
-      func: 'syncRemoteOwned',
-      url: '/nmslocationsync',
-      obj: {
-        params: {
-          username: this.state.username,
-          page_size: 9999
-        }
+    if (!username) username = this.state.username;
+    ajaxWorker.get('/nmslocationsync', {
+      params: {
+        username,
+        page_size: 9999
       }
+    }).then((res) => {
+      let {storedLocations} = this.state;
+      storedLocations = uniqBy(concat(storedLocations, res.data.results), 'dataId');
+      state.set({
+        storedLocations,
+        loading: 'Syncing locations...'
+      }, () => {
+        this.formatRemoteLocations(res, state.page, state.sort, state.init, false, false, () => {
+          if (state.init) {
+            this.handleSync(1, state.sort, state.init);
+            this.checkMods();
+          }
+        });
+      });
+    }).catch((err) => {
+      console.log(err)
+      log.error('Failed to download missing locations from the server: ', err.response);
     });
   }
   handleSync = (page=1, sort=this.state.sort, init=false) => {
@@ -383,10 +342,10 @@ class App extends React.Component {
         locations.push(location);
       }
     });
-    ajax.post('/nmslocationremotecheck/', {
-        locations: map(locations, (location) => location.dataId),
-        mode: state.mode,
-        username: state.username,
+    ajaxWorker.post('/nmslocationremotecheck/', {
+      locations: map(locations, (location) => location.dataId),
+      mode: state.mode,
+      username: state.username,
     }).then((missing) => {
       missing = missing.data;
       let missingLocations = [];
@@ -397,16 +356,16 @@ class App extends React.Component {
           missingLocations.push(location);
         }
       });
-      window.ajaxWorker.postMessage({
-        method: 'post',
-        func: 'handleSync',
-        url: '/nmslocationremotesync/',
-        obj: {
-          locations: missingLocations,
-          mode: state.mode,
-          username: state.username,
-        },
-        params: [page, sort, init, true, false]
+
+      let next = () => this.fetchRemoteLocations(page, sort, init, true);
+
+      ajaxWorker.post('/nmslocationremotesync/', {
+        locations: missingLocations,
+        mode: state.mode,
+        username: state.username,
+      }).then(() => next()).catch((err) => {
+        log.error('Failed to upload missing locations to the server: ', err.response);
+        next();
       });
     }).catch((err) => log.error(err.message));
   }
@@ -416,11 +375,22 @@ class App extends React.Component {
     }
     if (!this.state.remoteLocations || this.state.remoteLocations.length === 0) {
       this.state.remoteLocations = {
-        results: []
+        results: [],
       };
     }
+    if (formatCount > window.coreCount) {
+      formatCount = 1;
+    }
+    let worker = `formatWorker${formatCount}`;
 
-    window.formatWorker.postMessage({
+    window[worker].onmessage = (e) => {
+      window[worker].onmessage = null;
+      console.log('FORMAT WORKER: ', e.data);
+      state.set(e.data.stateUpdate);
+      if (cb) cb();
+    };
+
+    window[worker].postMessage({
       res,
       page,
       sort,
@@ -430,6 +400,7 @@ class App extends React.Component {
       state: {
         remoteLocations: this.state.remoteLocations,
         remoteLength: this.state.remoteLength,
+        remoteNext: this.state.remoteNext,
         search: this.state.search,
         favorites: this.state.favorites,
         storedLocations: this.state.storedLocations,
@@ -437,12 +408,9 @@ class App extends React.Component {
         loading: 'Loading remote locations...'
       }
     });
-
-    if (cb) {
-      cb();
-    }
+    formatCount++;
   }
-  pollRemoteLocations = (init=false) => {
+  pollRemoteLocations = (init = false) => {
     if (this.timeout)  {
       clearTimeout(this.timeout);
     }
@@ -461,19 +429,34 @@ class App extends React.Component {
     let start = new Date(lastRemoteLocation.created);
     let end = new Date();
 
-    window.ajaxWorker.postMessage({
-      method: 'get',
-      func: 'pollRemoteLocations',
-      url: '/nmslocationpoll',
-      obj: {
-        params: {
-          start: start,
-          end: end,
-          dataId: lastRemoteLocation.dataId
-        }
-      },
-      params: [state.page ? state.page : 1, state.sort, false, true, state.pagination]
-    });
+    let next = () => this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
+
+    ajaxWorker.get('/nmslocationpoll', {
+      params: {
+        start: start,
+        end: end,
+        dataId: lastRemoteLocation.dataId
+      }
+    }).then((res) => {
+      if (res.data.results.length > 0 && this.state.search.length === 0) {
+        this.formatRemoteLocations(
+          res,
+          state.page ? state.page : 1,
+          state.sort,
+          false,
+          true,
+          state.pagination,
+          () => {
+            next();
+          }
+        );
+      } else {
+        next();
+      }
+    }).catch((err) => {
+      log.error('Failed regular polling request: ', err.response);
+      next();
+    })
   }
   fetchRemoteLocations = (page = this.state.page, sort = this.state.sort, init = false, pagination = false) => {
     if (this.state.offline || this.state.closing) {
@@ -496,14 +479,23 @@ class App extends React.Component {
       params.page_size = q.substr(0, 5) === 'user:' ? 2000 : 200;
     }
 
-    window.ajaxWorker.postMessage({
-      method: 'get',
-      func: 'fetchRemoteLocations',
-      url: path,
-      obj: {
-        params
-      },
-      params: [page, sort, init, false, pagination]
+    ajaxWorker.get(path, {params}).then((res) => {
+      this.formatRemoteLocations(res, page, sort, false, false, !state.offline, () => {
+        if (state.init) {
+          state.set({init: false}, true);
+          this.pollRemoteLocations(init);
+        }
+      });
+    }).catch((err) => {
+      log.error('Failed to fetch remote locations: ', err.response);
+      let stateUpdate = {
+        remoteLocations: state.remoteLocations,
+        navLoad: false,
+      };
+      if (err.response && err.response.status === 404) {
+        stateUpdate.remoteNext = null;
+      }
+      state.set(stateUpdate);
     });
   }
   handleCheat = (dataId, n) => {
@@ -698,7 +690,7 @@ class App extends React.Component {
         }
         this.signSaveData(saveData.slot, () => {
           state.set({currentLocation: _location.dataId});
-          ajax.post('/nmslocation/', {
+          ajaxWorker.post('/nmslocation/', {
             machineId: this.state.machineId,
             username: this.state.username,
             teleports: true,
@@ -780,9 +772,7 @@ class App extends React.Component {
         log.error(`getLastSave -> next -> ${error}`);
       }
       if (init) {
-        handleWallpaper();
         if (!state.ps4User) {
-          this.syncRemoteOwned();
           if (!this.monitor) {
             watch.createMonitor(state.saveDirectory, {
               ignoreDotFiles: true,
@@ -906,7 +896,7 @@ class App extends React.Component {
     win.minimize();
   }
   handleClose = () => {
-    if (this.monitor) {
+    if (this.monitor && !module.hot) {
       this.monitor.stop();
     }
     state.set({closing: true});

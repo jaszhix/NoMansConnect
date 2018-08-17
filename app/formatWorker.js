@@ -69,6 +69,10 @@ onmessage = function(e) {
     searchInProgress: e.data.state.search.length > 0
   });
 
+  if (e.data.state.remoteNext !== e.data.res.data.next && e.data.res.data.next) {
+    stateUpdate.remoteNext = e.data.res.data.next;
+  }
+
   if (e.data.pagination) {
     stateUpdate.pagination = false;
   }

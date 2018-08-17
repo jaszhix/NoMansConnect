@@ -28,6 +28,8 @@ const toolTipContainerStyle = {
 };
 const nonSelectable = ['Center', 'Selected'];
 
+let workerCount = 1;
+
 const travelCurrentLocation = () => {
   window.travelToCurrent = true;
 };
@@ -189,7 +191,6 @@ class ThreeDimScatterChart extends React.Component {
         }
       })
     ];
-    this.handleMapWorker();
     this.handlePostMessage();
     this.handlePostMessageSize();
   }
@@ -208,7 +209,7 @@ class ThreeDimScatterChart extends React.Component {
     if (!state.navLoad) {
       state.set({navLoad: true});
     }
-    window.mapWorker.postMessage({
+    this.postMessage({
       selectOnly: false,
       p: {
         remoteLocations: this.props.remoteLocations,
@@ -226,7 +227,7 @@ class ThreeDimScatterChart extends React.Component {
   }
   handlePostMessageSize = () => {
     if (this.dragging || this.willUnmount) return;
-    window.mapWorker2.postMessage({
+    this.postMessage({
       selectOnly: false,
       p: {
         width: state.width,
@@ -242,7 +243,7 @@ class ThreeDimScatterChart extends React.Component {
   }
   handlePostMessageSelect = () => {
     if (this.dragging || this.willUnmount) return;
-    window.mapWorker2.postMessage({
+    this.postMessage({
       p: {
         selectedLocation: state.selectedLocation,
         selectedGalaxy: state.selectedGalaxy,
@@ -256,46 +257,58 @@ class ThreeDimScatterChart extends React.Component {
       s: this.state
     });
   }
-  handleMapWorker = () => {
-    const handler = (e) => {
-      if (this.willUnmount) return;
-      let setState = (data) => {
-        this.setState(data, () => {
-          let stateUpdate = {navLoad: false};
-          if (this.props.init) {
-            let legendItemText = v('.recharts-legend-item-text');
-            let legendItem = v('.recharts-legend-item');
-            if (!legendItemText.n || !legendItem.n) {
-              setTimeout(() => setState(data), 0);
-              return;
-            }
-            legendItemText.css({position: 'relative', top: '3px'});
-            each(this.props.show, (obj, key) => {
-              legendItem.each(function(el){
-                let _el = v(el);
-                if (_el.text()[0] === key) {
-                  _el.addClass(key);
-                }
-              });
+  handler = (e) => {
+    if (this.willUnmount) return;
+    let setState = (data) => {
+      this.setState(data, () => {
+        let stateUpdate = {navLoad: false};
+        if (this.props.init) {
+          let legendItemText = v('.recharts-legend-item-text');
+          let legendItem = v('.recharts-legend-item');
+          if (!legendItemText.n || !legendItem.n) {
+            setTimeout(() => setState(data), 0);
+            return;
+          }
+          legendItemText.css({position: 'relative', top: '3px'});
+          each(this.props.show, (obj, key) => {
+            legendItem.each(function(el){
+              let _el = v(el);
+              if (_el.text()[0] === key) {
+                _el.addClass(key);
+              }
             });
-            this.handleUpdateLegend();
-            this.props.onInit();
-          }
-          stateUpdate.navLoad = false;
-          if (e.data.fromSelected && e.data.fromSelected.globalState) {
-            Object.assign(stateUpdate, e.data.fromSelected.globalState);
-          }
-          state.set(stateUpdate);
-        });
-      };
-      if (e.data.fromSelected) {
-        setState({selectedLocation: e.data.fromSelected.selectedLocation});
-      } else {
-        setState(e.data);
-      }
+          });
+          this.handleUpdateLegend();
+          this.props.onInit();
+        }
+        stateUpdate.navLoad = false;
+        if (e.data.fromSelected && e.data.fromSelected.globalState) {
+          Object.assign(stateUpdate, e.data.fromSelected.globalState);
+        }
+        state.set(stateUpdate);
+      });
     };
-    window.mapWorker.onmessage = handler;
-    window.mapWorker2.onmessage = handler;
+    if (e.data.fromSelected) {
+      setState({selectedLocation: e.data.fromSelected.selectedLocation});
+    } else {
+      setState(e.data);
+    }
+  };
+  postMessage = (obj) => {
+    if (workerCount > window.coreCount) {
+      workerCount = 1;
+    }
+    let worker = `mapWorker${workerCount}`;
+    if (window[worker].onmessage) {
+      this.postMessage(obj);
+      return;
+    }
+    window[worker].onmessage = (e) => {
+      window[worker].onmessage = null;
+      this.handler(e);
+    };
+    window[worker].postMessage(obj);
+    workerCount++;
   }
   handleSelect = (symbol) => {
     let stateUpdate = {};
@@ -526,13 +539,6 @@ class GalacticMap extends React.Component {
 
   }
   componentDidMount() {
-    window.mapWorker3.onmessage = (e) => {
-      state.set(e.data.buildGalaxyOptions, () => {
-        if (e.data.init) {
-          travelCurrentLocation();
-        }
-      });
-    };
     state.set({navLoad: true});
     this.connections = [
       state.connect([
@@ -561,7 +567,23 @@ class GalacticMap extends React.Component {
     });
   }
   buildGalaxyOptions = (init) => {
-    window.mapWorker3.postMessage({
+    if (workerCount > window.coreCount) {
+      workerCount = 1;
+    }
+    let worker = `mapWorker${workerCount}`;
+    if (window[worker].onmessage) {
+      this.buildGalaxyOptions(init);
+      return;
+    }
+    window[worker].onmessage = (e) => {
+      window[worker].onmessage = null;
+      state.set(e.data.buildGalaxyOptions, () => {
+        if (e.data.init) {
+          travelCurrentLocation();
+        }
+      });
+    }
+    window[worker].postMessage({
       buildGalaxyOptions: {
         init,
         storedLocations: state.storedLocations,
@@ -573,6 +595,7 @@ class GalacticMap extends React.Component {
         galaxies: state.galaxies
       }
     });
+    workerCount++;
   }
   handleInit = () => {
     this.setState({init: false}, () => this.buildGalaxyOptions(true));

@@ -3,9 +3,9 @@ import fs from 'graceful-fs';
 import log from './log';
 import state from './state';
 import openExternal from 'open-external';
-import {delay, last} from 'lodash';
+import {last} from 'lodash';
 import v from 'vquery';
-import * as utils from './utils';
+import {fsWorker, ajaxWorker} from './utils';
 import {each, tryFn} from './lang';
 import defaultWallpaper from './assets/images/default_wallpaper.png';
 
@@ -43,10 +43,18 @@ export const handleRestart = () => {
 export const handleWallpaper = () => {
   let wallpaper = defaultWallpaper;
   if (state.wallpaper) {
-    tryFn(
-      () => wallpaper = `data:${last(state.wallpaper.split('.'))};base64,${fs.readFileSync(state.wallpaper).toString('base64')}`,
-      () => log.error(`Unable to set wallpaper: ${err}`)
-    );
+    fsWorker.readFile(state.wallpaper, (err, data) => {
+      tryFn(
+        () => wallpaper = `data:${last(state.wallpaper.split('.'))};base64,${data}`,
+        () => log.error(`Unable to set wallpaper: ${err}`)
+      );
+      v(document.body).css({
+        backgroundImage: `url(${wallpaper})`,
+        backgroundSize: 'cover',
+        backgroundRepeat: 'no-repeat'
+      });
+    });
+    return;
   }
   v(document.body).css({
     backgroundImage: `url(${wallpaper})`,
@@ -94,7 +102,12 @@ export const handleSelectSaveDirectory = () => {
 }
 
 export const handleUpgrade = (nextVersion) => {
-  state.set({updateAvailable: true, title: `OLD MAN'S ${state.offline ? 'DIS' : ''}CONNECT`});
+  let {title} = state;
+  title = title.replace(/NO/, 'OLD');
+  state.set({
+    updateAvailable: true,
+    title
+  });
   let upgradeMessage = `No Man's Connect v${nextVersion} is available.`;
   log.error(upgradeMessage);
   let infoUrl = 'https://github.com/jaszhix/NoMansConnect/releases';
@@ -114,7 +127,7 @@ export const handleUpgrade = (nextVersion) => {
   }, 0);
 }
 
-export const handleSaveDataFailure = (mode=state.mode, init=false, cb) => {
+export const handleSaveDataFailure = () => {
   dialog.showMessageBox({
     title: 'Which platform do you use?',
     message: 'Save data not found. Select PS4 to skip this step, and disable PC specific features.',
@@ -140,7 +153,7 @@ export const handleUsernameOverride = (username) => {
     });
     return;
   }
-  utils.ajax.post('/nmsoverride/', {
+  ajaxWorker.post('/nmsoverride/', {
     username: state.username,
     override: username,
     machineId: state.machineId,
@@ -179,7 +192,7 @@ export const handleProtectedSession = (username='Explorer') => {
     buttons: ['OK', 'Send Recovery Email', 'Enter Recovery Token']
   }, result=>{
     if (result === 1) {
-      utils.ajax.post('/nmsrequestrecovery/', {
+      ajaxWorker.post('/nmsrequestrecovery/', {
         machineId: state.machineId,
         username
       }).then(() => {

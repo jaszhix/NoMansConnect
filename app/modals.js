@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import moment from 'moment';
 import {assignIn, pick, isString, orderBy, upperFirst, clone, last} from 'lodash';
 
-import {validateEmail, ajax, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker} from './utils';
+import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
 import {each, findIndex, find, map, filter} from './lang';
 
@@ -143,7 +143,7 @@ export class RecoveryModal extends React.Component {
       username: this.props.s.username
     };
     request[prop] = this.state.value;
-    ajax.post(url, request).then((res)=>{
+    ajaxWorker.post(url, request).then((res)=>{
       if (this.props.type === 'recoveryToken') {
         handleRestart();
         return;
@@ -243,7 +243,7 @@ export class LocationRegistrationModal extends React.Component {
     this.props.s.storedLocations = orderBy(this.props.s.storedLocations, 'created', 'desc');
 
     state.set({storedLocations: this.props.s.storedLocations}, ()=>{
-      ajax.post('/nmslocation/', {
+      ajaxWorker.post('/nmslocation/', {
         machineId: this.props.s.machineId,
         username: location.username,
         ...location
@@ -478,7 +478,7 @@ export class ProfileModal extends React.Component {
     cleanUp(this);
   }
   fetchProfile = (id = this.props.profileId, discoveriesPage = 1, isPagination = false) => {
-    utils.ajax.get(`/nmsprofile/${id}/`, {
+    ajaxWorker.get(`/nmsprofile/${id}/`, {
       params: {discoveriesPage}
     }).then((profile) => {
       this.setState({
@@ -495,7 +495,7 @@ export class ProfileModal extends React.Component {
   }
   handleFriendRequest = (isFriend) => {
     if (isFriend) {
-      utils.ajax.post('/nmsfriendremove/', {
+      ajaxWorker.post('/nmsfriendremove/', {
         username: this.props.username,
         machineId: this.props.machineId,
         friend: this.state.profile.username,
@@ -508,7 +508,7 @@ export class ProfileModal extends React.Component {
         }
       });
     } else {
-      utils.ajax.post('/nmsfriendrequest/', {
+      ajaxWorker.post('/nmsfriendrequest/', {
         from: {
           username: this.props.username
         },
@@ -779,7 +779,7 @@ export class FriendRequestModal extends React.Component {
     state.set({displayFriendRequest: null});
   }
   handleFriendRequest = () => {
-    utils.ajax.post('/nmsfriendaccept/', {
+    ajaxWorker.post('/nmsfriendaccept/', {
       to: {
         username: this.props.username,
       },
@@ -1006,7 +1006,7 @@ export class SettingsModal extends React.Component {
       buttons: ['Cancel', `${this.props.s.profile.protected ? 'Unp' : 'P'}rotect Username`]
     }, result=>{
       if (result === 1) {
-        utils.ajax.post('/nmsprofile/', {
+        ajaxWorker.post('/nmsprofile/', {
           username: this.props.s.username,
           machineId: this.props.s.machineId,
           protected: !this.props.s.profile.protected
@@ -1067,7 +1067,7 @@ export class SettingsModal extends React.Component {
                 <Item
                 key={i}
                 className="Item__hover"
-                dataTip={utils.tip('Controls which save file is loaded and saved.')}
+                dataTip={tip('Controls which save file is loaded and saved.')}
                 onValueClick={() => this.handleModeSwitch(mode)}
                 label={upperFirst(mode)}
                 icon={p.s.mode === mode ? 'check' : 'remove'} />
@@ -1079,7 +1079,7 @@ export class SettingsModal extends React.Component {
           {!p.s.ps4User && !p.s.offline ?
           <Item
           className="Item__hover"
-          dataTip={utils.tip('Automatically grabs your screen when NMS is running and the game is saved. Only works when NMS is in window mode.')}
+          dataTip={tip('Automatically grabs your screen when NMS is running and the game is saved. Only works when NMS is in window mode.')}
           onValueClick={this.handleAutoCapture}
           label="Screenshot Capturer"
           value={p.s.autoCapture ? 'Auto' : 'Manual'} /> : null}
@@ -1087,7 +1087,7 @@ export class SettingsModal extends React.Component {
           <div className="ui segment SettingsModal__child">
             <Item
             className="Item__hover"
-            dataTip={utils.tip('Disable this to prevent the screenshot capturer from taking screenshots of space stations, atlas stations, and freighters.')}
+            dataTip={tip('Disable this to prevent the screenshot capturer from taking screenshots of space stations, atlas stations, and freighters.')}
             onValueClick={this.handleAutoCaptureSpaceStations}
             label="Capture Screenshots of Space Stations"
             icon={p.s.autoCaptureSpaceStations ? 'check' : 'remove'} />
@@ -1095,14 +1095,14 @@ export class SettingsModal extends React.Component {
           {!p.s.ps4User ? <div className="divider" /> : null}
           <Item
           className="Item__hover"
-          dataTip={utils.tip('Select which platform you play NMS on')}
+          dataTip={tip('Select which platform you play NMS on')}
           onValueClick={this.handlePlatformToggle}
           label="Platform"
           value={p.s.ps4User ? 'PS4' : 'PC'} />
           {!p.s.ps4User ?
           <Item
           className="Item__hover"
-          dataTip={utils.tip('Optional. Select the location NMS is installed in. This is used to associate your mods with a location, so other players can see a location which may not load properly for them.')}
+          dataTip={tip('Optional. Select the location NMS is installed in. This is used to associate your mods with a location, so other players can see a location which may not load properly for them.')}
           onValueClick={handleSelectInstallDirectory}
           label="NMS Install Directory"
           value={p.s.installDirectory}
@@ -1111,7 +1111,7 @@ export class SettingsModal extends React.Component {
           {!p.s.ps4User ?
           <Item
           className="Item__hover"
-          dataTip={utils.tip('Required. Select the location the save files are in.')}
+          dataTip={tip('Required. Select the location the save files are in.')}
           onValueClick={handleSelectSaveDirectory}
           label="NMS Save Directory"
           value={p.s.saveDirectory}
@@ -1121,7 +1121,7 @@ export class SettingsModal extends React.Component {
           <Item
           className="Item__hover"
           onValueClick={this.handlePollRate}
-          dataTip={utils.tip('Controls how often the client will check the server for new locations. If you experience performance issues, consider increasing this value.')}
+          dataTip={tip('Controls how often the client will check the server for new locations. If you experience performance issues, consider increasing this value.')}
           label="Polling Rate"
           value={`${p.s.pollRate / 1000} Seconds`} /> : null}
           {p.s.profile ?
@@ -1130,16 +1130,16 @@ export class SettingsModal extends React.Component {
           onValueClick={p.s.profile.email ? this.handleUsernameProtection : null}
           dataTip={
             p.s.profile.email ?
-            utils.tip('Highly recommended! Anyone can claim your username and impersonate you if this is not enabled. This associates your username with your Windows installation\'s cryptographic signature, so be sure to disable this when switching computers, upgrading hardware, or reinstalling Windows.')
+            tip('Highly recommended! Anyone can claim your username and impersonate you if this is not enabled. This associates your username with your Windows installation\'s cryptographic signature, so be sure to disable this when switching computers, upgrading hardware, or reinstalling Windows.')
             :
-            utils.tip('Please associate an email address with your profile in order to use username protection.')}
+            tip('Please associate an email address with your profile in order to use username protection.')}
           label="Username Protection"
           icon={p.s.profile.protected ? 'check' : 'remove'} /> : null}
           {p.s.profile ?
           <Item
           className="Item__hover"
           onValueClick={this.handleSetEmail}
-          dataTip={utils.tip(`Incase you get locked out of your profile, setting a recovery email can assist in unprotecting your username, when enabled. ${p.s.profile.email ? ' Current recovery email: ' + p.s.profile.email : ''}`)}
+          dataTip={tip(`Incase you get locked out of your profile, setting a recovery email can assist in unprotecting your username, when enabled. ${p.s.profile.email ? ' Current recovery email: ' + p.s.profile.email : ''}`)}
           label="Recovery Email"
           value={p.s.profile.email}
           icon="remove" /> : null}
@@ -1147,19 +1147,19 @@ export class SettingsModal extends React.Component {
           <Item
           className="Item__hover"
           onValueClick={this.props.onUsernameOverride}
-          dataTip={utils.tip('Changes your username. This will update all of your locations. You must disable username protection before setting this.')}
+          dataTip={tip('Changes your username. This will update all of your locations. You must disable username protection before setting this.')}
           label="Override Username"
           value={p.s.username} /> : null}
           <Item
           className="Item__hover"
           onValueClick={handleSetWallpaper}
-          dataTip={utils.tip('Changes the NMC background.')}
+          dataTip={tip('Changes the NMC background.')}
           label={p.s.wallpaper ? 'Reset Wallpaper' : 'Set Wallpaper'}
           value={p.s.wallpaper || 'Default'} />
           <Item
           className="Item__hover"
           onValueClick={this.handleOfflineModeToggle}
-          dataTip={utils.tip(`Prevents NMC from making network requests to the server, and attempts to keep most features in a functional state.`)}
+          dataTip={tip(`Prevents NMC from making network requests to the server, and attempts to keep most features in a functional state.`)}
           label="Offline Mode"
           icon={p.s.offline ? 'check' : 'remove'} />
           <Item
@@ -1170,12 +1170,12 @@ export class SettingsModal extends React.Component {
             <Item
             className="Item__hover"
             onValueClick={this.handleSync}
-            dataTip={utils.tip('Downloads stored locations belonging to you, that are available on the server, and uploads locations missing on the server.')}
+            dataTip={tip('Downloads stored locations belonging to you, that are available on the server, and uploads locations missing on the server.')}
             label="Sync Locations" /> : null}
             <Item
             className="Item__hover"
             onValueClick={this.handleResetRemoteCache}
-            dataTip={utils.tip('This clears the remote locations list that is stored locally in Roaming/NoMansConnect.')}
+            dataTip={tip('This clears the remote locations list that is stored locally in Roaming/NoMansConnect.')}
             label="Reset Remote Cache" />
           </div>
         </div>
