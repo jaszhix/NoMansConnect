@@ -817,6 +817,9 @@ class App extends React.Component {
     this.setState(e);
   }
   onWindowResize = () => {
+    let now = Date.now();
+    if ((now - this.lastMove) < 60) return;
+    this.lastMove = now;
     state.set({
       width: window.innerWidth,
       height: window.innerHeight
