@@ -57,7 +57,7 @@ class Search extends React.Component {
           <i
           className={state.searchInProgress ? 'remove link icon' : 'search link icon'}
           style={searchIconStyle}
-          onClick={this.props.onClick} />
+          onClick={this.handleSearchIconClick} />
         </div>
       </div>
     );
