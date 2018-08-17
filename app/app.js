@@ -35,7 +35,7 @@ import Container from './container';
 import {defaultPosition} from './constants';
 
 const {dialog} = remote;
-const win = state.trigger('window');
+let win;
 
 let formatCount = 1;
 
@@ -70,8 +70,6 @@ class App extends React.Component {
     this.headerItemClasses = 'ui dropdown icon item';
   }
   componentDidMount() {
-    win.on('maximize', this.handleMaximizeEvent);
-    win.on('unmaximize', this.handleMaximizeEvent);
     this.connections = [
       state
         .setMergeKeys(['remoteLocations'])
@@ -122,6 +120,9 @@ class App extends React.Component {
     state._init(() => this.init());
   }
   init = () => {
+    win = state.trigger('window');
+    win.on('maximize', this.handleMaximizeEvent);
+    win.on('unmaximize', this.handleMaximizeEvent);
     window.addEventListener('resize', this.onWindowResize);
     log.init(this.state.configDir);
     log.error(`Initializing No Man's Connect ${this.state.version}`);
@@ -698,7 +699,8 @@ class App extends React.Component {
             machineId: this.state.machineId,
             username: this.state.username,
             teleports: true,
-            dataId: _location.dataId
+            dataId: _location.dataId,
+            action: 1
           }).then((res) => {
             let {remoteLocations, selectedLocation} = this.state;
             let refRemoteLocation = findIndex(remoteLocations.results, (remoteLocation) => {
@@ -771,6 +773,10 @@ class App extends React.Component {
     if (!state.ready) {
       return;
     }
+    let now = Date.now();
+    if ((now - this.lastPoll) < 15000) return;
+    this.lastPoll = now;
+
     pollSaveData({mode, init, machineId, next: (error = false, ...args) => {
       if (error) {
         log.error(`getLastSave -> next -> ${error}`);
@@ -784,9 +790,8 @@ class App extends React.Component {
 
             }, (monitor) => {
               this.monitor = monitor;
-              this.pollSaveDataThrottled = throttle(this.pollSaveData, 15000, {leading: true});
               this.monitor.on('changed', (f, curr, prev) => {
-                this.pollSaveDataThrottled();
+                this.pollSaveData();
               });
             });
           }

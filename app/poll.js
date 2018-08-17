@@ -119,7 +119,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         base: false,
         baseData: null,
         upvote: upvote,
-        image: '',
+        image,
         mods: state.mods,
         manuallyEntered,
         created: Date.now(),
@@ -154,6 +154,10 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         });
         if (!refPosition) {
           existingLocation.positions.push(currentPosition);
+          isLocationUpdate = true;
+        }
+        if (!existingLocation.image && image) {
+          existingLocation.image = image;
           isLocationUpdate = true;
         }
       } else if (existingLocation.playerPosition) {
@@ -304,13 +308,26 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
             ...location
           }).then((res) => {
             if (isLocationUpdate) {
-              let {remoteLocations} = state;
+              let {storedLocations, remoteLocations, selectedLocation} = state;
+              let stateUpdate = {};
               let refRemote = findIndex(remoteLocations.results, (location) => location.dataId === res.data.dataId);
+              let refStored = findIndex(storedLocations, (location) => location.dataId === res.data.dataId);
+              let hasRemote = refRemote > -1;
+              let hasStored = refStored > -1;
+              let shouldUpdate = hasRemote || hasStored;
               if (refRemote > -1) {
                 remoteLocations.results[refRemote] = res.data;
-                state.set({remoteLocations}, () => next(false));
-                return;
+                stateUpdate.remoteLocations = remoteLocations;
               }
+              if (refStored > -1) {
+                storedLocations[refStored] = res.data;
+                stateUpdate.storedLocations = storedLocations;
+              }
+              if (selectedLocation && selectedLocation.dataId === res.data.dataId) {
+                stateUpdate.selectedLocation = res.data;
+              }
+              if (shouldUpdate) stateUpdate.remoteChanged = [res.data.dataId];
+              if (Object.keys(stateUpdate).length > 0) state.set(stateUpdate, true);
             }
             next(false);
           }).catch(errorHandler);

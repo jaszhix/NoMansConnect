@@ -54,7 +54,8 @@ class Container extends React.Component {
       username: username,
       score: location.score,
       upvote: upvote,
-      dataId: location.dataId
+      dataId: location.dataId,
+      action: 1
     }).then((res) => {
       res.data.upvote = upvote;
 
@@ -131,7 +132,8 @@ class Container extends React.Component {
         username: this.props.s.username,
         name,
         description,
-        dataId: this.props.s.selectedLocation.dataId
+        dataId: this.props.s.selectedLocation.dataId,
+        action: 1
       }).then((res) => {
         update();
       }).catch((err) => {
@@ -183,7 +185,8 @@ class Container extends React.Component {
               machineId: this.props.s.machineId,
               username: this.props.s.username,
               imageU: newDataUri,
-              dataId: this.props.s.selectedLocation.dataId
+              dataId: this.props.s.selectedLocation.dataId,
+              action: 1
             }).then((res) => {
               let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
               if (refLocation !== -1) {
@@ -227,7 +230,8 @@ class Container extends React.Component {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
       imageD: true,
-      dataId: this.props.s.selectedLocation.dataId
+      dataId: this.props.s.selectedLocation.dataId,
+      action: 1
     }).then((res) => {
       let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
       if (refLocation !== -1) {
@@ -262,7 +266,8 @@ class Container extends React.Component {
       machineId: this.props.s.machineId,
       username: this.props.s.username,
       version: this.props.s.saveVersion,
-      dataId: this.props.s.selectedLocation.dataId
+      dataId: this.props.s.selectedLocation.dataId,
+      action: 1
     }).then((res) => {
       let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
       if (refLocation !== -1) {

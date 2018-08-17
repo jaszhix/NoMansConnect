@@ -71,6 +71,7 @@ const state = initStore({
   },
   newsId: '',
   apiBase: 'https://neuropuff.com/api/',
+  staticBase: 'https://neuropuff.com',
   winVersion: os.release(),
   apiVersion: 2,
   machineId: null,
@@ -93,6 +94,7 @@ const state = initStore({
   remoteLocations: [],
   remoteLength: 0,
   remoteNext: null,
+  remoteChanged: [],
   currentLocation: null,
   selectedLocation: null,
   multiSelectedLocation: false,
@@ -207,6 +209,7 @@ const state = initStore({
     'sortByModded'
   ],
   _init: (_cb) => {
+    state.windowId = state.connect('window', () => win);
     cb = _cb;
     if (process.env.NODE_ENV === 'production') {
       Raven
@@ -227,6 +230,8 @@ const state = initStore({
           }
         })
         .install();
+    } else {
+      state.staticBase = 'http://z.npff.co:8000';
     }
 
     let saveDirPath;
@@ -384,9 +389,8 @@ const state = initStore({
   displayErrorDialog: (error) => {
     dialog.showErrorBox('NMC Error', error);
   },
+  disconnectWindow: () => state.disconnect(state.windowId)
 });
-
-state.connect('window', () => win);
 
 if (process.env.NODE_ENV === 'development') {
   window.state = state;

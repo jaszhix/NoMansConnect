@@ -44,6 +44,20 @@ class LocationBox extends React.Component {
     name: '',
     description: '',
   };
+  static getDerivedStateFromProps = (nextProps, nextState) => {
+    let stateUpdate = {};
+    if (nextProps.location.dataId !== nextState.location.dataId) {
+      state.trigger('resetLocationScrollTop');
+      stateUpdate.location = nextProps.location;
+    }
+    if (nextProps.name !== nextState.name) {
+      stateUpdate.name = nextProps.name;
+    }
+    if (nextProps.description !== nextState.description) {
+      stateUpdate.description = nextProps.description;
+    }
+    return stateUpdate;
+  }
   constructor(props) {
     super(props);
     this.state = {
@@ -62,6 +76,7 @@ class LocationBox extends React.Component {
   componentDidMount() {
     this.connections = [
       state.connect({
+        resetLocationScrollTop: () => this.scrollBox.scrollTop = 0,
         compactRemote: () => {
           if (!this.props.selectType && !this.willUnmount) {
             ReactTooltip.rebuild();
@@ -73,41 +88,20 @@ class LocationBox extends React.Component {
             if (!this.props || !this.props.selectType || this.willUnmount) return;
             this.setState({positionEdit: false, positionSelect: false})
           }, 0);
+        },
+        remoteChanged: ({remoteChanged}) => {
+          if (!this.willUnmount
+            && !this.props.offline
+            && remoteChanged.includes(this.props.location.dataId)) {
+            this.setState({location: this.props.location});
+            this.getImage(this.props);
+          }
         }
       })
     ];
     this.getImage(this.props);
     if (this.props.id && !this.props.offline) {
       this.updateLocation();
-    }
-  }
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.location.dataId !== this.props.location.dataId) {
-      if ((nextProps.selectType && this.scrollBox)
-        || (nextProps.updating !== this.props.updating && nextProps.updating)) {
-        if (this.scrollBox) {
-          this.scrollBox.scrollTop = 0;
-        }
-        this.setState({name: '', description: '', image: ''});
-      }
-      this.setState({location: nextProps.location});
-    }
-
-    if (nextProps.name !== this.props.name) {
-      this.setState({name: nextProps.name});
-    }
-
-    if (nextProps.description !== this.props.description) {
-      this.setState({description: nextProps.description});
-    }
-
-    /* if (nextProps.image !== this.props.image) {
-      this.getImage(nextProps);
-    } */
-
-    if (nextProps.compactRemote !== this.props.compactRemote && !nextProps.selectType) {
-      ReactTooltip.rebuild();
-      this.setState({compactRemote: nextProps.compactRemote}, this.props.onCompactRemoteSwitch);
     }
   }
   componentWillUnmount = () => {
@@ -158,7 +152,7 @@ class LocationBox extends React.Component {
       fsWorker.exists(file, (exists) => {
         if (!exists) {
           axios
-          .get(`https://neuropuff.com/${image}`, {
+          .get(`${state.staticBase}${image}`, {
             responseType: 'arraybuffer',
           })
           .then(res => {
@@ -236,7 +230,7 @@ class LocationBox extends React.Component {
             {this.state.image ? <img className="LocationBox__imageStyle" src={this.state.image} onClick={() => state.set({selectedImage: this.state.image})} /> : null}
           </div>
         ) : null}
-        {this.props.detailsOnly ? <Item label="Name" value={name || 'Unknown'} /> : null}
+        {this.props.detailsOnly ? <Item label="Name" value={p.name || 'Unknown'} /> : null}
         {location.description || this.props.description ? <Item label="Description" value={this.props.description ? this.props.description : location.description} /> : null}
         <Item label="Galactic Address" value={location.translatedId} />
         <Item label="Universe Address" value={location.dataId} />
