@@ -427,7 +427,9 @@ class LocationBox extends React.Component {
             fontSize: name.length > 28 ? '14px' : '17.92px',
             textAlign: 'center',
             maxHeight: '23px',
-            color: (location.playerPosition || (location.positions && location.positions[0].playerPosition)) && !location.manuallyEntered ? 'inherit' : '#7fa0ff',
+            color: (location.playerPosition
+              || (location.positions && location.positions.length > 0 && location.positions[0].playerPosition))
+              && !location.manuallyEntered ? 'inherit' : '#7fa0ff',
             cursor: p.selectType ? 'default' : 'pointer'
           }}
           onClick={() => state.set({selectedLocation: location, selectedGalaxy: location.galaxy})}>

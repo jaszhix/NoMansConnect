@@ -71,7 +71,9 @@ class StoredLocationItem extends React.Component {
         <p
         className={isMarquee ? 'marquee' : ''}
         style={{
-          color: (this.props.location.playerPosition || (this.props.location.positions && this.props.location.positions[0].playerPosition)) && !this.props.location.manuallyEntered ? 'inherit' : '#7fa0ff',
+          color: (this.props.location.playerPosition
+            || (this.props.location.positions && this.props.location.positions.length > 0 && this.props.location.positions[0].playerPosition))
+            && !this.props.location.manuallyEntered ? 'inherit' : '#7fa0ff',
           maxWidth: `${isMarquee ? 200 : 177}px`,
           whiteSpace: 'nowrap',
           position: 'relative',
