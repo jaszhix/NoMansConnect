@@ -45,7 +45,7 @@ export var exc = (cmd) => {
   });
 };
 
-const fsKeys = filter(Object.keys(fs), (key) => !key.includes('Sync')).concat(['walk', 'getLastGameModeSave']);
+const fsKeys = filter(Object.keys(fs), (key) => !key.includes('Sync')).concat(['walk', 'getLastGameModeSave', 'backupSaveFile']);
 export const fsWorker = {};
 
 let fsCount = 1;

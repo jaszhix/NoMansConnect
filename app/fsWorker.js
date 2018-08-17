@@ -5,6 +5,7 @@ const decoder = new StringDecoder('utf8');
 const {last, orderBy} = require('lodash');
 const {each, rEach, tryFn} = require('./lang');
 const log = require('./log');
+const JSZip = require('jszip');
 
 const walk = (dir, done) => {
   let results = [];
@@ -142,6 +143,59 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
   });
 };
 
+const _backupSaveFile = (saveDir, backupDir, saveFile, cb) => {
+  let d = new Date();
+  let dateString = `${d.getDay()}-${d.getMonth()}-${d.getFullYear()}-${d.getHours()}-${d.getMinutes()}-${d.getSeconds()}`;
+  let save = path.join(saveDir, saveFile);
+  let mfSave = path.join(saveDir, `mf_${saveFile}`);
+  fs.readFile(save, (err, data) => {
+    if (err) {
+      cb(err);
+      return;
+    }
+    save = data;
+    fs.readFile(mfSave, (err, data) => {
+      if (err) {
+        cb(err);
+        return;
+      }
+      mfSave = data;
+      let zip = new JSZip();
+      zip.file(`${saveFile}`, save, {
+        binary: true
+      });
+      zip.file(`mf_${saveFile}`, mfSave, {
+        binary: true
+      });
+      zip.generateAsync({
+        type: 'nodebuffer',
+        compression: 'DEFLATE',
+        compressionOptions: {level: 9}
+      }).then((buffer) => {
+        fs.writeFile(path.join(backupDir, `${saveFile}.bk-${dateString}.zip`), buffer, cb);
+      }).catch((err) => cb(err));
+    });
+  });
+}
+
+const backupSaveFile = (saveDir, saveFile, cb) => {
+  let backupDir = path.join(saveDir, 'nmcBackup');
+  fs.exists(backupDir, (exists) => {
+    if (!exists) {
+      fs.mkdir(backupDir, (err) => {
+        if (err) {
+          log.error('Unable to create save file backup directory: ', err);
+          cb(err);
+          return;
+        }
+        _backupSaveFile(saveDir, backupDir, saveFile, cb);
+      });
+      return;
+    }
+    _backupSaveFile(saveDir, backupDir, saveFile, cb);
+  })
+}
+
 const next = (err, data) => postMessage([err ? err.message : null, data]);
 
 onmessage = function(e) {
@@ -150,8 +204,9 @@ onmessage = function(e) {
     walk(...args, (err, data) => next(err, data));
   } else if (method === 'getLastGameModeSave') {
     getLastGameModeSave(...args, (err, data) => next(err, data));
+  } else if (method === 'backupSaveFile') {
+    backupSaveFile(...args, (err) => next(err));
   } else {
-
     each(args, (arg, i) => {
       if (arg.buffer) {
         args[i] = new Buffer.from(arg.buffer, 'binary');

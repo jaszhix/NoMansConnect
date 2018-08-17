@@ -534,21 +534,33 @@ class App extends React.Component {
   }
   signSaveData = (slot, cb) => {
     let absoluteSaveDir = this.state.saveFileName.split(dirSep);
+    let _absoluteSaveDir = absoluteSaveDir.slice();
     absoluteSaveDir.splice(absoluteSaveDir.length - 1, 1);
     absoluteSaveDir = absoluteSaveDir.join(dirSep);
-    let command = `${process.platform !== 'win32' ? 'wine ' : ''}"${this.saveTool}" encrypt -g ${slot} -f "${this.saveJSON}" --save-dir "${absoluteSaveDir}"`;
-    console.log(command);
-    exc(command).then((res) => {
-      log.error('Successfully signed save data with nmssavetool');
-      if (typeof cb === 'function') {
-        cb();
+    fsWorker.backupSaveFile(
+      absoluteSaveDir,
+      last(_absoluteSaveDir),
+      (err) => {
+        if (err) {
+          log.error('Unable to backup save file before writing: ', err);
+          state.set({navLoad: false});
+          return;
+        }
+        let command = `${process.platform !== 'win32' ? 'wine ' : ''}"${this.saveTool}" encrypt -g ${slot} -f "${this.saveJSON}" --save-dir "${absoluteSaveDir}"`;
+        console.log(command);
+        exc(command).then((res) => {
+          log.error('Successfully signed save data with nmssavetool');
+          if (typeof cb === 'function') {
+            cb();
+          }
+        }).catch((e) => {
+          if (process.platform !== 'win32') {
+            log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?')
+          }
+          log.error(e.message);
+        });
       }
-    }).catch((e) => {
-      if (process.platform !== 'win32') {
-        log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?')
-      }
-      log.error(e.message);
-    });
+    )
   }
   handleRestoreBase = (base, confirmed = false) => {
     state.set({navLoad: true});
