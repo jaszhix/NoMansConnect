@@ -3,6 +3,7 @@ import axios from 'axios';
 import {cloneDeep, assignIn, last, trimStart} from 'lodash';
 import {each, findIndex, filter} from './lang';
 import state from './state';
+import {defaultPosition} from './constants';
 
 var exec = require('child_process').exec;
 export var msToTime = (s) => {
@@ -205,10 +206,7 @@ export var fromHex = (str, username, galaxy) => {
 
     let manualLocation = {
       username: username,
-      playerPosition: false,
-      playerTransform: false,
-      shipPosition: false,
-      shipTransform: false,
+      positions: [Object.assign({}, defaultPosition, {name: '', image: ''})],
       galaxy: galaxy,
       distanceToCenter: calculateDistanceToCenter(result.x, result.y, result.z),
       VoxelY: result.y,
