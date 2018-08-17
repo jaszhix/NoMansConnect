@@ -116,7 +116,7 @@ class StoredLocations extends React.Component {
           this.storedLocations.scrollTop = refIndex * 29;
         }
         this.selecting = false;
-        if (state.multiSelectedLocation) {
+        if (state.multiSelectedLocation || !selectedLocation) {
           this.handleScroll();
         } else {
           this.setViewableRange(this.storedLocations);
