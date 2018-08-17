@@ -917,7 +917,7 @@ class App extends React.Component {
   }
   handleMaximizeEvent = () => {
     let maximized = win.isMaximized();
-    state.set({maximized})
+    state.set({maximized});
   }
   handleMinimize = () => {
     win.minimize();

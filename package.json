@@ -91,6 +91,10 @@
       {
         "from": "node_modules/jszip",
         "to": "node_modules/jszip"
+      },
+      {
+        "from": "node_modules/pako",
+        "to": "node_modules/pako"
       }
     ],
     "dmg": {

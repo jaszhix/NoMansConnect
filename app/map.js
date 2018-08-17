@@ -153,7 +153,8 @@ class ThreeDimScatterChart extends React.Component {
       state.connect([
         'width',
         'height',
-        'remoteLocationsColumns'
+        'remoteLocationsColumns',
+        'maximize'
       ], () => {
         if (this.willUnmount) return;
         this.handlePostMessageSize();
@@ -300,6 +301,7 @@ class ThreeDimScatterChart extends React.Component {
     }
     let worker = `mapWorker${workerCount}`;
     if (window[worker].onmessage) {
+      workerCount++;
       this.postMessage(obj);
       return;
     }

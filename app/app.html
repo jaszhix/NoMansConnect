@@ -125,7 +125,7 @@
         );
       }
       window.jsonWorker = new Worker('jsonWorker.js');
-      let coreCount = require('os').cpus().length / 2;
+      let coreCount = Math.max(Math.ceil(require('os').cpus().length / 2), 2);
       let w = coreCount;
       while (w > 0) {
         window['fsWorker' + w] = new Worker('fsWorker.js');
