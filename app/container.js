@@ -512,7 +512,7 @@ class Container extends React.Component {
         return location.playerPosition && !location.manuallyEntered;
       });
     }
-    if (showOnlyFriends) {
+    if (profile && showOnlyFriends) {
       locations = filter(locations, (location)=>{
         return (
           findIndex(profile.friends, (friend) => {
