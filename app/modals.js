@@ -1066,6 +1066,10 @@ export class SettingsModal extends React.Component {
       offline: !this.props.s.offline
     }, handleRestart);
   }
+  handleBackupToggle = (e) => {
+    e.stopPropagation();
+    state.set({backupSaveFile: !this.props.s.backupSaveFile});
+  }
   render() {
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
@@ -1132,8 +1136,13 @@ export class SettingsModal extends React.Component {
           onValueClick={handleSelectSaveDirectory}
           label="NMS Save Directory"
           value={p.s.saveDirectory}
-          icon="remove" />
-           : null}
+          icon="remove" /> : null}
+          <Item
+          className="Item__hover"
+          onValueClick={this.handleBackupToggle}
+          dataTip={tip('When enabled, the save current save file will be backed up automatically to a sub-directory inside the save data directory before any changes are written.')}
+          label="Automatically Backup Save File"
+          icon={p.s.backupSaveFile ? 'check' : 'remove'} />
           {!p.s.offline ?
           <Item
           className="Item__hover"
