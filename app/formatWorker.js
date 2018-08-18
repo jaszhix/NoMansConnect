@@ -12,7 +12,7 @@ const isDifferent = function(objA, objB, keys = ['username', 'name', 'descriptio
 let lastSort = null;
 onmessage = function(e) {
   let stateUpdate = {navLoad: false};
-  let order = e.data.sort === '-teleports' ? 'teleports' : e.data.sort === '-score' ? 'score' : e.data.sort === '-modified' ? 'modified' : 'created';
+  let order = e.data.sort === '-teleports' ? 'teleports' : e.data.sort === '-score' ? 'score' : 'created';
   let shouldMerge = e.data.state.search.length === 0 && (lastSort === e.data.sort || e.data.sort === '-created' || e.data.partial);
   let changed = false;
   let isSearch = e.data.state.search.length > 0;

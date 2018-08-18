@@ -1,5 +1,6 @@
 import {remote} from 'electron';
 import os from 'os';
+import path from 'path';
 import {assignIn, pick, uniqBy, cloneDeep} from 'lodash';
 import {handleRestart} from './dialog';
 import log from './log';
@@ -282,28 +283,14 @@ const state = initStore({
 
       // Clear all cache for major API change
       if (!e.data.apiVersion || e.data.apiVersion !== state.apiVersion) {
-        window.settingsWorker.postMessage({
-          method: 'set',
-          key: 'apiVersion',
-          value: state.apiVersion
+        state.set({loading: 'Performing migration, NMC will restart...'});
+        fsWorker.unlink(path.join(state.configDir, 'settings.json'), (err) => {
+          fsWorker.unlink(path.join(state.configDir, '__backup__settings.json'), (err) => {
+            fsWorker.unlink(path.join(state.configDir, 'cache.json'), (err) => {
+              handleRestart();
+            });
+          });
         });
-        window.settingsWorker.postMessage({
-          method: 'set',
-          key: 'sortStoredByKey',
-          value: 'created'
-        });
-        window.settingsWorker.postMessage({
-          method: 'set',
-          key: 'storedLocations',
-          value: []
-        });
-        window.jsonWorker.postMessage({
-          method: 'set',
-          key: 'remoteLocations',
-          value: []
-        });
-        state.set({loading: 'Performing migration, restarting NMC in 4 seconds...'});
-        setTimeout(handleRestart, 4000);
         return;
       }
 

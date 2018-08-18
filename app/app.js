@@ -201,7 +201,7 @@ class App extends React.Component {
   checkMods = (cb) => {
     let initialized = false;
     let initialize = () => {
-      if (!state.saveDirectory) {
+      if (!state.saveDirectory && process.platform !== 'win32') {
         handleSaveDataFailure();
         return;
       }
@@ -223,7 +223,7 @@ class App extends React.Component {
         }
         let fullscreen = null;
         if (data) {
-          fullscreen = data.toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
+          fullscreen = new Buffer.from(data).toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
         }
         if (fullscreen === 'true' || err) {
           state.set({autoCapture: false, loading: 'Checking for mods...'});
@@ -231,7 +231,7 @@ class App extends React.Component {
         let _modPath = `${_path}${modPath}`;
         fsWorker.exists(_modPath, (exists) => {
           if (!exists) {
-            log.error('Unable to find mods directory: ', err.message)
+            log.error('Unable to find mods directory.')
             initialize();
             return;
           }
@@ -849,7 +849,7 @@ class App extends React.Component {
   handleSort = (e, sort) => {
     sort = typeof sort === 'string' ? sort : '-created';
     state.set({sort: sort, navLoad: true}, () => {
-      this.fetchRemoteLocations(1, sort);
+      this.fetchRemoteLocations(1, sort, false, true);
     });
   }
   handleSearch = () => {

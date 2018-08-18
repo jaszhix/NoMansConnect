@@ -258,7 +258,7 @@ class ThreeDimScatterChart extends React.Component {
       s: this.state
     });
   }
-  handler = (e) => {
+  workerHandler = (e) => {
     if (this.willUnmount) return;
     let setState = (data) => {
       this.setState(data, () => {
@@ -307,7 +307,8 @@ class ThreeDimScatterChart extends React.Component {
     }
     window[worker].onmessage = (e) => {
       window[worker].onmessage = null;
-      this.handler(e);
+      if (this.willUnmount) return;
+      this.workerHandler(e);
     };
     window[worker].postMessage(obj);
     workerCount++;
@@ -319,7 +320,7 @@ class ThreeDimScatterChart extends React.Component {
     let results = [];
 
     each(this.props.remoteLocations, (location, i) => {
-      if (!location) {
+      if (!location || !location.translatedId) {
         return;
       }
       sector = `${location.translatedX}:${location.translatedY}:${location.translatedZ}`;

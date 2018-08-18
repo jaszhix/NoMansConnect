@@ -50,12 +50,6 @@ class LocationBox extends React.Component {
       state.trigger('resetLocationScrollTop');
       stateUpdate.location = nextProps.location;
     }
-    if (nextProps.name !== nextState.name) {
-      stateUpdate.name = nextProps.name;
-    }
-    if (nextProps.description !== nextState.description) {
-      stateUpdate.description = nextProps.description;
-    }
     return stateUpdate;
   }
   constructor(props) {
@@ -76,7 +70,7 @@ class LocationBox extends React.Component {
   componentDidMount() {
     this.connections = [
       state.connect({
-        resetLocationScrollTop: () => this.scrollBox.scrollTop = 0,
+        resetLocationScrollTop: () => this.scrollBox ? this.scrollBox.scrollTop = 0 : null,
         compactRemote: () => {
           if (!this.props.selectType && !this.willUnmount) {
             ReactTooltip.rebuild();
@@ -261,7 +255,7 @@ class LocationBox extends React.Component {
   render() {
     let p = this.props;
     let {location} = this.state;
-    if (location.results) return null;
+    if (location.results || location.data) return null;
     let upvote = p.favorites.indexOf(location.dataId) > -1;
     let isOwnLocation = p.isOwnLocation && p.selectType && location.username === p.username;
     let deleteArg = location.image && location.image.length > 0;

@@ -31,10 +31,12 @@ if (process.env.NODE_ENV === 'development') {
 app.commandLine.appendSwitch('--enable-usermedia-screen-capturing');
 app.commandLine.appendSwitch('--enable-native-gpu-memory-buffers');
 app.commandLine.appendSwitch('--enable-gpu-rasterization');
-app.commandLine.appendSwitch('--disable-gpu-sandbox');
-app.commandLine.appendSwitch('--background-color=#000000');
-app.commandLine.appendSwitch('--js-flags="--max_old_space_size=32768 --nolazy"');
-app.commandLine.appendSwitch('--enable-features="CheckerImaging"');
+app.commandLine.appendSwitch('--gpu-rasterization-msaa-sample-count=0');
+app.commandLine.appendSwitch('--ignore-gpu-blacklist');
+app.commandLine.appendSwitch('--disable-smooth-scrolling');
+app.commandLine.appendSwitch('--default-background-color=000000');
+app.commandLine.appendSwitch('--js-flags=--max_old_space_size=32768,--nolazy');
+app.commandLine.appendSwitch('--enable-features=CheckerImaging,VizDisplayCompositor');
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

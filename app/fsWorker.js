@@ -213,6 +213,7 @@ onmessage = function(e) {
       }
     });
     fs[method](...args, (err, data) => {
+      if (typeof err === 'boolean') data = err;
       next(err, data)
     });
   }
