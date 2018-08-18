@@ -424,17 +424,28 @@ class App extends React.Component {
       return;
     }
 
-    if (this.state.sort !== '-created' || (this.state.remoteLocations.results && this.state.remoteLocations.results.length === 0) || init) {
-      this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
+    let {sort, pollRate, remoteLocations} = this.state;
+
+    if (sort !== '-created' || (remoteLocations.results && remoteLocations.results.length === 0) || init) {
+      this.timeout = setTimeout(() => this.pollRemoteLocations(), pollRate);
       return;
     }
 
-    let lastRemoteLocation = first(orderBy(this.state.remoteLocations.results, 'created', 'desc'));
+    let orderedRemoteLocations = orderBy(remoteLocations.results, 'created', 'desc');
+    let lastRemoteLocation = first(orderedRemoteLocations);
+
+    if (!lastRemoteLocation) { // Temporary migration workaround
+      let i = 0;
+      while (!orderedRemoteLocations[i] && i < orderedRemoteLocations.length - 1) {
+        i++;
+      }
+      lastRemoteLocation = orderedRemoteLocations[i];
+    }
 
     let start = new Date(lastRemoteLocation.created);
     let end = new Date();
 
-    let next = () => this.timeout = setTimeout(() => this.pollRemoteLocations(), this.state.pollRate);
+    let next = () => this.timeout = setTimeout(() => this.pollRemoteLocations(), pollRate);
 
     ajaxWorker.get('/nmslocationpoll', {
       params: {
