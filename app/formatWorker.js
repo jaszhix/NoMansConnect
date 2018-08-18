@@ -1,4 +1,4 @@
-const {orderBy} = require('lodash');
+const {orderBy, uniqBy} = require('lodash');
 const {each, findIndex} = require('./lang');
 
 const isDifferent = function(objA, objB, keys = ['username', 'name', 'description', 'score', 'upvote', 'image']) {
@@ -81,7 +81,12 @@ onmessage = function(e) {
     stateUpdate.searchCache = e.data.res.data;
     delete stateUpdate.remoteLocations;
   } else {
-    stateUpdate.remoteLocations.results = orderBy(stateUpdate.remoteLocations.results, order, 'desc');
+    if (order === 'created') {
+      each(stateUpdate.remoteLocations.results, (location) => {
+        location.intCreated = new Date(location.created).getTime();
+      });
+      order = 'intCreated';
+    }
     if (e.data.res.data.next) {
       stateUpdate.remoteLocations.count = e.data.res.data.count
     }
