@@ -186,6 +186,7 @@ class ThreeDimScatterChart extends React.Component {
       state.connect({
         selectedLocation: () => this.handlePostMessageSelect(),
         mapLines: () => {
+          if (this.willUnmount) return;
           if (state.mapLines !== this.props.mapLines) {
             this.setState({mapLines: state.mapLines});
           }
