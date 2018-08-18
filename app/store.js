@@ -1,8 +1,9 @@
 import {clone, intersection as intersect, difference} from 'lodash';
 import {find, findIndex, filter} from './lang';
+import log from './log';
 
 function storeError(method, key, message) {
-  return new Error('[store -> ' + method + ' -> ' + key + '] ' + message);
+  log.error('Warning: [store -> ' + method + ' -> ' + key + '] ' + message);
 }
 
 function getByPath(key, object) {
@@ -95,7 +96,8 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
     let changed = false;
     for (let i = 0; i < keys.length; i++) {
       if (!state.hasOwnProperty(keys[i])) {
-        throw storeError('set', keys[i], 'Property not found.');
+        storeError('set', keys[i], 'Property not found.');
+        return;
       }
       if ((typeof object[keys[i]] === 'object')
         || state[keys[i]] !== object[keys[i]]) {
@@ -173,7 +175,8 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
       return listener.keys.indexOf(key) > -1;
     });
     if (matchedListeners.length === 0) {
-      throw storeError('trigger', key, 'Action not found.');
+      storeError('trigger', key, 'Action not found.');
+      return;
     }
     for (let i = 0; i < matchedListeners.length; i++) {
       if (matchedListeners[i].callback) {
@@ -233,7 +236,8 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
       return listener.keys.indexOf(key) > -1;
     });
     if (listenerIndex === -1) {
-      throw storeError('disconnect', key, 'Invalid disconnect key.');
+      storeError('disconnect', key, 'Invalid disconnect key.');
+      return;
     }
     listeners.splice(listenerIndex, 1);
   }
