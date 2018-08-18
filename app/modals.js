@@ -1000,6 +1000,18 @@ export class SettingsModal extends React.Component {
 
     handleRestart();
   }
+  handleResetAllCache = () => {
+    window.jsonWorker.postMessage({
+      method: 'remove',
+      key: 'remoteLocations'
+    });
+    window.settingsWorker.postMessage({
+      method: 'remove',
+      key: 'storedLocations'
+    });
+
+    handleRestart();
+  }
   handleUsernameProtection = () => {
     let helpMessage = 'When you protect your username, the app will associate your computer with your username to prevent impersonation. If you plan on using the app on another computer, you will need to disable protection before switching.';
     if (this.props.s.profile.protected) {
@@ -1180,8 +1192,13 @@ export class SettingsModal extends React.Component {
             <Item
             className="Item__hover"
             onValueClick={this.handleResetRemoteCache}
-            dataTip={tip('This clears the remote locations list that is stored locally in Roaming/NoMansConnect.')}
+            dataTip={tip('This clears the remote locations list that is stored locally in AppData/Roaming/NoMansConnect on Windows and ~/.config/NoMansConnect on Linux.')}
             label="Reset Remote Cache" />
+            <Item
+            className="Item__hover"
+            onValueClick={this.handleResetAllCache}
+            dataTip={tip('This clears all locations that are stored locally in AppData/Roaming/NoMansConnect on Windows and ~/.config/NoMansConnect on Linux.')}
+            label="Reset All Cache" />
           </div>
         </div>
       </div>

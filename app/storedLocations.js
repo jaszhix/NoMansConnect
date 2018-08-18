@@ -23,6 +23,7 @@ class StoredLocationItem extends React.Component {
     this.props.onClick(this.props.location);
   }
   render() {
+    if (!this.props.location || !this.props.location.dataId) return null;
     let uiSegmentStyle = {
       fontSize: '16px',
       fontWeight: this.props.location.upvote ? '600' : '400',
