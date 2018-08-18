@@ -569,7 +569,7 @@ export class ProfileModal extends React.Component {
   }
   render() {
     const {profile, error, discoveriesPage, height} = this.state;
-    if (!profile) {
+    if (!profile || !this.props.profile) {
       return null;
     }
     let isFriend = false;
@@ -933,6 +933,9 @@ export class LogModal extends React.Component {
     return (
       <div ref={this.getRef} className="ui fullscreen modal active modal__full ImageModal__root">
         <div className="ui segment LogModal__container" style={{maxHeight: `${this.state.height - 54}px`}}>
+          <i
+          className="window close outline icon modal__full__close modal__log__close"
+          onClick={this.handleClickOutside} />
           {this.state.log ?
           map(this.state.log.split(/[\r\n$]+/), (line, i) => {
             return <div key={i}>{line}</div>

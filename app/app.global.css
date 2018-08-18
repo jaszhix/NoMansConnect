@@ -39018,6 +39018,13 @@ Modals
   padding-top: 0px !important;
 }
 
+.modal__log__close {
+  position: fixed !important;
+  right: 14px !important;
+  font-size: 18px !important;
+  cursor: pointer !important;
+}
+
 .modal__error {
   font-size: 15px;
   font-weight: 600;
