@@ -87,6 +87,7 @@ onmessage = function(e) {
       });
       order = 'intCreated';
     }
+    stateUpdate.remoteLocations.results = orderBy(uniqBy(stateUpdate.remoteLocations.results, 'dataId'), order, 'desc');
     if (e.data.res.data.next) {
       stateUpdate.remoteLocations.count = e.data.res.data.count
     }

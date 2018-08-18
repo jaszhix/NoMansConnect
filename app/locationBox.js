@@ -88,13 +88,13 @@ class LocationBox extends React.Component {
             && !this.props.offline
             && remoteChanged.includes(this.props.location.dataId)) {
             this.setState({location: this.props.location});
-            this.getImage(this.props);
+            this.getImage();
           }
         }
       })
     ];
-    this.getImage(this.props);
-    if (this.props.id && !this.props.offline) {
+    this.getImage();
+    if (this.props.location && !this.props.offline) {
       this.updateLocation();
     }
   }
@@ -113,15 +113,15 @@ class LocationBox extends React.Component {
     this.setState({positionEdit: !this.state.positionEdit})
   }
   updateLocation = () => {
-    if (state.offline) return;
-    let {onUpdate} = this.props;
+    let {onUpdate, location, profile} = this.props;
+    if (state.offline || !location || this.willUnmount) return;
     if (!onUpdate) {
       onUpdate = (...args) => state.trigger('updateRemoteLocation', ...args);
     }
-    ajaxWorker.get(`/nmslocation/${this.props.id}/`).then((res) => {
+    ajaxWorker.get(`/nmslocation/${location.dataId}/`).then((res) => {
       if (!this.willUnmount) {
-        if (this.props.location.modified !== res.data.modified || !isEqual(this.props.profile, res.data.profile)) {
-          onUpdate(this.props.id, res.data);
+        if (location.modified !== res.data.modified || !isEqual(profile, res.data.profile)) {
+          onUpdate(location.dataId, res.data);
           this.setState({
             location: res.data,
             profile: res.data.profile
@@ -135,14 +135,15 @@ class LocationBox extends React.Component {
         // cleanUp was already called
         return;
       }
-      onUpdate(this.props.id, null, true);
+      onUpdate(location.dataId, null, true);
     });
   }
-  getImage = (p) => {
-    const {image} = p;
+  getImage = () => {
+    const {image} = this.props;
+    const {configDir} = state;
     if (image) {
-      let img = p.image.replace(/:/g, '~').replace(/NMSLocation-/, '');
-      let file = path.resolve(`${this.props.configDir}${img}`);
+      let img = image.replace(/:/g, '~').replace(/NMSLocation-/, '');
+      let file = path.resolve(`${configDir}${img}`);
       fsWorker.exists(file, (exists) => {
         if (!exists) {
           axios

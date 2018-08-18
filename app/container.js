@@ -586,7 +586,6 @@ class Container extends React.Component {
               currentLocation={currentLocation}
               isOwnLocation={isOwnLocation}
               isVisible={true}
-              id={selectedLocation.dataId}
               location={selectedLocation}
               navLoad={navLoad}
               updating={this.state.updating}

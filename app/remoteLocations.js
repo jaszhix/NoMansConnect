@@ -252,11 +252,10 @@ class RemoteLocations extends React.Component {
       if (isVisible) {
         _locations[i] = (
           <LocationBox
-          key={location.dataId}
+          key={location.id}
           i={i}
           scrollTop={this.recentExplorations ? this.recentExplorations.scrollTop : 0}
           isVisible={true}
-          id={location.dataId}
           name={location.name}
           profile={location.profile}
           description={location.description}
