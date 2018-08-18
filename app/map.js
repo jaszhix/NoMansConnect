@@ -575,6 +575,7 @@ class GalacticMap extends React.Component {
     }
     let worker = `mapWorker${workerCount}`;
     if (window[worker].onmessage) {
+      workerCount++;
       this.buildGalaxyOptions(init);
       return;
     }
