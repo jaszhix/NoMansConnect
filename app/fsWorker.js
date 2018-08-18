@@ -213,7 +213,10 @@ onmessage = function(e) {
       }
     });
     fs[method](...args, (err, data) => {
-      if (typeof err === 'boolean') data = err;
+      if (method === 'exists') {
+        postMessage([err]);
+        return;
+      }
       next(err, data)
     });
   }
