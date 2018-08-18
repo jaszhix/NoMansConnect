@@ -259,7 +259,11 @@ class Container extends React.Component {
   }
   handleCompatibility = () => {
     if (this.props.s.offline) {
-      state.set({error: `Unable to mark compatibility in offline mode.`});
+      state.set({error: 'Unable to mark compatibility in offline mode.'});
+      return;
+    }
+    if (!this.props.s.saveVersion) {
+      state.set({error: 'No save version metadata found. Do you have a save directory recognized by NMC in settings?'});
       return;
     }
     ajaxWorker.post('/nmslocation/', {
