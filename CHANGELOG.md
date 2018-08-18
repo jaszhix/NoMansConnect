@@ -1,3 +1,15 @@
+# 1.5.0
+
+  * Server-side improvements.
+    * Some duplicates were found and corrected in a migration.
+    * Better location validation.
+  * Locations that are re-visited can now have screenshots auto-captured and saved.
+  * Improved start-up time and general responsiveness.
+  * Fixed clicking the search button not starting a search.
+  * Fixed manual location entry false positive occurring when entering a location that exists in another galaxy.
+  * Fixed inability to teleport to manual locations.
+  * Added automatic backups of save files. This will create a directory inside the save folder called "nmcBackup", and will generated zip files inside it before the save file is written.
+
 # 1.4.0
 
   * Fixed an issue with old discoveries getting re-uploaded on intitialization.
