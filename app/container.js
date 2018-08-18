@@ -402,11 +402,14 @@ class Container extends React.Component {
     let storedFavorites = [];
     let storedNonFavorites = [];
 
+    let validLocations = [];
     each(storedLocations, (location) => {
       if (!location) return;
       location.created = new Date(location.created).getTime();
       location.description = location.description ? location.description.trim() : '';
+      validLocations.push(location);
     });
+    storedLocations = validLocations; // Temporary migration workaround
 
     let storedSortFunction = (location) => {
       if (sortStoredByKey === 'name') {
