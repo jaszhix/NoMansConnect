@@ -1140,7 +1140,7 @@ export class SettingsModal extends React.Component {
           <Item
           className="Item__hover"
           onValueClick={this.handleBackupToggle}
-          dataTip={tip('When enabled, the save current save file will be backed up automatically to a sub-directory inside the save data directory before any changes are written.')}
+          dataTip={tip('When enabled, the current save file will be backed up automatically to a sub-directory inside the save data directory before any changes are written.')}
           label="Automatically Backup Save File"
           icon={p.s.backupSaveFile ? 'check' : 'remove'} />
           {!p.s.offline ?

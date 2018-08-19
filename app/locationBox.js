@@ -50,7 +50,10 @@ class LocationBox extends React.Component {
       state.trigger('resetLocationScrollTop');
       stateUpdate.location = nextProps.location;
     }
-    if (nextProps.image !== nextState.image) state.trigger('imageChange');
+    if (nextProps.image !== nextState.image) {
+      state.trigger('imageChange', nextProps.location.dataId, nextProps.image)
+      if (nextProps.selectType) stateUpdate.image = null;
+    };
     return stateUpdate;
   }
   constructor(props) {
@@ -71,9 +74,9 @@ class LocationBox extends React.Component {
   componentDidMount() {
     this.connections = [
       state.connect({
-        imageChange: () => {
-          if (!this.props || this.willUnmount) return;
-          this.getImage();
+        imageChange: (dataId, image) => {
+          if (!this.props || this.willUnmount || this.props.location.dataId !== dataId) return;
+          this.getImage(image);
         },
         resetLocationScrollTop: () => this.scrollBox ? this.scrollBox.scrollTop = 0 : null,
         compactRemote: () => {
@@ -93,12 +96,12 @@ class LocationBox extends React.Component {
             && !this.props.offline
             && remoteChanged.includes(this.props.location.dataId)) {
             this.setState({location: this.props.location});
-            this.getImage();
+            this.getImage(this.props.image);
           }
         }
       })
     ];
-    this.getImage();
+    this.getImage(this.props.image);
     if (this.props.location && !this.props.offline) {
       this.updateLocation();
     }
@@ -108,7 +111,7 @@ class LocationBox extends React.Component {
     each(this.connections, (connection) => {
       state.disconnect(connection);
     });
-    cleanUp(this);
+    cleanUp(this, true);
   }
   toggleEditDetails = () => {
     this.setState({positionEdit: false});
@@ -143,8 +146,7 @@ class LocationBox extends React.Component {
       onUpdate(location.dataId, null, true);
     });
   }
-  getImage = () => {
-    const {image} = this.props;
+  getImage = (image) => {
     if (!image) return;
     const {configDir} = state;
     let img = image.replace(/:/g, '~').replace(/NMSLocation-/, '');

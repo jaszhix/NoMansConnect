@@ -1,5 +1,5 @@
 const {orderBy, uniqBy} = require('lodash');
-const {each, findIndex} = require('./lang');
+const {each, findIndex, filter} = require('./lang');
 
 const isDifferent = function(objA, objB, keys = ['username', 'name', 'description', 'score', 'upvote', 'image']) {
   for (let i = 0, len = keys.length; i < len; i++) {
@@ -88,7 +88,14 @@ onmessage = function(e) {
       });
       order = 'intCreated';
     }
-    stateUpdate.remoteLocations.results = orderBy(uniqBy(stateUpdate.remoteLocations.results, 'dataId'), order, 'desc');
+    stateUpdate.remoteLocations.results = orderBy(
+      uniqBy(
+        filter(stateUpdate.remoteLocations.results, (location) => location.dataId != null),
+        'dataId'
+      ),
+      order,
+      'desc'
+    );
     if (e.data.res.data.next) {
       stateUpdate.remoteLocations.count = e.data.res.data.count
     }

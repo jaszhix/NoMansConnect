@@ -27,11 +27,10 @@ function getByPath(key, object) {
  * See _connect.
  * @returns Initial state object with the public API.
  */
-function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
+function init(state = {}, listeners = [], connections = 0) {
   const publicAPI = Object.freeze({
     get,
     set,
-    setMergeKeys,
     exclude,
     trigger,
     connect,
@@ -117,24 +116,6 @@ function init(state = {}, listeners = [], mergeKeys = [], connections = 0) {
       cb();
     }
 
-    return publicAPI;
-  }
-
-  /**
-   * setMergeKeys
-   * Adds a list of state keys that should be merged into state instead of copied.
-   *
-   * @param {array} keys
-   * @returns Public API for chaining.
-   */
-  function setMergeKeys(keys) {
-    for (let i = 0; i < keys.length; i++) {
-      if (state[keys[i]]
-        && typeof state[keys[i]] === 'object'
-        && !Array.isArray(state[keys[i]])) {
-        mergeKeys.push(keys[i]);
-      }
-    }
     return publicAPI;
   }
 

@@ -72,7 +72,6 @@ class App extends React.Component {
   componentDidMount() {
     this.connections = [
       state
-        .setMergeKeys(['remoteLocations'])
         .connect('*', (obj) => {
         if (process.env.NODE_ENV === 'development') {
           let stackParts = new Error().stack.split('\n');
@@ -357,7 +356,6 @@ class App extends React.Component {
       each(missing, (dataId) => {
         let location = find(locations, (location) => location.dataId === dataId);
         if (location) {
-          if (typeof location) {}
           missingLocations.push(location);
         }
       });
@@ -497,7 +495,7 @@ class App extends React.Component {
     }
 
     ajaxWorker.get(path, {params}).then((res) => {
-      this.formatRemoteLocations(res, page, sort, false, false, !state.offline, () => {
+      this.formatRemoteLocations(res, page, sort, false, false, pagination && !state.offline, () => {
         if (state.init) {
           state.set({init: false}, true);
           this.pollRemoteLocations(init);

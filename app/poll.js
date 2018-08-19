@@ -274,15 +274,13 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         // Discoveries can change regardless if the location is known
         let {Record} = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store;
         let newDiscoveries = [];
-        if (profile.data.discoveryIds) {
-          each(Record, (discovery) => {
-            let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
-            if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) {
-              discovery.NMCID = uaToObject(discovery.DD.UA).dataId;
-              newDiscoveries.push(discovery);
-            }
-          });
-        }
+        each(Record, (discovery) => {
+          let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
+          if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) {
+            discovery.NMCID = uaToObject(discovery.DD.UA).dataId;
+            newDiscoveries.push(discovery);
+          }
+        });
         ajaxWorker.put(`/nmsprofile/${profile.data.id}/`, {
           machineId: state.machineId,
           username: state.username,
