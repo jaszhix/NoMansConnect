@@ -1,3 +1,14 @@
+# 1.5.1
+
+  * Fixed incorrect ordering when viewing recent explorations.
+  * Fixed several uncaught errors occurring on both the client and server.
+  * Added option to clear all stored locations. Select this option if you are unable to select certain locations.
+  * Fixed a bug that can cause NMC to stop checking for new locations.
+  * Fixed a server bug that was preventing an announcement about API compatibility from being sent to users on NMC <1.5.
+  * Added an option to disable automatic backups of the currently loaded save file.
+  * Fixed "Filter by PC Locations" filtering all locations.
+  * Fixed error occurring when filtering by screenshots.
+
 # 1.5.0
 
   * Server-side improvements.
