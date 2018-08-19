@@ -1,3 +1,11 @@
+# 1.5.2
+
+  * Fixed an issue preventing the profile from loading and causing the current username to be set randomly from location data being loaded.
+  * Fixed images not updating in the selected location box.
+  * Fixed an issue causing locations to stop updating.
+  * Fixed an issue that can prevent manual location registration from completing.
+  * Fixed various error scenarios caught via Sentry.
+
 # 1.5.1
 
   * Fixed incorrect ordering when viewing recent explorations.
