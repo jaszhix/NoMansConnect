@@ -25,7 +25,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
   let {storedLocations} = state;
   let stateUpdate = {};
 
-  let favorites = profile ? profile.data.favorites : state.favorites;
+  let favorites = profile && profile.data ? profile.data.favorites : state.favorites;
   if (state.ps4User) {
     state.set({
       machineId,
@@ -36,7 +36,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
   console.log('SAVE DATA: ', saveData);
   log.error(`Finished reading No Man's Sky v${saveData.result.Version} save file.`);
 
-  if (profile && state.favorites.length !== profile.data.favorites.length) {
+  if (profile && profile.data && profile.data.favorites && state.favorites && state.favorites.length !== profile.data.favorites.length) {
     let {remoteLocations} = state;
     log.error('Favorites are out of sync, fixing.');
     state.set({loading: 'Syncing favorites...'});
@@ -62,7 +62,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       }
     });
 
-    let favoritesLen = remainingFavorites.length;
+    let favoritesLen = remainingFavorites ? remainingFavorites.length : 0;
     if (favoritesLen > 0) {
       log.error(`Fetching ${favoritesLen} favorites from the server`);
       ajaxWorker.post('/nmsfavoritesync/', {
@@ -91,7 +91,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     }
   }
 
-  let refFav = findIndex(favorites, (fav) => {
+  let refFav = findIndex(favorites || [], (fav) => {
     return fav === location.dataId;
   });
   let upvote = refFav !== -1;
@@ -266,7 +266,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     state.set(stateUpdate, () => {
       let errorHandler = (err) => {
         if (err.response && err.response.data && err.response.data.status) {
-          log.error(err.response.data.status);
+          log.error('processData -> errorHandler:', err, err.response.data.status);
         }
         next([err, err.message, err.stack]);
       };
@@ -375,13 +375,12 @@ let getLastSave = (opts) => {
         }
         processData(opts, saveData, location, refLocation, username, profile);
       }).catch((err) => {
-        log.error(err.message)
         state.set({machineId, username}, () => {
           if (err.response && err.response.status === 403) {
             log.error(`Username protected: ${username}`);
             handleProtectedSession(username);
           } else {
-            log.error(`NMC couldn't fetch the profile: ${err.message}`);
+            log.error('NMC couldn\'t fetch the profile: ', err);
             processData(opts, saveData, location, refLocation, username);
           }
         });
@@ -389,9 +388,8 @@ let getLastSave = (opts) => {
     }
 
   }).catch((err) => {
-    log.error(`Unable to retrieve NMS save file: ${err}`)
+    log.error(`Unable to retrieve NMS save file: `, err);
     log.error(`${state.saveDirectory}, ${state.saveFileName}`);
-    tryFn(() => log.error(err.stack));
     handleSaveDataFailure(mode, init, () => pollSaveData({mode, init}));
   });
 };
@@ -420,7 +418,7 @@ pollSaveData = (opts = {mode: state.mode, init: false, machineId: state.machineI
       opts.NMSRunning = findIndex(list, proc => proc.ProcessName === 'NMS.exe') > -1;
       getLastSave(opts);
     }).catch((err) => {
-      log.error(`Unable to use win-ps: ${err}`);
+      log.error('Unable to use win-ps:', err);
       getLastSave(opts);
     });
   }

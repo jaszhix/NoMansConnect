@@ -327,7 +327,7 @@ class Container extends React.Component {
               selectedGalaxy: deselected ? 0 : _location.galaxy,
               multiSelectedLocation: false
             });
-          }).catch((err) => log.error(err));
+          }).catch((err) => log.error('Container.handleSelectLocation: ', err));
           return;
         }
 

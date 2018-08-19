@@ -15,10 +15,19 @@ class log {
     if (process.env.NODE_ENV === 'development') {
       console.log(...args);
     }
+
     try {
       let ts = Date.now();
       let argsString = '';
       for (let i = 0; i < args.length; i++) {
+        if (args[i] instanceof Error) {
+          argsString += `${args[i].message}\n`;
+          argsString += `${args[i].stack}\n`;
+          if (typeof window !== 'undefined') {
+            window.Raven.captureException(args[i]);
+          }
+          continue;
+        }
         argsString += `${JSON.stringify(args[i])} `;
       }
       let output = `${ts}:    ${argsString.replace(/"/g, '').replace(/\\\\/g, '\\')}`;

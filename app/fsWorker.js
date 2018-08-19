@@ -81,7 +81,7 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
 
       fs.readFile(lastModifiedSave.result, {}, (err, json) => {
         if (err) {
-          log.error(err);
+          log.error('getLastGameModeSave -> next: ', err);
           if (e.message.indexOf('EBUSY') > -1) {
             log.error(`Unable to read your last modified save file because it is in use by another program. Please make sure you are only teleporting, restoring bases, or using the cheat menu while the game is closed or paused.`);
           }

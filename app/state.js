@@ -233,6 +233,7 @@ const state = initStore({
           }
         })
         .install();
+        window.Raven = Raven;
     } else {
       state.staticBase = 'http://z.npff.co:8000';
     }

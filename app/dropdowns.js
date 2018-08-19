@@ -180,7 +180,7 @@ export class SaveEditorDropdownMenu extends React.Component {
         }
       }).then((res) => {
         state.set({profile: res.data}, () => this.props.onCheat(...args));
-      }).catch((err) => log.error(err.message));
+      }).catch((err) => log.error('SaveEditorDropdownMenu.handleClick: ', err));
     }
   }
   handleToggleOpen = () => {

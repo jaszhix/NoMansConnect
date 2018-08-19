@@ -1,4 +1,5 @@
 const axios = require('axios/dist/axios')
+const log = require('./log');
 
 const opts = {
   baseURL: 'https://neuropuff.com/api/',
@@ -17,7 +18,7 @@ onmessage = function(e) {
   ajax[method](...args)
     .then((res) => postMessage([null, {data: res.data}]))
     .catch((err) => {
-
+      log.error(err);
       let errObject = {
         response: err. response ? {
           status: err.response.status,

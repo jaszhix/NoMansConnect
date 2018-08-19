@@ -162,11 +162,11 @@ class LocationBox extends React.Component {
             if (!err && !this.willUnmount && this.scrollBox) {
               tryFn(() => this.setState({image: `${file}`}));
             } else {
-              log.error(err);
+              log.error('LocationBox.getImage: ', err);
             }
           });
         })
-        .catch((err) => log.error(err));
+        .catch((err) => log.error('LocationBox.getImage: ', err));
       } else {
         this.setState({image: `${file}`});
       }

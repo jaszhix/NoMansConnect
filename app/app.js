@@ -370,7 +370,7 @@ class App extends React.Component {
         log.error('Failed to upload missing locations to the server: ', err.response);
         next();
       });
-    }).catch((err) => log.error(err.message));
+    }).catch((err) => log.error('handleSync: ', err.message));
   }
   formatRemoteLocations = (res, page=1, sort, init, partial, pagination, cb=null) => {
     if (this.state.offline || this.state.closing) {
@@ -552,9 +552,9 @@ class App extends React.Component {
       }
     }).catch((e) => {
       if (process.platform !== 'win32') {
-        log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?')
+        log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?');
       }
-      log.error(e.message);
+      log.error('_signSaveData: ', e);
     });
   }
   signSaveData = (slot, cb) => {
@@ -758,8 +758,8 @@ class App extends React.Component {
         });
       });
     }).catch((err) => {
-      log.error(err.message);
-      log.error(`Unable to teleport to location: ${err}`);
+      log.error('Unable to teleport to location:');
+      log.error(err);
       state.set({navLoad: false});
     });
   }
@@ -798,8 +798,8 @@ class App extends React.Component {
         this.signSaveData(saveData.slot, () => state.set({navLoad: false}));
       });
     }).catch((err) => {
-      log.error(err.message);
-      log.error(`Unable to set waypoint for location: ${err}`);
+      log.error('Unable to set waypoint for location: ');
+      log.error(err);
     })
   }
   pollSaveData = (mode=this.state.mode, init=false, machineId=this.state.machineId) => {
