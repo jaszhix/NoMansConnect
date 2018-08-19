@@ -50,10 +50,6 @@ class LocationBox extends React.Component {
       state.trigger('resetLocationScrollTop');
       stateUpdate.location = nextProps.location;
     }
-    if (nextProps.image !== nextState.image) {
-      state.trigger('imageChange', nextProps.location.dataId, nextProps.image)
-      if (nextProps.selectType) stateUpdate.image = null;
-    };
     return stateUpdate;
   }
   constructor(props) {
@@ -74,10 +70,6 @@ class LocationBox extends React.Component {
   componentDidMount() {
     this.connections = [
       state.connect({
-        imageChange: (dataId, image) => {
-          if (!this.props || this.willUnmount || this.props.location.dataId !== dataId) return;
-          this.getImage(image);
-        },
         resetLocationScrollTop: () => this.scrollBox ? this.scrollBox.scrollTop = 0 : null,
         compactRemote: () => {
           if (!this.props.selectType && !this.willUnmount) {
@@ -85,10 +77,12 @@ class LocationBox extends React.Component {
             this.setState({compactRemote: this.props.compactRemote}, this.props.onCompactRemoteSwitch);
           }
         },
-        selectedLocation: () => {
+        selectedLocation: ({selectedLocation}) => {
+          if (!this.props || !this.props.selectType || this.willUnmount) return;
           setTimeout(() => {
             if (!this.props || !this.props.selectType || this.willUnmount) return;
             this.setState({positionEdit: false, positionSelect: false});
+            this.getImage(selectedLocation.image)
           }, 0);
         },
         remoteChanged: ({remoteChanged}) => {
@@ -111,7 +105,7 @@ class LocationBox extends React.Component {
     each(this.connections, (connection) => {
       state.disconnect(connection);
     });
-    cleanUp(this, true);
+    cleanUp(this);
   }
   toggleEditDetails = () => {
     this.setState({positionEdit: false});
@@ -147,7 +141,10 @@ class LocationBox extends React.Component {
     });
   }
   getImage = (image) => {
-    if (!image) return;
+    if (!image) {
+      this.setState({image});
+      return;
+    }
     const {configDir} = state;
     let img = image.replace(/:/g, '~').replace(/NMSLocation-/, '');
     let file = path.resolve(`${configDir}${img}`);
@@ -222,15 +219,14 @@ class LocationBox extends React.Component {
   }
   renderDetails = () => {
     let p = this.props;
-    let {location} = this.state;
+    let {location, image} = this.state;
     let scrollBoxStyle = p.compactRemote ? compactRemoteScrollBoxStyle : {};
     return (
       <div ref={this.getRef} style={scrollBoxStyle} className={`LocationBox__scrollBoxStyle${p.detailsOnly ? ' LocationBox__scrollBoxProfileStyle' : ''}`}>
-        {p.image && p.image.length > 0 ? (
-          <div style={{textAlign: 'center'}}>
-            {this.state.image ? <img className="LocationBox__imageStyle" src={this.state.image} onClick={() => state.set({selectedImage: this.state.image})} /> : null}
-          </div>
-        ) : null}
+        {image ?
+        <div style={{textAlign: 'center'}}>
+          <img className="LocationBox__imageStyle" src={image} onClick={() => state.set({selectedImage: image})} />
+        </div> : null}
         {this.props.detailsOnly ? <Item label="Name" value={p.name || 'Unknown'} /> : null}
         {location.description || this.props.description ? <Item label="Description" value={this.props.description ? this.props.description : location.description} /> : null}
         <Item label="Galactic Address" value={location.translatedId} />
