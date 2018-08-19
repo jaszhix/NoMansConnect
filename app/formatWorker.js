@@ -83,6 +83,7 @@ onmessage = function(e) {
   } else {
     if (order === 'created') {
       each(stateUpdate.remoteLocations.results, (location) => {
+        if (!location) return;
         location.intCreated = new Date(location.created).getTime();
       });
       order = 'intCreated';

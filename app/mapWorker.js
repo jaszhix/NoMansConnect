@@ -40,10 +40,12 @@ const getLocationsByTranslatedId = function(locations) {
     return null;
   }
   let systems = uniqBy(locations, (location) => {
-    return location.translatedX && location.translatedY && location.translatedZ;
+    return location && location.translatedX && location.translatedY && location.translatedZ;
   });
   each(systems, (location, i) => {
+    if (!location) return;
     let planets = filter(locations, (planet) => {
+      if (!planet) return;
       return (location.translatedX === planet.translatedX
         && location.translatedY === planet.translatedY
         && location.translatedZ === planet.translatedZ);
