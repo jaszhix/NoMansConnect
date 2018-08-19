@@ -56,6 +56,11 @@ const fsWorkerCaller = (method, ...args) => {
     fsCount = 1;
   }
   let worker = `fsWorker${fsCount}`;
+  if (window[worker].onmessage) {
+    fsCount++;
+    setTimeout(() => fsWorkerCaller(method, ...args), 0);
+    return;
+  }
   let cb = last(args);
   args.splice(-1);
   window[worker].onmessage = (e) => {
@@ -84,6 +89,12 @@ const ajaxWorkerCaller = (method, ...args) => {
     ajaxCount = 1;
   }
   let worker = `ajaxWorker${ajaxCount}`;
+  if (window[worker].onmessage) {
+    ajaxCount++;
+    return new Promise((resolve, reject) => setTimeout(() => resolve(ajaxWorkerCaller(method, ...args)), 50));
+  }
+  window[worker].postMessage([method, ...args]);
+  ajaxCount++;
   return new Promise((resolve, reject) => {
     window[worker].onmessage = (e) => {
       window[worker].onmessage = null;
@@ -95,8 +106,6 @@ const ajaxWorkerCaller = (method, ...args) => {
       }
       resolve(data);
     }
-    window[worker].postMessage([method, ...args]);
-    ajaxCount++;
   });
 }
 each(axiosKeys, (key) => {
