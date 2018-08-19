@@ -296,14 +296,18 @@ class ThreeDimScatterChart extends React.Component {
       setState(e.data);
     }
   };
-  postMessage = (obj) => {
+  postMessage = (obj, r = 0) => {
     if (workerCount > window.coreCount) {
       workerCount = 1;
     }
     let worker = `mapWorker${workerCount}`;
     if (window[worker].onmessage) {
       workerCount++;
-      this.postMessage(obj);
+      if (r > 0) {
+        setTimeout(() => this.postMessage(obj, 0), 50);
+        return;
+      }
+      this.postMessage(obj, 1);
       return;
     }
     window[worker].onmessage = (e) => {
@@ -570,14 +574,18 @@ class GalacticMap extends React.Component {
       state.disconnect(connection);
     });
   }
-  buildGalaxyOptions = (init) => {
+  buildGalaxyOptions = (init, r = 0) => {
     if (workerCount > window.coreCount) {
       workerCount = 1;
     }
     let worker = `mapWorker${workerCount}`;
     if (window[worker].onmessage) {
       workerCount++;
-      this.buildGalaxyOptions(init);
+      if (r > 0) {
+        setTimeout(() => this.buildGalaxyOptions(init, 0), 50);
+        return;
+      }
+      this.buildGalaxyOptions(init, 1);
       return;
     }
     window[worker].onmessage = (e) => {
