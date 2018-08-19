@@ -434,9 +434,9 @@ class App extends React.Component {
     let orderedRemoteLocations = orderBy(remoteLocations.results, 'created', 'desc');
     let lastRemoteLocation = first(orderedRemoteLocations);
 
-    if (!lastRemoteLocation) { // Temporary migration workaround
+    if (!lastRemoteLocation || !lastRemoteLocation.created) { // Temporary migration workaround
       let i = 0;
-      while (!orderedRemoteLocations[i] && i < orderedRemoteLocations.length - 1) {
+      while ((!orderedRemoteLocations[i] || !orderedRemoteLocations[i].created) && i < orderedRemoteLocations.length - 1) {
         i++;
       }
       lastRemoteLocation = orderedRemoteLocations[i];
@@ -470,6 +470,7 @@ class App extends React.Component {
         next();
       }
     }).catch((err) => {
+      console.log(err)
       log.error('Failed regular polling request: ', err.response);
       next();
     })
