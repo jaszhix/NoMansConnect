@@ -36,7 +36,7 @@ class RemoteLocations extends React.Component {
       WebkitUserSelect: 'none',
       paddingRight: '0px'
     };
-    let checkRemote = ()=>{
+    let checkRemote = () => {
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
         this.recentExplorations.addEventListener('scroll', this.handleScroll);
         this.setState({init: false});
@@ -90,7 +90,8 @@ class RemoteLocations extends React.Component {
     if (this.props.s.remoteNext
       && this.recentExplorations.scrollTop + window.innerHeight >= this.recentExplorations.scrollHeight + this.recentExplorations.offsetTop - 180) {
       this.throttledPagination(this.props.s.page);
-      delay(()=>{
+      setTimeout(() => {
+        if (!this.recentExplorations) return;
         this.recentExplorations.scrollTop = Math.floor(this.recentExplorations.scrollHeight - this.props.s.pageSize * 271);
       }, 1500);
     }
@@ -246,7 +247,7 @@ class RemoteLocations extends React.Component {
       height: `${(p.s.compactRemote ? 68 : 245) + 26}px`
     };
     let _locations = Array(locations.length);
-    each(locations, (location, i)=>{
+    each(locations, (location, i) => {
       if (!location) return null;
       let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
       if (isVisible) {

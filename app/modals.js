@@ -143,14 +143,14 @@ export class RecoveryModal extends React.Component {
       username: this.props.s.username
     };
     request[prop] = this.state.value;
-    ajaxWorker.post(url, request).then((res)=>{
+    ajaxWorker.post(url, request).then((res) => {
       if (this.props.type === 'recoveryToken') {
         handleRestart();
         return;
       }
       this.props.s.profile[prop] = this.state.value;
       state.set({profile: this.props.s.profile}, this.handleClickOutside);
-    }).catch((err)=>{
+    }).catch((err) => {
       console.log(err);
       this.setState({
         address: '',
@@ -193,7 +193,7 @@ export class LocationRegistrationModal extends React.Component {
     };
   }
   componentDidMount() {
-    each(state.galaxies, (galaxy, i)=>{
+    each(state.galaxies, (galaxy, i) => {
       this.state.galaxies.push({
         id: galaxy,
         label: galaxy,
@@ -223,8 +223,8 @@ export class LocationRegistrationModal extends React.Component {
       });
       return;
     }
-
-    let refLocation = findIndex(this.props.s.storedLocations, (location) => {
+    let {storedLocations} = this.props.s;
+    let refLocation = findIndex(storedLocations, (location) => {
       return location && location.translatedId === this.state.address && location.galaxy === this.state.galaxy;
     });
 
@@ -236,23 +236,24 @@ export class LocationRegistrationModal extends React.Component {
       return;
     }
 
-    this.props.s.storedLocations.push(location);
-    each(this.props.s.storedLocations, (storedLocation, i)=>{
+    storedLocations.push(location);
+    each(storedLocations, (storedLocation, i) => {
+      if (!storedLocation || !storedLocation.created) return;
       if (isString(storedLocation.created)) {
-        this.props.s.storedLocations[i].created = new Date(storedLocation.created).getTime()
+        storedLocations[i].created = new Date(storedLocation.created).getTime()
       }
     });
-    this.props.s.storedLocations = orderBy(this.props.s.storedLocations, 'created', 'desc');
+    storedLocations = orderBy(storedLocations, 'created', 'desc');
 
-    state.set({storedLocations: this.props.s.storedLocations}, ()=>{
+    state.set({storedLocations}, () => {
       ajaxWorker.post('/nmslocation/', {
         machineId: this.props.s.machineId,
         username: location.username,
         ...location
-      }).then((res)=>{
+      }).then((res) => {
         state.trigger('fetchRemoteLocations');
         this.handleClickOutside();
-      }).catch((err)=>{
+      }).catch((err) => {
         this.setState({
           address: '',
           error: 'There was an error registering this location.'
@@ -847,7 +848,7 @@ export class BaseRestorationModal extends React.Component {
       && base.Name
       && base.BaseType.PersistentBaseTypes === 'HomePlanetBase'
     });
-    each(elgibleBases, (base, i)=>{
+    each(elgibleBases, (base, i) => {
       baseOptions.push({
         id: base.Name,
         label: base.Name,
@@ -1027,10 +1028,10 @@ export class SettingsModal extends React.Component {
           username: this.props.s.username,
           machineId: this.props.s.machineId,
           protected: !this.props.s.profile.protected
-        }).then(()=>{
+        }).then(() => {
           this.props.s.profile.protected = !this.props.s.profile.protected;
           state.set({profile: this.props.s.profile});
-        }).catch((err)=>{
+        }).catch((err) => {
           log.error(`Error enabling username protection: ${err}`);
         });
       } else {
@@ -1083,7 +1084,7 @@ export class SettingsModal extends React.Component {
         <div className="ui segment">
           <Item label="Difficulty" />
           <div className="ui segment SettingsModal__child">
-            {!p.s.ps4User ? map(modes, (mode, i)=>{
+            {!p.s.ps4User ? map(modes, (mode, i) => {
               return (
                 <Item
                 key={i}

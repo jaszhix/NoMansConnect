@@ -201,7 +201,7 @@ class ThreeDimScatterChart extends React.Component {
     each(this.connections, (connection) => {
       state.disconnect(connection);
     });
-    cleanUp(this);
+    cleanUp(this, true);
   }
   shouldComponentUpdate(nP, nS) {
     return isEqual(this.props, nP) || !isEqual(this.state, nS)
