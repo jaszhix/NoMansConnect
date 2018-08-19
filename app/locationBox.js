@@ -50,6 +50,7 @@ class LocationBox extends React.Component {
       state.trigger('resetLocationScrollTop');
       stateUpdate.location = nextProps.location;
     }
+    if (nextProps.image !== nextState.image) state.trigger('imageChange');
     return stateUpdate;
   }
   constructor(props) {
@@ -70,6 +71,10 @@ class LocationBox extends React.Component {
   componentDidMount() {
     this.connections = [
       state.connect({
+        imageChange: () => {
+          if (!this.props || this.willUnmount) return;
+          this.getImage();
+        },
         resetLocationScrollTop: () => this.scrollBox ? this.scrollBox.scrollTop = 0 : null,
         compactRemote: () => {
           if (!this.props.selectType && !this.willUnmount) {
@@ -80,7 +85,7 @@ class LocationBox extends React.Component {
         selectedLocation: () => {
           setTimeout(() => {
             if (!this.props || !this.props.selectType || this.willUnmount) return;
-            this.setState({positionEdit: false, positionSelect: false})
+            this.setState({positionEdit: false, positionSelect: false});
           }, 0);
         },
         remoteChanged: ({remoteChanged}) => {
@@ -114,7 +119,7 @@ class LocationBox extends React.Component {
   }
   updateLocation = () => {
     let {onUpdate, location, profile} = this.props;
-    if (state.offline || !location || this.willUnmount) return;
+    if (state.offline || !location || !location.dataId || this.willUnmount) return;
     if (!onUpdate) {
       onUpdate = (...args) => state.trigger('updateRemoteLocation', ...args);
     }
@@ -140,31 +145,30 @@ class LocationBox extends React.Component {
   }
   getImage = () => {
     const {image} = this.props;
+    if (!image) return;
     const {configDir} = state;
-    if (image) {
-      let img = image.replace(/:/g, '~').replace(/NMSLocation-/, '');
-      let file = path.resolve(`${configDir}${img}`);
-      fsWorker.exists(file, (exists) => {
-        if (!exists) {
-          axios
-          .get(`${state.staticBase}${image}`, {
-            responseType: 'arraybuffer',
-          })
-          .then(res => {
-            fsWorker.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
-              if (!err && !this.willUnmount && this.scrollBox) {
-                tryFn(() => this.setState({image: `${file}`}));
-              } else {
-                log.error(err);
-              }
-            });
-          })
-          .catch((err) => log.error(err));
-        } else {
-          this.setState({image: `${file}`});
-        }
-      });
-    }
+    let img = image.replace(/:/g, '~').replace(/NMSLocation-/, '');
+    let file = path.resolve(`${configDir}${img}`);
+    fsWorker.exists(file, (exists) => {
+      if (!exists) {
+        axios
+        .get(`${state.staticBase}${image}`, {
+          responseType: 'arraybuffer',
+        })
+        .then(res => {
+          fsWorker.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
+            if (!err && !this.willUnmount && this.scrollBox) {
+              tryFn(() => this.setState({image: `${file}`}));
+            } else {
+              log.error(err);
+            }
+          });
+        })
+        .catch((err) => log.error(err));
+      } else {
+        this.setState({image: `${file}`});
+      }
+    });
   }
   handleNameChange = (e) => {
     this.setState({name: e.target.value});
