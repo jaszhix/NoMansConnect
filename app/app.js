@@ -338,7 +338,7 @@ class App extends React.Component {
     each(state.storedLocations, (location) => {
       let existsInRemoteLocations = false;
       each(state.remoteLocations.results, (remoteLocation) => {
-        if (location && remoteLocation.dataId === location.dataId) {
+        if (location && remoteLocation && remoteLocation.dataId === location.dataId) {
           existsInRemoteLocations = true;
           return false;
         };

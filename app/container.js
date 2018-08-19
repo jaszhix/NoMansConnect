@@ -302,7 +302,7 @@ class Container extends React.Component {
     let _location = null;
     if (!deselected) {
       let refRemoteLocation = find(this.props.s.remoteLocations.results, (remoteLocation) => {
-        return remoteLocation.dataId === location.dataId;
+        return remoteLocation && remoteLocation.dataId === location.dataId;
       });
       if (refRemoteLocation) {
         _location = copyMetadata(refRemoteLocation, location, ['isHidden', 'positions', 'version']);
@@ -509,7 +509,7 @@ class Container extends React.Component {
     }
     if (showOnlyPC) {
       locations = filter(locations, (location)=>{
-        return location.playerPosition && !location.manuallyEntered;
+        return !location.manuallyEntered;
       });
     }
     if (profile && showOnlyFriends) {

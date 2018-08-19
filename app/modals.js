@@ -225,7 +225,7 @@ export class LocationRegistrationModal extends React.Component {
     }
 
     let refLocation = findIndex(this.props.s.storedLocations, (location) => {
-      return location.translatedId === this.state.address && location.galaxy === this.state.galaxy;
+      return location && location.translatedId === this.state.address && location.galaxy === this.state.galaxy;
     });
 
     if (refLocation > -1) {

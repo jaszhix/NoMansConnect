@@ -229,8 +229,8 @@ class RemoteLocations extends React.Component {
       && p.s.remoteNext) {
       leftOptions.push({
         id: 'loadMore',
-        disabled: p.s.navLoad || p.s.pagination,
-        label: p.s.pagination ? 'Catching up with the server, please wait...' : `Load More Locations`,
+        disabled: p.s.navLoad,
+        label: 'Load More Locations',
         onClick: () => this.throttledPagination(p.s.page)
       });
     }
