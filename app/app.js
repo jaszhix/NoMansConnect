@@ -767,6 +767,8 @@ class App extends React.Component {
     log.error('Setting waypoint:', location.dataId);
     state.set({navLoad: true});
     getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+      let {Waypoints} = saveData.result.GameKnowledgeData.Waypoints;
+      if (!Waypoints) Waypoints = [];
       let {PlanetIndex, SolarSystemIndex, VoxelX, VoxelY, VoxelZ} = location;
       let waypoint = {
         Address: {
@@ -781,13 +783,13 @@ class App extends React.Component {
           GalaxyWaypointType: 'User'
         }
       };
-      let userWaypoint = findIndex(saveData.result.GameKnowledgeData.Waypoints, (wp) => {
+      let userWaypoint = findIndex(Waypoints, (wp) => {
         return wp.Type.GalaxyWaypointType === 'User';
       });
       if (userWaypoint > -1) {
-        saveData.result.GameKnowledgeData.Waypoints[userWaypoint] = waypoint;
+        Waypoints[userWaypoint] = waypoint;
       } else {
-        saveData.result.GameKnowledgeData.Waypoints.push(waypoint);
+        Waypoints.push(waypoint);
       }
 
       fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {

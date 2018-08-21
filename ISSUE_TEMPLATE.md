@@ -6,7 +6,7 @@ Unless this is a feature request, ALL of the following is required:
 - Absolute path to your storage_x.hg files.
 - Absolute path to your NMS install directory.
 
-Use Pastebin of directly attach these files:
+Use Pastebin of directly attach these files (Users/<Username>/AppData/Roaming/NoMansConnect):
 
 - NMC.log
 - settings.json
