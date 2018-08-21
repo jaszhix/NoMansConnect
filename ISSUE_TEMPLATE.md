@@ -1,11 +1,13 @@
-Issue template for bug reports:
+Unless this is a feature request, ALL of the following is required:
 
 - Description of the problem
 - Windows version
+- NMC version
 - Absolute path to your storage_x.hg files.
 - Absolute path to your NMS install directory.
 
-Use Pastebin or a small snippet relevant to the issue and include these files from Roaming/AppData/NoMansConnect:
+Use Pastebin of directly attach these files:
+
 - NMC.log
 - settings.json
 
