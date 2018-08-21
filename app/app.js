@@ -767,7 +767,7 @@ class App extends React.Component {
     log.error('Setting waypoint:', location.dataId);
     state.set({navLoad: true});
     getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
-      let {Waypoints} = saveData.result.GameKnowledgeData.Waypoints;
+      let {Waypoints} = saveData.result.GameKnowledgeData;
       if (!Waypoints) Waypoints = [];
       let {PlanetIndex, SolarSystemIndex, VoxelX, VoxelY, VoxelZ} = location;
       let waypoint = {
@@ -791,7 +791,7 @@ class App extends React.Component {
       } else {
         Waypoints.push(waypoint);
       }
-
+      saveData.result.GameKnowledgeData.Waypoints = Waypoints;
       fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
         if (err) {
           log.error('Error occurred while attempting to write save file cache:');
