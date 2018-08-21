@@ -255,9 +255,9 @@ class Map3D extends React.Component {
     const _this = this;
 
     let onComplete = function () {
+      if (!_this.controls) return;
       _this.controls.distance = 75;
       _this.controls.needsUpdate = true;
-
     }
     new TWEEN.Tween({x: _this.target.x, y: _this.target.y, z: _this.target.z})
       .to({ x: vector3.x, y: vector3.y, z: vector3.z }, 2200)

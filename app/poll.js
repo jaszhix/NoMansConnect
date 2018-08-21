@@ -184,6 +184,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
 
     // Detect player bases
     each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
+      if (!base || !base.BaseType) return;
       let galacticAddress;
       if (!base.GalacticAddress || base.BaseType.PersistentBaseTypes !== 'HomePlanetBase') {
         return;

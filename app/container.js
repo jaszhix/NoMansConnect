@@ -484,7 +484,7 @@ class Container extends React.Component {
       isSelectedLocationRemovable = refLocation !== -1;
     }
 
-    let locations = p.s.remoteLocations.results;
+    let locations = filter(p.s.remoteLocations.results || [], (location) => location != null);
     if (showOnlyScreenshots) {
       locations = filter(locations, (location)=>{
         return location.image.length > 0;
@@ -522,6 +522,7 @@ class Container extends React.Component {
     }
     if (profile && showOnlyFriends) {
       locations = filter(locations, (location)=>{
+        if (!location) return false;
         return (
           findIndex(profile.friends, (friend) => {
             return (location.profile && friend.username === location.profile.username) || friend.username === location.username;
@@ -532,9 +533,7 @@ class Container extends React.Component {
     }
     if (sortByDistance || sortByModded) {
       locations = orderBy(locations, (location)=>{
-        if (!location.mods) {
-          location.mods = [];
-        }
+        if (!location || !location.mods) return 0;
         if (sortByModded && sortByDistance) {
           return location.mods.length + location.distanceToCenter;
         } else if (sortByDistance) {

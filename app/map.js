@@ -52,6 +52,7 @@ class TooltipChild extends React.Component {
             {`${this.props.payload[0].payload.user}`}
           </div> : null}
           {this.props.payload[0].payload.planetData ? map(this.props.payload[0].payload.planetData, (sector, i) => {
+            if (!sector) return null;
             return (
               <div
               key={i}
@@ -304,7 +305,10 @@ class ThreeDimScatterChart extends React.Component {
     if (window[worker].onmessage) {
       workerCount++;
       if (r > 0) {
-        setTimeout(() => this.postMessage(obj, 0), 50);
+        setTimeout(() => {
+          if (!this.postMessage) return;
+          this.postMessage(obj, 0);
+        }, 50);
         return;
       }
       this.postMessage(obj, 1);
