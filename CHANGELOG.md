@@ -1,3 +1,8 @@
+# 1.5.3
+
+  * Fixed the profile badge not updating in the selected location box.
+  * Fixed various errors captured by Sentry.
+
 # 1.5.2
 
   * Fixed an issue preventing the profile from loading and causing the current username to be set randomly from location data being loaded.

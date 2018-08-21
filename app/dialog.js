@@ -120,7 +120,7 @@ export const handleSaveDataFailure = () => {
   dialog.showMessageBox({
     title: 'Which platform do you use?',
     message: 'Save data not found. Select PS4 to skip this step, and disable PC specific features.',
-    buttons: ['PC', 'PS4']
+    buttons: ['PC', 'PS4/XB1']
   }, result=>{
     state.set({ps4User: result === 1}, () => {
       if (result === 0) {

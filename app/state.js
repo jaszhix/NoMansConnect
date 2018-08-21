@@ -65,7 +65,7 @@ const state = initStore({
   galaxies,
   defaultLegendKeys: Object.keys(showDefault),
   completedMigration: false,
-  version: '1.5.2',
+  version: '1.5.3',
   notification: {
     message: '',
     type: 'info'
