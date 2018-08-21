@@ -49,6 +49,7 @@ class LocationBox extends React.Component {
     if (nextProps.location.dataId !== nextState.location.dataId) {
       state.trigger('resetLocationScrollTop');
       stateUpdate.location = nextProps.location;
+      stateUpdate.profile = nextProps.profile ? nextProps.profile : nextProps.location.profile;
     }
     return stateUpdate;
   }

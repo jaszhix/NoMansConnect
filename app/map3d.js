@@ -378,7 +378,10 @@ class Map3D extends React.Component {
     });
     each(el.find('.planetLabel').ns, (label) => {
       label.addEventListener('click', () => {
-        if (!this.props) {
+        if (!this.props
+          || !this.willUnmount
+          || !this.props.remoteLocations
+          || !this.props.remoteLocations.results) {
           return;
         }
         let refLocation = find(this.props.remoteLocations.results, (location) => {
