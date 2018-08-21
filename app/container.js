@@ -316,17 +316,25 @@ class Container extends React.Component {
             username: state.username,
             locations: [location.dataId]
           }).then((res) => {
-            _location = res.data[0];
-            let {remoteLocations} = this.props.s;
-            remoteLocations.results.push(res.data[0]);
-            remoteLocations.results = uniqBy(remoteLocations.results, 'dataId');
-            state.set({
-              remoteLocations,
-              remoteLength: remoteLocations.results.length,
-              selectedLocation: deselected ? null : _location,
-              selectedGalaxy: deselected ? 0 : _location.galaxy,
-              multiSelectedLocation: false
-            });
+            let stateUpdate = {};
+            if (res.data[0]) {
+              _location = res.data[0];
+              let {remoteLocations} = this.props.s;
+              remoteLocations.results.push(_location);
+              remoteLocations.results = uniqBy(remoteLocations.results, 'dataId');
+              stateUpdate.remoteLocations = remoteLocations;
+              stateUpdate.remoteLength = remoteLocations.results.length;
+            } else {
+              _location = location;
+            }
+
+            state.set(
+              Object.assign(stateUpdate, {
+                selectedLocation: deselected ? null : _location,
+                selectedGalaxy: deselected ? 0 : _location.galaxy,
+                multiSelectedLocation: false
+              })
+            );
           }).catch((err) => log.error('Container.handleSelectLocation: ', err));
           return;
         }
