@@ -348,6 +348,7 @@ let getLastSave = (opts) => {
   log.error('SAVE DIRECTORY: ', state.saveDirectory)
 
   getLastGameModeSave(state.saveDirectory, state.ps4User, log).then((saveData) => {
+    console.log('SAVE DATA: ', saveData)
     let refLocation, location, username;
     if (!state.ps4User) {
       location = formatID(saveData.result.PlayerStateData.UniverseAddress);

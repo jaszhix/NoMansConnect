@@ -1,3 +1,5 @@
+const {saveKeyMapping} = require('./constants');
+
 const each = (obj, cb)=>{
   if (Array.isArray(obj)) {
     for (let i = 0, len = obj.length; i < len; i++) {
@@ -96,4 +98,33 @@ const tryFn = function(fn, errCb) {
   }
 };
 
-module.exports = {each, rEach, findIndex, find, filter, map, includes, merge, tryFn};
+const parseSaveKeys = (saveData, write = false) => {
+  let reverse = {};
+  if (write) {
+    reverse = saveKeyMapping;
+  } else {
+    each(saveKeyMapping, (val, key) => {
+      reverse[val] = key;
+    });
+  }
+  each(saveData, (val, key) => {
+    if (val && typeof val === 'object') {
+      if (Array.isArray(val)) {
+        each(val, (item, i) => {
+          if (item && typeof item === 'object' && !Array.isArray(item)) {
+            val[i] = parseSaveKeys(item);
+          }
+        })
+      } else {
+        val = parseSaveKeys(val);
+      }
+    }
+    if (reverse[key]) {
+      saveData[reverse[key]] = val;
+      delete saveData[key];
+    }
+  });
+  return saveData;
+}
+
+module.exports = {each, rEach, findIndex, find, filter, map, includes, merge, tryFn, parseSaveKeys};

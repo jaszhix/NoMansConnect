@@ -13,7 +13,7 @@ import Loader from './loader';
 import {dirSep, getLastGameModeSave, exc, formatBase, css, tip, fsWorker, ajaxWorker} from './utils';
 import pollSaveData from './poll';
 import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
-import {each, find, findIndex, map, filter} from './lang';
+import {each, find, findIndex, map, filter, parseSaveKeys} from './lang';
 
 import baseIcon from './assets/images/base_icon.png';
 
@@ -547,9 +547,7 @@ class App extends React.Component {
     console.log(command);
     exc(command).then((res) => {
       log.error('Successfully signed save data with nmssavetool.');
-      if (typeof cb === 'function') {
-        cb();
-      }
+      if (typeof cb === 'function') cb();
     }).catch((e) => {
       if (process.platform !== 'win32') {
         log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?');
@@ -557,31 +555,42 @@ class App extends React.Component {
       log.error('_signSaveData: ', e);
     });
   }
-  signSaveData = (slot, cb) => {
+  signSaveData = (saveData, cb) => {
     let absoluteSaveDir = this.state.saveFileName.split(dirSep);
     let _absoluteSaveDir = absoluteSaveDir.slice();
     absoluteSaveDir.splice(absoluteSaveDir.length - 1, 1);
     absoluteSaveDir = absoluteSaveDir.join(dirSep);
 
-    if (!this.state.backupSaveFile) {
-      log.error('Skipping save file backup because option is disabled in settings.');
-      this._signSaveData(absoluteSaveDir, slot, cb);
-      return;
+    if (saveData.needsConversion) {
+      saveData.result = parseSaveKeys(saveData.result, true);
     }
 
-    fsWorker.backupSaveFile(
-      absoluteSaveDir,
-      last(_absoluteSaveDir),
-      (err) => {
-        if (err) {
-          log.error('Unable to backup save file before writing: ', err);
-          state.set({navLoad: false});
-          return;
-        }
-        log.error('Successfully backed up save file.');
-        this._signSaveData(absoluteSaveDir, slot, cb);
+    fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
+      if (err) {
+        log.error('Error occurred while attempting to write save file cache:');
+        log.error(err);
+        state.set({navLoad: false});
+        return;
       }
-    )
+      if (!this.state.backupSaveFile) {
+        log.error('Skipping save file backup because option is disabled in settings.');
+        this._signSaveData(absoluteSaveDir, saveData.slot, cb);
+        return;
+      }
+      fsWorker.backupSaveFile(
+        absoluteSaveDir,
+        last(_absoluteSaveDir),
+        (err) => {
+          if (err) {
+            log.error('Unable to backup save file before writing: ', err);
+            state.set({navLoad: false});
+            return;
+          }
+          log.error('Successfully backed up save file.');
+          this._signSaveData(absoluteSaveDir, saveData.slot, cb);
+        }
+      );
+    });
   }
   handleRestoreBase = (base, confirmed = false) => {
     state.set({navLoad: true});
@@ -672,13 +681,7 @@ class App extends React.Component {
 
       saveData.result.PlayerStateData.PersistentPlayerBases[refIndex].Objects = storedBase.Objects;
 
-      fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
-        if (err) {
-          log.error(`Failed to restore base: ${err.message}`);
-          return;
-        }
-        this.signSaveData(saveData.slot, () => state.set({displayBaseRestoration: null, navLoad: false}));
-      });
+      this.signSaveData(saveData, () => state.set({displayBaseRestoration: null, navLoad: false}));
     }).catch((err) => {
       log.error(`Failed to restore base: ${err.message}`);
       state.set({navLoad: false});
@@ -719,42 +722,34 @@ class App extends React.Component {
 
       saveData.result.PlayerStateData.UniverseAddress.RealityIndex = _location.galaxy;
 
-      fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
-        if (err) {
-          log.error('Error occurred while attempting to write save file cache:');
-          log.error(err);
-          state.set({navLoad: false});
-          return;
-        }
-        this.signSaveData(saveData.slot, () => {
-          state.set({currentLocation: _location.dataId});
-          ajaxWorker.post('/nmslocation/', {
-            machineId: this.state.machineId,
-            username: this.state.username,
-            teleports: true,
-            dataId: _location.dataId,
-            action: 1
-          }).then((res) => {
-            let {remoteLocations, selectedLocation} = this.state;
-            let refRemoteLocation = findIndex(remoteLocations.results, (remoteLocation) => {
-              return remoteLocation.dataId === _location.dataId;
-            });
-            if (refRemoteLocation > -1) {
-              remoteLocations.results[refRemoteLocation] = res.data;
-            }
-            if (selectedLocation && selectedLocation.dataId === _location.dataId) {
-              selectedLocation = res.data;
-            }
-
-            state.set({
-              navLoad: false,
-              remoteLocations,
-              selectedLocation
-            });
-          }).catch((err) => {
-            log.error(`Unable to send teleport stat to server: ${err}`);
-            state.set({navLoad: false});
+      this.signSaveData(saveData, () => {
+        state.set({currentLocation: _location.dataId});
+        ajaxWorker.post('/nmslocation/', {
+          machineId: this.state.machineId,
+          username: this.state.username,
+          teleports: true,
+          dataId: _location.dataId,
+          action: 1
+        }).then((res) => {
+          let {remoteLocations, selectedLocation} = this.state;
+          let refRemoteLocation = findIndex(remoteLocations.results, (remoteLocation) => {
+            return remoteLocation.dataId === _location.dataId;
           });
+          if (refRemoteLocation > -1) {
+            remoteLocations.results[refRemoteLocation] = res.data;
+          }
+          if (selectedLocation && selectedLocation.dataId === _location.dataId) {
+            selectedLocation = res.data;
+          }
+
+          state.set({
+            navLoad: false,
+            remoteLocations,
+            selectedLocation
+          });
+        }).catch((err) => {
+          log.error(`Unable to send teleport stat to server: ${err}`);
+          state.set({navLoad: false});
         });
       });
     }).catch((err) => {
@@ -792,13 +787,7 @@ class App extends React.Component {
         Waypoints.push(waypoint);
       }
       saveData.result.GameKnowledgeData.Waypoints = Waypoints;
-      fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
-        if (err) {
-          log.error('Error occurred while attempting to write save file cache:');
-          log.error(err);
-        }
-        this.signSaveData(saveData.slot, () => state.set({navLoad: false}));
-      });
+      this.signSaveData(saveData, () => state.set({navLoad: false}));
     }).catch((err) => {
       log.error('Unable to set waypoint for location: ');
       log.error(err);

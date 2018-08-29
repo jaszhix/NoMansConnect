@@ -1,3 +1,7 @@
+# 1.5.4
+
+  * Fixes save file handling for the NMS experimental branch.
+
 # 1.5.3
 
   * Fixed the profile badge not updating in the selected location box.
