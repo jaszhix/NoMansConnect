@@ -3,9 +3,10 @@ const path = require('path');
 const {StringDecoder} = require('string_decoder');
 const decoder = new StringDecoder('utf8');
 const {last, orderBy} = require('lodash');
+const JSZip = require('jszip');
+const {saveKeyMapping} = require('./constants');
 const {each, rEach, tryFn} = require('./lang');
 const log = require('./log');
-const JSZip = require('jszip');
 
 const walk = (dir, done) => {
   let results = [];
@@ -41,6 +42,29 @@ const walk = (dir, done) => {
     });
   });
 };
+
+const parseSaveKeys = (saveData) => {
+  let reverse = {};
+  each(saveKeyMapping, (val, key) => {
+    reverse[val] = key;
+  });
+  each(saveData, (val, key) => {
+    if (val && typeof val === 'object') {
+      if (Array.isArray(val)) {
+        each(val, (item, i) => {
+          if (item && typeof item === 'object' && !Array.isArray(item)) {
+            val[i] = parseSaveKeys(item);
+          }
+        })
+      } else {
+        val = parseSaveKeys(val);
+      }
+    }
+    saveData[reverse[key]] = val;
+    delete saveData[key];
+  });
+  return saveData;
+}
 
 const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
   if (ps4User) {
@@ -101,6 +125,9 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
         }
         tryFn(() => {
           lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
+          if (lastModifiedSave.result.F2P) {
+            lastModifiedSave.result = parseSaveKeys(lastModifiedSave.result);
+          }
           let {int} = lastModifiedSave;
           if (lastModifiedSave.result.version <= 4104) {
             lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
