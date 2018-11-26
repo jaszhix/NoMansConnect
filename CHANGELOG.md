@@ -1,6 +1,10 @@
+# 1.5.5
+
+  * Fixed dropdowns clipping the window area.
+
 # 1.5.4
 
-  * Fixes save file handling for the NMS experimental branch.
+  * Fixed save file handling for the NMS experimental branch.
 
 # 1.5.3
 
