@@ -253,6 +253,7 @@ class StoredLocations extends React.Component {
             top: '16px'
           }}>
             <BasicDropdown
+            height={height}
             width={250}
             icon="ellipsis horizontal"
             showValue={null}

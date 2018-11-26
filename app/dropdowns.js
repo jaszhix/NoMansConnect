@@ -81,7 +81,7 @@ export class BaseDropdownMenu extends React.Component {
     this.setState({hover: -1});
   }
   render() {
-    var p = this.props;
+    let p = this.props;
     return (
       <div
       style={noDragStyle}
@@ -318,7 +318,7 @@ You should have received a copy of the GNU General Public License along with thi
   handleSettings = () => state.set({displaySettings: true})
   handleProfileClick = () => state.set({displayProfile: this.props.s.profile.id})
   render() {
-    var p = this.props;
+    let p = this.props;
     return (
       <div
       style={noDragStyle}
@@ -415,14 +415,19 @@ export class BasicDropdown extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      open: false
+      open: false,
+      maxHeight: 0,
     };
   }
   componentDidMount() {
     ReactTooltip.rebuild();
+    this.connectId = state.connect({
+      height: ({height}) => this.calculateHeight(this.ref, height)
+    });
   }
   componentWillUnmount = () => {
     this.willUnmount = true;
+    if (this.connectId) state.disconnect(this.connectId);
     cleanUp(this);
   }
   handleOptionClick = (e, option) => {
@@ -445,10 +450,25 @@ export class BasicDropdown extends React.Component {
   handleToggleOpen = () => {
     this.setState({open: !this.state.open});
   }
+  getRef = (ref) => {
+    if (!ref) return;
+    this.ref = ref;
+    this.calculateHeight(ref, this.props.height);
+
+  }
+  calculateHeight = (ref, height) => {
+    if (!ref) return;
+    let {y} = ref.getBoundingClientRect();
+    if (y && !isNaN(y)) {
+      let maxHeight = Math.floor(Math.abs(height - y - ref.clientHeight));
+      this.setState({maxHeight});
+    }
+  }
   render() {
-    let height = this.props.height ? this.props.height : window.innerHeight;
+    const {maxHeight} = this.state;
     return (
       <div
+      ref={this.getRef}
       className={`ui dropdown BasicDropdown__root${this.state.open ? ' active visible' : ''}${this.props.detailsOnly ? ' BasicDropdown__profile' : ''}`}
       onClick={this.handleToggleOpen}>
         {this.props.showValue && this.props.options.length > 0 ?
@@ -461,7 +481,7 @@ export class BasicDropdown extends React.Component {
           display: this.state.open ? 'block !important' : 'none',
           borderRadius: '0px',
           background: 'rgb(23, 26, 22)',
-          maxHeight: `${this.props.height ? this.props.height : (height / 2)}px`,
+          maxHeight: `${maxHeight}px`,
           minWidth: `${this.props.width || '132.469'}px`,
           overflowY: 'auto'
         }}

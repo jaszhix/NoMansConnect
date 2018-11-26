@@ -745,6 +745,7 @@ class GalacticMap extends React.Component {
           top: '16px'
         }}>
           <BasicDropdown
+          height={p.height}
           icon="ellipsis horizontal"
           showValue={null}
           persist={true}

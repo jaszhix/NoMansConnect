@@ -399,7 +399,7 @@ class LocationBox extends React.Component {
 
     let dropdown = (
       <BasicDropdown
-      height={200}
+      height={p.height}
       icon="ellipsis horizontal"
       showValue={null}
       persist={p.edit || this.state.positionSelect}

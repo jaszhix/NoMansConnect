@@ -299,6 +299,7 @@ class RemoteLocations extends React.Component {
               top: '16px'
             }}>
               <BasicDropdown
+              height={p.s.height}
               width={350}
               icon="ellipsis horizontal"
               showValue={null}
