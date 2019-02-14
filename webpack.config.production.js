@@ -12,6 +12,7 @@ import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
 import baseConfig from './webpack.config.base';
 
 export default merge.smart(baseConfig, {
+  mode: 'production',
   devtool: 'source-map',
 
   entry: ['babel-polyfill', './app/index'],
