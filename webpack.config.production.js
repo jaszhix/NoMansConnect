@@ -173,7 +173,23 @@ export default merge.smart(baseConfig, {
     minimizer: [
       new TerserPlugin({
         parallel: true,
-        sourceMap: true
+        sourceMap: true,
+        terserOptions: {
+          ecma: undefined,
+          warnings: false,
+          parse: {},
+          compress: {},
+          sourceMap: true,
+          mangle: false,
+          module: false,
+          output: null,
+          toplevel: false,
+          nameCache: null,
+          ie8: false,
+          keep_classnames: undefined,
+          keep_fnames: true,
+          safari10: false,
+        },
       }),
     ],
   },
