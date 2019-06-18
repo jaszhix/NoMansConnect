@@ -83,7 +83,8 @@ app.on('ready', async () => {
     thickFrame: !aeroEnabled,
     transparent: false,
     webPreferences: {
-      nodeIntegrationInWorker: true
+      nodeIntegration: true,
+      nodeIntegrationInWorker: true,
     },
   });
 

@@ -4,7 +4,7 @@
 
 import webpack from 'webpack';
 import merge from 'webpack-merge';
-import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 import {BundleAnalyzerPlugin} from 'webpack-bundle-analyzer';
 import baseConfig from './webpack.config.base';
 
@@ -21,23 +21,6 @@ export default merge.smart(baseConfig, {
   },
 
   plugins: [
-    new UglifyJSPlugin({
-      sourceMap: true,
-      uglifyOptions: {
-        mangle: false,
-        compress: {
-          warnings: false,
-          drop_console: true,
-          drop_debugger: true,
-          dead_code: true,
-          unused: true,
-        },
-        output: {
-          comments: false
-        }
-      }
-    }),
-
     new BundleAnalyzerPlugin({
       analyzerMode: process.env.OPEN_ANALYZER === 'true' ? 'server' : 'disabled',
       openAnalyzer: process.env.OPEN_ANALYZER === 'true'
@@ -72,5 +55,14 @@ export default merge.smart(baseConfig, {
   node: {
     __dirname: false,
     __filename: false
+  },
+
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        parallel: true,
+        sourceMap: true,
+      }),
+    ],
   },
 });

@@ -8,7 +8,7 @@ import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import {BundleAnalyzerPlugin} from 'webpack-bundle-analyzer';
 import merge from 'webpack-merge';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import UglifyJSPlugin from 'uglifyjs-webpack-plugin';
+import TerserPlugin from 'terser-webpack-plugin';
 import baseConfig from './webpack.config.base';
 
 export default merge.smart(baseConfig, {
@@ -149,23 +149,6 @@ export default merge.smart(baseConfig, {
       'process.env.NODE_ENV': JSON.stringify('production')
     }),
 
-    new UglifyJSPlugin({
-      sourceMap: true,
-      uglifyOptions: {
-        mangle: false,
-        compress: {
-          warnings: false,
-          drop_console: true,
-          drop_debugger: true,
-          dead_code: true,
-          unused: true,
-        },
-        output: {
-          comments: false
-        }
-      }
-    }),
-
     new ExtractTextPlugin('style.css'),
 
     /**
@@ -184,5 +167,14 @@ export default merge.smart(baseConfig, {
   ],
 
   // https://github.com/chentsulin/webpack-target-electron-renderer#how-this-module-works
-  target: 'electron-renderer'
+  target: 'electron-renderer',
+
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        parallel: true,
+        sourceMap: true
+      }),
+    ],
+  },
 });
