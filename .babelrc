@@ -1,26 +1,19 @@
 {
   "presets": [
-    ["env", { "targets": { "node": 6 }, "useBuiltIns": true }],
-    "stage-0",
-    "react"
+    ["@babel/preset-env", {
+      "targets": {
+        "node": 12
+      },
+      "useBuiltIns": "usage",
+      "corejs": 3
+    }],
+    "@babel/preset-typescript",
+    "@babel/preset-react"
   ],
   "plugins": [
-    "lodash"
-  ],
-  "env": {
-    "production": {
-      "presets": ["react-optimize"],
-      "plugins": [
-        "babel-plugin-dev-expression",
-        "babel-plugin-transform-remove-console"
-      ]
-    },
-    "development": {
-      "plugins": [
-        "transform-class-properties",
-        "transform-es2015-classes",
-        "react-hot-loader/babel"
-      ]
-    }
-  }
+    "lodash",
+    "@babel/plugin-proposal-class-properties",
+    "@babel/plugin-transform-classes",
+    "@babel/plugin-syntax-dynamic-import"
+  ]
 }

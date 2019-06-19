@@ -1,4 +1,3 @@
-// @flow
 import {app, BrowserWindow, Menu, globalShortcut, systemPreferences} from 'electron';
 import windowStateKeeper from 'electron-window-state';
 import fs from 'graceful-fs';
@@ -7,6 +6,7 @@ import log from './log';
 const userData = app.getPath('userData');
 const dirSep = process.platform === 'win32' ? '\\' : '/';
 const mediaDir = `${userData}${dirSep}media`;
+
 if (!fs.existsSync(mediaDir)) {
   try {
     fs.mkdirSync(mediaDir);
@@ -15,7 +15,7 @@ if (!fs.existsSync(mediaDir)) {
   }
 }
 
-let mainWindow = null;
+let mainWindow: BrowserWindow;
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support'); // eslint-disable-line
@@ -28,6 +28,7 @@ if (process.env.NODE_ENV === 'development') {
   const p = path.join(__dirname, '..', 'app', 'node_modules'); // eslint-disable-line
   require('module').globalPaths.push(p); // eslint-disable-line
 }
+
 app.commandLine.appendSwitch('--enable-usermedia-screen-capturing');
 app.commandLine.appendSwitch('--enable-native-gpu-memory-buffers');
 app.commandLine.appendSwitch('--enable-gpu-rasterization');
@@ -42,7 +43,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-const installExtensions = async () => {
+const installExtensions = async (): Promise<any> => {
   if (process.env.NODE_ENV === 'development') {
     const installer = require('electron-devtools-installer'); // eslint-disable-line global-require
 
@@ -61,7 +62,7 @@ const installExtensions = async () => {
   }
 };
 
-app.on('ready', async () => {
+app.on('ready', async (): Promise<any> => {
   await installExtensions();
 
   let mainWindowState = windowStateKeeper({
@@ -103,11 +104,10 @@ app.on('ready', async () => {
   });
 
   mainWindow.on('closed', () => {
-    mainWindow = null;
     app.quit();
   });
 
-  const handleExceptionState = (e, killed) => {
+  const handleExceptionState = (e: Electron.Event, killed: boolean) => {
     mainWindow.webContents.reload();
   };
 

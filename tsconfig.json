@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "strict": true,
+    "noEmit": true,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "jsx": "react",
+    "typeRoots" : ["./node_modules/@types"],
+  },
+  "include": [
+    "app"
+  ],
+  "exclude": [
+    "app/dist",
+    "release",
+    "resources"
+  ]
+}

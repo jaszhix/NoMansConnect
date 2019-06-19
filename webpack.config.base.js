@@ -5,15 +5,27 @@
 import path from 'path';
 import webpack from 'webpack';
 import {dependencies as externals} from './app/package.json';
+import {readFileSync} from 'fs-extra-p';
+
+// babel-loader@8 seems to not use .babelrc implicitly
+const babelConfig = JSON.parse(readFileSync('./.babelrc'));
 
 export default {
   module: {
     rules: [
       {
-        test: /\.js?$/,
-        use: 'babel-loader',
+        test: /\.(js|jsx|mjs|ts|tsx)$/,
         exclude: /(node_modules|bower_components)/,
-      }
+        use: [{
+          loader: 'babel-loader',
+          options: babelConfig
+        }],
+      },
+      {
+        test: /\.js$/,
+        use: ['source-map-loader'],
+        enforce: 'pre'
+      },
     ]
   },
 
@@ -28,7 +40,7 @@ export default {
    * Determine the array of extensions that should be used to resolve modules.
    */
   resolve: {
-    extensions: ['.js', '.jsx', '.json'],
+    extensions: ['.js', '.jsx', '.tsx', '.ts', '.json'],
     modules: [
       path.join(__dirname, 'app'),
       'node_modules',
