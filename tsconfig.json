@@ -3,13 +3,15 @@
     "target": "esnext",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "isolatedModules": true,
-    "strict": true,
+    "module": "commonjs",
     "noEmit": true,
     "allowJs": true,
     "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": true,
     "jsx": "react",
-    "typeRoots" : ["./node_modules/@types"],
+    "baseUrl": "app",
+    "typeRoots" : ["./node_modules/@types", "./node_modules/csstype", "./types"],
   },
   "include": [
     "app"

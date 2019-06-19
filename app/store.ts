@@ -2,11 +2,13 @@ import {clone, intersection as intersect, difference} from 'lodash';
 import {find, findIndex, filter} from './lang';
 import log from './log';
 
-function storeError(method, key, message) {
+
+
+function storeError(method: string, key: string, message: string): void {
   log.error('Warning: [store -> ' + method + ' -> ' + key + '] ' + message);
 }
 
-function getByPath(key, object) {
+function getByPath(key: string, object: State): State {
   const path = key.split('.');
   for (let i = 0; i < path.length; i++) {
     object = object[path[i]];
@@ -27,8 +29,8 @@ function getByPath(key, object) {
  * See _connect.
  * @returns Initial state object with the public API.
  */
-function init(state = {}, listeners = [], connections = 0) {
-  const publicAPI = Object.freeze({
+function init(state: State, listeners: Listener[] = [], connections = 0) {
+  const publicAPI: State = Object.freeze({
     get,
     set,
     exclude,
@@ -38,7 +40,7 @@ function init(state = {}, listeners = [], connections = 0) {
     destroy
   });
 
-  function getAPIWithObject(object) {
+  function getAPIWithObject(object: State): State {
     return Object.assign(object, publicAPI);
   }
 
@@ -72,7 +74,7 @@ function init(state = {}, listeners = [], connections = 0) {
    * @param {string} [key=null]
    * @returns {object}
    */
-  function get(key = null) {
+  function get(key: string = '') {
     if (!key || key === '*') {
       return exclude();
     }
@@ -90,7 +92,7 @@ function init(state = {}, listeners = [], connections = 0) {
    * @param {object} object
    * @param {boolean} forceDispatch
    */
-  function set(object, cb = null, force = false) {
+  function set(object: State, cb: Function | boolean = false, force = false): State | void {
     let keys = Object.keys(object);
     let changed = false;
     for (let i = 0; i < keys.length; i++) {
@@ -127,7 +129,7 @@ function init(state = {}, listeners = [], connections = 0) {
    * @returns Partial or full state object with keys in
    * excludeKeys excluded, along with the public API for chaining.
    */
-  function exclude(excludeKeys = []) {
+  function exclude(excludeKeys: string[] = []): object {
     let apiKeys = Object.keys(publicAPI);
     let stateKeys = Object.keys(state);
     let filteredState = {};
@@ -150,12 +152,13 @@ function init(state = {}, listeners = [], connections = 0) {
    * @param {any} args
    * @returns {any} Return result of the callback.
    */
-  function trigger() {
+  function trigger(): any {
     const [key, ...args] = Array.from(arguments);
     let matchedListeners = filter(listeners, function(listener) {
       return listener.keys.indexOf(key) > -1;
     });
     if (matchedListeners.length === 0) {
+      console.log(listeners)
       storeError('trigger', key, 'Action not found.');
       return;
     }
@@ -169,15 +172,18 @@ function init(state = {}, listeners = [], connections = 0) {
     }
   }
 
-  function _connect(keys, callback, id, context) {
-    let listener;
+  function _connect(keys: any, callback: Function, id: number, context: object): void {
+    let listener: Listener;
 
     if (callback) {
+
       listener = find(listeners, _listener => _listener && _listener.callback === callback);
+
       if (context) {
         callback.bind(context);
       }
     }
+
     if (listener) {
       let newKeys = difference(keys, listener.keys);
       listener.keys.concat(newKeys);
@@ -192,9 +198,13 @@ function init(state = {}, listeners = [], connections = 0) {
    * @param {any} actions - can be a string, array, or an object.
    * @param {function} callback - callback to be fired on either state
    * property change, or through the trigger method.
-   * @returns Public API for chaining.
+   * @returns ID of the added listener.
    */
-  function connect(actions, callback, context) {
+  function connect(
+    actions: any,
+    callback: Function,
+    context: object
+  ): number {
     const id = connections++;
     if (actions === '*') {
       listeners.push({keys: Object.keys(state), callback, id});
@@ -212,7 +222,7 @@ function init(state = {}, listeners = [], connections = 0) {
     return id;
   }
 
-  function disconnectByKey(key) {
+  function disconnectByKey(key: string): void {
     let listenerIndex = findIndex(listeners, function(listener) {
       return listener.keys.indexOf(key) > -1;
     });
@@ -229,7 +239,7 @@ function init(state = {}, listeners = [], connections = 0) {
    *
    * @param {string} key
    */
-  function disconnect(key) {
+  function disconnect(key: DisconnectKey) {
     if (typeof key === 'string') {
       disconnectByKey(key);
     } else if (Array.isArray(key)) {

@@ -10,6 +10,10 @@ import {readFileSync} from 'fs-extra-p';
 // babel-loader@8 seems to not use .babelrc implicitly
 const babelConfig = JSON.parse(readFileSync('./.babelrc'));
 
+if (process.env.NODE_ENV === 'development') {
+  babelConfig.plugins.push('react-hot-loader/babel');
+}
+
 export default {
   module: {
     rules: [

@@ -277,7 +277,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         let newDiscoveries = [];
         each(Record, (discovery) => {
           let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
-          if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) {
+          if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) { // TODO: use indexOf
             discovery.NMCID = uaToObject(discovery.DD.UA).dataId;
             newDiscoveries.push(discovery);
           }
@@ -338,7 +338,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
   });
 }
 
-let pollSaveData;
+let pollSaveData: Function;
 let getLastSave = (opts) => {
   let {mode, init, machineId} = opts;
   if (mode && mode !== state.mode) {
@@ -349,7 +349,7 @@ let getLastSave = (opts) => {
 
   getLastGameModeSave(state.saveDirectory, state.ps4User, log).then((saveData) => {
     console.log('SAVE DATA: ', saveData)
-    let refLocation, location, username;
+    let refLocation: number, location, username;
     if (!state.ps4User) {
       location = formatID(saveData.result.PlayerStateData.UniverseAddress);
       delete location.RealityIndex;

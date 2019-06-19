@@ -7,14 +7,15 @@ import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
 import {assignIn, cloneDeep, orderBy, uniqBy, concat, first, isArray, throttle, pick, last} from 'lodash';
-import math from 'mathjs';
+import * as math from 'mathjs';
 
 import Loader from './loader';
-import {dirSep, getLastGameModeSave, exc, formatBase, css, tip, fsWorker, ajaxWorker} from './utils';
+import * as utils from './utils';
+const {dirSep, getLastGameModeSave, exc, formatBase, css, tip, fsWorker, ajaxWorker} = utils;
 import pollSaveData from './poll';
 import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
 import {each, find, findIndex, map, filter, parseSaveKeys} from './lang';
-
+// @ts-ignore
 import baseIcon from './assets/images/base_icon.png';
 
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDropdown} from './dropdowns';
@@ -35,12 +36,27 @@ import Container from './container';
 import {defaultPosition} from './constants';
 
 const {dialog} = remote;
-let win;
+let win: Electron.BrowserWindow;
 
 let formatCount = 1;
 
 class App extends React.Component {
-  constructor(props) {
+  topAttachedMenuStyle: CSSProperties;
+  titleStyle: CSSProperties;
+  titleBarControlsStyle: CSSProperties;
+  noDragStyle: CSSProperties;
+  connections: any[];
+  monitor: watch.Monitor | void;
+  state: GlobalState;
+  lastPoll: number;
+  lastMove: number;
+  saveJSON: string;
+  saveTool: string;
+  headerItemClasses: string;
+  searchIconStyle: string;
+  timeout: NodeJS.Timeout;
+
+  constructor(props: React.Props<any>) {
     super(props);
 
     this.state = state.get();
@@ -48,9 +64,9 @@ class App extends React.Component {
     this.topAttachedMenuStyle = {
       position: 'absolute',
       maxHeight: '42px',
-      zIndex: '99',
+      zIndex: 99,
       WebkitUserSelect: 'none',
-      WebkitAppRegion: 'drag'
+      WebkitAppRegion: 'drag',
     };
     this.titleStyle = {
       position: 'absolute',
@@ -68,13 +84,16 @@ class App extends React.Component {
       WebkitAppRegion: 'no-drag'
     };
     this.headerItemClasses = 'ui dropdown icon item';
+    this.connections = [];
+    this.monitor = undefined;
   }
   componentDidMount() {
     this.connections = [
       state
         .connect('*', (obj) => {
         if (process.env.NODE_ENV === 'development') {
-          let stackParts = new Error().stack.split('\n');
+          // @ts-ignore
+          let stackParts: string[] = new Error().stack.split('\n');
           console.log('STATE CALLEE: ', stackParts[6]);
         }
         console.log('STATE INPUT: ', obj);
@@ -113,7 +132,7 @@ class App extends React.Component {
         setWaypoint: (location) => this.setWaypoint(location),
         getMonitor: () => this.monitor,
         handleClearSearch: () => this.handleClearSearch(),
-        teleport: (...args) => this.handleTeleport(...args)
+        teleport: (...args: [any, any, any, any]) => this.handleTeleport(...args)
       })
     ];
     state._init(() => this.init());
@@ -130,7 +149,7 @@ class App extends React.Component {
     }
 
     // TBD: Work around electron starting in the home directory on Linux
-    let modulePath = remote.app.getPath('module').split(dirSep);
+    let modulePath: any = remote.app.getPath('module').split(dirSep);
     modulePath.pop();
     modulePath = modulePath.join(dirSep);
     window.modulePath = modulePath;
@@ -190,14 +209,14 @@ class App extends React.Component {
 
   }
   componentWillUnmount() {
-    win.off('maximize', this.handleMaximizeEvent);
-    win.off('unmaximize', this.handleMaximizeEvent);
+    win.removeListener('maximize', this.handleMaximizeEvent);
+    win.removeListener('unmaximize', this.handleMaximizeEvent);
     if (this.monitor) {
       this.monitor.stop();
     }
     state.destroy();
   }
-  checkMods = (cb) => {
+  checkMods = (cb?: Function) => {
     let initialized = false;
     let initialize = () => {
       if (!state.saveDirectory && process.platform !== 'win32') {
@@ -213,7 +232,7 @@ class App extends React.Component {
     };
 
     let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
-    let indexModsInUse = (_path, modPath) => {
+    let indexModsInUse = (_path: string, modPath: string) => {
       fsWorker.readFile(`${_path}${dirSep}Binaries${dirSep}SETTINGS${dirSep}TKGRAPHICSSETTINGS.MXML`, (err, data) => {
         if (err) {
           log.error('Unable to check NMS settings: ', _path);
@@ -222,7 +241,7 @@ class App extends React.Component {
         }
         let fullscreen = null;
         if (data) {
-          fullscreen = new Buffer.from(data).toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
+          fullscreen = Buffer.from(data).toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
         }
         if (fullscreen === 'true' || err) {
           state.set({autoCapture: false, loading: 'Checking for mods...'});
@@ -273,7 +292,7 @@ class App extends React.Component {
     }
 
     let hasPath = false;
-    let args = [];
+    let args: [string, string];
     let shouldReturn = false;
     each(letters, (drive, key) => {
       each(paths, (_path) => {
@@ -330,7 +349,7 @@ class App extends React.Component {
       return;
     }
 
-    if (!state.remoteLocations || !state.remoteLength === 0) {
+    if (!state.remoteLocations || !state.remoteLength) {
       return;
     }
     let locations = [];
@@ -484,7 +503,7 @@ class App extends React.Component {
     let path = q ? '/nmslocationsearch' : '/nmslocation';
     sort = sort === 'search' ? '-created' : sort;
 
-    let params = {
+    let params: LocationQueryParams = {
       page: page ? page : 1,
       sort: sort,
       q: q
@@ -503,7 +522,7 @@ class App extends React.Component {
       });
     }).catch((err) => {
       log.error('Failed to fetch remote locations: ', err.response);
-      let stateUpdate = {
+      let stateUpdate: GlobalState = {
         remoteLocations: state.remoteLocations,
         navLoad: false,
       };
@@ -519,7 +538,7 @@ class App extends React.Component {
       this.handleTeleport(currentLocation, 0, dataId, n);
     }
   }
-  handleSaveBase = (baseData=null) => {
+  handleSaveBase = (baseData = null) => {
     const {storedBases} = this.state;
     if (baseData) {
       storedBases.push(cloneDeep(baseData));
@@ -614,10 +633,11 @@ class App extends React.Component {
         log.error('Base restoration cancelled - unable to get index of base to be replaced.');
         return;
       }
+      // @ts-ignore
       let refIndex = findIndex(PersistentPlayerBases, (base) => base.Name === confirmed.Name);
       let newBase = PersistentPlayerBases[refIndex];
       let storedBase = cloneDeep(base);
-
+      // @ts-ignore
       log.error(`Restoring base ${base.Name} over ${confirmed.Name}`);
 
       // Base conversion algorithm by monkeyman192
@@ -627,6 +647,7 @@ class App extends React.Component {
       // 3-vector
       let upOriginal;
       if (storedBase.Objects.length > 0) {
+        // @ts-ignore
         upOriginal = last(storedBase.Objects).Up;
       } else {
         dialog.showMessageBox({
@@ -653,6 +674,7 @@ class App extends React.Component {
       // 3-vector
       let upNew;
       if (newBase.Objects.length > 0) {
+        // @ts-ignore
         upNew = last(newBase.Objects).Up;
       } else {
         dialog.showMessageBox({
@@ -674,8 +696,10 @@ class App extends React.Component {
       let M = math.multiply(Q, math.inv(P))
 
       each(storedBase.Objects, (object, i) => {
+        // @ts-ignore
         storedBase.Objects[i].At = math.multiply(M, object.At)._data
         storedBase.Objects[i].Up = upNew;
+        // @ts-ignore
         storedBase.Objects[i].Position = math.multiply(M, object.Position)._data;
       });
 
@@ -858,7 +882,7 @@ class App extends React.Component {
       height: window.innerHeight
     });
   }
-  handleSort = (e, sort) => {
+  handleSort = (e: React.MouseEvent, sort?: string) => {
     sort = typeof sort === 'string' ? sort : '-created';
     state.set({sort: sort, navLoad: true}, () => {
       this.fetchRemoteLocations(1, sort, false, true);

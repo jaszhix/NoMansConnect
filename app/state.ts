@@ -57,9 +57,7 @@ const showDefault = {
   }
 };
 
-let cb;
-
-const state = initStore({
+const state: GlobalState = initStore({
   // Core
   knownProducts,
   galaxies,
@@ -211,9 +209,9 @@ const state = initStore({
     'sortByDistance',
     'sortByModded'
   ],
-  _init: (_cb) => {
+  _init: (cb: Function) => {
     state.windowId = state.connect('window', () => win);
-    cb = _cb;
+
     if (process.env.NODE_ENV === 'production') {
       Raven
         .config('https://9729d511f78f40d0ae5ebdeabc9217fc@sentry.io/180778', {
@@ -264,7 +262,7 @@ const state = initStore({
           configDir: state.configDir,
           pageSize: state.pageSize
         });
-        state.handleSettingsWorker();
+        state.handleSettingsWorker(cb);
         const settings = pick(state, state.settingsKeys);
         window.settingsWorker.postMessage({
           method: 'new',
@@ -280,9 +278,9 @@ const state = initStore({
       state.set(e.data, true);
     }
   },
-  handleSettingsWorker: () => {
+  handleSettingsWorker: (cb: Function) => {
     window.settingsWorker.onmessage = (e) => {
-      let stateUpdate = {};
+      let stateUpdate: GlobalState = {};
 
       // Clear all cache for major API change
       if (!e.data.apiVersion || e.data.apiVersion !== state.apiVersion) {
@@ -383,6 +381,7 @@ const state = initStore({
 });
 
 if (process.env.NODE_ENV === 'development') {
-  window.state = state;
+  window.state = state.default;
 }
+
 export default state;

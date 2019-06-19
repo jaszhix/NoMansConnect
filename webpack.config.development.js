@@ -28,11 +28,11 @@ if (!(fs.existsSync(dll) && fs.existsSync(manifest))) {
 
 export default merge.smart(baseConfig, {
   mode: 'development',
-  devtool: 'inline-source-map',
+  devtool: 'source-map',
 
   entry: [
     //'@babel/polyfill',
-    'react-hot-loader/patch',
+    '@hot-loader/react-dom',
     `webpack-dev-server/client?http://localhost:${port}/`,
     'webpack/hot/only-dev-server',
     path.join(__dirname, 'app/index.js'),
@@ -40,6 +40,12 @@ export default merge.smart(baseConfig, {
 
   output: {
     publicPath: `http://localhost:${port}/dist/`
+  },
+
+  resolve: {
+    alias: {
+      'react-dom': '@hot-loader/react-dom'
+    },
   },
 
   module: {

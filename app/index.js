@@ -1,15 +1,12 @@
 import React from 'react';
 import {render} from 'react-dom';
-import {AppContainer} from 'react-hot-loader';
 import state from './state';
 import App from './app';
 import konami from 'konami';
 import './app.global.css';
 
 render(
-  <AppContainer>
-    <App />
-  </AppContainer>,
+  <App />,
   document.getElementById('app')
 );
 
@@ -17,9 +14,7 @@ if (module.hot) {
   module.hot.accept('./app', () => {
     const NextApp = require('./app').default;
     render(
-      <AppContainer>
-        <NextApp />
-      </AppContainer>,
+      <NextApp />,
       document.getElementById('app')
     );
   });
