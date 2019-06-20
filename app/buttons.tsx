@@ -1,7 +1,7 @@
 import React from 'react';
 import {cleanUp} from './utils';
 
-let style = {
+let style: CSSProperties = {
   left: '9px',
   letterSpacing: '3px',
   fontSize: '16px',
@@ -10,7 +10,16 @@ let style = {
   cursor: 'pointer'
 };
 
-class Button extends React.Component {
+interface ButtonProps {
+  style: CSSProperties;
+  onClick: React.MouseEventHandler;
+}
+
+interface ButtonState {
+  hover: boolean;
+}
+
+class Button extends React.Component<ButtonProps, ButtonState> {
   static defaultProps = {
     style: {}
   };

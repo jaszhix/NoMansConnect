@@ -1,16 +1,22 @@
 import React from 'react';
 import {map} from './lang';
 
-const textStyle = {
+const textStyle: CSSProperties = {
   position: 'relative',
   top: '140px',
   fontSize: '28px',
   width: '300px'
 };
-const fill = Array(64).fill('');
-class Loader extends React.Component {
+
+const fill: number[] = Array(64).fill('');
+
+interface LoaderProps {
+  loading: boolean;
+}
+
+class Loader extends React.Component<LoaderProps> {
   render() {
-    let style = !this.props.loading ? {
+    let style: CSSProperties = !this.props.loading ? {
       fontSize: '6px',
       left: '0px',
       position: 'relative'

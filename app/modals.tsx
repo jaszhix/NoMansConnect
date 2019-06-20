@@ -8,6 +8,7 @@ import ReactMarkdown from 'react-markdown';
 import moment from 'moment';
 import {assignIn, pick, isString, orderBy, upperFirst, clone, last} from 'lodash';
 
+import log from './log';
 import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
 import {each, findIndex, find, map, filter} from './lang';
@@ -19,7 +20,11 @@ import Item from './item';
 
 const {dialog} = remote;
 
-export class ImageModal extends React.Component {
+interface ImageModalProps {
+  image: string;
+}
+
+export class ImageModal extends React.Component<ImageModalProps> {
   constructor(props) {
     super(props);
   }
@@ -40,16 +45,29 @@ export class ImageModal extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 ImageModal = onClickOutside(ImageModal);
 
-export class UsernameOverrideModal extends React.Component {
+interface UsernameOverrideModalProps {
+  ps4User: boolean;
+}
+
+interface UsernameOverrideModalState {
+  name: string;
+}
+
+export class UsernameOverrideModal extends React.Component<UsernameOverrideModalProps, UsernameOverrideModalState> {
+  modalStyle: CSSProperties;
+
   constructor(props) {
     super(props);
+
     this.state = {
       name: ''
     };
+
     assignIn(this.state, pick(state.get(), ['ps4User']))
+
     this.modalStyle = {
       padding: '8px',
       textAlign: 'center',
@@ -97,14 +115,28 @@ export class UsernameOverrideModal extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 UsernameOverrideModal = onClickOutside(UsernameOverrideModal);
 
-export class RecoveryModal extends React.Component {
+interface RecoveryModalProps {
+  s: GlobalState;
+  type: string;
+  placeholder: string;
+}
+
+interface RecoveryModalState {
+  value: string;
+  address: string;
+  error: string;
+}
+
+export class RecoveryModal extends React.Component<RecoveryModalProps, RecoveryModalState> {
   constructor(props) {
     super(props);
     this.state = {
       value: '',
+      address: '',
+      error: ''
     };
   }
   componentWillUnmount() {
@@ -178,18 +210,35 @@ export class RecoveryModal extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 RecoveryModal = onClickOutside(RecoveryModal);
 
-export class LocationRegistrationModal extends React.Component {
+interface LocationRegistrationModalProps {
+  s: GlobalState;
+};
+
+interface LocationRegistrationModalState {
+  address: string;
+  galaxies: any[];
+  galaxy: number;
+  selectedGalaxy: number;
+  preventClose: boolean;
+  error: string;
+  name: string;
+}
+
+export class LocationRegistrationModal extends React.Component<LocationRegistrationModalProps, LocationRegistrationModalState> {
   constructor(props) {
     super(props);
+
     this.state = {
       address: '',
       galaxies: [],
       galaxy: 0,
       selectedGalaxy: 0,
-      preventClose: false
+      preventClose: false,
+      error: '',
+      name: '',
     };
   }
   componentDidMount() {
@@ -289,11 +338,19 @@ export class LocationRegistrationModal extends React.Component {
   }
 };
 
+interface NotificationProps {
+  notification: NotificationInfo;
+}
+
+// @ts-ignore
 LocationRegistrationModal = onClickOutside(LocationRegistrationModal);
 
-export class Notification extends React.Component {
+export class Notification extends React.Component<NotificationProps> {
+  modalStyle: CSSProperties;
+
   constructor(props) {
     super(props);
+
     this.modalStyle = {
       padding: '8px',
       textAlign: 'center',
@@ -367,7 +424,23 @@ const discoveryLevelMap = {
   Interactable: 1
 };
 
-class EventItem extends React.Component {
+interface EvenItemProps {
+  profile: any;
+  name: string;
+  type: string;
+  created: string | number;
+  image: string;
+  dataId: string;
+  score: number;
+  version: string;
+  shouldShowPlanetType: boolean;
+  isStart: boolean;
+  isEnd: boolean;
+  isLocation: boolean;
+  location: any;
+}
+
+class EventItem extends React.Component<EvenItemProps> {
   static defaultProps = {
     shouldShowPlanetType: true,
   };
@@ -441,7 +514,6 @@ class EventItem extends React.Component {
           onSubmit={null}
           onSaveBase={null}
           ps4User={false}
-          configDir={state.configDir}
           detailsOnly={true} /> : null}
         </div>
       </div>
@@ -449,13 +521,35 @@ class EventItem extends React.Component {
   }
 }
 
-export class ProfileModal extends React.Component {
+interface ProfileModalProps {
+  width: number;
+  height: number;
+  profileId: string;
+  username: string;
+  machineId: string;
+  profile: any; /* TODO */
+}
+
+interface ProfileModalState {
+  profile: any;
+  height: number;
+  discoveriesPage: number;
+  error: string;
+}
+
+export class ProfileModal extends React.Component<ProfileModalProps, ProfileModalState> {
   static propTypes = {
     profileId: PropTypes.string.isRequired
   }
   static defaultProps = {
     profileId: ''
   }
+
+  connections: any[];
+  willUnmount: boolean;
+  ref: HTMLElement;
+  eventRef: HTMLElement;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -711,6 +805,7 @@ export class ProfileModal extends React.Component {
                           } else if (previousLocation) {
                             let previousLocationDiscovery = last(previousLocation.discoveries);
                             if (previousLocationDiscovery) {
+                              // @ts-ignore
                               prevLevel = discoveryLevelMap[previousLocationDiscovery.type];
                             }
                           }
@@ -765,10 +860,20 @@ export class ProfileModal extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 ProfileModal = onClickOutside(ProfileModal);
 
-export class FriendRequestModal extends React.Component {
+interface FriendRequestModalProps {
+  username: string;
+  machineId: string;
+  notification: any; /* TODO */
+}
+
+interface FriendRequestModalState {
+  error: string;
+}
+
+export class FriendRequestModal extends React.Component<FriendRequestModalProps, FriendRequestModalState> {
   constructor(props) {
     super(props);
     this.state = {
@@ -824,10 +929,26 @@ export class FriendRequestModal extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 FriendRequestModal = onClickOutside(FriendRequestModal);
 
-export class BaseRestorationModal extends React.Component {
+interface BaseData {
+  savedBases: any[];
+  restoreBase: any;
+}
+
+interface BaseRestorationModalProps {
+  baseData: BaseData;
+  height: number;
+}
+
+interface BaseRestorationModalState {
+  baseOptions: any[];
+  selectedBase: [any, number];
+  preventClose: boolean;
+}
+
+export class BaseRestorationModal extends React.Component<BaseRestorationModalProps, BaseRestorationModalState> {
   static defaultProps = {
     baseData: {
       savedBases: [],
@@ -838,7 +959,8 @@ export class BaseRestorationModal extends React.Component {
     super(props);
     this.state = {
       baseOptions: [],
-      selectedBase: [null, 0]
+      selectedBase: [null, 0],
+      preventClose: false
     };
   }
   componentDidMount() {
@@ -894,10 +1016,19 @@ export class BaseRestorationModal extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 BaseRestorationModal = onClickOutside(BaseRestorationModal);
 
-export class LogModal extends React.Component {
+interface LogModalProps {}
+
+interface LogModalState {
+  log: string;
+  height: number;
+}
+
+export class LogModal extends React.Component<LogModalProps, LogModalState> {
+  willUnmount: boolean;
+  ref: any;
   constructor(props) {
     super(props);
     this.state = {
@@ -955,17 +1086,27 @@ export class LogModal extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 LogModal = onClickOutside(LogModal);
 
-const menuContainerStyle = {
+const menuContainerStyle: CSSProperties = {
   minWidth: '183px',
   borderBottomLeftRadius: '0px',
   borderBottomRightRadius: '0px',
   borderTop: '1px solid rgb(149, 34, 14)'
 };
 
-export class SettingsModal extends React.Component {
+interface SettingsModalProps {
+  s: GlobalState;
+  onSync: () => void;
+  onUsernameOverride: () => void;
+}
+
+interface SettingsModalState {}
+
+export class SettingsModal extends React.Component<SettingsModalProps, SettingsModalState> {
+  willUnmount: boolean;
+
   constructor(props) {
     super(props);
   }
@@ -1215,5 +1356,5 @@ export class SettingsModal extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 SettingsModal = onClickOutside(SettingsModal);

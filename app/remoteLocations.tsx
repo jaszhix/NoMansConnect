@@ -1,13 +1,43 @@
 import state from './state';
 import React from 'react';
 import {delay, throttle} from 'lodash';
-import log from './log';
 import {whichToShow} from './utils';
 import {each, findIndex} from './lang';
 import {BasicDropdown} from './dropdowns';
 import LocationBox from './locationBox';
 
-class RemoteLocations extends React.Component {
+interface RemoteLocationsProps {
+  s: GlobalState;
+  onPagination: Function;
+  onFav: Function;
+  onSaveBase: Function;
+  onSearch: Function;
+  ps4User: boolean;
+  isOwnLocation: boolean;
+  updating: boolean;
+  locations: any[];
+}
+
+interface RemoteLocationsState {
+  init: boolean;
+}
+
+interface MenuOption {
+  id: string,
+  label: string,
+  toggle?: boolean,
+  disabled?: boolean
+  onClick?: Function;
+}
+
+class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocationsState> {
+  range: VisibleRange;
+  connections: any[];
+  recentExplorations: HTMLElement;
+  uiSegmentStyle: CSSProperties;
+  throttledPagination: Function;
+  scrollTimeout: NodeJS.Timeout;
+
   constructor(props){
     super(props);
     this.state = {
@@ -25,7 +55,7 @@ class RemoteLocations extends React.Component {
       }),
       state.connect(['remoteLocationsColumns', 'compactRemote'], () => setTimeout(() => this.setViewableRange(this.recentExplorations), 0)),
       state.connect({
-        updateRemoteLocation: (...args) => this.handleUpdate(...args)
+        updateRemoteLocation: (...args: [string, object, boolean]) => this.handleUpdate(...args)
       })
     ];
     this.uiSegmentStyle = {
@@ -46,6 +76,7 @@ class RemoteLocations extends React.Component {
       }
     };
     checkRemote();
+    // @ts-ignore
     this.throttledPagination = throttle(this.props.onPagination, 1000, {leading: true});
   }
   componentWillUnmount() {
@@ -99,7 +130,7 @@ class RemoteLocations extends React.Component {
   handleFavorite = (location, upvote) => {
     this.props.onFav(location, upvote);
   }
-  handleUpdate = (dataId, location, remove = false) => {
+  handleUpdate = (dataId: string, location: any, remove = false) => {
     let {remoteLocations} = this.props.s;
     dataId = location ? location.dataId : dataId;
     let refIndex = findIndex(remoteLocations.results, (_location) => _location.dataId === location.dataId);
@@ -131,18 +162,18 @@ class RemoteLocations extends React.Component {
     } else {
       remoteLocationsWidth = '1300px';
     }
-    let containerStyle = {
+    let containerStyle: CSSProperties = {
       position: 'absolute',
       right: '54px',
-      zIndex: '91',
+      zIndex: 91,
       maxWidth: remoteLocationsWidth,
     };
-    let uiSegmentsStyle = {
+    let uiSegmentsStyle: CSSProperties = {
       display: 'inline-flex',
       paddingTop: '14px',
       width: '400px !important'
     };
-    let innerContainerStyle = {
+    let innerContainerStyle: CSSProperties = {
       maxHeight: `${p.s.height - 125}px`,
       width: remoteLocationsWidth,
       minWidth: '400px',
@@ -152,7 +183,7 @@ class RemoteLocations extends React.Component {
       position: 'relative'
     };
 
-    let leftOptions = [
+    let leftOptions: MenuOption[] = [
       {
         id: 'remoteLocationsColumns',
         label: `Max Columns: ${p.s.remoteLocationsColumns}`,

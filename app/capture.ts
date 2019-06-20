@@ -5,7 +5,7 @@ const primaryDisplay = remote.screen.getPrimaryDisplay();
 const types = ['window']
 let key = 'bounds';
 
-const screenshot = function(proceed, callback, debug) {
+const screenshot = function(proceed: boolean, callback: Function) {
   if (!proceed) {
     callback('');
     return;
@@ -30,6 +30,7 @@ const screenshot = function(proceed, callback, debug) {
     };
     for (let i = 0; i < sources.length; ++i) {
       if (sources[i].name === 'Screen 1' || sources[i].name === 'Entire screen' || sources[i].name === `No Man's Sky`) {
+        // @ts-ignore
         callback(sources[i].thumbnail.toDataURL('image/jpeg', 0.75));
         return;
       }

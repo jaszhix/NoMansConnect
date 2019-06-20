@@ -3,16 +3,25 @@ import ReactMarkdown from 'react-markdown';
 import openExternal from 'open-external';
 import {cleanUp} from './utils';
 
-const iconStyle = {
+const iconStyle: CSSProperties = {
   position: 'relative',
   top: '-2px'
 };
 
-class Item extends React.Component {
-  static defaultProps = {
-    dataTip: null,
-    onValueClick: null
-  };
+interface ItemProps {
+  dataTip?: any;
+  dataPlace?: string;
+  onValueClick?: React.MouseEventHandler;
+  label?: string;
+  className?: string;
+  value?: string;
+  icon?: string;
+}
+
+class Item extends React.Component<ItemProps> {
+  descriptionRef: HTMLElement;
+ // onWindowResize: Function;
+
   constructor(props) {
     super(props);
   }
@@ -20,7 +29,7 @@ class Item extends React.Component {
     e.preventDefault();
     openExternal(e.target.href);
   }
-  componentDidMount(){
+  componentDidMount() {
     if (this.props.label === 'Description') {
       setTimeout(() => {
         if (this.descriptionRef) {
@@ -29,8 +38,7 @@ class Item extends React.Component {
       }, 0);
     }
   }
-  componentWillUnmount(){
-    window.removeEventListener('resize', this.onWindowResize);
+  componentWillUnmount() {
     if (this.descriptionRef) {
       this.descriptionRef.removeEventListener('click', this.handleDescClick);
     }

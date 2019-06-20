@@ -1,12 +1,11 @@
 import {remote} from 'electron';
-import fs from 'graceful-fs';
 import log from './log';
 import state from './state';
 import openExternal from 'open-external';
-import {last} from 'lodash';
 import v from 'vquery';
-import {fsWorker, ajaxWorker} from './utils';
-import {each, tryFn} from './lang';
+import {ajaxWorker} from './utils';
+import {each} from './lang';
+// @ts-ignore
 import defaultWallpaper from './assets/images/default_wallpaper.png';
 
 const {dialog} = remote;
@@ -41,7 +40,7 @@ export const handleRestart = () => {
 };
 
 export const handleWallpaper = () => {
-  let wallpaper = defaultWallpaper;
+  let wallpaper: string = defaultWallpaper;
   if (state.wallpaper) {
     wallpaper = `'file://${state.wallpaper}'`;
   }
@@ -92,14 +91,17 @@ export const handleSelectSaveDirectory = () => {
 
 export const handleUpgrade = (nextVersion) => {
   let {title} = state;
+
   title = title.replace(/NO/, 'OLD');
   state.set({
     updateAvailable: true,
     title
   });
+
   let upgradeMessage = `No Man's Connect v${nextVersion} is available.`;
-  log.error(upgradeMessage);
   let infoUrl = 'https://github.com/jaszhix/NoMansConnect/releases';
+
+  log.error(upgradeMessage);
 
   setTimeout(() => {
     dialog.showMessageBox({
@@ -132,7 +134,7 @@ export const handleSaveDataFailure = () => {
   });
 };
 
-export const handleUsernameOverride = (username) => {
+export const handleUsernameOverride = (username: string): void => {
   if (username.length === 0) {
     dialog.showMessageBox({
       type: 'info',
@@ -142,6 +144,7 @@ export const handleUsernameOverride = (username) => {
     });
     return;
   }
+
   ajaxWorker.post('/nmsoverride/', {
     username: state.username,
     override: username,
@@ -174,7 +177,7 @@ export const handleUsernameOverride = (username) => {
   });
 }
 
-export const handleProtectedSession = (username='Explorer') => {
+export const handleProtectedSession = (username = 'Explorer'): void => {
   dialog.showMessageBox({
     title: `Protection Enabled For ${username}`,
     message: 'This username was protected by another user. When you protect your username, the app will associate your computer with your username to prevent impersonation. If this is in error, please open an issue on the Github repository.',

@@ -9,10 +9,12 @@ import ReactTooltip from 'react-tooltip';
 import {truncate, upperFirst, isEqual, last} from 'lodash';
 import moment from 'moment';
 
-import {css, tip, cleanUp, formatForGlyphs, ajaxWorker, fsWorker} from './utils';
+import {css, tip, cleanUp, formatForGlyphs, ajaxWorker, fsWorker, dirSep} from './utils';
 import {each, map, tryFn} from './lang';
 
+// @ts-ignore
 import baseIcon from './assets/images/base_icon.png';
+// @ts-ignore
 import spaceStationIcon from './assets/images/spacestation_icon.png';
 
 import {BasicDropdown} from './dropdowns';
@@ -22,30 +24,76 @@ import {locationItemStyle} from './constants';
 
 const glyphs = {};
 const glyphsChars = ['A', 'B', 'C', 'D', 'E', 'F', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-const glyphStyle = {
+
+const glyphStyle: CSSProperties = {
   height: '16px',
   width: '16px'
 };
 
-each(glyphsChars, character => {
-  glyphs[character] = require(`./assets/images/glyphs/${character}.png`);
-});
-
-const compactRemoteScrollBoxStyle = {
+const compactRemoteScrollBoxStyle: CSSProperties = {
   maxHeight: '500px',
   overflowY: 'hidden',
   paddingTop: '2px',
   paddingBottom: '2px'
 };
 
-class LocationBox extends React.Component {
-  static defaultProps = {
-    selectType: false,
-    name: '',
-    description: '',
-  };
+each(glyphsChars, character => {
+  glyphs[character] = require(`./assets/images/glyphs/${character}.png`);
+});
+
+interface LocationBoxProps {
+  selectType: boolean;
+  name: string;
+  description: string;
+  image: string;
+  username: string;
+  currentLocation: string;
+  location: any; // TODO
+  offline?: boolean;
+  compactRemote?: boolean;
+  detailsOnly?: boolean;
+  isOwnLocation: boolean;
+  edit: boolean;
+  navLoad?: boolean;
+  ps4User: boolean;
+  isSelectedLocationRemovable: boolean;
+  isVisible: boolean;
+  updating: boolean;
+  version: boolean;
+  profile?: any;
+  i?: number;
+  width: number;
+  height: number;
+  favorites: string[];
+  onCompactRemoteSwitch?: () => void;
+  onEdit: () => void;
+  onUpdate?: (dataId: string, data: any /* location */, remove?: boolean) => void;
+  onSaveBase: (baseData: any) => void;
+  onMarkCompatible: () => void;
+  onDeleteScreen: () => void;
+  onUploadScreen: () => void;
+  onRemoveStoredLocation: () => void;
+  onSubmit: (name: string, description: string) => void;
+  onFav: (location: any) => void;
+}
+
+interface LocationBoxState {
+  hover: string;
+  limit: boolean;
+  name: string;
+  description: string;
+  image: string;
+  profile: any;
+  location: any;
+  positionSelect: boolean;
+  positionEdit: boolean;
+  positionEditHover: number;
+  compactRemote: boolean;
+}
+
+class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   static getDerivedStateFromProps = (nextProps, nextState) => {
-    let stateUpdate = {};
+    let stateUpdate: GlobalState = {};
     if (nextProps.location.dataId !== nextState.location.dataId) {
       state.trigger('resetLocationScrollTop');
       stateUpdate.location = nextProps.location;
@@ -53,6 +101,11 @@ class LocationBox extends React.Component {
     }
     return stateUpdate;
   }
+
+  connections: any[];
+  scrollBox: HTMLElement;
+  willUnmount: boolean;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -65,7 +118,8 @@ class LocationBox extends React.Component {
       location: this.props.location,
       positionSelect: false,
       positionEdit: false,
-      positionEditHover: -1
+      positionEditHover: -1,
+      compactRemote: false
     };
   }
   componentDidMount() {
@@ -156,7 +210,7 @@ class LocationBox extends React.Component {
           responseType: 'arraybuffer',
         })
         .then(res => {
-          fsWorker.writeFile(file, new Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
+          fsWorker.writeFile(file, Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
             if (!err && !this.willUnmount && this.scrollBox) {
               tryFn(() => this.setState({image: `${file}`}));
             } else {
@@ -190,7 +244,7 @@ class LocationBox extends React.Component {
     this.setState({positionEdit: false});
     state.trigger('updateLocation', this.state.location);
   }
-  handleTeleport = (position) => {
+  handleTeleport = (position?) => {
     let {location, positionSelect} = this.state;
     let {selectType, i} = this.props;
     if (positionSelect) {
@@ -246,7 +300,7 @@ class LocationBox extends React.Component {
         {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
         <Item label="Created" value={moment(location.created).format('MMMM D, Y')} />
         {location.mods && location.mods.length > 0 && !p.compactRemote ? (
-          <Item label={`Mods Used (${location.mods.length})`} dataPlace="top" dataTip={utils.tip(this.getModMarkup(location.mods))} />
+          <Item label={`Mods Used (${location.mods.length})`} dataPlace="top" dataTip={tip(this.getModMarkup(location.mods))} />
         ) : null}
       </div>
     );
@@ -293,7 +347,7 @@ class LocationBox extends React.Component {
       }
     } else {
       if (location.dataId !== p.currentLocation && !p.ps4User) {
-        let saveFileInfoTip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(utils.dirSep)))}</strong><br /> Ensure the game is paused first, and afterwards, select "Reload current" from the game's options menu.`;
+        let saveFileInfoTip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(dirSep)))}</strong><br /> Ensure the game is paused first, and afterwards, select "Reload current" from the game's options menu.`;
         leftOptions.push({
           id: 'teleport',
           tooltip: saveFileInfoTip,
@@ -346,7 +400,7 @@ class LocationBox extends React.Component {
           leftOptions.push({
             id: 'uploadScreen',
             label: 'Upload Screenshot',
-            onClick: () => p.onUploadScreen()
+            onClick: () => p.onDeleteScreen()
           });
         }
       }
@@ -369,10 +423,10 @@ class LocationBox extends React.Component {
       });
     }
 
-    let visibleStyle = {
+    let visibleStyle: CSSProperties = {
       background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
       display: p.detailsOnly ? 'WebkitBox' : 'inline-table',
-      opacity: '1',
+      opacity: 1,
       borderTop: p.detailsOnly ? 'unset' : '2px solid #95220E',
       textAlign: 'left',
       marginTop: p.selectType ? '26px' : 'initial',
@@ -383,7 +437,7 @@ class LocationBox extends React.Component {
       minHeight: p.detailsOnly ? 'unset' : p.compactRemote ? '68px' : '245px',
       maxHeight: p.detailsOnly ? 'unset' : '289px',
       zIndex: p.selectType ? '91' : 'inherit',
-      position: p.selectType ? 'fixed' : '',
+      position: p.selectType ? 'fixed' : '', // TBD
       left: p.selectType ? '28px' : 'inherit',
       top: p.selectType ? `${p.height - 271}px` : 'inherit',
       WebkitUserSelect: 'none'
@@ -496,14 +550,19 @@ class LocationBox extends React.Component {
             <div className="ui segment LocationBox__uiSegmentEditStyle">
               <div className="ui input" style={{width: '200px'}}>
                 <div className="row">
-                  <input className="LocationBox__inputStyle" type="text" value={this.state.name} onChange={this.handleNameChange} maxLength={30} placeholder="Name" />
+                  <input
+                  className="LocationBox__inputStyle"
+                  type="text"
+                  value={this.state.name}
+                  onChange={this.handleNameChange}
+                  maxLength={30}
+                  placeholder="Name" />
                 </div>
               </div>
               <div className="ui input" style={{width: '200px'}}>
                 <div className="row">
                   <textarea
                   className="LocationBox__textareaStyle"
-                  type="text"
                   value={this.state.description}
                   onChange={this.handleDescriptionChange}
                   maxLength={200}

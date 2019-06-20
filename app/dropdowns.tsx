@@ -14,29 +14,60 @@ import {findIndex, map} from './lang';
 
 const {dialog} = remote;
 
-const menuContainerStyle = {
+const menuContainerStyle: CSSProperties = {
   minWidth: '183px',
   borderBottomLeftRadius: '0px',
   borderBottomRightRadius: '0px',
   borderTop: '1px solid rgb(149, 34, 14)'
 };
-const noDragStyle = {
+const noDragStyle: CSSProperties = {
   WebkitAppRegion: 'no-drag'
 };
-const trashIconContainerStyle = {
+const trashIconContainerStyle: CSSProperties = {
   position: 'relative',
   left: '92%',
   width: '179px',
   top: '-14px',
   cursor: 'pointer'
 };
-const notificationTrashIconContainerStyle = {
+const notificationTrashIconContainerStyle: CSSProperties = {
   position: 'relative',
   top: '14px',
   cursor: 'pointer'
 };
 
-export class BaseDropdownMenu extends React.Component {
+interface BasicDropdownProps {
+  options?: any[];
+  selectedGalaxy?: number;
+  icon?: string;
+  showValue?: boolean;
+  persist?: boolean;
+  isGalaxies?: boolean;
+  height?: number;
+  width?: number;
+  detailsOnly?: boolean;
+}
+
+interface BasicDropdownState {
+  open?: boolean;
+  maxHeight?: number;
+}
+
+interface BaseDropdownMenuProps {
+  onSaveBase: Function;
+  onRestoreBase: Function;
+  storedBases: any[]; // TODO: create base interface
+  baseIcon: string;
+}
+
+interface BaseDropdownMenuState extends BasicDropdownState {
+  hover?: number;
+}
+
+export class BaseDropdownMenu extends React.Component<BaseDropdownMenuProps, BaseDropdownMenuState> {
+  baseItemStyle: CSSProperties;
+  menuContainerStyle: CSSProperties;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -137,10 +168,15 @@ export class BaseDropdownMenu extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 BaseDropdownMenu = onClickOutside(BaseDropdownMenu);
 
-export class SaveEditorDropdownMenu extends React.Component {
+interface SaveEditorDropdownMenuProps {
+  profile: any;
+  onCheat: Function;
+}
+
+export class SaveEditorDropdownMenu extends React.Component<SaveEditorDropdownMenuProps, BasicDropdownState> {
   constructor(props) {
     super(props);
     this.state = {
@@ -211,7 +247,7 @@ export class SaveEditorDropdownMenu extends React.Component {
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
           <div
           id="repairInventory|50"
-          style={{opacity: p.profile.exp >= 50 ? '1' : '0.5'}}
+          style={{opacity: p.profile.exp >= 50 ? 1 : 0.5}}
           className={`item${disabled ? ' item-disabled' : ''}`}
           onClick={this.handleClick}
           data-place="left"
@@ -220,7 +256,7 @@ export class SaveEditorDropdownMenu extends React.Component {
           </div>
           <div
           id="stockInventory|100"
-          style={{opacity: p.profile.exp >= 100 ? '1' : '0.5'}}
+          style={{opacity: p.profile.exp >= 100 ? 1 : 0.5}}
           className={`item${disabled ? ' item-disabled' : ''}`}
           onClick={this.handleClick}
           data-place="left"
@@ -229,7 +265,7 @@ export class SaveEditorDropdownMenu extends React.Component {
           </div>
           <div
           id="refuelEnergy|200"
-          style={{opacity: p.profile.exp >= 200 ? '1' : '0.5'}}
+          style={{opacity: p.profile.exp >= 200 ? 1 : 0.5}}
           className={`item${disabled ? ' item-disabled' : ''}`}
           onClick={this.handleClick}
           data-place="left"
@@ -249,10 +285,14 @@ export class SaveEditorDropdownMenu extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 SaveEditorDropdownMenu = onClickOutside(SaveEditorDropdownMenu);
 
-export class DropdownMenu extends React.Component {
+interface DropdownMenuProps extends BasicDropdownState {
+  s: GlobalState;
+}
+
+export class DropdownMenu extends React.Component<DropdownMenuProps, BaseDropdownMenuState>  {
   constructor(props) {
     super(props);
     this.state = {
@@ -399,10 +439,10 @@ You should have received a copy of the GNU General Public License along with thi
     );
   }
 };
-
+// @ts-ignore
 DropdownMenu = onClickOutside(DropdownMenu);
 
-export class BasicDropdown extends React.Component {
+export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDropdownState> {
   static defaultProps = {
     options: [],
     selectedGalaxy: 0,
@@ -412,6 +452,11 @@ export class BasicDropdown extends React.Component {
     isGalaxies: true,
     height: 0
   };
+
+  connectId: number;
+  ref: HTMLElement;
+  willUnmount: boolean;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -510,10 +555,15 @@ export class BasicDropdown extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 BasicDropdown = onClickOutside(BasicDropdown);
 
-export class NotificationDropdown extends React.Component {
+interface NotificationDropdownProps extends BasicDropdownProps {
+  machineId: string;
+  username: string;
+}
+
+export class NotificationDropdown extends React.Component<NotificationDropdownProps, BaseDropdownMenuState> {
   static defaultProps = {
     options: [],
     selectedGalaxy: 0,
@@ -521,9 +571,12 @@ export class NotificationDropdown extends React.Component {
     showValue: true,
     persist: false
   };
+  willUnmount: boolean;
+
   constructor(props) {
     super(props);
     this.state = {
+      hover: -1,
       open: false
     };
   }
@@ -571,8 +624,8 @@ export class NotificationDropdown extends React.Component {
           background: 'rgb(23, 26, 22)',
           maxHeight: `${height / 2}px`,
           width: '400px',
-          overflowY: 'none',
-          overflowX: 'none'
+          overflowY: 'hidden',
+          overflowX: 'hidden'
         }}
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
           {this.props.options.length > 0 ? map(this.props.options, (option, i)=>{
@@ -609,5 +662,5 @@ export class NotificationDropdown extends React.Component {
     );
   }
 };
-
+// @ts-ignore
 NotificationDropdown = onClickOutside(NotificationDropdown);

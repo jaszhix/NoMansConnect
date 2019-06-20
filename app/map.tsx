@@ -1,6 +1,19 @@
 import state from './state';
 import React from 'react';
-import {ScatterChart, Scatter, XAxis, YAxis, ZAxis, CartesianGrid, Tooltip, Legend, ReferenceArea} from 'recharts';
+import {
+  ScatterChart,
+  Scatter, XAxis,
+  YAxis,
+  ZAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ReferenceArea,
+  // types
+  TickFormatterFunction,
+  ScaleType,
+  PolarRadiusAxisDomain
+} from 'recharts';
 import {delay, isEqual, last} from 'lodash';
 import v from 'vquery';
 import {BasicDropdown} from './dropdowns';
@@ -8,18 +21,18 @@ import Map3D from './map3d';
 import {uuidV4, cleanUp} from './utils';
 import {each, map} from './lang';
 
-const toolTipHeaderStyle = {
+const toolTipHeaderStyle: CSSProperties = {
   padding: '3px 5px',
-  fontWeight: '600',
+  fontWeight: 600,
   borderBottom: '1px solid rgb(149, 34, 14)'
 };
-const toolTipChildStyle = {
-  fontWeight: '500'
+const toolTipChildStyle: CSSProperties = {
+  fontWeight: 500
 }
-const toolTipExploredStyle = {
+const toolTipExploredStyle: CSSProperties = {
   padding: '0px 5px'
 };
-const toolTipContainerStyle = {
+const toolTipContainerStyle: CSSProperties = {
   display: 'inline-table',
   textAlign: 'left',
   fontSize: '16px',
@@ -34,7 +47,13 @@ const travelCurrentLocation = () => {
   window.travelToCurrent = true;
 };
 
-class TooltipChild extends React.Component {
+interface TooltipChildProps {
+  active: boolean;
+  isSelected: boolean;
+  payload: any[];
+}
+
+class TooltipChild extends React.Component<TooltipChildProps> {
   constructor(props) {
     super(props);
   }
@@ -76,6 +95,8 @@ class TooltipChild extends React.Component {
               key={i}
               className="ui segment"
               style={toolTipExploredStyle}>
+                {/*
+                // @ts-ignore */}
                 {`${item.name}: ${item.name === 'Z' ? (0, 4096) - item.value : item.value}`}
               </div>
             );
@@ -87,14 +108,73 @@ class TooltipChild extends React.Component {
   }
 };
 
-class ThreeDimScatterChart extends React.Component {
+interface MapCoordinate {
+  x: number;
+  y: number;
+  z: number;
+};
+
+interface ThreeDimScatterChartProps {
+  remoteLocations: APIResult;
+  storedLocations: any[];
+  selectedLocation: any;
+  currentLocation: string;
+  username: string;
+  show: boolean;
+  mapLines: boolean;
+  init: boolean;
+  size: number;
+  selectedGalaxy: number;
+  width: number;
+  height: number;
+  remoteLocationsColumns: number;
+  onInit: () => void;
+};
+
+interface ThreeDimScatterChartState {
+  currentLocation: string;
+  locations: any[];
+  remoteLocations: any[];
+  selectedLocation: any;
+  favLocations: any[];
+  baseLocations: any[];
+  ps4Locations: any[];
+  center: MapCoordinate[];
+  size: number;
+  zRange: number[];
+  ticks: number[];
+  range: number[];
+  xDomain: [PolarRadiusAxisDomain, PolarRadiusAxisDomain];
+  yDomain: [PolarRadiusAxisDomain, PolarRadiusAxisDomain];
+  zoom: number;
+  zoomHistory: any[];
+  startCoordinates: number[] | null;
+  endCoordinates: number[] | null;
+  scale: ScaleType;
+  mapLines: boolean;
+}
+
+class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, ThreeDimScatterChartState> {
+  legendStyle: CSSProperties;
+  tooltipCursor: RechartsTooltipProps;
+  chartMargin: RechartsMargin;
+  xTickFormatter: TickFormatterFunction;
+  yTickFormatter: TickFormatterFunction;
+  allowZoom: boolean;
+  dragCount: number;
+  connections: any[];
+  willUnmount: boolean;
+  dragging: boolean;
+  dragCancelled: boolean;
+  lastMove: number;
+
   constructor(props) {
     super(props);
     this.state = {
-      currentLocation: [],
+      currentLocation: '',
       locations: [],
       remoteLocations: [],
-      selectedLocation: [],
+      selectedLocation: null,
       favLocations: [],
       baseLocations: [],
       ps4Locations: [],
@@ -371,11 +451,11 @@ class ThreeDimScatterChart extends React.Component {
     this.props.show[e.payload.name].value = !this.props.show[e.payload.name].value;
     state.set({show: this.props.show, navLoad: true});
     if (e.payload.name === 'Center') {
-      this.handlePostMessageSize(this.props);
+      this.handlePostMessageSize();
     } else if (e.payload.name.indexOf('Selected') > -1) {
-      this.handlePostMessageSelect(this.props);
+      this.handlePostMessageSelect();
     } else {
-      this.handlePostMessage(this.props);
+      this.handlePostMessage();
     }
     this.handleUpdateLegend();
   }
@@ -488,6 +568,8 @@ class ThreeDimScatterChart extends React.Component {
       onMouseDown={this.handleMouseDown}
       onMouseMove={this.handleMouseMove}
       onMouseUp={this.handleMouseUp}>
+        {/*
+        // @ts-ignore */}
         <XAxis
         scale={scale}
         allowDataOverflow={isZoom}
@@ -500,6 +582,8 @@ class ThreeDimScatterChart extends React.Component {
         range={range}
         name="X"
         label="X" />
+        {/*
+        // @ts-ignore */}
         <YAxis
         scale={scale}
         allowDataOverflow={isZoom}
@@ -512,8 +596,12 @@ class ThreeDimScatterChart extends React.Component {
         range={range}
         name="Z"
         label="Z" />
+        {/*
+        // @ts-ignore */}
         <ZAxis allowDataOverflow={isZoom} dataKey="z" range={zRange} name="Y" />
         <CartesianGrid strokeDasharray={`${zoom} ${zoom}`} />
+        {/*
+        // @ts-ignore */}
         <Tooltip cursor={this.tooltipCursor} content={<TooltipChild />} selectedLocation={this.props.selectedLocation} />
         <Legend align="right" wrapperStyle={this.legendStyle} iconSize={12} onClick={this.handleLegendClick} />
         {map(legends, (l) => l)}
@@ -533,7 +621,35 @@ class ThreeDimScatterChart extends React.Component {
   }
 };
 
-class GalacticMap extends React.Component {
+interface GalacticMapProps {
+  remoteLocations: APIResult;
+  storedLocations: any[];
+  selectedLocation: any;
+  currentLocation: string;
+  username: string;
+  searchCache: APIResult;
+  galaxyOptions: any[];
+  map3d: boolean;
+  mapDrawDistance: boolean;
+  mapLines: boolean;
+  show: boolean;
+  selectedGalaxy: number;
+  width: number;
+  height: number;
+  remoteLocationsColumns: number;
+  onSearch: () => void;
+  onRestart: () => void;
+};
+
+interface GalacticMapState {
+  init: boolean;
+};
+
+class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
+  mapWrapper: CSSProperties;
+  leftDropdownWrapper: CSSProperties;
+  connections: any[];
+
   constructor(props) {
     super(props);
     this.state = {
@@ -634,7 +750,7 @@ class GalacticMap extends React.Component {
   }
   render() {
     let p = this.props;
-    if (!p.selectedGalaxy < 0) {
+    if (p.selectedGalaxy < 0) {
       return null;
     }
     let compact = p.width <= 1212 || p.height <= 850;
@@ -724,11 +840,11 @@ class GalacticMap extends React.Component {
         top: '-11px',
         left: '15px',
         WebkitTransition: 'left 0.1s, background 0.1s, opacity 0.2s',
-        zIndex: p.map3d ? '0' : '90',
+        zIndex: p.map3d ? 0 : 90,
         WebkitUserSelect: 'none',
         minWidth: '360px',
         minHeight: '360px',
-        opacity: this.state.init && !p.map3d ? '0' : '1'
+        opacity: this.state.init && !p.map3d ? 0 : 1
       }}>
         <h3 style={{textAlign: compact ? 'left' : 'inherit'}}>Galactic Map</h3>
         {p.galaxyOptions.length > 0 ?

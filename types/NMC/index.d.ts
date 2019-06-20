@@ -1,5 +1,6 @@
 import * as CSS from 'csstype';
 import * as Raven from 'raven-js';
+import * as recharts from 'recharts';
 
 declare global {
   interface State extends Object {
@@ -23,17 +24,40 @@ declare global {
   type Listener = _Listener;
   type DisconnectKey = string[] | number;
 
+  type Map3DCoordinates = [number, number, number] | boolean | any /* TODO */;
+
   interface Window {
     state?: GlobalState;
     modulePath?: string;
+    travelTo?: Map3DCoordinates;
     coreCount?: number;
+    __mouseDown?: number;
+    travelToCurrent?: boolean;
     jsonWorker: Worker;
     settingsWorker: Worker;
     Raven: Raven.RavenStatic;
   }
 
+  interface NodeModule {
+    hot?: boolean;
+  }
+
+  // @ts-ignore
   interface CSSProperties extends CSS.Properties {
     WebkitAppRegion?: string;
+    position?: CSS.PositionProperty | '';
+    zIndex?: CSS.ZIndexProperty | string;
+  }
+
+  interface RechartsTooltipProps extends recharts.TooltipProps {
+    strokeDasharray?: string;
+  }
+
+  interface RechartsMargin {
+    top?: number;
+    right?: number;
+    bottom?: number;
+    left?: number;
   }
 
   interface NotificationInfo {
@@ -55,6 +79,11 @@ declare global {
     q?: string;
   }
 
+  interface VisibleRange {
+    start: number;
+    length: number;
+  }
+
   interface _GlobalState extends State {
     knownProducts?: string[];
     galaxies?: string[];
@@ -62,7 +91,7 @@ declare global {
     completedMigration?: boolean;
     version?: string;
     notification?: NotificationInfo;
-    newsId?: '';
+    newsId?: string;
     apiBase?: string;
     staticBase?: string;
     winVersion?: string;

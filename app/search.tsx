@@ -1,24 +1,31 @@
 import state from './state';
 import React from 'react';
 
-import * as utils from './utils';
-window.utils = utils
-
-const transparentIconInputStyle = {
+const transparentIconInputStyle: CSSProperties = {
   width: '250px',
   WebkitUserSelect: 'initial',
   WebkitAppRegion: 'no-drag',
   fontSize: '15px'
 };
-const searchIconStyle = {
+const searchIconStyle: CSSProperties = {
   cursor: 'default',
   padding: '0px'
 };
-const letterSpacingStyle = {
+const letterSpacingStyle: CSSProperties = {
   letterSpacing: '2px'
 };
 
-class Search extends React.Component {
+interface SearchProps {
+  search: string;
+  onClick: React.MouseEventHandler;
+  onKeyDown: React.KeyboardEventHandler;
+}
+
+interface SearchState {
+  search: string;
+}
+
+class Search extends React.Component<SearchProps, SearchState> {
   constructor(props) {
     super(props);
     this.state = {
@@ -29,7 +36,7 @@ class Search extends React.Component {
     let search = e.target.value;
     this.setState({search}, () => {
       if (search.length === 0 && state.searchInProgress) {
-        state.set({search}, () => this.props.onClick());
+        state.set({search}, () => this.props.onClick(null));
       }
     });
   }
@@ -39,7 +46,7 @@ class Search extends React.Component {
     }
   }
   handleSearchIconClick = () => {
-    state.set({search: this.state.search}, () => this.props.onClick());
+    state.set({search: this.state.search}, () => this.props.onClick(null));
   }
   render() {
     return (

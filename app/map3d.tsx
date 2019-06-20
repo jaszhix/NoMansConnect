@@ -9,7 +9,14 @@ import RNG from './RNG';
 import {cleanUp} from './utils';
 import {each, find, findIndex, map, filter} from './lang';
 
-function distanceVector (v1, v2) {
+interface Position {
+  top?: number;
+  left?: number;
+  x?: number;
+  y?: number;
+}
+
+function distanceVector (v1: THREE.Vector3, v2: THREE.Vector3): number {
   var dx = v1.x - v2.x
   var dy = v1.y - v2.y
   var dz = v1.z - v2.z
@@ -17,19 +24,20 @@ function distanceVector (v1, v2) {
   return Math.sqrt(dx * dx + dy * dy + dz * dz)
 }
 
-function findOffset (element) {
-  var pos = {}
+function findOffset (element: HTMLElement): Position {
+  const pos: Position = {};
   pos.left = pos.top = 0
   if (element.offsetParent) {
     do {
       pos.left += element.offsetLeft
       pos.top += element.offsetTop
+    // @ts-ignore
     } while (element = element.offsetParent)
   }
   return pos
 }
 
-function toScreenXY (position, camera, div) {
+function toScreenXY (position: THREE.Vector3, camera, div) {
   let posX = position.clone()
   let projScreenMatX = new THREE.Matrix4()
   projScreenMatX.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse)
@@ -45,7 +53,7 @@ function toScreenXY (position, camera, div) {
     y: (-posY.y + 1) * div.height / 2 + offset.top }
 }
 
-function toScreenPosition(obj, camera, controls, div){
+function toScreenPosition(obj: THREE.Object3D, camera, controls, div){
   obj.updateMatrixWorld();
   let vector = obj.position.clone();
 
@@ -78,13 +86,66 @@ function toScreenPosition(obj, camera, controls, div){
 let WebGLRenderer = null;
 let Mesh = null;
 let SpotLight = null;
-class Map3D extends React.Component {
+
+interface Map3DProps {
+  remoteLocations: APIResult;
+  storedLocations: any[];
+  selectedLocation: any;
+  currentLocation: string;
+  remoteLocationsColumns: number;
+  selectedGalaxy: number;
+  size: number;
+  mapDrawDistance: boolean;
+  searchCache: APIResult;
+}
+
+interface Map3DState {
+  locations: any[];
+}
+
+class Map3D extends React.Component<Map3DProps, Map3DState> {
+  mounted: boolean;
+  loader: THREE.TextureLoader;
+  starRed: any;
+  starOrange: any;
+  starBlue: any;
+  starGreen: any;
+  starPurple: any;
+  sphere: THREE.SphereGeometry;
+  sphereVs: string;
+  sphereFs: string;
+  blueMaterial: THREE.ShaderMaterial;
+  orangeMaterial: THREE.ShaderMaterial;
+  greenMaterial: THREE.ShaderMaterial;
+  redMaterial: THREE.ShaderMaterial;
+  purpleMaterial: THREE.ShaderMaterial;
+  connections: any[];
+  selected: boolean;
+  galaxyChanged: boolean;
+  willUnmount: any;
+  lights: number;
+  hovered: string;
+  renderer: any;
+  scene: any;
+  camera: any;
+  controls: any;
+  target: any;
+  anisotropy: any;
+  raycaster: THREE.Raycaster;
+  mouse: THREE.Vector3;
+  travelTo: Map3DCoordinates;
+
+  lastTraveled(vector3: THREE.Vector3, lastTraveled: any) {
+    throw new Error('Method not implemented.');
+  }
   constructor(props) {
+    super(props);
+
     let threact = require('threact');
     WebGLRenderer = threact.WebGLRenderer;
     Mesh = threact.Mesh;
     SpotLight = threact.SpotLight;
-    super(props);
+
     this.state = {
       locations: null
     };
@@ -105,7 +166,7 @@ class Map3D extends React.Component {
     this.sphereVs = document.getElementById('surface-vertexShader').textContent;
     this.sphereFs = document.getElementById('surface-fragmentShader').textContent;
 
-    let getMaterialProperties = (texture) => {
+    let getMaterialProperties = (texture): THREE.ShaderMaterialParameters => {
       return {
         uniforms: {
           texture1: {type: 't', value: texture},
@@ -118,14 +179,16 @@ class Map3D extends React.Component {
         },
         vertexShader: this.sphereVs,
         fragmentShader: this.sphereFs,
-        flatShading: THREE.SmoothShading,
+        flatShading: true, // TBD: THREE.SmoothShading,
         side: THREE.FrontSide,
         transparent: true
       };
     };
 
     this.blueMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starBlue));
+    // @ts-ignore
     this.blueMaterial.wrapS = this.blueMaterial.wrapT = THREE.RepeatWrapping;
+    // @ts-ignore
     this.blueMaterial.minFilter = THREE.LinearFilter;
     this.orangeMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starOrange));
     this.greenMaterial = new THREE.ShaderMaterial(getMaterialProperties(this.starGreen));
@@ -218,6 +281,7 @@ class Map3D extends React.Component {
 
     if (window.travelTo) {
       let coords = window.travelTo;
+      // @ts-ignore
       let vector3 = new THREE.Vector3(...coords);
       if (!isEqual(vector3, this.lastTraveled)) {
         this.handleTravel(vector3);
@@ -341,13 +405,17 @@ class Map3D extends React.Component {
       if (!intersects[0].object.visible) {
         return;
       }
+      // @ts-ignore
       if (!intersects[0].object.el) {
         console.log(this.controls)
         let screen = toScreenPosition(intersects[0].object, this.camera, this.controls, this.renderer.domElement);
         let distanceBetweenMouseAndHoveredObject = distanceVector(new THREE.Vector3(screen.x, screen.y, 0.5), mouseCoords);
         if (distanceBetweenMouseAndHoveredObject <= 1319 && intersects[0].object.type === 'Mesh') {
+          // @ts-ignore
           intersects[0].object.el = this.getHUDElement(intersects[0].object, {x: screen.x, y: screen.y});
+          // @ts-ignore
           intersects[0].object.hovered = true;
+          // @ts-ignore
           intersects[0].object.el.insertAfter('#app');
           removeHovered();
           this.hovered = intersects[0].object.uuid;
@@ -411,7 +479,7 @@ class Map3D extends React.Component {
     let currentCentered = null;
 
     each(dupePositions, (child) => {
-      let pos = ['x', 'y', 'z']
+      let pos: [string|number, string|number, string|number] = ['x', 'y', 'z']
 
       if (!child.userData) {
         return;

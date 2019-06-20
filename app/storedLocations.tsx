@@ -4,12 +4,27 @@ import {truncate, delay} from 'lodash';
 import {map, findIndex} from './lang';
 import {whichToShow, cleanUp} from './utils';
 import {sortStoredByKeyMap} from './constants';
+// @ts-ignore
 import baseIcon from './assets/images/base_icon.png';
+// @ts-ignore
 import spaceStationIcon from './assets/images/spacestation_icon.png';
 
 import {BasicDropdown} from './dropdowns';
 
-class StoredLocationItem extends React.Component {
+interface StoredLocationItemProps {
+  onClick: Function;
+  location: any;
+  isSelected: boolean;
+  useGAFormat: boolean;
+  isCurrent: boolean;
+  i: number;
+}
+
+interface StoredLocationItemState {
+  hover: boolean;
+}
+
+class StoredLocationItem extends React.Component<StoredLocationItemProps, StoredLocationItemState> {
   constructor(props) {
     super(props);
     this.state = {
@@ -24,16 +39,16 @@ class StoredLocationItem extends React.Component {
   }
   render() {
     if (!this.props.location || !this.props.location.dataId) return null;
-    let uiSegmentStyle = {
+    let uiSegmentStyle: CSSProperties = {
       fontSize: '16px',
-      fontWeight: this.props.location.upvote ? '600' : '400',
+      fontWeight: this.props.location.upvote ? 600 : 400,
       cursor: 'pointer',
       padding: '3px 12px 3px 3px',
       background: this.state.hover || this.props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'inherit',
       textAlign: 'right',
       minHeight: '29px',
       maxHeight: '29px',
-      opacity: this.props.location.isHidden ? '0.5' : '1'
+      opacity: this.props.location.isHidden ? 0.5 : 1
     };
     let usesName = this.props.location.name && this.props.location.name.length > 0;
     let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.dataId}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
@@ -87,7 +102,32 @@ class StoredLocationItem extends React.Component {
   }
 }
 
-class StoredLocations extends React.Component {
+interface StoredLocationsProps {
+  storedLocations: any[];
+  selectedLocationId: string;
+  height: number;
+  filterOthers: boolean;
+  useGAFormat: boolean;
+  multiSelectedLocation: boolean;
+  showHidden: boolean;
+  sortStoredByTime: boolean;
+  sortStoredByKey: string;
+  filterStoredByBase: boolean;
+  filterStoredByScreenshot: boolean;
+  currentLocation: any;
+  onSelect: Function;
+}
+
+interface StoredLocationsState {}
+
+class StoredLocations extends React.Component<StoredLocationsProps, StoredLocationsState> {
+  uiSegmentStyle: CSSProperties;
+  range: VisibleRange;
+  connectId: number;
+  storedLocations: HTMLElement;
+  selecting: boolean;
+  scrollTimeout: NodeJS.Timeout;
+
   constructor(props) {
     super(props);
     this.uiSegmentStyle = {
@@ -99,7 +139,7 @@ class StoredLocations extends React.Component {
       textAlign: 'center',
       paddingLeft: '0px',
       paddingRight: '0px',
-      zIndex: '90'
+      zIndex: 90
     };
     this.range = {start: 0, length: 0};
   }
@@ -126,6 +166,7 @@ class StoredLocations extends React.Component {
     });
     let checkStored = () => {
       if (this.storedLocations) {
+        // @ts-ignore
         this.storedLocations.addEventListener('scroll', this.handleScroll);
         this.setViewableRange(this.storedLocations);
       } else {
@@ -143,6 +184,7 @@ class StoredLocations extends React.Component {
   }
   componentWillUnmount() {
     if (this.storedLocations) {
+      // @ts-ignore
       this.storedLocations.removeEventListener('scroll', this.handleScroll);
     }
     state.disconnect(this.connectId);

@@ -210,6 +210,7 @@
     "@types/react": "^16.8.20",
     "@types/react-dom": "^16.8.4",
     "@types/react-tooltip": "^3.9.2",
+    "@types/recharts": "^1.1.16",
     "@types/watch": "^1.0.1",
     "@types/webpack-env": "^1.13.9",
     "@typescript-eslint/eslint-plugin": "^1.10.2",

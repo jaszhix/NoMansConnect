@@ -14,15 +14,37 @@ import RemoteLocations from './remoteLocations';
 
 const empty = []
 
-class Container extends React.Component {
+interface ContainerProps {
+  s: GlobalState;
+  onSearch: () => void;
+  onRemoveStoredLocation: () => void;
+  onSaveBase: (baseData: any) => void;
+  onPagination: Function;
+}
+
+interface ContainerState {
+  updating: boolean;
+  edit: boolean;
+  limit: boolean;
+  mapRender: string;
+}
+
+class Container extends React.Component<ContainerProps, ContainerState> {
+
+  connectId: number;
+  willUnmount: boolean;
+  screenshotRef: HTMLInputElement;
+
   constructor(props) {
     super(props);
 
     this.state = {
       updating: false,
       edit: false,
+      limit: false,
       mapRender: '<div />'
     };
+
     this.connectId = state.connect({
       selectedLocation: () => {
         if (this.willUnmount || !this.state.edit) {
@@ -148,7 +170,7 @@ class Container extends React.Component {
       ...location
     }).then((res) => {
       let {remoteLocations, storedLocations} = this.props.s;
-      let stateUpdate = {};
+      let stateUpdate: GlobalState = {};
       let refRemote = findIndex(remoteLocations.results, (location) => location.dataId === res.data.dataId);
       let refStored = findIndex(storedLocations, (location) => location.dataId === res.data.dataId);
       if (refRemote > -1) {
@@ -169,17 +191,17 @@ class Container extends React.Component {
       return;
     }
     this.setState({updating: true}, () => {
-      var reader = new FileReader();
+      let reader = new FileReader();
       reader.onload = (e)=> {
-        var sourceImage = new Image();
+        let sourceImage: HTMLImageElement = new Image();
         sourceImage.onload = ()=> {
-          var imgWidth = sourceImage.width;
-          var imgHeight = sourceImage.height;
-          var canvas = document.createElement("canvas");
+          let imgWidth = sourceImage.width;
+          let imgHeight = sourceImage.height;
+          let canvas = document.createElement("canvas");
           canvas.width = imgWidth;
           canvas.height = imgHeight;
           canvas.getContext('2d').drawImage(sourceImage, 0, 0, imgWidth, imgHeight);
-          var newDataUri = canvas.toDataURL('image/jpeg', 0.75);
+          let newDataUri = canvas.toDataURL('image/jpeg', 0.75);
           if (newDataUri) {
             ajaxWorker.post('/nmslocation/', {
               machineId: this.props.s.machineId,
@@ -215,6 +237,7 @@ class Container extends React.Component {
             });
           }
         };
+        // @ts-ignore
         sourceImage.src = reader.result;
         this.screenshotRef.value = '';
       };
@@ -316,7 +339,7 @@ class Container extends React.Component {
             username: state.username,
             locations: [location.dataId]
           }).then((res) => {
-            let stateUpdate = {};
+            let stateUpdate: GlobalState = {};
             if (res.data[0]) {
               _location = res.data[0];
               let {remoteLocations} = this.props.s;
@@ -398,8 +421,6 @@ class Container extends React.Component {
       height,
       width,
       ps4User,
-      configDir,
-      mapLoading,
       map3d,
       mapDrawDistance,
       mapLines,
@@ -452,6 +473,7 @@ class Container extends React.Component {
       });
     }
     if (sortStoredByTime) {
+      // @ts-ignore
       storedLocations = orderBy(storedLocations, storedSortFunction, direction);
     } else {
       storedFavorites = orderBy(
@@ -459,6 +481,7 @@ class Container extends React.Component {
           return favorites.indexOf(location.dataId) > -1;
         }),
         sortStoredByKey,
+        // @ts-ignore
         direction
       );
       storedNonFavorites = orderBy(
@@ -466,6 +489,7 @@ class Container extends React.Component {
           return favorites.indexOf(location.dataId) === -1;
         }),
         sortStoredByKey,
+        // @ts-ignore
         direction
       );
       storedLocations = storedFavorites.concat(storedNonFavorites);
@@ -567,12 +591,10 @@ class Container extends React.Component {
             sortStoredByKey={sortStoredByKey}
             filterStoredByBase={filterStoredByBase}
             filterStoredByScreenshot={filterStoredByScreenshot}
-            useGAFormat={useGAFormat}
-            username={username} />
+            useGAFormat={useGAFormat} />
             <div className="ui segments Container__mapAndSelected">
               {remoteLocationsLoaded ?
               <GalacticMap
-              mapLoading={mapLoading}
               map3d={map3d}
               mapDrawDistance={mapDrawDistance}
               mapLines={mapLines}
@@ -589,8 +611,7 @@ class Container extends React.Component {
               show={show}
               onRestart={handleRestart}
               onSearch={p.onSearch}
-              searchCache={searchCache.results}
-              friends={profile ? profile.friends : empty} /> : null}
+              searchCache={searchCache.results} /> : null}
               {selectedLocation && !multiSelectedLocation ?
               <LocationBox
               name={selectedLocation.name}
@@ -618,8 +639,7 @@ class Container extends React.Component {
               onRemoveStoredLocation={p.onRemoveStoredLocation}
               onSubmit={this.handleUpdate}
               onSaveBase={p.onSaveBase}
-              ps4User={ps4User}
-              configDir={configDir} /> : null}
+              ps4User={ps4User} /> : null}
             </div>
           </div>
         </div>
@@ -628,7 +648,6 @@ class Container extends React.Component {
         s={p.s}
         onSearch={p.onSearch}
         locations={locations}
-        currentLocation={currentLocation}
         isOwnLocation={isOwnLocation}
         updating={this.state.updating}
         onPagination={p.onPagination}

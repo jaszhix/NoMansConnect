@@ -40,7 +40,7 @@ let win: Electron.BrowserWindow;
 
 let formatCount = 1;
 
-class App extends React.Component {
+class App extends React.Component<GlobalState> {
   topAttachedMenuStyle: CSSProperties;
   titleStyle: CSSProperties;
   titleBarControlsStyle: CSSProperties;
@@ -92,7 +92,6 @@ class App extends React.Component {
       state
         .connect('*', (obj) => {
         if (process.env.NODE_ENV === 'development') {
-          // @ts-ignore
           let stackParts: string[] = new Error().stack.split('\n');
           console.log('STATE CALLEE: ', stackParts[6]);
         }
@@ -1010,7 +1009,6 @@ class App extends React.Component {
             {!s.init ?
             <Search
             onKeyDown={this.handleSearch}
-            style={this.searchIconStyle}
             onClick={this.handleSearchIconClick}
             search={s.search} /> : null}
             {this.state.profile && this.state.profile.notifications && this.state.profile.notifications.length > 0 ?
@@ -1028,8 +1026,6 @@ class App extends React.Component {
             /> : null}
             {s.profile && !s.ps4User && s.displaySaveEditor ?
             <SaveEditorDropdownMenu
-            onSaveBase={this.handleSaveBase}
-            onRestoreBase={this.handleRestoreBase}
             profile={s.profile}
             onCheat={this.handleCheat} /> : null}
             <a
