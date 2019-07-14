@@ -280,7 +280,7 @@
     "graceful-fs": "^4.1.15",
     "jszip": "^3.2.1",
     "konami": "^1.6.2",
-    "lodash": "4.17.11",
+    "lodash": "4.17.14",
     "mathjs": "6.0.2",
     "moment": "2.24.0",
     "node-machine-id": "1.1.12",
