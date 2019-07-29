@@ -20,6 +20,14 @@
     "tsconfigRootDir": "."
   },
   "plugins": ["@typescript-eslint", "react"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {
+        "prefer-const": 0
+      }
+    }
+  ],
   "rules": {
     "@typescript-eslint/no-var-requires": 0,
     "comma-dangle": 0,
@@ -138,7 +146,6 @@
     "react/jsx-no-target-blank": 2,
     "react/jsx-no-undef": [2, {"allowGlobals": true}],
     "react/jsx-pascal-case": 1,
-    "react/jsx-space-before-closing": 1,
     "react/jsx-tag-spacing": [
       1,
       {
