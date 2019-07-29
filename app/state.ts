@@ -110,6 +110,7 @@ const state: GlobalState = initStore({
   selectedImage: null,
   autoCapture: false,
   autoCaptureSpaceStations: false,
+  nmsIsFullscreen: false,
   backupSaveFile: true,
   selectedGalaxy: 0,
   galaxyOptions: [],
@@ -365,7 +366,7 @@ const state: GlobalState = initStore({
   handleState: (obj) => {
     each(obj, (value, key) => {
       if (state.settingsKeys.indexOf(key) > -1) {
-        console.log('Storing: ', key)
+        console.log('Storing: ', key, value)
         window.settingsWorker.postMessage({
           method: 'set',
           key,

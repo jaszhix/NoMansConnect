@@ -16,6 +16,7 @@ interface ItemProps {
   className?: string;
   value?: string;
   icon?: string;
+  disabled?: boolean;
 }
 
 class Item extends React.Component<ItemProps> {
@@ -48,39 +49,47 @@ class Item extends React.Component<ItemProps> {
     this.descriptionRef = ref;
   }
   render(){
-    if (this.props.label === 'Description') {
+    let {label, value, icon, className, onValueClick, dataTip, disabled, children} = this.props;
+
+    if (label === 'Description') {
       return (
         <div
         ref={this.getRef}
         className="Item__wrapperStyle">
-          <ReactMarkdown className="md-p" source={this.props.value} />
-        </div>
-      );
-    } else {
-      return (
-        <div
-        className={`Item__wrapperStyle${this.props.className ? ` ${this.props.className}` : ''}${this.props.onValueClick ? ' cursorPointer' : ''}`}
-        onClick={this.props.onValueClick}
-        data-place="top"
-        data-tip={this.props.dataTip}>
-          <span className="Item__labelStyle">{`${this.props.label}`}</span>
-          {this.props.label === 'Portal Address' ?
-          <span className="Item__valueStyle Item__portal">
-            {this.props.children}
-          </span>
-          :
-          <span
-          className="Item__valueStyle">
-            {this.props.value ? this.props.value
-            : this.props.icon ?
-            <i
-            style={iconStyle}
-            className={`${this.props.icon} icon`} />
-            : null}
-          </span>}
+          <ReactMarkdown className="md-p" source={value} />
         </div>
       );
     }
+
+    className = `Item__wrapperStyle${className ? ` ${className}` : ''}${onValueClick ? ' cursorPointer' : ''}`;
+
+    if (disabled) {
+      className += ' Item__disabled';
+    }
+
+    return (
+      <div
+      className={className}
+      onClick={onValueClick}
+      data-place="top"
+      data-tip={dataTip}>
+        <span className="Item__labelStyle">{`${label}`}</span>
+        {label === 'Portal Address' ?
+        <span className="Item__valueStyle Item__portal">
+          {children}
+        </span>
+        :
+        <span
+        className="Item__valueStyle">
+          {value ? value
+          : icon ?
+          <i
+          style={iconStyle}
+          className={`${icon} icon`} />
+          : null}
+        </span>}
+      </div>
+    );
   }
 };
 

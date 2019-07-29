@@ -1215,6 +1215,16 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
   render() {
     var p = this.props;
     let modes = ['permadeath', 'survival', 'normal', 'creative'];
+    let autoCaptureTip;
+
+    if (!p.s.ps4User && !p.s.offline) {
+      autoCaptureTip = 'Automatically grabs your screen when NMS is running and the game is saved. Only works when NMS is in (borderless) window mode.';
+
+      if (p.s.nmsIsFullscreen) {
+        autoCaptureTip += ' <strong>NMC detected fullscreen mode is enabled in the game\'s settings, so this feature is automatically disabled.</strong>';
+      }
+    }
+
     return (
       <div
       style={menuContainerStyle}
@@ -1241,14 +1251,16 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
 
           {!p.s.ps4User && !p.s.offline ?
           <Item
+          disabled={p.s.nmsIsFullscreen}
           className="Item__hover"
-          dataTip={tip('Automatically grabs your screen when NMS is running and the game is saved. Only works when NMS is in window mode.')}
-          onValueClick={this.handleAutoCapture}
+          dataTip={tip(autoCaptureTip)}
+          onValueClick={!p.s.nmsIsFullscreen ? this.handleAutoCapture : null}
           label="Screenshot Capturer"
           value={p.s.autoCapture ? 'Auto' : 'Manual'} /> : null}
           {!p.s.ps4User && !p.s.offline && p.s.autoCapture ?
           <div className="ui segment SettingsModal__child">
             <Item
+            disabled={p.s.nmsIsFullscreen}
             className="Item__hover"
             dataTip={tip('Disable this to prevent the screenshot capturer from taking screenshots of space stations, atlas stations, and freighters.')}
             onValueClick={this.handleAutoCaptureSpaceStations}

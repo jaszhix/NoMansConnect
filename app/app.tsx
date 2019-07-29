@@ -232,19 +232,29 @@ class App extends React.Component<GlobalState> {
 
     let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
     let indexModsInUse = (_path: string, modPath: string) => {
+      let nmsIsFullscreen = false, fullscreenValue;
+
       fsWorker.readFile(`${_path}${dirSep}Binaries${dirSep}SETTINGS${dirSep}TKGRAPHICSSETTINGS.MXML`, (err, data) => {
         if (err) {
           log.error('Unable to check NMS settings: ', _path);
           initialize();
           return;
         }
-        let fullscreen = null;
+
         if (data) {
-          fullscreen = Buffer.from(data).toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
+          fullscreenValue = Buffer.from(data).toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
+          nmsIsFullscreen = fullscreenValue === 'true';
         }
-        if (fullscreen === 'true' || err) {
-          state.set({autoCapture: false, loading: 'Checking for mods...'});
+
+        if (nmsIsFullscreen || err) {
+          log.error('NMS is currently set to fullscreen mode. Auto capture only works in borderless fullscreen mode, and is being disabled.');
+          state.set({
+            autoCapture: false,
+            nmsIsFullscreen,
+            loading: 'Checking for mods...'
+          });
         }
+
         let _modPath = `${_path}${modPath}`;
         fsWorker.exists(_modPath, (exists) => {
           if (!exists) {
@@ -663,9 +673,11 @@ class App extends React.Component<GlobalState> {
 
       // This creates  3rd vector orthogonal to the previous 2 to create a set of linearly independent basis vectors
       // this is a matrix made up from the other 3 vectors as columns
-      let P = math.matrix([[fwdOriginal[0], upOriginal[0], perpOriginal[0]],
+      let P = math.matrix(
+        [[fwdOriginal[0], upOriginal[0], perpOriginal[0]],
         [fwdOriginal[1], upOriginal[1], perpOriginal[1]],
-        [fwdOriginal[2], upOriginal[2], perpOriginal[2]]]);
+        [fwdOriginal[2], upOriginal[2], perpOriginal[2]]]
+      );
 
       // now read the new data, ensuring the user has created at least one Object to read data from (need that Up value!)
       // 3-vector
