@@ -6,6 +6,15 @@ import log from './log';
 const userData = app.getPath('userData');
 const dirSep = process.platform === 'win32' ? '\\' : '/';
 const mediaDir = `${userData}${dirSep}media`;
+const chromiumFeatures = 'CheckerImaging,'
+  + 'VizHitTestDrawQuad,'
+  + 'BlinkGenPropertyTrees,'
+  + 'BlinkHeapUnifiedGarbageCollection,'
+  + 'V8Orinoco,'
+  + 'ExpensiveBackgroundTimerThrottling,'
+  + 'FontCacheScaling,'
+  + 'WebContentsOcclusion,'
+  + 'CalculateNativeWinOcclusion';
 
 if (!fs.existsSync(mediaDir)) {
   try {
@@ -16,7 +25,6 @@ if (!fs.existsSync(mediaDir)) {
 }
 
 let mainWindow: BrowserWindow;
-
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support'); // eslint-disable-line
   sourceMapSupport.install();
@@ -29,15 +37,18 @@ if (process.env.NODE_ENV === 'development') {
   require('module').globalPaths.push(p); // eslint-disable-line
 }
 
-app.commandLine.appendSwitch('--enable-usermedia-screen-capturing');
-app.commandLine.appendSwitch('--enable-native-gpu-memory-buffers');
-app.commandLine.appendSwitch('--enable-gpu-rasterization');
-app.commandLine.appendSwitch('--gpu-rasterization-msaa-sample-count=0');
-app.commandLine.appendSwitch('--ignore-gpu-blacklist');
-app.commandLine.appendSwitch('--disable-smooth-scrolling');
-app.commandLine.appendSwitch('--default-background-color=000000');
-app.commandLine.appendSwitch('--js-flags=--max_old_space_size=32768,--nolazy');
-app.commandLine.appendSwitch('--enable-features=CheckerImaging,VizDisplayCompositor');
+app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
+app.commandLine.appendSwitch('enable-native-gpu-memory-buffers');
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('num-raster-threads', '4');
+app.commandLine.appendSwitch('gpu-rasterization-msaa-sample-count', '0');
+app.commandLine.appendSwitch('ignore-gpu-blacklist');
+app.commandLine.appendSwitch('enable-hardware-overlays', 'single-fullscreen');
+app.commandLine.appendSwitch('disable-smooth-scrolling');
+app.commandLine.appendSwitch('use-angle', 'gl');
+app.commandLine.appendSwitch('default-background-color', '000000');
+app.commandLine.appendSwitch('js-flags', '--max_old_space_size=32768,--nolazy');
+app.commandLine.appendSwitch('enable-features', chromiumFeatures);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
