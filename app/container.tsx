@@ -12,8 +12,6 @@ import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
 import RemoteLocations from './remoteLocations';
 
-const empty = []
-
 interface ContainerProps {
   s: GlobalState;
   onSearch: () => void;

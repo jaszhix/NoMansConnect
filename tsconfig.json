@@ -5,18 +5,18 @@
     "esModuleInterop": true,
     "module": "commonjs",
     "noEmit": true,
-    "allowJs": true,
+    "allowJs": false,
     "resolveJsonModule": true,
     "declaration": false,
-    "sourceMap": true,
     "jsx": "react",
-    "baseUrl": "app",
-    "typeRoots" : ["./node_modules/@types", "./node_modules/csstype", "./types"],
+    "baseUrl": "./app",
+    "typeRoots" : ["./types"],
   },
   "include": [
     "app"
   ],
   "exclude": [
+    "dll",
     "app/dist",
     "release",
     "resources"

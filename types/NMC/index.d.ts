@@ -3,6 +3,8 @@ import * as Raven from 'raven-js';
 import * as recharts from 'recharts';
 
 declare global {
+  type NumberOrString = number | string;
+
   interface State extends Object {
     get?: Function;
     set?: Function;
@@ -112,13 +114,13 @@ declare global {
     saveVersion?: number | null;
     mode?: string;
     storedBases?: any[];
-    storedLocations?: any[];
+    storedLocations?: NMSLocation[];
     remoteLocations?: any[];
     remoteLength?: 0;
     remoteNext?: null;
     remoteChanged?: any[];
     currentLocation?: null;
-    selectedLocation?: null;
+    selectedLocation?: NMSLocation;
     multiSelectedLocation?: boolean;
     username?: string;
     profile?: null;
@@ -202,4 +204,42 @@ declare global {
   }
 
   type GlobalState = _GlobalState | State;
+
+  interface GalacticAddress {
+    VoxelX: number;
+    VoxelY: number;
+    VoxelZ: number;
+    SolarSystemIndex: number;
+    PlanetIndex: number;
+    RealityIndex?: number;
+    dataId?: string;
+  }
+
+  interface NMSPosition {
+    playerPosition: [number, number, number, number],
+    playerTransform: [number, number, number, number],
+    shipPosition: [number, number, number, number],
+    shipTransform: [number, number, number, number]
+  }
+
+  interface NMSLocation extends GalacticAddress {
+    GalacticAddress?: GalacticAddress;
+    RealityIndex?: number;
+    translatedX?: number;
+    translatedY?: number;
+    translatedZ?: number;
+    translatedId?: string;
+    username: string;
+    positions: NMSPosition[];
+    galaxy: number;
+    distanceToCenter: number;
+    base: boolean;
+    baseData: any;
+    upvote: boolean;
+    image: string;
+    mods: string[];
+    manuallyEntered: boolean;
+    created: number;
+    apiVersion: number;
+  }
 }

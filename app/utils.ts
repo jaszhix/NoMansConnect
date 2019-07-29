@@ -1,40 +1,13 @@
 import fs from 'graceful-fs';
+import {exec} from 'child_process';
 import axios from 'axios';
 import {cloneDeep, assignIn, last, trimStart} from 'lodash';
 import {each, findIndex, filter} from './lang';
 import state from './state';
-import {defaultPosition} from './constants';
+import {defaultPosition, syncedKeys} from './constants';
 
-var exec = require('child_process').exec;
-export var msToTime = (s) => {
-  var ms = s % 1000;
-  s = (s - ms) / 1000;
-  var secs = s % 60;
-  s = (s - secs) / 60;
-  var mins = s % 60;
-  var hrs = (s - mins) / 60;
-
-  var output = `${hrs}h ${mins}m ${secs}s`;
-  output = hrs <= 0 ? output.split('h ')[1] : output;
-  output = mins <= 0 ? output.split('m ')[1] : output;
-  return output;
-};
-
-export var exc = (cmd) => {
+export const exc = (cmd: string): Promise<any> => {
   return new Promise((resolve, reject) => {
-    var opts = {
-      encoding: 'utf8',
-      timeout: 0,
-      maxBuffer: 200*1024,
-      killSignal: 'SIGTERM',
-      cwd: null,
-      env: null
-    };
-    if (process.platform === 'win32') {
-      opts.shell = 'powershell.exe';
-    } else {
-      opts.shell = '/bin/sh';
-    }
     exec(cmd, function (err, stdout, stderr) {
       if (err) {
         reject(err);
@@ -46,12 +19,12 @@ export var exc = (cmd) => {
 };
 
 const fsKeys = filter(Object.keys(fs), (key) => !key.includes('Sync')).concat(['walk', 'getLastGameModeSave', 'backupSaveFile']);
-export const fsWorker = {};
+export const fsWorker: any = {};
 
 let fsCount = 1;
 let ajaxCount = 1;
 
-const fsWorkerCaller = (method, ...args) => {
+const fsWorkerCaller = (method: string, ...args: any[]) => {
   if (fsCount > window.coreCount) {
     fsCount = 1;
   }
@@ -81,9 +54,9 @@ each(fsKeys, (key) => {
 });
 
 const axiosKeys = Object.keys(axios);
-export const ajaxWorker = {};
+export const ajaxWorker: any = {};
 
-const ajaxWorkerCaller = (method, ...args) => {
+const ajaxWorkerCaller = (method: string, ...args: any[]) => {
   state.set({navLoad: true});
   if (ajaxCount > window.coreCount) {
     ajaxCount = 1;
@@ -112,31 +85,36 @@ each(axiosKeys, (key) => {
   ajaxWorker[key] = (...args) => ajaxWorkerCaller(key, ...args);
 });
 
-export var formatID = (location) => {
-  location.GalacticAddress.dataId = `${location.GalacticAddress.VoxelX}:${location.GalacticAddress.VoxelY}:${location.GalacticAddress.VoxelZ}:${location.RealityIndex}:${location.GalacticAddress.SolarSystemIndex}:${location.GalacticAddress.PlanetIndex}`
+export const formatID = (location): NMSLocation => {
+  location.GalacticAddress.dataId = `${location.GalacticAddress.VoxelX}:`
+    + `${location.GalacticAddress.VoxelY}:`
+    + `${location.GalacticAddress.VoxelZ}:`
+    + `${location.RealityIndex}:`
+    + `${location.GalacticAddress.SolarSystemIndex}:`
+    + location.GalacticAddress.PlanetIndex
   return {
     ...location.GalacticAddress,
     RealityIndex: location.RealityIndex
   };
 };
 
-export var parseID = (id) => {
+export const parseID = (id): GalacticAddress => {
   id = id.split(':');
-  let location = {
+
+  return {
     PlanetIndex: id[4],
     SolarSystemIndex: id[3],
     VoxelX: id[0],
     VoxelY: id[1],
     VoxelZ: id[2]
   };
-  return location;
 };
 
-export var isNegativeInteger = (int) => {
+export const isNegativeInteger = (int: number): boolean => {
   return int.toString()[0] === '-';
 };
 
-export var convertInteger = (int, axis) => {
+export const convertInteger = (int: number, axis: string): number => {
   let oldMin = axis === 'y' ? -128 : -2048;
   let oldMax = axis === 'y' ? 127 : 2047;
   let oldRange = (oldMax - oldMin);
@@ -146,7 +124,7 @@ export var convertInteger = (int, axis) => {
   return Math.floor(((((int - oldMin) * newRange) / oldRange) + newMin) - 1);
 };
 
-export var convertHex = (int, axis) => {
+export const convertHex = (int: number, axis: string): number => {
   let oldMin = 0;
   let oldMax = axis === 'y' ? 255 : 4096;
   let oldRange = (oldMax - oldMin);
@@ -157,24 +135,17 @@ export var convertHex = (int, axis) => {
   return Math.floor(((((int - oldMin) * newRange) / oldRange) + newMin) + offset)
 };
 
-export const calculateDistanceToCenter = function(x, y, z) {
+export const calculateDistanceToCenter = (x: number, y: number, z: number): number => {
   return (Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2) + Math.pow(z, 2)) * 100) * 4;
 };
 
-var setDefaultValueIfNull = (variable, defaultVal) => {
-  if (variable == null) {
-    variable = defaultVal;
-  }
-  return variable;
-}
-
-export const toHex = (str, totalChars) => {
-  totalChars = setDefaultValueIfNull(totalChars, 2);
-  str = ('0'.repeat(totalChars)+Number(str).toString(16)).slice(-totalChars).toUpperCase();
+export const toHex = (str: NumberOrString, totalChars: number): string => {
+  totalChars = totalChars || 2;
+  str = ('0'.repeat(totalChars) + Number(str).toString(16)).slice(-totalChars).toUpperCase();
   return str;
 }
 
-export const formatTranslatedID = (location) => {
+export const formatTranslatedID = (location): NMSLocation => {
   let translatedX = convertInteger(location.VoxelX, 'x');
   let translatedZ = convertInteger(location.VoxelZ, 'z');
   let translatedY = convertInteger(location.VoxelY, 'y');
@@ -187,96 +158,99 @@ export const formatTranslatedID = (location) => {
   };
 }
 
-export var fromHex = (str, username, galaxy) => {
-  try {
-    let result = {x: 0, y: 0, z: 0, SolarSystemIndex: 0};
-    let resultKeys = Object.keys(result);
-    if (str.indexOf(':') === -1) {
-      return null;
-    }
-    let strParts = str.split(':');
-    if (strParts.length !== 4) {
-      return null;
-    }
-    let valid = true;
-    each(strParts, (part, key) => {
-      part = part.trim();
-      if (!part.match(/^[a-z0-9]+$/i)) {
-        valid = false;
-        return;
-      }
-      let _key = resultKeys[key];
-      result[_key] = _key.length === 1 ? convertHex(parseInt(part, 16), _key) : parseInt(part, 16);
-    });
+export const fromHex = (str: string, username: string, galaxy: number): NMSLocation => {
+  let result = {x: 0, y: 0, z: 0, SolarSystemIndex: 0};
+  let resultKeys = Object.keys(result);
+  let strParts;
+  let valid = true;
 
-    if (!valid) {
-      return
+  if (str.indexOf(':') === -1) {
+    return null;
+  }
+
+  strParts = str.split(':');
+
+  if (strParts.length !== 4) {
+    return null;
+  }
+
+  each(strParts, (part, key) => {
+    part = part.trim();
+
+    if (!part.match(/^[a-z0-9]+$/i)) {
+      valid = false;
+      return;
     }
 
-    let manualLocation = {
-      username: username,
-      positions: [Object.assign({}, defaultPosition, {name: '', image: ''})],
-      galaxy: galaxy,
-      distanceToCenter: calculateDistanceToCenter(result.x, result.y, result.z),
+    let _key = resultKeys[key];
+    result[_key] = _key.length === 1 ? convertHex(parseInt(part, 16), _key) : parseInt(part, 16);
+  });
+
+  if (!valid) return;
+
+  let manualLocation: NMSLocation = {
+    username: username,
+    positions: [Object.assign({}, defaultPosition, {name: '', image: ''})],
+    galaxy: galaxy,
+    distanceToCenter: calculateDistanceToCenter(result.x, result.y, result.z),
+    VoxelY: result.y,
+    VoxelX: result.x,
+    VoxelZ: result.z,
+    SolarSystemIndex: result.SolarSystemIndex,
+    PlanetIndex: 0,
+    RealityIndex: 0,
+    base: false,
+    baseData: false,
+    upvote: false,
+    image: '',
+    mods: [],
+    manuallyEntered: true,
+    created: Date.now(),
+    apiVersion: 2
+  };
+
+  manualLocation = formatTranslatedID(manualLocation);
+
+  if (isNaN(manualLocation.SolarSystemIndex)
+    || isNaN(manualLocation.translatedX)
+    || isNaN(manualLocation.translatedY)
+    || isNaN(manualLocation.translatedZ)
+    || manualLocation.translatedX > 4096
+    || manualLocation.translatedZ > 4096
+    || manualLocation.translatedY > 256
+    || manualLocation.SolarSystemIndex > 600
+    || manualLocation.VoxelY < -128
+    || manualLocation.VoxelY > 127
+    || manualLocation.VoxelZ < -2048
+    || manualLocation.VoxelZ > 2047
+    || manualLocation.VoxelX < -2048
+    || manualLocation.VoxelX > 2047) {
+    return null;
+  }
+
+  assignIn(manualLocation, {
+    jumps: Math.ceil(manualLocation.distanceToCenter / 400),
+    GalacticAddress: {
       VoxelY: result.y,
       VoxelX: result.x,
       VoxelZ: result.z,
       SolarSystemIndex: result.SolarSystemIndex,
       PlanetIndex: 0,
-      base: false,
-      baseData: false,
-      upvote: false,
-      image: '',
-      mods: [],
-      manuallyEntered: true,
-      created: Date.now(),
-      apiVersion: 2
-    };
-
-    manualLocation = formatTranslatedID(manualLocation);
-
-    if (isNaN(manualLocation.SolarSystemIndex)
-      || isNaN(manualLocation.translatedX)
-      || isNaN(manualLocation.translatedY)
-      || isNaN(manualLocation.translatedZ)
-      || manualLocation.translatedX > 4096
-      || manualLocation.translatedZ > 4096
-      || manualLocation.translatedY > 256
-      || manualLocation.SolarSystemIndex > 600
-      || manualLocation.VoxelY < -128
-      || manualLocation.VoxelY > 127
-      || manualLocation.VoxelZ < -2048
-      || manualLocation.VoxelZ > 2047
-      || manualLocation.VoxelX < -2048
-      || manualLocation.VoxelX > 2047) {
-      return null;
-    }
-    assignIn(manualLocation, {
-      jumps: Math.ceil(manualLocation.distanceToCenter / 400),
-      GalacticAddress: {
-        VoxelY: result.y,
-        VoxelX: result.x,
-        VoxelZ: result.z,
-        SolarSystemIndex: result.SolarSystemIndex,
-        PlanetIndex: 0,
-        RealityIndex: galaxy
-      },
       RealityIndex: galaxy
-    });
+    },
+    RealityIndex: galaxy
+  });
 
-    let _manualLocation = formatID(manualLocation);
-    delete manualLocation.GalacticAddress;
-    delete manualLocation.RealityIndex;
+  let _manualLocation = formatID(manualLocation);
+  delete manualLocation.GalacticAddress;
+  delete manualLocation.RealityIndex;
 
-    assignIn(manualLocation, _manualLocation)
-    return manualLocation;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
+  assignIn(manualLocation, _manualLocation)
+
+  return manualLocation;
 }
 
-export var getLastGameModeSave = (saveDirectory, ps4User, log) => {
+export const getLastGameModeSave = (saveDirectory: string, ps4User: boolean) => {
   return new Promise((resolve, reject) => {
     fsWorker.getLastGameModeSave(saveDirectory, ps4User, (err, data) => {
       if (err) {
@@ -288,7 +262,7 @@ export var getLastGameModeSave = (saveDirectory, ps4User, log) => {
   });
 };
 
-export var repairInventory = (saveData) => {
+export const repairInventory = (saveData) => {
   let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
   each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
     saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].DamageFactor = 0;
@@ -304,7 +278,7 @@ export var repairInventory = (saveData) => {
   return saveData.result;
 };
 
-export var refuelEnergy = (saveData) => {
+export const refuelEnergy = (saveData) => {
   let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
   let refillableTech = [
     // Suit inventory
@@ -360,7 +334,7 @@ export var refuelEnergy = (saveData) => {
   return saveData.result;
 };
 
-export var stockInventory = (saveData) => {
+export const stockInventory = (saveData) => {
   let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
   each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
@@ -380,12 +354,12 @@ export var stockInventory = (saveData) => {
   return saveData.result;
 };
 
-export var modifyUnits = (saveData, n=100000) => {
+export const modifyUnits = (saveData, n=100000) => {
   saveData.result.PlayerStateData.Units += n;
   return saveData.result;
 };
 
-export var formatBase = (saveData, knownProducts, i = 0) => {
+export const formatBase = (saveData, knownProducts, i = 0) => {
   let base = cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[i]);
   // Check for modded objects and remove them
   let moddedObjectKeys = [];
@@ -407,13 +381,13 @@ export var formatBase = (saveData, knownProducts, i = 0) => {
   return cloneDeep(cachedBase);
 };
 
-var flip = (string) => {
+const flip = (string: string): string => {
   let stringArr = string.split('').reverse();
   string = stringArr.join('');
   return string;
 };
 
-var signInt = (x, byteLen) => {
+const signInt = (x: string, byteLen: number): number => {
   let y = parseInt(x, 16);
   if (y > 0.5 * Math.pow(16, byteLen)) {
     return y - Math.pow(16, byteLen);
@@ -422,7 +396,7 @@ var signInt = (x, byteLen) => {
   }
 }
 
-const formatIntAddress = (x) => {
+const formatIntAddress = (x: NumberOrString): string => {
   if (typeof x === 'string' && x.indexOf('0x') !== -1) {
     x = x.substr(2, x.length);
   } else {
@@ -435,7 +409,7 @@ const formatIntAddress = (x) => {
   return x;
 };
 
-export const gaToObject = (x) => {
+export const gaToObject = (x: NumberOrString): GalacticAddress => {
   x = formatIntAddress(x);
   return {
     PlanetIndex: parseInt(flip(x.substr(0, 1)), 16),
@@ -446,8 +420,9 @@ export const gaToObject = (x) => {
   };
 }
 
-export const uaToObject = (x) => {
+export const uaToObject = (x: NumberOrString): NMSLocation => {
   x = formatIntAddress(x);
+
   const PlanetIndex = parseInt(x.substring(0, 1), 16);
   const SolarSystemIndex = parseInt(x.substring(1, 4), 16);
   const RealityIndex = parseInt(x.substring(4, 6), 16);
@@ -455,7 +430,7 @@ export const uaToObject = (x) => {
   const VoxelZ = signInt(x.substring(8, 11), 3);
   const VoxelX = signInt(x.substring(11, x.length), 3);
 
-  let result = {
+  return formatID({
     GalacticAddress: {
       PlanetIndex,
       SolarSystemIndex,
@@ -464,82 +439,89 @@ export const uaToObject = (x) => {
       VoxelX
     },
     RealityIndex: RealityIndex || 0,
-  };
-  return formatID(result);
+  });
 }
 
-export function whichToShow ({outerHeight, itemHeight, scrollTop, columns}) {
+export const whichToShow = ({outerHeight, itemHeight, scrollTop, columns}) => {
   let start = Math.floor(scrollTop / itemHeight);
   let heightOffset = scrollTop % itemHeight;
   let length = Math.ceil((outerHeight + heightOffset) / itemHeight) * columns;
 
-  return {
-    start: start,
-    length: length,
-  }
+  return {start, length};
 }
 
-export function convertRange(value, r1, r2) {
+export const convertRange = (value: number, r1: [number, number], r2: [number, number]): number => {
   return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
 };
 
-export const formatForGlyphs = function(translatedId, planetIndex) {
+export const formatForGlyphs = (translatedId: string, planetIndex): string[] => {
   if (!translatedId || typeof translatedId !== 'string') {
     return [];
   }
+  let A: NumberOrString, B: NumberOrString, C: NumberOrString, D: NumberOrString;
+
   // Based on
   // https://github.com/nmsportals/nmsportals.github.io/blob/47f52a729ed38bb5ce4224e7fe52575b5c8329ec/js/glyphs.js#L378
-  let [A, B, C, D] = translatedId.split(':');
+  [A, B, C, D] = translatedId.split(':');
   A = parseInt(A, 16);
   A = +A + 2049;
   A = Math.abs(+A % 4096);
   A = A.toString(16).toUpperCase();
+
   if (A.length === 2) {
     A = '0' + A;
   }
+
   if (A.length === 1) {
     A = '00' + A;
   }
+
   B = parseInt(B, 16);
   B = +B + 129;
   B = +B % 256;
   B = Math.abs(B);
   B = B.toString(16).toUpperCase();
+
   if (B.length === 1) {
     B = '0' + B;
   }
+
   C = parseInt(C, 16);
   C = +C + 2049;
   C = +C % 4096;
   C = Math.abs(C);
   C = C.toString(16).toUpperCase();
+
   if (C.length === 1) {
     C = '00' + C;
   }
+
   if (C.length === 2) {
     C = '0' + C;
   }
+
   D = D.slice(1);
   let result = [planetIndex, D, B, C, A].join('').split('');
+
   return result;
 };
 
-export function uuidV4() {
+export const uuidV4 = (): string => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     return Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8).toString(16);
   });
 }
 
-export var validateEmail = (email) => {
-  let re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+export const validateEmail = (email): boolean => {
+  let re = /dsad^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/g;
   return re.test(email);
 }
 
-export var css = (styleObject, newObject) => {
+export const css = (styleObject, newObject): CSSProperties => {
   return assignIn({}, styleObject, newObject);
 };
 
-export var tip = (content) => {
+export const tip = (content: string): string | null => {
   if (content.length === 0) {
     return null;
   }
@@ -547,12 +529,14 @@ export var tip = (content) => {
 }
 
 // Cleans up the left over object references after a component unmounts, helps with garbage collection
-export const cleanUp = (obj, defer = false) => {
+export const cleanUp = (obj, defer = false): void => {
   if (defer) {
     setTimeout(() => cleanUp(obj), 0);
     return;
   }
+
   let contextProps = Object.keys(obj);
+
   each(contextProps, (key) => {
     if (key === 'willUnmount') {
       return;
@@ -563,7 +547,6 @@ export const cleanUp = (obj, defer = false) => {
 
 export const dirSep = process.platform === 'win32' ? '\\' : '/';
 
-const syncedKeys = ['image', 'name', 'description', 'teleports', 'profile'];
 export const copyMetadata = (a, b, keys = syncedKeys) => {
   each(keys, (key) => a[key] = b[key]);
   return a;

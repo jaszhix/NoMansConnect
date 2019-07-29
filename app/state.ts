@@ -346,13 +346,13 @@ const state: GlobalState = initStore({
         return;
       }
 
-      let locations = filter(obj.remoteLocations.results, (location) => {
+      let locations = filter(obj.remoteLocations.results, (location: NMSLocation) => {
         return (location.upvote
           || (location.VoxelY > -128 && location.VoxelY < 127
           && location.VoxelZ > -2048 && location.VoxelZ < 2047
           && location.VoxelX > -2048 && location.VoxelX < 2047));
       });
-      locations = uniqBy(locations, (location) => {
+      locations = uniqBy(locations, (location: NMSLocation) => {
         return location.dataId;
       });
       obj.remoteLocations.results = locations;

@@ -241,4 +241,6 @@ const saveKeyMapping = {
   C: 'bLr'
 };
 
-module.exports = {locationItemStyle, sortStoredByKeyMap, defaultPosition, saveKeyMapping};
+const syncedKeys = ['image', 'name', 'description', 'teleports', 'profile'];
+
+module.exports = {locationItemStyle, sortStoredByKeyMap, defaultPosition, saveKeyMapping, syncedKeys};
