@@ -52,7 +52,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     each(remoteLocations.results, (location) => {
       if (favorites.indexOf(location.dataId) > -1) {
         location.upvote = true;
-        let refStored = findIndex(storedLocations, (l) => l.dataId === location.dataId) === -1;
+        let refStored = findIndex(storedLocations, (l) => l.dataId === location.dataId);
         if (refStored === -1) {
           storedLocations.push(location);
         } else {
