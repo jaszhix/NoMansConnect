@@ -271,10 +271,10 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           <div
           key={i}
           style={css(locationItemStyle, {
-              marginBottom: '0px',
-              fontSize: '14px',
-              width: '300px'
-            })}>
+            marginBottom: '0px',
+            fontSize: '14px',
+            width: '300px'
+          })}>
             {truncate(mod, {length: 43})}
           </div>
         );
