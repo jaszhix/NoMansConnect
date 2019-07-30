@@ -153,8 +153,13 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             this.setState({location: this.props.location});
             this.getImage(this.props.image);
           }
+        },
+        deleteScreenshot: (dataId) => {
+          if (this.state && this.state.location && this.state.location.dataId === dataId) {
+            this.setState({image: null});
+          }
         }
-      })
+      }),
     ];
     this.getImage(this.props.image);
     if (this.props.location && !this.props.offline) {
@@ -278,6 +283,10 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       this.setState({positionSelect: false});
     }
     state.trigger('teleport', location, selectType ? 'selected' : i, position);
+  }
+  handleDeleteScreenshot = () => {
+    state.trigger('deleteScreenshot', this.state.location.dataId);
+    this.props.onDeleteScreen();
   }
   getModMarkup = (mods) => {
     return ReactDOMServer.renderToString(
@@ -429,13 +438,13 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           leftOptions.push({
             id: 'deleteScreen',
             label: 'Delete Screenshot',
-            onClick: () => p.onDeleteScreen()
+            onClick: this.handleDeleteScreenshot
           });
         } else {
           leftOptions.push({
             id: 'uploadScreen',
             label: 'Upload Screenshot',
-            onClick: () => p.onDeleteScreen()
+            onClick: this.handleDeleteScreenshot
           });
         }
       }
