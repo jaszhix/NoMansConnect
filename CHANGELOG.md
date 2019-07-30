@@ -1,3 +1,9 @@
+# 1.5.8
+
+  * Added option to unmark base locations. If the base location still exists in the save data then this will not do anything.
+  * Fixed the galaxy list not rendering in the 2D map.
+  * Fixed screenshots still rendering after server-side deletion.
+
 # 1.5.7
 
   * Fixed an error occurring in the 2D map worker thread.
