@@ -96,8 +96,10 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     let stateUpdate: GlobalState = {};
     if (nextProps.location.dataId !== nextState.location.dataId) {
       state.trigger('resetLocationScrollTop');
+      stateUpdate.image = null;
       stateUpdate.location = nextProps.location;
       stateUpdate.profile = nextProps.profile ? nextProps.profile : nextProps.location.profile;
+
     }
     return stateUpdate;
   }
@@ -188,10 +190,12 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     }).catch((err) => {
       if (!err.response) return;
       console.log(err)
+
       if (!this.props || (err.response && err.response.status === 404)) {
         // cleanUp was already called
         return;
       }
+
       onUpdate(location.dataId, null, true);
     });
   }
