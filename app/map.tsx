@@ -720,7 +720,7 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
       buildGalaxyOptions: {
         init,
         storedLocations: state.storedLocations,
-        remoteLocations: state.remoteLocations,
+        remoteLocations: this.props.remoteLocations,
         selectedLocation: state.selectedLocation,
         selectedGalaxy: state.selectedGalaxy,
         currentLocation: state.currentLocation,
