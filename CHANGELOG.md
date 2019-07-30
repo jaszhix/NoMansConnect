@@ -1,3 +1,11 @@
+# 1.5.7
+
+  * Fixed an error occurring in the 2D map worker thread.
+  * Fixed images in the selected location box not updating when there is a network error.
+  * Fixed stale name and description edit data persisting when toggling location editing.
+  * Reduced the minimum window size to 1280x720.
+  * Misc. state management fixes.
+
 # 1.5.6
 
   * Clarified requirements for the screenshot capturer feature.
