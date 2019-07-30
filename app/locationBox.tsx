@@ -165,8 +165,16 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     cleanUp(this);
   }
   toggleEditDetails = () => {
-    this.setState({positionEdit: false});
-    this.props.onEdit();
+    const stateUpdate = {positionEdit: false};
+
+    if (this.props.edit) {
+      Object.assign(stateUpdate, {
+        name: '',
+        description: ''
+      });
+    }
+
+    this.setState(stateUpdate, this.props.onEdit);
   }
   togglePositionEdit = () => {
     this.setState({positionEdit: !this.state.positionEdit})
