@@ -116,7 +116,7 @@ onmessage = function(e) {
     }
 
     each(e.data.p.show, (legendItem, key) => {
-      if (!legendItem.value) {
+      if (!legendItem.value || !e.data.s[legendItem.listKey]) {
         return;
       }
 

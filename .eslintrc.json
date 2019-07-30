@@ -97,6 +97,7 @@
     "no-param-reassign": 0,
     "no-process-env": 0,
     "no-proto": 0,
+    "no-prototype-builtins": 0,
     "no-redeclare": [2, {"builtinGlobals": true}],
     "no-return-assign": 0,
     "no-script-url": 0,
