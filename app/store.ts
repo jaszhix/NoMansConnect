@@ -1,8 +1,5 @@
-import {clone, intersection as intersect, difference} from 'lodash';
 import {find, findIndex, filter} from './lang';
 import log from './log';
-
-
 
 function storeError(method: string, key: string, message: string): void {
   log.error('Warning: [store -> ' + method + ' -> ' + key + '] ' + message);
@@ -17,6 +14,60 @@ function getByPath(key: string, object: State): State {
     }
   }
   return object;
+}
+
+function differenceKeys(arr1, arr2) {
+  let newKeys = [];
+
+  for (let i = 0, len = arr1.length; i < len; i++) {
+    if (arr2.indexOf(arr1[i]) === -1) {
+      newKeys.push(arr1[i]);
+    }
+  }
+
+  return newKeys;
+}
+
+function intersectKeys(arr1: string[], arr2: string[]): string[] {
+  let newKeys = [];
+
+  for (let i = 0, len = arr1.length; i < len; i++) {
+    if (arr2.indexOf(arr1[i]) > -1) {
+      newKeys.push(arr1[i]);
+    }
+  }
+
+  return newKeys;
+}
+
+function isEqual(obj1, obj2) {
+  let keys1, keys2, len, matches;
+
+  if (!obj1 || !obj2 || typeof obj1 !== 'object' || typeof obj2 !== 'object') {
+    return obj1 === obj2;
+  }
+
+  keys1 = Object.keys(obj1);
+  keys2 = Object.keys(obj2);
+  len = keys1.length;
+  matches = 0;
+
+  if (keys1.length !== keys2.length) return false;
+
+  if (differenceKeys(keys1, keys2).length) return false;
+
+  for (let i = 0; i < len; i++) {
+    let key = keys1[i];
+    let value1 = obj1[key];
+    let value2 = obj2[key];
+
+    if ((value1 && typeof value1 === 'object' && isEqual(value1, value2) )
+      || value1 === value2) {
+      matches++;
+    }
+  }
+
+  return matches === len;
 }
 
 /**
@@ -53,10 +104,10 @@ function init(state: State, listeners: Listener[] = [], connections = 0) {
   function dispatch(object) {
     let keys = Object.keys(object);
     for (let i = 0; i < listeners.length; i++) {
-      let commonKeys = intersect(keys, listeners[i].keys);
-      if (commonKeys.length === 0) {
-        continue;
-      }
+      let commonKeys = intersectKeys(keys, listeners[i].keys);
+
+      if (commonKeys.length === 0) continue;
+
       if (listeners[i].callback) {
         let partialState = {};
         for (let z = 0; z < keys.length; z++) {
@@ -78,10 +129,12 @@ function init(state: State, listeners: Listener[] = [], connections = 0) {
     if (!key || key === '*') {
       return exclude();
     }
+
     if (key.indexOf('.') > -1) {
       return getByPath(key, state);
     }
-    return clone(state[key]);
+
+    return state[key];
   }
 
   /**
@@ -95,12 +148,14 @@ function init(state: State, listeners: Listener[] = [], connections = 0) {
   function set(object: State, cb: Function | boolean = false, force = false): State | void {
     let keys = Object.keys(object);
     let changed = false;
+
     for (let i = 0; i < keys.length; i++) {
-      if (!state.hasOwnProperty(keys[i])) {
+      if (!(keys[i] in state)) {
         storeError('set', keys[i], 'Property not found.');
         return;
       }
-      if ((typeof object[keys[i]] === 'object')
+
+      if ((object[keys[i]] && typeof object[keys[i]] === 'object' && !isEqual(state[keys[i]], object[keys[i]]))
         || state[keys[i]] !== object[keys[i]]) {
         changed = true;
         state[keys[i]] = object[keys[i]];
@@ -114,9 +169,7 @@ function init(state: State, listeners: Listener[] = [], connections = 0) {
       console.log('NO CHANGE:', keys.join(', '))
     } */
 
-    if (typeof cb === 'function') {
-      cb();
-    }
+    if (typeof cb === 'function') cb();
 
     return publicAPI;
   }
@@ -152,16 +205,17 @@ function init(state: State, listeners: Listener[] = [], connections = 0) {
    * @param {any} args
    * @returns {any} Return result of the callback.
    */
-  function trigger(): any {
-    const [key, ...args] = Array.from(arguments);
+  function trigger(key, ...args): any {
     let matchedListeners = filter(listeners, function(listener) {
       return listener.keys.indexOf(key) > -1;
     });
+
     if (matchedListeners.length === 0) {
       console.log(listeners)
       storeError('trigger', key, 'Action not found.');
       return;
     }
+
     for (let i = 0; i < matchedListeners.length; i++) {
       if (matchedListeners[i].callback) {
         let output = matchedListeners[i].callback(...args);
@@ -185,8 +239,8 @@ function init(state: State, listeners: Listener[] = [], connections = 0) {
     }
 
     if (listener) {
-      let newKeys = difference(keys, listener.keys);
-      listener.keys.concat(newKeys);
+      let newKeys = differenceKeys(keys, listener.keys);
+      listener.keys = listener.keys.concat(newKeys);
     } else {
       listeners.push({keys, callback, id});
     }
@@ -226,10 +280,12 @@ function init(state: State, listeners: Listener[] = [], connections = 0) {
     let listenerIndex = findIndex(listeners, function(listener) {
       return listener.keys.indexOf(key) > -1;
     });
+
     if (listenerIndex === -1) {
       storeError('disconnect', key, 'Invalid disconnect key.');
       return;
     }
+
     listeners.splice(listenerIndex, 1);
   }
 
