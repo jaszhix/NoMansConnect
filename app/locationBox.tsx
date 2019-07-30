@@ -94,13 +94,17 @@ interface LocationBoxState {
 class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   static getDerivedStateFromProps = (nextProps, nextState) => {
     let stateUpdate: GlobalState = {};
+
     if (nextProps.location.dataId !== nextState.location.dataId) {
       state.trigger('resetLocationScrollTop');
+
       stateUpdate.image = null;
+      stateUpdate.name = '';
+      stateUpdate.description = '';
       stateUpdate.location = nextProps.location;
       stateUpdate.profile = nextProps.profile ? nextProps.profile : nextProps.location.profile;
-
     }
+
     return stateUpdate;
   }
 
@@ -178,6 +182,17 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   }
   togglePositionEdit = () => {
     this.setState({positionEdit: !this.state.positionEdit})
+  }
+  unmarkBaseLocation = () => {
+    const {location} = this.props;
+
+    Object.assign(location, {
+      base: false,
+      baseData: null
+    });
+
+    state.trigger('markStoredLocationsDirty');
+    state.trigger('updateLocation', location);
   }
   updateLocation = () => {
     let {onUpdate, location, profile} = this.props;
@@ -381,6 +396,14 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           label: 'Store Base',
           onClick: () => p.onSaveBase(location.baseData)
         });
+
+        if (isOwnLocation) {
+          leftOptions.push({
+            id: 'unmarkBaseLocation',
+            label: 'Unmark as Base Location',
+            onClick: this.unmarkBaseLocation
+          });
+        }
       }
       if (isOwnLocation) {
         leftOptions.push({

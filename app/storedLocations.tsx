@@ -126,10 +126,12 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
   connectId: number;
   storedLocations: HTMLElement;
   selecting: boolean;
+  needsUpdate: boolean;
   scrollTimeout: NodeJS.Timeout;
 
   constructor(props) {
     super(props);
+
     this.uiSegmentStyle = {
       background: 'rgba(23, 26, 22, 0.9)',
       display: 'inline-table',
@@ -142,6 +144,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       zIndex: 90
     };
     this.range = {start: 0, length: 0};
+    this.needsUpdate = false;
   }
   componentDidMount() {
     this.connectId = state.connect({
@@ -162,7 +165,8 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
         } else {
           this.setViewableRange(this.storedLocations);
         }
-      }
+      },
+      markStoredLocationsDirty: () => this.needsUpdate = true
     });
     let checkStored = () => {
       if (this.storedLocations) {
@@ -176,11 +180,18 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
     checkStored();
   }
   shouldComponentUpdate(nextProps) {
-    return (nextProps.storedLocations !== this.props.storedLocations
+    let shouldUpdate = (nextProps.storedLocations !== this.props.storedLocations
       || nextProps.selectedLocationId !== this.props.selectedLocationId
       || nextProps.height !== this.props.height
       || nextProps.filterOthers !== this.props.filterOthers
-      || nextProps.useGAFormat !== this.props.useGAFormat)
+      || nextProps.useGAFormat !== this.props.useGAFormat);
+
+    if (this.needsUpdate) {
+      this.needsUpdate = false;
+      shouldUpdate = true;
+    }
+
+    return shouldUpdate;
   }
   componentWillUnmount() {
     if (this.storedLocations) {

@@ -19,13 +19,59 @@ import {each, find, findIndex, tryFn} from './lang';
 import {handleSaveDataFailure, handleProtectedSession} from './dialog';
 import {defaultPosition} from './constants';
 
+const updateLocation = ({location, isLocationUpdate, image, stateUpdate = {}, next, errorHandler}: any): Promise<any> => {
+  let route = '/nmslocation/';
+  let method = 'post';
+
+  if (isLocationUpdate) {
+    method = 'put';
+    route += `${location.dataId}/`;
+  }
+
+  return ajaxWorker[method](route, {
+    machineId: state.machineId,
+    username: state.username,
+    mode: state.mode,
+    image,
+    ...location
+  }).then((res) => {
+    if (isLocationUpdate) {
+      let {storedLocations, remoteLocations, selectedLocation} = state;
+      let refRemote = findIndex(remoteLocations.results, (location) => location.dataId === res.data.dataId);
+      let refStored = findIndex(storedLocations, (location) => location.dataId === res.data.dataId);
+      let hasRemote = refRemote > -1;
+      let hasStored = refStored > -1;
+      let shouldUpdate = hasRemote || hasStored;
+
+      if (refRemote > -1) {
+        remoteLocations.results[refRemote] = res.data;
+        stateUpdate.remoteLocations = remoteLocations;
+      }
+
+      if (refStored > -1) {
+        storedLocations[refStored] = res.data;
+        stateUpdate.storedLocations = storedLocations;
+      }
+
+      if (selectedLocation && selectedLocation.dataId === res.data.dataId) {
+        stateUpdate.selectedLocation = res.data;
+      }
+
+      if (shouldUpdate) stateUpdate.remoteChanged = [res.data.dataId];
+
+      if (Object.keys(stateUpdate).length > 0) state.set(stateUpdate, true);
+    }
+    if (next) next(false);
+  }).catch(errorHandler);
+}
+
 
 let processData = (opts, saveData, location, refLocation, username, profile=null) => {
   let {init, machineId, NMSRunning, next} = opts;
   let {storedLocations} = state;
-  let stateUpdate = {};
-
+  let stateUpdate: GlobalState = {};
   let favorites = profile && profile.data ? profile.data.favorites : state.favorites;
+
   if (state.ps4User) {
     state.set({
       machineId,
@@ -33,6 +79,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     }, next);
     return;
   }
+
   console.log('SAVE DATA: ', saveData);
   log.error(`Finished reading No Man's Sky v${saveData.result.Version} save file.`);
 
@@ -63,6 +110,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     });
 
     let favoritesLen = remainingFavorites ? remainingFavorites.length : 0;
+
     if (favoritesLen > 0) {
       log.error(`Fetching ${favoritesLen} favorites from the server`);
       ajaxWorker.post('/nmsfavoritesync/', {
@@ -110,6 +158,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       image: '',
     });
     let isLocationUpdate = false;
+
     if (refLocation === -1) {
       assignIn(location, {
         username,
@@ -143,6 +192,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       storedLocations.push(location);
     } else {
       let existingLocation = storedLocations[refLocation];
+
       if (existingLocation.positions) {
         let refPosition = find(existingLocation.positions, (position) => {
           return (
@@ -177,6 +227,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         delete existingLocation.shipTransform;
         isLocationUpdate = true;
       }
+
       if (isLocationUpdate) {
         location = storedLocations[refLocation] = existingLocation;
       }
@@ -185,12 +236,15 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     // Detect player bases
     each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
       if (!base || !base.BaseType) return;
+
       let galacticAddress;
+
       if (!base.GalacticAddress || base.BaseType.PersistentBaseTypes !== 'HomePlanetBase') {
         return;
       }
       galacticAddress = gaToObject(base.GalacticAddress);
-      let refStoredLocation = findIndex(storedLocations, (storedLocation) => {
+
+      let refStoredLocation = find(storedLocations, (storedLocation) => {
         return (
           storedLocation
           && galacticAddress.VoxelX === storedLocation.VoxelX
@@ -201,14 +255,19 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
           && (!galacticAddress.RealityIndex || galacticAddress.RealityIndex === storedLocation.galaxy)
         );
       });
-      if (refStoredLocation > -1) {
-        storedLocations[refStoredLocation] = Object.assign(
-          storedLocations[refStoredLocation],
-          {
-            base: true,
-            baseData: formatBase(saveData, state.knownProducts, i)
-          }
-        );
+
+      if (refStoredLocation && (!refStoredLocation.base || !refStoredLocation.baseData)) {
+        Object.assign(refStoredLocation, {
+          base: true,
+          baseData: formatBase(saveData, state.knownProducts, i)
+        });
+
+        updateLocation({
+          location: refStoredLocation,
+          isLocationUpdate: true,
+          stateUpdate,
+          errorHandler: () => log.error('Unable to update base data for location: ', refStoredLocation.dataId)
+        });
       }
     });
 
@@ -227,8 +286,10 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
 
     if (profile) {
       stateUpdate.profile = profile.data;
+
       // Add friends to the map legend
       let {show} = state;
+
       each(profile.data.friends, (friend) => {
         if (show[friend.username]) {
           return;
@@ -275,8 +336,10 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         // Discoveries can change regardless if the location is known
         let {Record} = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store;
         let newDiscoveries = [];
+
         each(Record, (discovery) => {
           let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
+
           if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) { // TODO: use indexOf
             discovery.NMCID = uaToObject(discovery.DD.UA).dataId;
             newDiscoveries.push(discovery);
@@ -292,44 +355,16 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
             next(false);
           }
         }).catch(errorHandler);
+
         if (!init || isLocationUpdate) {
-          let route = '/nmslocation/';
-          let method = 'post';
-          if (isLocationUpdate) {
-            method = 'put';
-            route += `${location.dataId}/`;
-          }
-          ajaxWorker[method](route, {
-            machineId: state.machineId,
-            username: state.username,
-            mode: state.mode,
+          updateLocation({
+            location,
+            isLocationUpdate,
             image,
-            ...location
-          }).then((res) => {
-            if (isLocationUpdate) {
-              let {storedLocations, remoteLocations, selectedLocation} = state;
-              let stateUpdate = {};
-              let refRemote = findIndex(remoteLocations.results, (location) => location.dataId === res.data.dataId);
-              let refStored = findIndex(storedLocations, (location) => location.dataId === res.data.dataId);
-              let hasRemote = refRemote > -1;
-              let hasStored = refStored > -1;
-              let shouldUpdate = hasRemote || hasStored;
-              if (refRemote > -1) {
-                remoteLocations.results[refRemote] = res.data;
-                stateUpdate.remoteLocations = remoteLocations;
-              }
-              if (refStored > -1) {
-                storedLocations[refStored] = res.data;
-                stateUpdate.storedLocations = storedLocations;
-              }
-              if (selectedLocation && selectedLocation.dataId === res.data.dataId) {
-                stateUpdate.selectedLocation = res.data;
-              }
-              if (shouldUpdate) stateUpdate.remoteChanged = [res.data.dataId];
-              if (Object.keys(stateUpdate).length > 0) state.set(stateUpdate, true);
-            }
-            next(false);
-          }).catch(errorHandler);
+            stateUpdate,
+            next,
+            errorHandler
+          });
         }
         return;
       }

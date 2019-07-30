@@ -171,15 +171,18 @@ class Container extends React.Component<ContainerProps, ContainerState> {
       let stateUpdate: GlobalState = {};
       let refRemote = findIndex(remoteLocations.results, (location) => location.dataId === res.data.dataId);
       let refStored = findIndex(storedLocations, (location) => location.dataId === res.data.dataId);
+
       if (refRemote > -1) {
         remoteLocations.results[refRemote] = res.data;
         stateUpdate.remoteLocations = remoteLocations;
       }
+
       if (refStored > -1) {
         storedLocations[refStored] = res.data;
         stateUpdate.storedLocations = storedLocations;
       }
-      state.set(stateUpdate);
+
+      state.set(stateUpdate, true);
     })
   }
   handleUploadScreen = (e) => {
