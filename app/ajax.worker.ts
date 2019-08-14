@@ -1,5 +1,5 @@
-const axios = require('axios/dist/axios')
-const log = require('./log');
+import axios from 'axios';
+import log from './log';
 
 const opts = {
   baseURL: 'https://neuropuff.com/api/',
@@ -16,6 +16,7 @@ const ajax = axios.create(opts);
 onmessage = function(e) {
   let [method, ...args] = e.data;
   ajax[method](...args)
+    // @ts-ignore
     .then((res) => postMessage([null, {data: res.data}]))
     .catch((err) => {
       log.error(err);
@@ -26,6 +27,9 @@ onmessage = function(e) {
         } : null
       };
       let {message} = err;
+      // @ts-ignore
       postMessage([{message, ...errObject}])
     })
 }
+
+export default {} as typeof Worker & {new (): Worker};

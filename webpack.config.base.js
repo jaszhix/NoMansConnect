@@ -18,6 +18,17 @@ export default {
   module: {
     rules: [
       {
+        test: /\.worker\.ts$/,
+        use: [
+          {
+            loader: 'worker-loader',
+            options: {
+              name: '[name].js',
+            }
+          }
+        ]
+      },
+      {
         test: /\.(js|jsx|mjs|ts|tsx)$/,
         exclude: /(node_modules|bower_components)/,
         use: [{
@@ -26,7 +37,7 @@ export default {
         }],
       },
       {
-        test: /\.js$/,
+        test: /\.(js|ts|tsx)$/,
         use: ['source-map-loader'],
         enforce: 'pre'
       },
@@ -37,7 +48,8 @@ export default {
     path: path.join(__dirname, 'app'),
     filename: 'bundle.js',
     // https://github.com/webpack/webpack/issues/1114
-    libraryTarget: 'commonjs2'
+    libraryTarget: 'commonjs2',
+    globalObject: 'this'
   },
 
   /**

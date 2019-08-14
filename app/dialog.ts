@@ -1,10 +1,12 @@
 import {remote} from 'electron';
+import openExternal from 'open-external';
+import {each} from '@jaszhix/utils';
+
 import log from './log';
 import state from './state';
-import openExternal from 'open-external';
 import v from 'vquery';
 import {ajaxWorker} from './utils';
-import {each} from './lang';
+
 // @ts-ignore
 import defaultWallpaper from './assets/images/default_wallpaper.png';
 

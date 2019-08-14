@@ -1,5 +1,5 @@
-const {uniqBy, uniq, assignIn, orderBy} = require('lodash');
-const {each, findIndex, filter} = require('./lang');
+import {uniqBy, uniq, assignIn, orderBy} from 'lodash';
+import {each, findIndex, filter} from '@jaszhix/utils';
 
 const buildGalaxyOptions = function(state) {
   let options = [];
@@ -25,24 +25,25 @@ const buildGalaxyOptions = function(state) {
       label: state.galaxies[id]
     });
   });
-  const stateUpdate = {
+  const stateUpdate: State = {
     galaxyOptions: orderBy(options, 'id', 'asc')
   };
 
   if (state.init) {
     stateUpdate.selectedGalaxy = state.ps4User ? 0 : selectedGalaxy;
   }
+  // @ts-ignore
   postMessage({buildGalaxyOptions: stateUpdate, init: state.init});
 };
 
-const getLocationsByTranslatedId = function(locations) {
+const getLocationsByTranslatedId = function(locations: NMSLocation[]) {
   if (!locations || !locations[0]) {
     return null;
   }
   let systems = uniqBy(locations, (location) => {
     return location && location.translatedX && location.translatedY && location.translatedZ;
   });
-  each(systems, (location, i) => {
+  each(systems, (location) => {
     if (!location) return;
     let planets = filter(locations, (planet) => {
       if (!planet) return;
@@ -83,7 +84,7 @@ onmessage = function(e) {
     buildGalaxyOptions(e.data.buildGalaxyOptions);
     return;
   }
-  let stateUpdate = {};
+  let stateUpdate: State = {};
   let center = e.data.p.show.Center.value ? [{
     x: 2048,
     y: 2048,
@@ -244,6 +245,8 @@ onmessage = function(e) {
       zRange
     });
   }
-
+  // @ts-ignore
   postMessage(stateUpdate);
 }
+
+export default {} as typeof Worker & {new (): Worker};

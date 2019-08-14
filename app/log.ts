@@ -1,17 +1,18 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'graceful-fs';
+import path from 'path';
 
 const lineEnding = process.platform === 'win32' ? '\r\n' : '\n';
 
 class log {
+  public location: string;
+
   constructor() {
     this.location = './';
   }
   init(location) {
     this.location = location;
   }
-  error() {
-    let args = Array.from(arguments);
+  error(...args: any[]) {
     if (process.env.NODE_ENV === 'development') {
       console.log(...args);
     }
@@ -33,7 +34,7 @@ class log {
       let output = `${ts}:    ${argsString.replace(/"/g, '').replace(/\\\\/g, '\\')}`;
       let configPath = path.resolve(this.location, 'NMC.log');
       fs.appendFile(configPath, output + lineEnding, {
-        flags: 'w'
+        flag: 'w'
       }, (err)=>{
         if (err) throw err;
       });
@@ -41,4 +42,4 @@ class log {
   }
 }
 
-module.exports = new log();
+export default new log();

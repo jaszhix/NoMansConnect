@@ -1,8 +1,9 @@
 import state from './state';
 import React from 'react';
 import {delay, throttle} from 'lodash';
+import {each, findIndex} from '@jaszhix/utils';
+
 import {whichToShow} from './utils';
-import {each, findIndex} from './lang';
 import {BasicDropdown} from './dropdowns';
 import LocationBox from './locationBox';
 

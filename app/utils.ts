@@ -2,7 +2,8 @@ import fs from 'graceful-fs';
 import {exec} from 'child_process';
 import axios from 'axios';
 import {cloneDeep, assignIn, last, trimStart} from 'lodash';
-import {each, findIndex, filter} from './lang';
+import {each, findIndex, filter} from '@jaszhix/utils';
+
 import state from './state';
 import {defaultPosition, syncedKeys} from './constants';
 

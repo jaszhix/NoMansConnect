@@ -16,10 +16,11 @@ import {
 } from 'recharts';
 import {delay, isEqual, last} from 'lodash';
 import v from 'vquery';
+import {each, map} from '@jaszhix/utils';
+
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
 import {uuidV4, cleanUp} from './utils';
-import {each, map} from './lang';
 
 const toolTipHeaderStyle: CSSProperties = {
   padding: '3px 5px',

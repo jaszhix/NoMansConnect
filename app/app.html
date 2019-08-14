@@ -124,19 +124,6 @@
             .join('')
         );
       }
-      window.jsonWorker = new Worker('jsonWorker.js');
-      let coreCount = Math.max(Math.ceil(require('os').cpus().length / 2), 2);
-      let w = coreCount;
-      while (w > 0) {
-        window['fsWorker' + w] = new Worker('fsWorker.js');
-        window['ajaxWorker' + w] = new Worker('ajaxWorker.js');
-        window['mapWorker' + w] = new Worker('mapWorker.js');
-        window['formatWorker' + w] = new Worker('formatWorker.js');
-        w--;
-      }
-      window.coreCount = coreCount;
-      window.settingsWorker = new Worker('jsonWorker.js');
-      window.map3DWorker = new Worker('map3dWorker.js');
     </script>
   </body>
 </html>

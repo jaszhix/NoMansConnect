@@ -1,16 +1,17 @@
 import {remote} from 'electron';
-import moment from 'moment';
-import state from './state';
-import log from './log';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
 import {assignIn, clone} from 'lodash';
+import moment from 'moment';
+import {findIndex, map} from '@jaszhix/utils';
+
+import state from './state';
+import log from './log';
 
 import {tip, ajaxWorker, cleanUp} from './utils';
 import {handleRestart} from './dialog';
-import {findIndex, map} from './lang';
 
 const {dialog} = remote;
 

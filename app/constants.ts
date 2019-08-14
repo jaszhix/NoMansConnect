@@ -243,4 +243,4 @@ const saveKeyMapping = {
 
 const syncedKeys = ['image', 'name', 'description', 'teleports', 'profile'];
 
-module.exports = {locationItemStyle, sortStoredByKeyMap, defaultPosition, saveKeyMapping, syncedKeys};
+export {locationItemStyle, sortStoredByKeyMap, defaultPosition, saveKeyMapping, syncedKeys};

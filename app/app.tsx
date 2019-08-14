@@ -1,20 +1,21 @@
 import {remote} from 'electron';
 import fs from 'graceful-fs';
-import log from './log';
 import watch from 'watch';
 import {machineId} from 'node-machine-id';
-import state from './state';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
-import {assignIn, cloneDeep, orderBy, uniqBy, concat, first, isArray, throttle, pick, last} from 'lodash';
+import {assignIn, cloneDeep, orderBy, uniqBy, concat, first, isArray, pick, last} from 'lodash';
 import * as math from 'mathjs';
+import {each, find, findIndex, map, filter} from '@jaszhix/utils';
+import log from './log';
 
+import state from './state';
 import Loader from './loader';
 import * as utils from './utils';
 const {dirSep, getLastGameModeSave, exc, formatBase, css, tip, fsWorker, ajaxWorker} = utils;
 import pollSaveData from './poll';
 import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
-import {each, find, findIndex, map, filter, parseSaveKeys} from './lang';
+import {parseSaveKeys} from './lang';
 // @ts-ignore
 import baseIcon from './assets/images/base_icon.png';
 
@@ -138,9 +139,14 @@ class App extends React.Component<GlobalState> {
   }
   init = () => {
     win = state.trigger('window');
+
     win.on('maximize', this.handleMaximizeEvent);
     win.on('unmaximize', this.handleMaximizeEvent);
+
+    this.handleMaximizeEvent();
+
     window.addEventListener('resize', this.onWindowResize);
+
     log.init(this.state.configDir);
     log.error(`Initializing No Man's Connect ${this.state.version}`);
     if (this.state.offline) {
@@ -208,8 +214,11 @@ class App extends React.Component<GlobalState> {
 
   }
   componentWillUnmount() {
-    win.removeListener('maximize', this.handleMaximizeEvent);
-    win.removeListener('unmaximize', this.handleMaximizeEvent);
+    if (win) {
+      win.removeListener('maximize', this.handleMaximizeEvent);
+      win.removeListener('unmaximize', this.handleMaximizeEvent);
+    }
+
     if (this.monitor) {
       this.monitor.stop();
     }

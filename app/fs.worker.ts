@@ -1,11 +1,13 @@
-const fs = require('graceful-fs');
-const path = require('path');
-const {StringDecoder} = require('string_decoder');
+import fs from 'fs-extra';
+import path from 'path';
+import {StringDecoder} from 'string_decoder';
+import {last, orderBy} from 'lodash';
+import JSZip from 'jszip';
+import {each, rEach, tryFn} from '@jaszhix/utils';
+import {parseSaveKeys} from './lang';
+import log from './log';
+
 const decoder = new StringDecoder('utf8');
-const {last, orderBy} = require('lodash');
-const JSZip = require('jszip');
-const {each, rEach, tryFn, parseSaveKeys} = require('./lang');
-const log = require('./log');
 
 const walk = (dir, done) => {
   let results = [];
@@ -82,7 +84,7 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
       fs.readFile(lastModifiedSave.result, {}, (err, json) => {
         if (err) {
           log.error('getLastGameModeSave -> next: ', err);
-          if (e.message.indexOf('EBUSY') > -1) {
+          if (err.message.indexOf('EBUSY') > -1) {
             log.error(`Unable to read your last modified save file because it is in use by another program. Please make sure you are only teleporting, restoring bases, or using the cheat menu while the game is closed or paused.`);
           }
           cb(new Error());
@@ -123,12 +125,12 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
 
     rEach(saveInts, (int, i, next1) => {
       rEach(results, (result, r, next2) => {
-        let fileName = last(result.split('\\'));
+        let fileName: string = last(result.split('\\'));
         if (((int === 0 && fileName.indexOf('save.hg') > -1) || result.indexOf(`save${int + 1}.hg`) > -1)
           || ((int === 0 && fileName.indexOf('storage.hg') > -1) || result.indexOf(`storage${int + 1}.hg`) > -1)) {
           fs.stat(result, (err, stats) => {
             if (err) {
-              reject(err);
+              log.error(err);
               return;
             }
             saves.push({
@@ -200,24 +202,29 @@ const backupSaveFile = (saveDir, saveFile, cb) => {
   })
 }
 
+// @ts-ignore
 const next = (err, data) => postMessage([err ? err.message : null, data]);
 
 onmessage = function(e) {
   let [method, ...args] = e.data;
   if (method === 'walk') {
+    // @ts-ignore
     walk(...args, (err, data) => next(err, data));
   } else if (method === 'getLastGameModeSave') {
+    // @ts-ignore
     getLastGameModeSave(...args, (err, data) => next(err, data));
   } else if (method === 'backupSaveFile') {
+    // @ts-ignore
     backupSaveFile(...args, (err) => next(err));
   } else {
     each(args, (arg, i) => {
       if (arg.buffer) {
-        args[i] = new Buffer.from(arg.buffer, 'binary');
+        args[i] = Buffer.from(arg.buffer, 'binary');
       }
     });
     fs[method](...args, (err, data) => {
       if (method === 'exists') {
+        // @ts-ignore
         postMessage([err]);
         return;
       }
@@ -225,3 +232,5 @@ onmessage = function(e) {
     });
   }
 }
+
+export default {} as typeof Worker & {new (): Worker};

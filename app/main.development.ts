@@ -54,7 +54,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-const installExtensions = async (): Promise<any> => {
+/* const installExtensions = async (): Promise<any> => {
   if (process.env.NODE_ENV === 'development') {
     const installer = require('electron-devtools-installer'); // eslint-disable-line global-require
 
@@ -71,10 +71,11 @@ const installExtensions = async (): Promise<any> => {
       .all(extensions.map(name => installer.default(installer[name], forceDownload)))
       .catch(console.log);
   }
-};
+}; */
 
 app.on('ready', async (): Promise<any> => {
-  await installExtensions();
+  // Bug: https://github.com/electron/electron/issues/19468
+  //await installExtensions();
 
   let mainWindowState = windowStateKeeper({
     defaultWidth: 1421,
@@ -103,12 +104,14 @@ app.on('ready', async (): Promise<any> => {
   mainWindowState.manage(mainWindow);
   mainWindow.loadURL(`file://${__dirname}/app.html`);
 
-  mainWindow.webContents.on('did-finish-load', () => {
+  mainWindow.once('ready-to-show', () => {
     if (!mainWindow) {
       throw new Error('"mainWindow" is not defined');
     }
+
     mainWindow.show();
     mainWindow.focus();
+
     if (process.env.NODE_ENV === 'development') {
       mainWindow.webContents.openDevTools();
     }
@@ -118,7 +121,7 @@ app.on('ready', async (): Promise<any> => {
     app.quit();
   });
 
-  const handleExceptionState = (e: Electron.Event, killed: boolean) => {
+  const handleExceptionState = () => {
     mainWindow.webContents.reload();
   };
 
@@ -127,6 +130,7 @@ app.on('ready', async (): Promise<any> => {
   mainWindow.webContents.on('uncaughtException', handleExceptionState);*/
 
   Menu.setApplicationMenu(null);
+
   globalShortcut.register('Insert', ()=>{
     if (mainWindow.isFocused()) {
       mainWindow.minimize();
@@ -135,6 +139,7 @@ app.on('ready', async (): Promise<any> => {
       mainWindow.focus();
     }
   });
+
   globalShortcut.register('Control+Shift+P+]', ()=>{
     mainWindow.webContents.openDevTools();
   });

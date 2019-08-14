@@ -17,7 +17,7 @@
  * @param {String} seed A string to seed the generator.
  * @constructor
  */
-function RC4(seed) {
+function RC4(seed: string) {
     this.s = new Array(256);
     this.i = 0;
     this.j = 0;
@@ -34,11 +34,11 @@ function RC4(seed) {
  * @param {string} string
  * @returns {Array} An array of bytes
  */
-RC4.getStringBytes = function(string) {
-    var output = [];
+RC4.getStringBytes = function(string): number[] {
+    let output = [];
     for (var i = 0; i < string.length; i++) {
-        var c = string.charCodeAt(i);
-        var bytes = [];
+        let c = string.charCodeAt(i);
+        let bytes = [];
         do {
             bytes.push(c & 0xFF);
             c = c >> 8;
@@ -58,9 +58,9 @@ RC4.prototype._swap = function(i, j) {
  * Mix additional entropy into this generator.
  * @param {String} seed
  */
-RC4.prototype.mix = function(seed) {
-    var input = RC4.getStringBytes(seed);
-    var j = 0;
+RC4.prototype.mix = function(seed: string) {
+    let input = RC4.getStringBytes(seed);
+    let j = 0;
     for (var i = 0; i < this.s.length; i++) {
         j += this.s[i] + input[i % input.length];
         j %= 256;
@@ -71,7 +71,7 @@ RC4.prototype.mix = function(seed) {
 /**
  * @returns {number} The next byte of output from the generator.
  */
-RC4.prototype.next = function() {
+RC4.prototype.next = function(): number {
     this.i = (this.i + 1) % 256;
     this.j = (this.j + this.s[this.i]) % 256;
     this._swap(this.i, this.j);
@@ -85,7 +85,7 @@ RC4.prototype.next = function() {
  * @param seed An arbitrary object used to seed the generator.
  * @constructor
  */
-function RNG(seed) {
+function RNG(seed?) {
     if (seed == null) {
         seed = '' + Math.random() + Date.now();
     } else if (typeof seed === "function") {
@@ -109,14 +109,14 @@ function RNG(seed) {
 /**
  * @returns {number} Uniform random number between 0 and 255.
  */
-RNG.prototype.nextByte = function() {
+RNG.prototype.nextByte = function(): number {
     return this._state.next();
 };
 
 /**
  * @returns {number} Uniform random number between 0 and 1.
  */
-RNG.prototype.uniform = function() {
+RNG.prototype.uniform = function(): number {
     var BYTES = 7; // 56 bits to make a 53-bit double
     var output = 0;
     for (var i = 0; i < BYTES; i++) {
@@ -132,7 +132,7 @@ RNG.prototype.uniform = function() {
  * @param {number} m
  *
  */
-RNG.prototype.random = function(n, m) {
+RNG.prototype.random = function(n: number, m: number) {
     if (n == null) {
         return this.uniform();
     } else if (m == null) {
@@ -146,7 +146,7 @@ RNG.prototype.random = function(n, m) {
  * Generates numbers using this.uniform() with the Box-Muller transform.
  * @returns {number} Normally-distributed random number of mean 0, variance 1.
  */
-RNG.prototype.normal = function() {
+RNG.prototype.normal = function(): number {
     if (this._normal !== null) {
         var n = this._normal;
         this._normal = null;
@@ -163,7 +163,7 @@ RNG.prototype.normal = function() {
  * Generates numbers using this.uniform().
  * @returns {number} Number from the exponential distribution, lambda = 1.
  */
-RNG.prototype.exponential = function() {
+RNG.prototype.exponential = function(): number {
     return -Math.log(this.uniform() || Math.pow(2, -53));
 };
 
@@ -172,7 +172,7 @@ RNG.prototype.exponential = function() {
  * @param {number} [mean=1]
  * @returns {number} Number from the Poisson distribution.
  */
-RNG.prototype.poisson = function(mean) {
+RNG.prototype.poisson = function(mean: number): number {
     var L = Math.exp(-(mean || 1));
     var k = 0, p = 1;
     do {
@@ -188,7 +188,7 @@ RNG.prototype.poisson = function(mean) {
  * @param {number} a
  * @returns {number} Number from the gamma distribution.
  */
-RNG.prototype.gamma = function(a) {
+RNG.prototype.gamma = function(a: number): number {
     var d = (a < 1 ? 1 + a : a) - 1 / 3;
     var c = 1 / Math.sqrt(9 * d);
     do {
@@ -214,14 +214,14 @@ RNG.prototype.gamma = function(a) {
  * @param {RNG} rng An optional RNG object.
  * @returns {Function}
  */
-RNG.roller = function(expr, rng) {
+RNG.roller = function(expr: string, rng: RNG): () => number {
     var parts = expr.split(/(\d+)?d(\d+)([+-]\d+)?/).slice(1);
     var dice = parseFloat(parts[0]) || 1;
     var sides = parseFloat(parts[1]);
     var mod = parseFloat(parts[2]) || 0;
     rng = rng || new RNG();
     return function() {
-        var total = dice + mod;
+        let total = dice + mod;
         for (var i = 0; i < dice; i++) {
             total += rng.random(sides);
         }

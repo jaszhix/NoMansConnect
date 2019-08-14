@@ -1,6 +1,7 @@
 import * as CSS from 'csstype';
 import * as Raven from 'raven-js';
 import * as recharts from 'recharts';
+import Json from '../../app/json';
 
 declare global {
   type NumberOrString = number | string;
@@ -36,12 +37,19 @@ declare global {
     __mouseDown?: number;
     travelToCurrent?: boolean;
     jsonWorker: Worker;
+    map3DWorker: Worker;
     settingsWorker: Worker;
     Raven: Raven.RavenStatic;
   }
 
+  module NodeJS  {
+    interface Global {
+      Json: Json,
+    }
+  }
+
   interface NodeModule {
-    hot?: boolean;
+    hot?: any;
   }
 
   // @ts-ignore
@@ -229,6 +237,7 @@ declare global {
     translatedY?: number;
     translatedZ?: number;
     translatedId?: string;
+    planetData?: any;
     username: string;
     positions: NMSPosition[];
     galaxy: number;

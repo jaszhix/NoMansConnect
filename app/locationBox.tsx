@@ -8,9 +8,9 @@ import ReactDOMServer from 'react-dom/server';
 import ReactTooltip from 'react-tooltip';
 import {truncate, upperFirst, isEqual, last} from 'lodash';
 import moment from 'moment';
+import {each, map, tryFn} from '@jaszhix/utils';
 
 import {css, tip, cleanUp, formatForGlyphs, ajaxWorker, fsWorker, dirSep} from './utils';
-import {each, map, tryFn} from './lang';
 
 // @ts-ignore
 import baseIcon from './assets/images/base_icon.png';

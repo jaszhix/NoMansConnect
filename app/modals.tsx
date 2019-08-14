@@ -7,11 +7,11 @@ import onClickOutside from 'react-onclickoutside';
 import ReactMarkdown from 'react-markdown';
 import moment from 'moment';
 import {assignIn, pick, isString, orderBy, upperFirst, clone, last} from 'lodash';
+import {each, findIndex, find, map, filter} from '@jaszhix/utils';
 
 import log from './log';
 import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
-import {each, findIndex, find, map, filter} from './lang';
 
 import {BasicDropdown} from './dropdowns';
 import Button from './buttons';

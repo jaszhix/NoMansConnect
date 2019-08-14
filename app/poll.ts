@@ -1,9 +1,10 @@
 import log from './log';
 const ps = require('win-ps');
-import state from './state';
 import {assignIn, uniqBy, isEqual} from 'lodash';
+import {each, find, findIndex, tryFn} from '@jaszhix/utils';
 
-import screenshot from 'capture';
+import screenshot from './capture';
+import state from './state';
 import {
   exc,
   ajaxWorker,
@@ -15,7 +16,7 @@ import {
   gaToObject,
   uaToObject
 } from './utils';
-import {each, find, findIndex, tryFn} from './lang';
+
 import {handleSaveDataFailure, handleProtectedSession} from './dialog';
 import {defaultPosition} from './constants';
 

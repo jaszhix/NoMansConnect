@@ -1,11 +1,11 @@
-import log from './log';
-import state from './state';
 import React from 'react';
 import {cloneDeep, orderBy, uniq, uniqBy} from 'lodash';
+import {each, find, findIndex, filter} from '@jaszhix/utils';
 
+import log from './log';
+import state from './state';
 import {ajaxWorker, copyMetadata} from './utils';
 import {handleRestart} from './dialog';
-import {each, find, findIndex, filter} from './lang';
 
 import GalacticMap from './map';
 import LocationBox from './locationBox';

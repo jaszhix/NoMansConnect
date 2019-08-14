@@ -1,7 +1,7 @@
 import state from './state';
 import React from 'react';
 import {truncate, delay} from 'lodash';
-import {map, findIndex} from './lang';
+import {map, findIndex} from '@jaszhix/utils';
 import {whichToShow, cleanUp} from './utils';
 import {sortStoredByKeyMap} from './constants';
 // @ts-ignore
@@ -243,6 +243,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       filterStoredByScreenshot,
       useGAFormat
     } = this.props;
+
     let leftOptions = [
       {
         id: 'hideOthers',
@@ -323,6 +324,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
             overflowX: 'hidden'}}>
             {map(storedLocations, (location, i) => {
               let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
+
               if (isVisible) {
                 return (
                   <StoredLocationItem

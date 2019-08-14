@@ -7,7 +7,7 @@ import TWEEN from 'tween.js'
 import v from 'vquery';
 import RNG from './RNG';
 import {cleanUp} from './utils';
-import {each, find, findIndex, map, filter} from './lang';
+import {each, find, findIndex, map, filter} from '@jaszhix/utils';
 
 interface Position {
   top?: number;

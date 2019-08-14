@@ -1,5 +1,5 @@
-const Json = require('./json');
-const {tryFn} = require('./lang');
+import Json from './json';
+import {tryFn} from '@jaszhix/utils';
 
 onmessage = function(e) {
   if (e.data.method === 'new') {
@@ -18,15 +18,20 @@ onmessage = function(e) {
           res.page = Math.ceil(res.remoteLocations.results.length / e.data.pageSize);
         }
       }
+      // @ts-ignore
       postMessage(res);
     });
   } else if (e.data.method === 'set') {
     tryFn(() => global.Json.set(e.data.key, e.data.value));
   } else if (e.data.method === 'get') {
+    // @ts-ignore
     postMessage(global.Json.get(e.data.key));
   } else if (e.data.method === 'remove') {
     global.Json.remove(e.data.key);
   } else if (e.data.method === 'checkIfWriting') {
+    // @ts-ignore
     postMessage(global.Json.writing);
   }
 }
+
+export default {} as typeof Worker & {new (): Worker};

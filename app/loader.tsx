@@ -1,5 +1,5 @@
 import React from 'react';
-import {map} from './lang';
+import {map} from '@jaszhix/utils';
 
 const textStyle: CSSProperties = {
   position: 'relative',

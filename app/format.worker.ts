@@ -1,5 +1,5 @@
-const {orderBy, uniqBy} = require('lodash');
-const {each, findIndex, filter} = require('./lang');
+import {orderBy, uniqBy} from 'lodash';
+import {each, findIndex, filter} from '@jaszhix/utils';
 
 const isDifferent = function(objA, objB, keys = ['username', 'name', 'description', 'score', 'upvote', 'image']) {
   for (let i = 0, len = keys.length; i < len; i++) {
@@ -9,9 +9,11 @@ const isDifferent = function(objA, objB, keys = ['username', 'name', 'descriptio
   }
   return false;
 };
+
 let lastSort = null;
+
 onmessage = function(e) {
-  let stateUpdate = {navLoad: false};
+  let stateUpdate: State = {navLoad: false};
   let order = e.data.sort === '-teleports' ? 'teleports' : e.data.sort === '-score' ? 'score' : 'created';
   let shouldMerge = e.data.state.search.length === 0 && (lastSort === e.data.sort || e.data.sort === '-created' || e.data.partial);
   let changed = false;
@@ -56,6 +58,7 @@ onmessage = function(e) {
       stateUpdate.pagination = true;
       delete stateUpdate.navLoad;
     }
+    // @ts-ignore
     postMessage({stateUpdate});
     return;
   }
@@ -105,6 +108,8 @@ onmessage = function(e) {
       stateUpdate.remoteLocations.page = e.data.page;
     }
   }
-
+  // @ts-ignore
   postMessage({stateUpdate});
 }
+
+export default {} as typeof Worker & {new (): Worker};

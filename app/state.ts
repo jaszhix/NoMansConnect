@@ -1,15 +1,17 @@
 import {remote} from 'electron';
 import os from 'os';
 import path from 'path';
+import Raven from 'raven-js';
 import {assignIn, pick, uniqBy, cloneDeep} from 'lodash';
+import {each, filter} from '@jaszhix/utils';
+import initStore from '@jaszhix/state';
+
 import {handleRestart} from './dialog';
 import log from './log';
 import {fsWorker} from './utils';
-import {each, filter} from './lang';
-import initStore from './store';
 import galaxies from './static/galaxies.json';
 import knownProducts from './static/knownProducts.json';
-import Raven from 'raven-js';
+
 
 const {dialog} = remote;
 const win = remote.getCurrentWindow();

@@ -1,8 +1,16 @@
-const fs = require('fs');
-const copyFile = require('./copy');
-const {tryFn} = require('./lang');
+import fs from 'graceful-fs';
+import {tryFn} from '@jaszhix/utils';
+import copyFile from './copy';
 
 class Json {
+  public shouldWrite: boolean;
+  public writing: boolean;
+  public fileName: string;
+  public path: string;
+  public backupPath: string;
+  public data: object;
+  public timeout: NodeJS.Timeout;
+
   constructor(path, fileName, defaultObj, cb) {
     this.shouldWrite = false;
     this.fileName = fileName;
@@ -13,10 +21,10 @@ class Json {
     this.writing = false;
   }
   init(readPath, cb, fromFailure=null) {
-    fs.readFile(readPath, (err, data=this.data) => {
+    fs.readFile(readPath, (err, data) => {
       if (err) {
         this.writing = true;
-        fs.writeFile(this.path, JSON.stringify(this.data), (err, data) => {
+        fs.writeFile(this.path, JSON.stringify(this.data), (err) => {
           this.writing = false;
           if (err) {
             console.log(err);
@@ -26,7 +34,7 @@ class Json {
         });
       }
       tryFn(() => {
-        this.data = JSON.parse(data);
+        this.data = JSON.parse(data.toString());
         this.callback(cb);
       }, (e) => {
         fs.exists(this.backupPath, (exists) => {
@@ -44,8 +52,8 @@ class Json {
     this.shouldWrite = true;
     cb(this.data);
   }
-  _writeFile(cb) {
-    fs.writeFile(this.path, JSON.stringify(this.data), (err, data) => {
+  _writeFile(cb?) {
+    fs.writeFile(this.path, JSON.stringify(this.data), (err) => {
       this.writing = false;
       if (err) {
         console.log(err);
@@ -56,7 +64,7 @@ class Json {
       }
     });
   }
-  writeFile(cb, backup) {
+  writeFile(cb?, backup?) {
     if (!this.shouldWrite) {
       if (typeof cb === 'function') {
         cb(this.data);
@@ -81,14 +89,14 @@ class Json {
       this.timeout = null;
     }
     if (this.writing) {
-      this.timeout = setTimeout(() => this.set(...arguments), 1000);
+      this.timeout = setTimeout(() => this.set(key, value), 1000);
       return;
     }
     this.data[key] = value;
     this.writing = true;
     this.writeFile(null, this.data.hasOwnProperty('maintenanceTS'));
   }
-  get(key) {
+  get() {
     return tryFn(() => this.data, () => null);
   }
   remove(key) {
@@ -97,4 +105,4 @@ class Json {
   }
 }
 
-module.exports = Json;
+export default Json;
