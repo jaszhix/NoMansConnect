@@ -1,3 +1,12 @@
+# 1.5.9
+
+  * Fixed inability to manually upload screenshots.
+  * Fixed screenshots being uploaded not updating the corresponding location in the remote list.
+  * Fixed map rendering becoming out of sync with selections.
+  * Addressed issue #114: No Man's Connect startup is stuck in 'syncing discoveries'
+  * Updated dependencies.
+  * Various code quality improvements.
+
 # 1.5.8
 
   * Added option to unmark base locations. If the base location still exists in the save data then this will not do anything.
