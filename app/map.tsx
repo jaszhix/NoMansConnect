@@ -197,12 +197,6 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       scale: 'linear',
       mapLines: props.mapLines
     };
-    if (process.env.NODE_ENV === 'development') {
-      let originalSetState = this.setState;
-      this.setState = function(obj, cb) {
-        originalSetState.call(this, ...arguments);
-      };
-    }
     each(props.show, (legendItem, key) => {
       if (state.defaultLegendKeys.indexOf(key) > -1) {
         return;
@@ -244,7 +238,8 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       state.connect([
         'selectedGalaxy',
         'storedLocations',
-        'remoteLocations'
+        'remoteLocations',
+        'selectedLocation',
       ], () => {
         if (this.willUnmount) return;
         this.handlePostMessage()
@@ -266,7 +261,6 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
         }, 0);
       }),
       state.connect({
-        selectedLocation: () => this.handlePostMessageSelect(),
         mapLines: () => {
           if (this.willUnmount) return;
           if (state.mapLines !== this.props.mapLines) {
@@ -275,6 +269,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
         }
       })
     ];
+
     this.handlePostMessage();
     this.handlePostMessageSize();
   }
@@ -294,9 +289,8 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       state.set({navLoad: true});
     }
     this.postMessage({
-      selectOnly: false,
       p: {
-        remoteLocations: this.props.remoteLocations,
+        remoteLocations: state.remoteLocations.results,
         selectedLocation: state.selectedLocation,
         selectedGalaxy: state.selectedGalaxy,
         currentLocation: state.currentLocation,
@@ -305,14 +299,13 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
         defaultLegendKeys: state.defaultLegendKeys
       },
       opts: {
-        locations: true
+        locations: true,
       }
     });
   }
   handlePostMessageSize = () => {
     if (this.dragging || this.willUnmount) return;
     this.postMessage({
-      selectOnly: false,
       p: {
         width: state.width,
         height: state.height,
@@ -323,22 +316,6 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       opts: {
         size: true
       }
-    });
-  }
-  handlePostMessageSelect = () => {
-    if (this.dragging || this.willUnmount) return;
-    this.postMessage({
-      p: {
-        selectedLocation: state.selectedLocation,
-        selectedGalaxy: state.selectedGalaxy,
-        remoteLocations: this.props.remoteLocations,
-        show: this.props.show,
-        defaultLegendKeys: state.defaultLegendKeys
-      },
-      opts: {
-        selectedLocation: true
-      },
-      s: this.state
     });
   }
   workerHandler = (e) => {
@@ -409,7 +386,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
     let hexSector;
     let results = [];
 
-    each(this.props.remoteLocations, (location, i) => {
+    each(state.remoteLocations.results, (location, i) => {
       if (!location || !location.translatedId) {
         return;
       }
@@ -451,17 +428,18 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
   handleLegendClick = (e) => {
     this.props.show[e.payload.name].value = !this.props.show[e.payload.name].value;
     state.set({show: this.props.show, navLoad: true});
+
     if (e.payload.name === 'Center') {
       this.handlePostMessageSize();
-    } else if (e.payload.name.indexOf('Selected') > -1) {
-      this.handlePostMessageSelect();
     } else {
       this.handlePostMessage();
     }
+
     this.handleUpdateLegend();
   }
   handleMouseDown = (e) => {
     let {zoomHistory, zoom} = this.state;
+
     if (window.__mouseDown === 2) {
       this.dragCancelled = false;
       zoomHistory.pop();
@@ -475,6 +453,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       });
       return;
     }
+
     if (!e) return;
 
     let {xValue, yValue} = e;
@@ -491,6 +470,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
     }
 
     let {zoom, xDomain, yDomain, range, ticks, startCoordinates, endCoordinates, zoomHistory} = this.state;
+
     if (!startCoordinates || !endCoordinates) return;
 
     ++zoom;
@@ -540,9 +520,11 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       zoom,
       mapLines
     } = this.state
+
     const {show} = this.props;
     let isZoom = zoom > 0;
     let legends = [];
+
     each(show, (obj, label) => {
       legends.push(
         <Scatter
@@ -699,7 +681,9 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
     if (workerCount > window.coreCount) {
       workerCount = 1;
     }
+
     let worker = `mapWorker${workerCount}`;
+
     if (window[worker].onmessage) {
       workerCount++;
       if (r > 0) {
@@ -709,6 +693,7 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
       this.buildGalaxyOptions(init, 1);
       return;
     }
+
     window[worker].onmessage = (e) => {
       window[worker].onmessage = null;
       state.set(e.data.buildGalaxyOptions, () => {
@@ -721,7 +706,7 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
       buildGalaxyOptions: {
         init,
         storedLocations: state.storedLocations,
-        remoteLocations: this.props.remoteLocations,
+        remoteLocations: state.remoteLocations.results,
         selectedLocation: state.selectedLocation,
         selectedGalaxy: state.selectedGalaxy,
         currentLocation: state.currentLocation,

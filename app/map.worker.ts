@@ -76,9 +76,6 @@ const getLocationsByTranslatedId = function(locations: NMSLocation[]) {
   return systems
 }
 
-let lastSelected = null;
-let prevListKey = null;
-
 onmessage = function(e) {
   if (e.data.buildGalaxyOptions) {
     buildGalaxyOptions(e.data.buildGalaxyOptions);
@@ -93,56 +90,6 @@ onmessage = function(e) {
 
   e.data.p.remoteLocations = getLocationsByTranslatedId(e.data.p.remoteLocations);
 
-  if (e.data.opts.selectedLocation) {
-    let selectedLocation = [];
-    if (e.data.p.remoteLocations && e.data.p.remoteLocations) {
-      each(e.data.p.remoteLocations, (location) => {
-        if (location.galaxy !== e.data.p.selectedGalaxy) {
-          return;
-        }
-        if (e.data.p.selectedLocation && e.data.p.show.Selected.value
-          && location.translatedX === e.data.p.selectedLocation.translatedX
-          && location.translatedY === e.data.p.selectedLocation.translatedY
-          && location.translatedZ === e.data.p.selectedLocation.translatedZ) {
-          selectedLocation[0] = {
-            x: location.translatedX,
-            y: (0, 4096) - location.translatedZ,
-            z: location.translatedY,
-            selected: true,
-            id: `${location.translatedX}:${location.translatedY}:${location.translatedZ}`,
-            planetData: location.planetData
-          };
-        }
-      });
-    }
-
-    each(e.data.p.show, (legendItem, key) => {
-      if (!legendItem.value || !e.data.s[legendItem.listKey]) {
-        return;
-      }
-
-      let refIndex = findIndex(e.data.s[legendItem.listKey], (location) => {
-        return selectedLocation[0] && location.dataId === selectedLocation[0].dataId;
-      });
-      if (refIndex > -1) {
-        if (lastSelected && e.data.s[prevListKey]) {
-          e.data.s[prevListKey] = e.data.s[prevListKey].concat(lastSelected);
-          stateUpdate[prevListKey] = e.data.s[prevListKey];
-        }
-        prevListKey = legendItem.listKey;
-        e.data.s[legendItem.listKey].splice(refIndex, 1);
-        stateUpdate[legendItem.listKey] = e.data.s[legendItem.listKey];
-        return;
-      }
-    });
-
-    lastSelected = selectedLocation;
-
-    assignIn(stateUpdate, {
-      selectedLocation
-    });
-  }
-
   if (e.data.opts.locations) {
     Object.assign(stateUpdate, {
       currentLocation: [],
@@ -150,7 +97,8 @@ onmessage = function(e) {
       remoteLocations: [],
       favLocations: [],
       baseLocations: [],
-      ps4Locations: []
+      ps4Locations: [],
+      selectedLocation: []
     })
 
     let friendKeys = [];
@@ -162,11 +110,11 @@ onmessage = function(e) {
 
     if (e.data.p.remoteLocations && e.data.p.remoteLocations) {
       each(e.data.p.remoteLocations, (location) => {
-        if (location.galaxy !== e.data.p.selectedGalaxy
-        || (e.data.p.selectedLocation && location.dataId === e.data.p.selectedLocation.dataId)) {
+        if (location.galaxy !== e.data.p.selectedGalaxy) {
           return;
         }
-        let obj = {
+
+        let obj: any = {
           x: location.translatedX,
           y: (0, 4096) - location.translatedZ,
           z: location.translatedY,
@@ -188,37 +136,54 @@ onmessage = function(e) {
             }
           }
         });
+
         if (matchedFriendKey) {
           return;
         }
-        if (location.upvote) {
-          if (e.data.p.show.Favorite.value) {
-            stateUpdate.favLocations.push(obj);
-          }
-        } else if (location.dataId === e.data.p.currentLocation) {
-          if (e.data.p.show.Current.value) {
-            stateUpdate.currentLocation.push(obj);
-          }
-        } else if (location.base) {
-          if (e.data.p.show.Base.value) {
-            stateUpdate.baseLocations.push(obj);
-          }
-        } else if (location.username === e.data.p.username) {
-          if (e.data.p.show.Explored.value) {
-            stateUpdate.locations.push(obj);
-          }
-        } else if (location.username !== e.data.p.username
-          && (location.playerPosition
-            || (location.positions
-              && location.positions[0].playerPosition)
-              && !location.manuallyEntered)) {
-          if (e.data.p.show.Shared.value) {
-            stateUpdate.remoteLocations.push(obj);
-          }
-        } else {
-          if (e.data.p.show.PS4.value) {
-            stateUpdate.ps4Locations.push(obj);
-          }
+
+        switch (true) {
+          case (e.data.p.selectedLocation
+            && location.translatedX === e.data.p.selectedLocation.translatedX
+            && location.translatedY === e.data.p.selectedLocation.translatedY
+            && location.translatedZ === e.data.p.selectedLocation.translatedZ):
+            if (e.data.p.show.Selected.value) {
+              obj.selected = true;
+              stateUpdate.selectedLocation = [obj];
+            }
+            break;
+          case (location.upvote):
+            if (e.data.p.show.Favorite.value) {
+              stateUpdate.favLocations.push(obj);
+            }
+            break;
+          case (location.dataId === e.data.p.currentLocation):
+            if (e.data.p.show.Current.value) {
+              stateUpdate.currentLocation.push(obj);
+            }
+            break;
+          case (location.base):
+            if (e.data.p.show.Base.value) {
+              stateUpdate.baseLocations.push(obj);
+            }
+            break;
+          case (location.username === e.data.p.username):
+            if (e.data.p.show.Explored.value) {
+              stateUpdate.locations.push(obj);
+            }
+            break;
+          case (location.username !== e.data.p.username
+            && (location.playerPosition
+              || (location.positions
+                && location.positions[0].playerPosition)
+                && !location.manuallyEntered)):
+            if (e.data.p.show.Shared.value) {
+              stateUpdate.remoteLocations.push(obj);
+            }
+            break;
+          default:
+            if (e.data.p.show.PS4.value) {
+              stateUpdate.ps4Locations.push(obj);
+            }
         }
       });
     }

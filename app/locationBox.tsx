@@ -139,10 +139,13 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           }
         },
         selectedLocation: ({selectedLocation}) => {
-          if (!this.props || this.willUnmount || this.state.location.dataId !== selectedLocation.dataId) return;
+          if (!this.props
+            || this.willUnmount
+            || (selectedLocation && this.state.location.dataId !== selectedLocation.dataId)) return;
 
           this.setState({positionEdit: false, positionSelect: false});
-          this.getImage(selectedLocation.image)
+
+          if (selectedLocation) this.getImage(selectedLocation.image)
         },
         remoteChanged: ({remoteChanged}) => {
           if (!this.willUnmount
