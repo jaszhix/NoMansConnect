@@ -339,7 +339,6 @@ const state: GlobalState = initStore({
     // stored, so performance isn't compromised in the interim of a better solution.
     // Favorites will always stay in the list.
     // TODO: Find a beter way to handle cache
-
     if ((state.maintenanceTS + 86400000 < Date.now())) {
       let remoteLength = obj.remoteLocations.results.length;
       state.set({loading: 'Validating locations Please wait...', remoteLength});
@@ -355,14 +354,18 @@ const state: GlobalState = initStore({
           && location.VoxelZ > -2048 && location.VoxelZ < 2047
           && location.VoxelX > -2048 && location.VoxelX < 2047));
       });
+
       locations = uniqBy(locations, (location: NMSLocation) => {
         return location.dataId;
       });
+
       obj.remoteLocations.results = locations;
       obj.remoteLocations.count = locations.length;
+
       obj.page = Math.ceil(obj.remoteLocations.results.length / state.pageSize)
       obj.remoteLocations.page = obj.page;
     }
+
     cb(obj);
   },
   handleState: (obj) => {

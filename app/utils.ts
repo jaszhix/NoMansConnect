@@ -507,14 +507,8 @@ export const formatForGlyphs = (translatedId: string, planetIndex): string[] => 
   return result;
 };
 
-export const uuidV4 = (): string => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    return Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8).toString(16);
-  });
-}
-
 export const validateEmail = (email): boolean => {
-  let re = /dsad^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/g;
+  let re = /dsad^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/g;
   return re.test(email);
 }
 

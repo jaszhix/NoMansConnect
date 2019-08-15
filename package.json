@@ -41,20 +41,19 @@
     },
     "asar": true,
     "files": [
-      "dist/",
+      "dist/*",
       "node_modules/axios/*",
       "node_modules/lodash/*",
       "app.html",
       "main.js",
       "main.js.map",
       "package.json",
-      "ajaxWorker.js",
-      "fsWorker.js",
-      "formatWorker.js",
-      "jsonWorker.js",
-      "settingsWorker.js",
-      "mapWorker.js",
-      "map3dWorker.js",
+      "ajax.worker.js",
+      "fs.worker.js",
+      "format.worker.js",
+      "json.worker.js",
+      "map.worker.js",
+      "map3d.worker.js",
       "json.js",
       "each.js",
       "copy.js",
@@ -70,6 +69,10 @@
       {
         "from": "./app/textures",
         "to": "./app/textures"
+      },
+      {
+        "from": "./app/dist",
+        "to": "./resources/dist"
       }
     ],
     "extraResources": [

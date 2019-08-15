@@ -20,7 +20,7 @@ import {each, map} from '@jaszhix/utils';
 
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
-import {uuidV4, cleanUp} from './utils';
+import {cleanUp} from './utils';
 
 const toolTipHeaderStyle: CSSProperties = {
   padding: '3px 5px',
@@ -58,7 +58,7 @@ class TooltipChild extends React.Component<TooltipChildProps> {
   constructor(props) {
     super(props);
   }
-  componentWillReceiveProps() {
+  componentDidUpdate() {
     cleanUp(this, true);
   }
   render() {

@@ -98,6 +98,7 @@ app.on('ready', async (): Promise<any> => {
     webPreferences: {
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
+      webSecurity: false
     },
   });
 

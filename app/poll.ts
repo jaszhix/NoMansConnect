@@ -36,7 +36,7 @@ const updateLocation = ({location, isLocationUpdate, image, stateUpdate = {}, ne
     image,
     ...location
   }).then((res) => {
-    if (isLocationUpdate) {
+    if (isLocationUpdate && res.data) {
       let {storedLocations, remoteLocations, selectedLocation} = state;
       let refRemote = findIndex(remoteLocations.results, (location) => location.dataId === res.data.dataId);
       let refStored = findIndex(storedLocations, (location) => location.dataId === res.data.dataId);
@@ -89,7 +89,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     log.error('Favorites are out of sync, fixing.');
     state.set({loading: 'Syncing favorites...'});
     let remainingFavorites = profile.data.favorites.slice();
-    each(storedLocations, (location) => {
+    each(storedLocations, (location: NMSLocation) => {
       if (favorites.indexOf(location.dataId) > -1) {
         location.upvote = true;
         if (location.username === username) {
@@ -97,7 +97,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         }
       }
     });
-    each(remoteLocations.results, (location) => {
+    each(remoteLocations.results, (location: NMSLocation) => {
       if (favorites.indexOf(location.dataId) > -1) {
         location.upvote = true;
         let refStored = findIndex(storedLocations, (l) => l.dataId === location.dataId);
@@ -329,7 +329,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     state.set(stateUpdate, () => {
       let errorHandler = (err) => {
         if (err.response && err.response.data && err.response.data.status) {
-          log.error('processData -> errorHandler:', err, err.response.data.status);
+          log.error('processData -> errorHandler:', err.stack, err.response.data.status);
         }
         next([err, err.message, err.stack]);
       };
@@ -341,11 +341,12 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         each(Record, (discovery) => {
           let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
 
-          if (!find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) { // TODO: use indexOf
+          if (profile.data.discoveryIds && !find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) { // TODO: use indexOf
             discovery.NMCID = uaToObject(discovery.DD.UA).dataId;
             newDiscoveries.push(discovery);
           }
         });
+
         ajaxWorker.put(`/nmsprofile/${profile.data.id}/`, {
           machineId: state.machineId,
           username: state.username,
@@ -383,13 +384,13 @@ let getLastSave = (opts) => {
 
   log.error('SAVE DIRECTORY: ', state.saveDirectory)
 
-  getLastGameModeSave(state.saveDirectory, state.ps4User, log).then((saveData) => {
+  getLastGameModeSave(state.saveDirectory, state.ps4User).then((saveData: SaveDataMeta) => {
     console.log('SAVE DATA: ', saveData)
     let refLocation: number, location, username;
     if (!state.ps4User) {
       location = formatID(saveData.result.PlayerStateData.UniverseAddress);
       delete location.RealityIndex;
-      refLocation = findIndex(state.storedLocations, _location => _location.dataId === location.dataId);
+      refLocation = findIndex(state.storedLocations, (item) => item && item.dataId === location.dataId);
       if (!state.username || state.username === 'Explorer') {
         username = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store.Record[0].OWS.USN;
       }
@@ -428,7 +429,7 @@ let getLastSave = (opts) => {
   }).catch((err) => {
     log.error(`Unable to retrieve NMS save file: `, err);
     log.error(`${state.saveDirectory}, ${state.saveFileName}`);
-    handleSaveDataFailure(mode, init, () => pollSaveData({mode, init}));
+    handleSaveDataFailure();
   });
 };
 

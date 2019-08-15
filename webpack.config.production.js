@@ -178,7 +178,10 @@ export default merge.smart(baseConfig, {
           ecma: undefined,
           warnings: false,
           parse: {},
-          compress: {},
+          compress: {
+            drop_console: true,
+            drop_debugger: true,
+          },
           sourceMap: true,
           mangle: false,
           module: false,
