@@ -187,7 +187,10 @@ class Container extends React.Component<ContainerProps, ContainerState> {
   }
   handleUploadScreen = (e) => {
     e.persist();
-    if (this.props.s.offline) {
+
+    const {offline, machineId, username, selectedLocation, storedLocations, remoteLocations} = this.props.s;
+
+    if (offline) {
       state.set({error: `Unable to upload screenshot in offline mode.`});
       return;
     }
@@ -205,34 +208,34 @@ class Container extends React.Component<ContainerProps, ContainerState> {
           let newDataUri = canvas.toDataURL('image/jpeg', 0.75);
           if (newDataUri) {
             ajaxWorker.post('/nmslocation/', {
-              machineId: this.props.s.machineId,
-              username: this.props.s.username,
+              machineId,
+              username,
               imageU: newDataUri,
-              dataId: this.props.s.selectedLocation.dataId,
+              dataId: selectedLocation.dataId,
               action: 1
             }).then((res) => {
-              let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
+              let refLocation = findIndex(storedLocations, (location) => location.dataId === selectedLocation.dataId);
               if (refLocation !== -1) {
-                this.props.s.storedLocations[refLocation].image = res.data.image;
+                storedLocations[refLocation].image = res.data.image;
               }
-              let refRemoteLocation = findIndex(this.props.s.remoteLocations.results, (location) => {
-                return location.dataId === this.props.s.selectedLocation.dataId;
+              let refRemoteLocation = findIndex(remoteLocations.results, (location) => {
+                return location.dataId === selectedLocation.dataId;
               });
               if (refRemoteLocation !== -1) {
-                this.props.s.remoteLocations.results[refRemoteLocation].image = res.data.image;
+                remoteLocations.results[refRemoteLocation].image = res.data.image;
               }
-              this.props.s.selectedLocation.image = res.data.image;
+              selectedLocation.image = res.data.image;
               state.set({
-                storedLocations: this.props.s.storedLocations,
-                remoteLocations: this.props.s.remoteLocations,
-                selectedLocation: this.props.s.selectedLocation
+                storedLocations,
+                remoteLocations,
+                selectedLocation
               }, () => {
                 if (this.willUnmount) return;
                 this.setState({
                   updating: false,
                   edit: false
                 });
-              });
+              }, true);
             }).catch((err) => {
               log.error(`Failed to upload screenshot: ${err}`);
             });
