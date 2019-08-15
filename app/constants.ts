@@ -14,7 +14,7 @@ const sortStoredByKeyMap = {
   teleports: 'Popularity'
 };
 
-const defaultPosition = {
+const defaultPosition: NMSPosition = {
   playerPosition: [
     233.02163696289063,
     6774.24560546875,

@@ -27,7 +27,10 @@ declare global {
   type Listener = _Listener;
   type DisconnectKey = string[] | number;
 
-  type Map3DCoordinates = [number, number, number] | boolean | any /* TODO */;
+  type MatrixSide = [number, number, number];
+  type Transform = [number, number, number, number];
+
+  type Map3DCoordinates = MatrixSide | boolean | any /* TODO */;
 
   interface Window {
     state?: GlobalState;
@@ -220,14 +223,17 @@ declare global {
     SolarSystemIndex: number;
     PlanetIndex: number;
     RealityIndex?: number;
+    GalacticAddress?: GalacticAddress;
     dataId?: string;
   }
 
   interface NMSPosition {
-    playerPosition: [number, number, number, number],
-    playerTransform: [number, number, number, number],
-    shipPosition: [number, number, number, number],
-    shipTransform: [number, number, number, number]
+    name?: string;
+    image?: string;
+    playerPosition: Transform,
+    playerTransform: Transform,
+    shipPosition: Transform,
+    shipTransform: Transform
   }
 
   interface NMSLocation extends GalacticAddress {
@@ -250,5 +256,173 @@ declare global {
     manuallyEntered: boolean;
     created: number;
     apiVersion: number;
+  }
+
+  interface DiscoveryRecord {
+    DD: {
+      DT: string;
+      UA: NumberOrString;
+      VP: [NumberOrString, NumberOrString]
+    },
+    DM: any;
+    FL?: {
+      C: number;
+      tiH: number;
+    },
+    NMCID?: string; // mutated at runtime, not saved
+    OWS: {
+      D6b: string;
+      LID: string;
+      UID: string;
+      USN: string;
+      TS?: number;
+    },
+    RID?: string;
+  }
+
+  interface DiscoveryStore {
+    Record: DiscoveryRecord[];
+  }
+
+  interface DiscoveryData {
+    ReserveManaged: number;
+    ReserveStore: number;
+    Store: DiscoveryStore;
+  }
+
+  interface DiscoveryManagerData {
+    'DiscoveryData-v1': any;
+  }
+
+  interface Waypoint {
+    Address: GalacticAddress;
+    EventId: string;
+    Type: {
+      GalaxyWaypointType: string;
+    }
+  }
+
+  interface GameKnowledgeData {
+    Waypoints: Waypoint[];
+  }
+
+  interface BaseObject {
+    At: MatrixSide;
+    GalacticAddress: NumberOrString;
+    ObjectID: string;
+    Position: MatrixSide;
+    RegionSeed: NumberOrString;
+    Timestamp: number;
+    Up: MatrixSide;
+    UserData: any;
+  }
+
+  // WIP
+  interface PlayerStateData {
+    ActiveSpaceBattleUA: number;
+    AnomalyPositionOverride: Transform;
+    AtlasStationAdressData: GalacticAddress[];
+    BaseBuildingObjects: BaseObject[];
+    BoltAmmo: number;
+    CurrentFreighter: any;
+    Energy: number;
+    FirstAtlasStationDiscovered: boolean;
+    FirstShipPosition: Transform;
+    FirstSpawnPosition: Transform;
+    FreighterInventory: any;
+    FreighterInventory_TechOnly: any;
+    FreighterLayout: any;
+    FreighterMatrixAt: MatrixSide;
+    FreighterMatrixPos: MatrixSide;
+    FreighterMatrixUp: MatrixSide;
+    FreighterUniverseAddress: GalacticAddress;
+    GalacticMapRequests: boolean[];
+    GameStartAddress1: GalacticAddress;
+    GameStartAddress2: GalacticAddress;
+    Hazard: number[];
+    HazardTimeAlive: number;
+    Health: number;
+    InteractionProgressTable: string[];
+    Inventory: any;
+    IsNew: boolean;
+    KnownPortalRunes: number;
+    KnownProducts: string[];
+    KnownTech: string[];
+    LaserAmmo: number;
+    LastPortal: any[];
+    MaintenanceInteractions: any[];
+    MarkerStack: any[];
+    MiniStationUA: NumberOrString;
+    MultiShipEnabled: boolean;
+    NPCWorkers: any[];
+    NewAtlasStationAdressData: GalacticAddress[];
+    OnOtherSideOfPortal: boolean;
+    PersistentPlayerBases: any[];
+    PersonalMaintenanceInteractions: any[];
+    PlanetPositions: MatrixSide[];
+    PlanetSeeds: [boolean, NumberOrString][];
+    PlayerFreighterName: string;
+    PlayerWeaponName: string;
+    PortalMarkerPosition_Local: Transform;
+    PortalMarkerPosition_Offset: Transform;
+    SavedInteractionDialogTable: any[];
+    SavedInteractionIndicies: any[];
+    ScatterAmmo: number;
+    Shield: number;
+    ShipHealth: number;
+    ShipOwnership: any[];
+    ShipShield: number;
+    StartGameShipPosition: Transform;
+    Stats: any[];
+    StoredInteractions: any[];
+    TelemetryStats: any[];
+    TeleportEndpoints: any[];
+    TerrainEditData: any;
+    TimeAlive: number;
+    TimeLastMiniStation: number;
+    TimeLastSpaceBattle: number;
+    TotalPlayTime: number;
+    TradingSupplyData: any[];
+    TradingSupplyDataIndex: number;
+    Units: number;
+    UniverseAddress: GalacticAddress;
+    UsedEntitlements: any[];
+    UsesThirdPersonCharacterCam: boolean;
+    VisitedAtlasStationsData: GalacticAddress[];
+    VisitedPortal: any;
+    VisitedSystems: NumberOrString[];
+    WarpsLastMiniStation: number;
+    WarpsLastSpaceBattle: number;
+    WeaponInventory: any;
+  }
+
+  interface SpawnStateData {
+    FreighterPositionInSystem: Transform;
+    FreighterTransformAt: Transform;
+    FreighterTransformUp: Transform;
+    LastKnownPlayerState: string;
+    PlayerPositionInSystem: Transform;
+    PlayerTransformAt: Transform;
+    ShipPositionInSystem: Transform;
+    ShipTransformAt: Transform;
+  }
+
+  interface SaveData {
+    DiscoveryManagerData: DiscoveryManagerData;
+    GameKnowledgeData: GameKnowledgeData;
+    Platform: string;
+    PlayerStateData: PlayerStateData;
+    SpawnStateData: SpawnStateData;
+    Version: number;
+  }
+
+  interface SaveDataMeta {
+    fileName: string;
+    int: number;
+    mtime: Date;
+    needsConversion: boolean;
+    path: string;
+    slot: number;
+    result: SaveData;
   }
 }

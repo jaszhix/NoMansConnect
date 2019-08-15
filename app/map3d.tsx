@@ -496,7 +496,7 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
           pos[key] = child.position[key] - value;
         }
       });
-
+      // @ts-ignore
       child.position.copy(new THREE.Vector3(pos.x, pos.y, pos.z));
 
       if (child.userData.dataId === this.props.currentLocation && !this.mounted) {

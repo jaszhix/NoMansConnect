@@ -86,7 +86,7 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
     }
     each(this.connections, (id) => state.disconnect(id));
   }
-  setViewableRange = (node) => {
+  setViewableRange = (node?) => {
     if (!node) {
       return;
     }
@@ -128,7 +128,7 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
       }, 1500);
     }
   }
-  handleFavorite = (location, upvote) => {
+  handleFavorite = (location, upvote?) => {
     this.props.onFav(location, upvote);
   }
   handleUpdate = (dataId: string, location: any, remove = false) => {
