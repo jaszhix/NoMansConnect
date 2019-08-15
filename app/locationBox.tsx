@@ -21,6 +21,7 @@ import {BasicDropdown} from './dropdowns';
 import Item from './item';
 import Button from './buttons';
 import {locationItemStyle} from './constants';
+import Loader from './loader';
 
 const glyphs = {};
 const glyphsChars = ['A', 'B', 'C', 'D', 'E', 'F', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -48,7 +49,7 @@ interface LocationBoxProps {
   image: string;
   username: string;
   currentLocation: string;
-  location: any; // TODO
+  location: NMSLocation;
   offline?: boolean;
   compactRemote?: boolean;
   detailsOnly?: boolean;
@@ -84,7 +85,7 @@ interface LocationBoxState {
   description: string;
   image: string;
   profile: any;
-  location: any;
+  location: NMSLocation;
   positionSelect: boolean;
   positionEdit: boolean;
   positionEditHover: number;
@@ -92,6 +93,10 @@ interface LocationBoxState {
 }
 
 class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
+  static defaultProps = {
+    name: '',
+    description: '',
+  };
   static getDerivedStateFromProps = (nextProps, nextState) => {
     let stateUpdate: GlobalState = {};
 
@@ -141,11 +146,10 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         selectedLocation: ({selectedLocation}) => {
           if (!this.props
             || this.willUnmount
-            || (selectedLocation && this.state.location.dataId !== selectedLocation.dataId)) return;
+            || !this.props.selectType
+            || !selectedLocation) return;
 
-          this.setState({positionEdit: false, positionSelect: false});
-
-          if (selectedLocation) this.getImage(selectedLocation.image)
+          this.getImage(selectedLocation.image, {positionEdit: false, positionSelect: false});
         },
         remoteChanged: ({remoteChanged}) => {
           if (!this.willUnmount
@@ -155,6 +159,11 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             this.getImage(this.props.image);
           }
         },
+        updateScreenshot: (selectedLocation) => {
+          if (this.props.selectType || selectedLocation.dataId !== this.state.location.dataId) return;
+
+          this.getImage(selectedLocation.image);
+        },
         deleteScreenshot: (dataId) => {
           if (this.state && this.state.location && this.state.location.dataId === dataId) {
             this.setState({image: null});
@@ -162,7 +171,9 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         }
       }),
     ];
+
     this.getImage(this.props.image);
+
     if (this.props.location && !this.props.offline) {
       this.updateLocation();
     }
@@ -228,11 +239,12 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       onUpdate(location.dataId, null, true);
     });
   }
-  getImage = (image) => {
+  getImage = (image, stateUpdate = {}) => {
     if (!image) {
-      this.setState({image});
+      this.setState({image: null, ...stateUpdate});
       return;
     }
+
     const {configDir} = state;
     let img = image.replace(/:/g, '~').replace(/NMSLocation-/, '');
     let file = path.resolve(`${configDir}${img}`);
@@ -245,7 +257,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         .then(res => {
           fsWorker.writeFile(file, Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
             if (!err && !this.willUnmount && this.scrollBox) {
-              tryFn(() => this.setState({image: `${file}`}));
+              tryFn(() => this.setState({image: `${file}`, ...stateUpdate}));
             } else {
               log.error('LocationBox.getImage: ', err);
             }
@@ -253,8 +265,26 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         })
         .catch((err) => log.error('LocationBox.getImage: ', err));
       } else {
-        this.setState({image: `${file}`});
+        this.setState({image: `${file}`, ...stateUpdate});
       }
+    });
+  }
+  // Remove screenshot from local cache
+  removeImage = (cb) => {
+    const {image} = this.state.location;
+    const {configDir} = state;
+    const img = image.replace(/:/g, '~').replace(/NMSLocation-/, '');
+    const file = path.resolve(`${configDir}${img}`);
+
+    fsWorker.exists(file, (exists) => {
+      if (!exists) {
+        cb();
+        return;
+      }
+      fsWorker.unlink(file, (err) => {
+        if (err) log.error(err);
+        cb();
+      });
     });
   }
   handleNameChange = (e) => {
@@ -289,8 +319,10 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     this.props.onUploadScreen();
   }
   handleDeleteScreenshot = () => {
-    state.trigger('deleteScreenshot', this.state.location.dataId);
-    this.props.onDeleteScreen();
+    this.removeImage(() => {
+      state.trigger('deleteScreenshot', this.state.location.dataId);
+      this.props.onDeleteScreen();
+    });
   }
   getModMarkup = (mods) => {
     return ReactDOMServer.renderToString(
@@ -319,7 +351,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     return (
       <div ref={this.getRef} style={scrollBoxStyle} className={`LocationBox__scrollBoxStyle${p.detailsOnly ? ' LocationBox__scrollBoxProfileStyle' : ''}`}>
         {image ?
-        <div style={{textAlign: 'center'}}>
+        <div className="textCentered">
           <img className="LocationBox__imageStyle" src={image} onClick={() => state.set({selectedImage: image})} />
         </div> : null}
         {this.props.detailsOnly ? <Item label="Name" value={p.name || 'Unknown'} /> : null}

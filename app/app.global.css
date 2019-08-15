@@ -38646,6 +38646,10 @@ Components
 
 */
 
+.textCentered {
+  text-align: center;
+}
+
 .cursorPointer {
   cursor: pointer;
 }

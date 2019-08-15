@@ -235,6 +235,8 @@ class Container extends React.Component<ContainerProps, ContainerState> {
                   updating: false,
                   edit: false
                 });
+
+                state.trigger('updateScreenshot', selectedLocation);
               }, true);
             }).catch((err) => {
               log.error(`Failed to upload screenshot: ${err}`);
