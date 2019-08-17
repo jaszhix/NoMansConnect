@@ -1,3 +1,9 @@
+# 1.5.10
+
+  * Reduced discovery sync time during startup. Only 500 discoveries are synced within a single request unless the new "Sync discoveries" option in Settings is used. (#114)
+  * Fixed a regression in 1.5.9 that prevented the log from being written.
+  * Improved API error messaging.
+
 # 1.5.9
 
   * Fixed inability to manually upload screenshots.
