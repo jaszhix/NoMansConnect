@@ -1,5 +1,4 @@
 import axios from 'axios';
-import log from './log';
 
 const opts = {
   baseURL: 'https://neuropuff.com/api/',
@@ -19,7 +18,6 @@ onmessage = function(e) {
     // @ts-ignore
     .then((res) => postMessage([null, {data: res.data}]))
     .catch((err) => {
-      log.error(err);
       let errObject = {
         response: err. response ? {
           status: err.response.status,

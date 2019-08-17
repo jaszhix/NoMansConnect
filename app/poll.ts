@@ -66,6 +66,60 @@ const updateLocation = ({location, isLocationUpdate, image, stateUpdate = {}, ne
   }).catch(errorHandler);
 }
 
+const updateDiscoveries = ({saveData, profile, init = false, fullSync = false, next, errorHandler}: any): Promise<any> => {
+  // Discoveries can change regardless if the location is known
+  let {Record} = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store;
+  let newDiscoveries = [];
+
+  each(Record, (discovery) => {
+    let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
+
+    if (profile.discoveryIds && !find(profile.discoveryIds, (d) => d[0].includes(NMCUID))) { // TODO: use indexOf
+      discovery.NMCID = uaToObject(discovery.DD.UA).dataId;
+      newDiscoveries.push(discovery);
+    }
+  });
+
+  // If a large set of discoveries are going to be uploaded, don't hold up the startup process.
+  if (!fullSync && newDiscoveries.length > 500) {
+    log.error(
+      'Over 500 new discoveries were found in the save file, these will be incrementally synced ' +
+      'over time instead, but can optionally be manually synced in Settings.'
+    );
+    init = false;
+    next(false);
+
+    newDiscoveries = newDiscoveries.slice(0, 500);
+  }
+
+  return ajaxWorker.put(`/nmsprofile/${profile.id}/`, {
+    machineId: state.machineId,
+    username: state.username,
+    discoveries: newDiscoveries,
+    apiVersion: 2
+  }).then(() => {
+    if (init) {
+      next(false);
+    }
+  }).catch(errorHandler);
+};
+
+const syncDiscoveries = () => {
+  state.set({navLoad: true});
+  getLastGameModeSave(state.saveDirectory, state.ps4User).then((saveData: SaveDataMeta) => {
+    updateDiscoveries({
+      saveData,
+      profile: state.profile,
+      init: false,
+      fullSync: true,
+      next: () => state.set({navLoad: false}),
+      errorHandler: (err) => {
+        log.error('Failed to sync discoveries: ', err);
+        state.set({navLoad: false})
+      }
+    })
+  }).catch(() => state.set({navLoad: false}));
+}
 
 let processData = (opts, saveData, location, refLocation, username, profile=null) => {
   let {init, machineId, NMSRunning, next} = opts;
@@ -333,41 +387,26 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         }
         next([err, err.message, err.stack]);
       };
+
       if (profile && !state.offline && (init || refLocation === -1 || isLocationUpdate)) {
-        // Discoveries can change regardless if the location is known
-        let {Record} = saveData.result.DiscoveryManagerData['DiscoveryData-v1'].Store;
-        let newDiscoveries = [];
-
-        each(Record, (discovery) => {
-          let NMCUID = `${discovery.DD.VP.join('-')}-${discovery.DD.DT || ''}-${discovery.DD.UA || ''}-${discovery.OWS.TS}`;
-
-          if (profile.data.discoveryIds && !find(profile.data.discoveryIds, (d) => d[0].includes(NMCUID))) { // TODO: use indexOf
-            discovery.NMCID = uaToObject(discovery.DD.UA).dataId;
-            newDiscoveries.push(discovery);
-          }
-        });
-
-        ajaxWorker.put(`/nmsprofile/${profile.data.id}/`, {
-          machineId: state.machineId,
-          username: state.username,
-          discoveries: newDiscoveries,
-          apiVersion: 2
+        updateDiscoveries({
+          saveData,
+          profile: profile.data,
+          init,
+          next,
+          errorHandler
         }).then(() => {
-          if (init) {
-            next(false);
+          if (!init || isLocationUpdate) {
+            updateLocation({
+              location,
+              isLocationUpdate,
+              image,
+              stateUpdate,
+              next,
+              errorHandler
+            });
           }
         }).catch(errorHandler);
-
-        if (!init || isLocationUpdate) {
-          updateLocation({
-            location,
-            isLocationUpdate,
-            image,
-            stateUpdate,
-            next,
-            errorHandler
-          });
-        }
         return;
       }
       next(false);
@@ -377,7 +416,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
 
 let pollSaveData: Function;
 let getLastSave = (opts) => {
-  let {mode, init, machineId} = opts;
+  let {mode, machineId} = opts;
   if (mode && mode !== state.mode) {
     state.mode = mode;
   }
@@ -463,4 +502,7 @@ pollSaveData = (opts = {mode: state.mode, init: false, machineId: state.machineI
   }
 };
 
-export default pollSaveData;
+export {
+  pollSaveData,
+  syncDiscoveries
+};

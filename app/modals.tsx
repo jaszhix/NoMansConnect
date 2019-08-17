@@ -1,5 +1,4 @@
 import {clipboard, remote} from 'electron';
-import state from './state';
 import React from 'react';
 import PropTypes from 'prop-types';
 import ReactTooltip from 'react-tooltip';
@@ -9,7 +8,9 @@ import moment from 'moment';
 import {assignIn, pick, isString, orderBy, upperFirst, clone, last} from 'lodash';
 import {each, findIndex, find, map, filter} from '@jaszhix/utils';
 
+import state from './state';
 import log from './log';
+import {syncDiscoveries} from './poll';
 import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
 
@@ -1123,7 +1124,8 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
     }
     state.set({displaySettings: false});
   }
-  handleSync = () => {
+  handleLocationSync = () => {
+    state.set({navLoad: true});
     this.props.onSync();
   }
   handleAutoCapture = (e) => {
@@ -1269,6 +1271,7 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
           </div> : null}
           {!p.s.ps4User ? <div className="divider" /> : null}
           <Item
+          disabled={p.s.navLoad}
           className="Item__hover"
           dataTip={tip('Select which platform you play NMS on')}
           onValueClick={this.handlePlatformToggle}
@@ -1276,6 +1279,7 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
           value={p.s.ps4User ? 'PS4' : 'PC'} />
           {!p.s.ps4User ?
           <Item
+          disabled={p.s.navLoad}
           className="Item__hover"
           dataTip={tip('Optional. Select the location NMS is installed in. This is used to associate your mods with a location, so other players can see a location which may not load properly for them.')}
           onValueClick={handleSelectInstallDirectory}
@@ -1285,6 +1289,7 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
            : null}
           {!p.s.ps4User ?
           <Item
+          disabled={p.s.navLoad}
           className="Item__hover"
           dataTip={tip('Required. Select the location the save files are in.')}
           onValueClick={handleSelectSaveDirectory}
@@ -1337,6 +1342,7 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
           label={p.s.wallpaper ? 'Reset Wallpaper' : 'Set Wallpaper'}
           value={p.s.wallpaper || 'Default'} />
           <Item
+          disabled={p.s.navLoad}
           className="Item__hover"
           onValueClick={this.handleOfflineModeToggle}
           dataTip={tip(`Prevents NMC from making network requests to the server, and attempts to keep most features in a functional state.`)}
@@ -1348,10 +1354,18 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
           <div className="ui segment SettingsModal__child">
             {!p.s.offline ?
             <Item
+            disabled={p.s.navLoad}
             className="Item__hover"
-            onValueClick={this.handleSync}
+            onValueClick={this.handleLocationSync}
             dataTip={tip('Downloads stored locations belonging to you, that are available on the server, and uploads locations missing on the server.')}
             label="Sync Locations" /> : null}
+            {!p.s.offline ?
+            <Item
+            disabled={p.s.navLoad}
+            className="Item__hover"
+            onValueClick={syncDiscoveries}
+            dataTip={tip('Uploads missing discoveries from your save file. This process may take a while depending on how many are stored in the save file.')}
+            label="Sync Discoveries" /> : null}
             <Item
             className="Item__hover"
             onValueClick={this.handleResetRemoteCache}

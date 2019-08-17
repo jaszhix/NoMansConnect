@@ -5,6 +5,7 @@ import {cloneDeep, assignIn, last, trimStart} from 'lodash';
 import {each, findIndex, filter} from '@jaszhix/utils';
 
 import state from './state';
+import log from './log';
 import {defaultPosition, syncedKeys} from './constants';
 
 export const exc = (cmd: string): Promise<any> => {
@@ -75,6 +76,10 @@ const ajaxWorkerCaller = (method: string, ...args: any[]) => {
       let [err, data] = e.data;
       state.set({navLoad: false});
       if (err) {
+        if (typeof err.response.data.alert !== 'undefined') {
+          log.error(`API error received (${err.response.status}):`);
+          log.error(err.response.data.alert);
+        }
         reject(err);
         return;
       }

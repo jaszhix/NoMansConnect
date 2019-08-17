@@ -13,7 +13,7 @@ import state from './state';
 import Loader from './loader';
 import * as utils from './utils';
 const {dirSep, getLastGameModeSave, exc, formatBase, css, tip, fsWorker, ajaxWorker} = utils;
-import pollSaveData from './poll';
+import {pollSaveData} from './poll';
 import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
 import {parseSaveKeys} from './lang';
 // @ts-ignore
@@ -123,6 +123,9 @@ class App extends React.Component<GlobalState> {
         this.setState(obj, () => {
           state.handleState(obj);
         });
+
+        if (obj.loading) log.error(obj.loading);
+
         console.log(`STATE: `, this.state);
       }),
       state.connect({
@@ -207,7 +210,7 @@ class App extends React.Component<GlobalState> {
           }, true);
           return;
         }
-        log.error('Failed to check for newer version: ', err.response);
+        log.error('Failed to check for newer version');
       });
     });
 
@@ -337,7 +340,9 @@ class App extends React.Component<GlobalState> {
     if (this.state.offline || this.state.closing) {
       return;
     }
+
     if (!username) username = this.state.username;
+
     ajaxWorker.get('/nmslocationsync', {
       params: {
         username,
@@ -354,12 +359,15 @@ class App extends React.Component<GlobalState> {
           if (state.init) {
             this.handleSync(1, state.sort, state.init);
             this.checkMods();
+          } else {
+            state.set({navLoad: false});
           }
         });
       });
     }).catch((err) => {
       console.log(err)
-      log.error('Failed to download missing locations from the server: ', err.response);
+      log.error('Failed to download missing locations from the server.');
+      state.set({navLoad: false});
     });
   }
   handleSync = (page=1, sort=this.state.sort, init=false) => {
@@ -404,7 +412,7 @@ class App extends React.Component<GlobalState> {
         mode: state.mode,
         username: state.username,
       }).then(() => next()).catch((err) => {
-        log.error('Failed to upload missing locations to the server: ', err.response);
+        log.error('Failed to upload missing locations to the server');
         next();
       });
     }).catch((err) => log.error('handleSync: ', err.message));
@@ -506,7 +514,7 @@ class App extends React.Component<GlobalState> {
       }
     }).catch((err) => {
       console.log(err)
-      log.error('Failed regular polling request: ', err.response);
+      log.error('Failed regular polling request.');
       next();
     })
   }
@@ -539,7 +547,7 @@ class App extends React.Component<GlobalState> {
         }
       });
     }).catch((err) => {
-      log.error('Failed to fetch remote locations: ', err.response);
+      log.error('Failed to fetch remote locations.');
       let stateUpdate: GlobalState = {
         remoteLocations: state.remoteLocations,
         navLoad: false,
