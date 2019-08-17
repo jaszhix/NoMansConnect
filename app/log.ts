@@ -34,7 +34,8 @@ class log {
       let output = `${ts}:    ${argsString.replace(/"/g, '').replace(/\\\\/g, '\\')}`;
       let configPath = path.resolve(this.location, 'NMC.log');
       fs.appendFile(configPath, output + lineEnding, {
-        flag: 'w'
+        // @ts-ignore
+        flags: 'w'
       }, (err)=>{
         if (err) throw err;
       });
