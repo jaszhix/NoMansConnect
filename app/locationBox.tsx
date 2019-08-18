@@ -21,7 +21,6 @@ import {BasicDropdown} from './dropdowns';
 import Item from './item';
 import Button from './buttons';
 import {locationItemStyle} from './constants';
-import Loader from './loader';
 
 const glyphs = {};
 const glyphsChars = ['A', 'B', 'C', 'D', 'E', 'F', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -79,17 +78,18 @@ interface LocationBoxProps {
 }
 
 interface LocationBoxState {
-  hover: string;
-  limit: boolean;
-  name: string;
-  description: string;
-  image: string;
-  profile: any;
-  location: NMSLocation;
-  positionSelect: boolean;
-  positionEdit: boolean;
-  positionEditHover: number;
-  compactRemote: boolean;
+  hover?: string;
+  limit?: boolean;
+  name?: string;
+  description?: string;
+  image?: string;
+  profile?: any;
+  location?: NMSLocation;
+  portalHex?: string[];
+  positionSelect?: boolean;
+  positionEdit?: boolean;
+  positionEditHover?: number;
+  compactRemote?: boolean;
 }
 
 class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
@@ -98,15 +98,17 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     description: '',
   };
   static getDerivedStateFromProps = (nextProps, nextState) => {
-    let stateUpdate: GlobalState = {};
+    const stateUpdate: LocationBoxState = {};
+    const {location} = nextProps;
 
-    if (nextProps.location.dataId !== nextState.location.dataId) {
+    if (location.dataId !== nextState.location.dataId) {
       state.trigger('resetLocationScrollTop');
 
       stateUpdate.image = null;
       stateUpdate.name = '';
       stateUpdate.description = '';
-      stateUpdate.location = nextProps.location;
+      stateUpdate.location = location;
+      stateUpdate.portalHex = formatForGlyphs(location.translatedId, location.PlanetIndex);
       stateUpdate.profile = nextProps.profile ? nextProps.profile : nextProps.location.profile;
     }
 
@@ -119,14 +121,18 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
 
   constructor(props) {
     super(props);
+
+    const {location} = props;
+
     this.state = {
       hover: '',
       limit: false,
-      name: this.props.name,
-      description: this.props.description,
+      name: props.name,
+      description: props.description,
       image: null,
       profile: props.profile,
-      location: this.props.location,
+      location: location,
+      portalHex: formatForGlyphs(location.translatedId, location.PlanetIndex),
       positionSelect: false,
       positionEdit: false,
       positionEditHover: -1,
@@ -223,6 +229,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           onUpdate(location.dataId, res.data);
           this.setState({
             location: res.data,
+            portalHex: formatForGlyphs(location.translatedId, location.PlanetIndex),
             profile: res.data.profile
           });
         }
@@ -346,7 +353,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   }
   renderDetails = () => {
     let p = this.props;
-    let {location, image} = this.state;
+    let {location, portalHex, image} = this.state;
     let scrollBoxStyle = p.compactRemote ? compactRemoteScrollBoxStyle : {};
     return (
       <div ref={this.getRef} style={scrollBoxStyle} className={`LocationBox__scrollBoxStyle${p.detailsOnly ? ' LocationBox__scrollBoxProfileStyle' : ''}`}>
@@ -359,7 +366,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         <Item label="Galactic Address" value={location.translatedId} />
         <Item label="Universe Address" value={location.dataId} />
         <Item label="Portal Address">
-          {map(formatForGlyphs(location.translatedId, location.PlanetIndex), (glyph, i) => {
+          {map(portalHex, (glyph, i) => {
             return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
           })}
         </Item>
@@ -384,7 +391,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   }
   render() {
     let p = this.props;
-    let {location} = this.state;
+    let {location, portalHex} = this.state;
     if (location.results || location.data) return null;
     let upvote = p.favorites.indexOf(location.dataId) > -1;
     let isOwnLocation = p.isOwnLocation && p.selectType && location.username === p.username;
@@ -500,6 +507,11 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         id: 'copyAddress',
         label: 'Copy Universe Address to Clipboard',
         onClick: () => clipboard.writeText(location.dataId)
+      });
+      leftOptions.push({
+        id: 'copyPortalHex',
+        label: 'Copy Portal Address',
+        onClick: () => clipboard.writeText(portalHex.join(''))
       });
     }
 
