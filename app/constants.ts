@@ -1,10 +1,3 @@
-const locationItemStyle = {
-  padding: '0px 2px',
-  margin: '0px 3px',
-  background: 'rgba(23, 26, 22, 0.8)',
-  fontSize: '16px'
-};
-
 const sortStoredByKeyMap = {
   created: 'Time',
   name: 'Name',
@@ -243,4 +236,4 @@ const saveKeyMapping = {
 
 const syncedKeys = ['image', 'name', 'description', 'teleports', 'profile'];
 
-export {locationItemStyle, sortStoredByKeyMap, defaultPosition, saveKeyMapping, syncedKeys};
+export {sortStoredByKeyMap, defaultPosition, saveKeyMapping, syncedKeys};

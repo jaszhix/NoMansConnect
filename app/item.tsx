@@ -81,12 +81,7 @@ class Item extends React.Component<ItemProps> {
         :
         <span
         className="Item__valueStyle">
-          {value ? value
-          : icon ?
-          <i
-          style={iconStyle}
-          className={`${icon} icon`} />
-          : null}
+          {value ? value : icon ? <i className={`${icon} icon Item__icon`} /> : null}
         </span>}
       </div>
     );

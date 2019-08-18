@@ -1,16 +1,8 @@
 import React from 'react';
 import {cleanUp} from './utils';
 
-let style: CSSProperties = {
-  left: '9px',
-  letterSpacing: '3px',
-  fontSize: '16px',
-  padding: '3px 3px',
-  textAlign: 'center',
-  cursor: 'pointer'
-};
-
 interface ButtonProps {
+  className: string;
   style: CSSProperties;
   onClick: React.MouseEventHandler;
 }
@@ -21,6 +13,7 @@ interface ButtonState {
 
 class Button extends React.Component<ButtonProps, ButtonState> {
   static defaultProps = {
+    className: '',
     style: {}
   };
   constructor(props) {
@@ -35,8 +28,7 @@ class Button extends React.Component<ButtonProps, ButtonState> {
   render() {
     return (
       <div
-      className="ui segment Button__div"
-      style={Object.assign({}, style, this.props.style)}
+      className={`ui segment Button__div ${this.props.className}`}
       onClick={this.props.onClick}>
         {this.props.children}
       </div>
