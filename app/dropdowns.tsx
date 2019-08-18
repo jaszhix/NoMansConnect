@@ -340,6 +340,9 @@ You should have received a copy of the GNU General Public License along with thi
       `
     });
   }
+  handleReleaseNotes = () => {
+    openExternal('https://github.com/jaszhix/NoMansConnect/blob/master/CHANGELOG.md');
+  }
   handleSupport = () => {
     openExternal('https://neuropuff.com/static/donate.html');
   }
@@ -392,6 +395,13 @@ You should have received a copy of the GNU General Public License along with thi
           data-place="left"
           data-tip={tip('NMC info.')}>
             About
+          </div>
+          <div
+          className="item"
+          onClick={this.handleReleaseNotes}
+          data-place="left"
+          data-tip={tip('Information about NMC changes.')}>
+            Release Notes
           </div>
           <div
           className="item"
