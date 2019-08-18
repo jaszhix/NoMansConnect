@@ -526,7 +526,9 @@ export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDrop
           overflowY: 'auto'
         }}
         className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
-          {this.props.options.length > 0 ? map(this.props.options, (option, i)=>{
+          {this.props.options.length > 0 ? map(this.props.options, (option, i) => {
+            if (option.hidden) return null;
+
             let tooltip = '';
             if (option.tooltip) {
               tooltip = option.tooltip

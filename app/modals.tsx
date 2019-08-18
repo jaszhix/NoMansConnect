@@ -1,5 +1,5 @@
 import {clipboard, remote} from 'electron';
-import React from 'react';
+import React, {Fragment} from 'react';
 import PropTypes from 'prop-types';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
@@ -11,7 +11,7 @@ import {each, findIndex, find, map, filter} from '@jaszhix/utils';
 import state from './state';
 import log from './log';
 import {syncDiscoveries} from './poll';
-import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip} from './utils';
+import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip, numberWithCommas} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
 
 import {BasicDropdown} from './dropdowns';
@@ -509,6 +509,41 @@ class EventItem extends React.Component<EvenItemProps> {
   }
 }
 
+interface ProfileModalPaginationProps {
+  discoveriesPage: number;
+  discoveriesCount: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}
+
+interface ProfileModalPaginationState {}
+
+class ProfileModalPagination extends React.Component<ProfileModalPaginationProps, ProfileModalPaginationState> {
+  render() {
+    const {discoveriesPage, discoveriesCount, onPrevious, onNext} = this.props;
+
+    return (
+      <div className="ui three column grid">
+        <div className="column">
+          {discoveriesPage > 1 ?
+          <Button onClick={onPrevious}>
+            Previous
+          </Button> : null}
+        </div>
+        <div className="column textCentered ProfileModal__paginationCount">
+          {`Page ${discoveriesPage} of ${Math.round(discoveriesCount / 60)}`}
+        </div>
+        {discoveriesCount > 60 && discoveriesPage < Math.ceil(discoveriesCount / 60) ?
+        <div className="column">
+          <Button onClick={onNext}>
+            Next
+          </Button>
+        </div> : null}
+      </div>
+    );
+  }
+}
+
 interface ProfileModalProps {
   width: number;
   height: number;
@@ -652,11 +687,21 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
   }
   render() {
     const {profile, error, discoveriesPage, height} = this.state;
-    if (!profile || !this.props.profile) {
-      return null;
-    }
+
+    if (!profile || !this.props.profile) return null;
+
+    const pagination = (
+      <ProfileModalPagination
+      discoveriesPage={discoveriesPage}
+      discoveriesCount={profile.discoveriesCount}
+      onNext={this.handleNextPage}
+      onPrevious={this.handlePreviousPage} />
+    );
     let isFriend = false;
     let isOwnProfile = this.props.profile.id === profile.id;
+    let locations = [];
+    let isStart;
+
     if (!isOwnProfile) {
       each(this.props.profile.friends, (friend) => {
         if (friend.username === profile.username) {
@@ -665,8 +710,8 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
         }
       });
     }
+
     // Group discoveries by location
-    let locations = [];
     each(profile.discoveries, (discovery) => {
       discovery = clone(discovery);
       if (!discovery.location) {
@@ -701,7 +746,7 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
       }
       if (discovery.type !== 'Planet') delete discovery.location;
     });
-    let isStart;
+
     return (
       <div ref={this.getRef} className="ui large modal active modal__large">
         <i
@@ -715,25 +760,26 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
             className="ui feed eight wide column left floated segment ProfileModal__container ProfileModal__lgColumn"
             style={{maxHeight: `${height - 1}px`}}>
               <div className="ui">
-                <h3>{`${profile.username}'s Profile (Beta)`}</h3>
+                <h3>{`${profile.username}'s Profile`}</h3>
                 {!isOwnProfile ?
                 <Button
-                style={{position: 'absolute', top: '-4px', right: '0px', left: 'unset'}}
+                className="ProfileModal__friendButton"
                 onClick={() => this.handleFriendRequest(isFriend)} >
                   {error ? error : isFriend ? 'Remove Friend' : 'Send Friend Request'}
                 </Button> : null}
               </div>
               <div className="ui segment">
-                <Item label="XP" value={profile.exp} />
+                <Item className="Item__marginBottom" label="Joined" value={moment(profile.created).format('MMMM D, Y')} />
+                <Item className="Item__marginBottom" label="Registered Locations" value={numberWithCommas(profile.exp)} />
                 {profile.discoveriesCount > 0 ?
-                <Item label="Discoveries" value={profile.discoveriesCount} /> : null}
+                <Item label="Discoveries" value={numberWithCommas(profile.discoveriesCount)} /> : null}
                 {profile.discoveriesCount > 0 ?
                 <div className="ui segment ProfileModal__content">
-                  <Item label="Systems" value={profile.solarSystemCount} />
-                  <Item label="Planets" value={profile.planetCount} />
-                  <Item label="Interactables" value={profile.interactableCount} />
-                  <Item label="Fauna" value={profile.animalCount} />
-                  <Item label="Flora" value={profile.floraCount} />
+                  {profile.solarSystemCount ? <Item label="Systems" value={numberWithCommas(profile.solarSystemCount)} /> : null}
+                  {profile.planetCount ? <Item label="Planets" value={numberWithCommas(profile.planetCount)} /> : null}
+                  {profile.interactableCount ? <Item label="Interactables" value={numberWithCommas(profile.interactableCount)} /> : null}
+                  {profile.animalCount ?<Item label="Fauna" value={numberWithCommas(profile.animalCount)} /> : null}
+                  {profile.floraCount ? <Item label="Flora" value={numberWithCommas(profile.floraCount)} /> : null}
                 </div> : null}
                 {profile.friends.length > 0 ?
                 <Item label="Friends" /> : null}
@@ -755,7 +801,9 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
             ref={this.getEventRef}
             className="ui eight wide column right floated ProfileModal__container ProfileModal__mdColumn"
             style={{maxHeight: `${height - 1}px`}}>
-              <React.Fragment>
+              <Fragment>
+                {profile.discoveries && profile.discoveries.length > 0 ? pagination : null}
+
                 <div className="ui feed ProfileModal__feed">
                   {map(locations, (location, i) => {
                     let locationsLen = locations.length;
@@ -764,9 +812,11 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
                     let previousLocation = locations[i - 1];
                     let nextDiscovery = null;
                     let previousDiscovery = null;
+
                     if (nextLocation) {
                       nextDiscovery = filter(nextLocation.discoveries, (d) => d.type !== 'Planet')[0];
                     }
+
                     previousDiscovery = filter(location.discoveries, (d) => d.type !== 'Planet')[0]
 
                     isStart = !previousDiscovery || discoveryLevelMap[previousDiscovery.type] > 1;
@@ -775,7 +825,7 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
                       || discoveryLevelMap[nextDiscovery.type] < 2;
 
                     return (
-                      <React.Fragment key={i}>
+                      <Fragment key={i}>
                         {map(location.discoveries, (discovery, d) => {
                           let nextDiscovery = location.discoveries[d + 1];
                           let previousDiscovery = location.discoveries[d - 1];
@@ -820,27 +870,13 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
                         isEnd={isEnd}
                         type="Planet"
                         isLocation={location.id != null} /> : null}
-                      </React.Fragment>
+                      </Fragment>
                     );
                   })}
                 </div>
 
-                {profile.discoveries && profile.discoveries.length > 0 ?
-                <div className="ui two column grid">
-                  <div className="column">
-                    {discoveriesPage > 1 ?
-                    <Button onClick={this.handlePreviousPage}>
-                      Previous
-                    </Button> : null}
-                  </div>
-                  {profile.discoveriesCount > 60 && discoveriesPage < Math.ceil(profile.discoveriesCount / 60) ?
-                  <div className="column">
-                    <Button onClick={this.handleNextPage}>
-                      Next
-                    </Button>
-                  </div> : null}
-                </div> : null}
-              </React.Fragment>
+                {profile.discoveries && profile.discoveries.length > 0 ? pagination : null}
+              </Fragment>
             </div>
           </div>
         </div>
@@ -1074,6 +1110,7 @@ export class LogModal extends React.Component<LogModalProps, LogModalState> {
     );
   }
 };
+
 // @ts-ignore
 LogModal = onClickOutside(LogModal);
 
@@ -1371,3 +1408,249 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
 };
 // @ts-ignore
 SettingsModal = onClickOutside(SettingsModal);
+
+interface StatsModalProps {
+  onClose: () => void
+}
+
+interface StatsModalState {
+  height: number;
+  stats: any;
+  selected: number;
+  loading: boolean;
+}
+
+class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
+  willUnmount: boolean;
+  ref: any;
+  periodOptions: any[];
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      height: 0,
+      stats: null,
+      selected: 1,
+      loading: true,
+    };
+    this.periodOptions = [
+      {
+        id: 'day',
+        label: 'Time Period: Past Day',
+        onClick: () => {
+          this.setState({selected: 0});
+          this.fetchStats('day');
+        }
+      },
+      {
+        id: 'week',
+        label: 'Time Period: Past Week',
+        onClick: () => {
+          this.setState({selected: 1});
+          this.fetchStats('week');
+        }
+      },
+      {
+        id: 'month',
+        label: 'Time Period: Past Month',
+        onClick: () => {
+          this.setState({selected: 2});
+          this.fetchStats('month');
+        }
+      },
+      {
+        id: 'year',
+        label: 'Time Period: Past Year',
+        onClick: () => {
+          this.setState({selected: 3});
+          this.fetchStats('year');
+        }
+      },
+      {
+        id: 'all',
+        label: 'Time Period: All',
+        onClick: () => {
+          this.setState({selected: 4});
+          this.fetchStats('all');
+        }
+      }
+    ];
+  }
+  componentDidMount() {
+    this.fetchStats();
+  }
+  componentWillUnmount = () => {
+    this.willUnmount = true;
+    cleanUp(this);
+  }
+  fetchStats = (period = 'week') => {
+    this.setState({loading: true});
+    ajaxWorker.get('/nmsstats/', {
+      params: {period}
+    }).then((res) => {
+      if (this.willUnmount) return;
+      this.setState({stats: res.data, loading: false});
+    });
+  }
+  handleClickOutside = () => {
+    this.props.onClose();
+  }
+  getRef = (ref) => {
+    if (this.willUnmount) return;
+    if (!this.ref) {
+      this.ref = ref;
+      this.setState({height: ref.clientHeight});
+      ref.addEventListener('resize', this.handleResize);
+    }
+  }
+  handleResize = () => {
+    this.setState({height: this.ref.clientHeight});
+  }
+  handleProfileClick = () => {
+
+  }
+  render() {
+    const {selected, height, stats, loading} = this.state;
+
+    return (
+      <div ref={this.getRef} className="ui large modal active modal__large">
+        <i
+        className="window close outline icon modal__full__close"
+        onClick={this.handleClickOutside} />
+        <div
+        className="ui segment ProfileModal__content"
+        style={{maxHeight: `${height}px`}}>
+          {stats ?
+          <div
+          className="ui two column grid"
+          style={{opacity: loading ? 0.4 : 1, transition: 'opacity 0.1s'}}>
+            <div
+            className="StatsModal__header"
+            data-place="bottom"
+            data-tip="Stats update once every three hours.">
+              <h3>{loading ? 'Loading...' : 'Global Stats'}</h3>
+            </div>
+            <div className="StatsModal__dropdown">
+              <BasicDropdown
+              height={height}
+              isGalaxies={false}
+              selectedGalaxy={selected}
+              options={this.periodOptions} />
+            </div>
+            <div
+            className="ui feed eight wide column left floated segment ProfileModal__container ProfileModal__lgColumn StatsModal__leftColumn"
+            style={{maxHeight: `${height - 40}px`}}>
+              {stats.discoveries.count ?
+              <div className="ui segment">
+                <Item
+                label="Discoveries"
+                value={numberWithCommas(stats.discoveries.count)} />
+                <div className="ui segment ProfileModal__content">
+                  {map(stats.discoveries.types, (type) => {
+                    const {name, count} = type;
+
+                    if (!count) return null;
+
+                    return (
+                      <Item
+                      key={name}
+                      label={name}
+                      value={numberWithCommas(count)} />
+                    );
+                  })}
+                </div>
+              </div> : null}
+              <div className="ui segment">
+                <Item
+                label="Registered Locations"
+                value={numberWithCommas(stats.locations.count)} />
+                <div className="ui segment ProfileModal__content">
+                  <Item
+                  className="Item__marginBottom"
+                  label="Bases"
+                  value={numberWithCommas(stats.locations.bases)} />
+                  {map(stats.locations.galaxies, (galaxy) => {
+                    const {name, count} = galaxy;
+
+                    if (!count) return null;
+
+                    return (
+                      <Item
+                      key={name}
+                      label={name}
+                      value={numberWithCommas(count)} />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            <div
+            className="ui eight wide column right floated ProfileModal__container ProfileModal__mdColumn StatsModal__rightColumn"
+            style={{maxHeight: `${height - 1}px`}}>
+              {map(stats.leaderboard, (item, i) => {
+                const {username, count} = item;
+                return (
+                  <Item
+                  key={username}
+                  label={username}
+                  value={numberWithCommas(count)}
+                  onValueClick={() => state.set({displayProfile: username})} />
+                )
+              })}
+            </div>
+          </div> : <div>Loading fresh stats, this may take a few moments...</div>}
+        </div>
+      </div>
+    );
+  }
+};
+
+// @ts-ignore
+StatsModal = onClickOutside(StatsModal);
+
+interface StatsContainerProps {
+  height: number;
+}
+
+interface StatsContainerState {
+  open: boolean;
+}
+
+export class StatsContainer extends React.Component<StatsContainerProps, StatsContainerState> {
+  willUnmount: boolean;
+  ref: any;
+  periodOptions: any[];
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      open: false,
+    };
+  }
+  componentWillUnmount = () => {
+    this.willUnmount = true;
+    cleanUp(this);
+  }
+  handleOpen = () => {
+    this.setState({open: true});
+  }
+  handleClose = () => {
+    this.setState({open: false});
+  }
+  render() {
+
+    return (
+      <Fragment>
+        <div
+        className="ui dropdown icon item noDrag"
+        data-place="bottom"
+        data-tip={tip('Global Stats')}
+        onClick={this.handleOpen}>
+          <i className="chart area icon" />
+        </div>
+        {this.state.open ?
+        <StatsModal onClose={this.handleClose} /> : null}
+      </Fragment>
+    );
+  }
+};

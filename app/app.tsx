@@ -30,7 +30,8 @@ import {
   FriendRequestModal,
   BaseRestorationModal,
   LogModal,
-  SettingsModal
+  SettingsModal,
+  StatsContainer
 } from './modals';
 import Search from './search';
 import Container from './container';
@@ -135,7 +136,8 @@ class App extends React.Component<GlobalState> {
         setWaypoint: (location) => this.setWaypoint(location),
         getMonitor: () => this.monitor,
         handleClearSearch: () => this.handleClearSearch(),
-        teleport: (...args: [any, any, any, any]) => this.handleTeleport(...args)
+        teleport: (...args: [any, any, any, any]) => this.handleTeleport(...args),
+        syncLocations: () => this.handleSync(1, state.sort, state.init)
       })
     ];
     state._init(() => this.init());
@@ -1040,6 +1042,8 @@ class App extends React.Component<GlobalState> {
             onKeyDown={this.handleSearch}
             onClick={this.handleSearchIconClick}
             search={s.search} /> : null}
+            {!s.offline ?
+            <StatsContainer height={this.state.height} /> : null}
             {this.state.profile && this.state.profile.notifications && this.state.profile.notifications.length > 0 ?
             <NotificationDropdown
             machineId={this.state.machineId}

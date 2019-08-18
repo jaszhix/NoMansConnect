@@ -254,7 +254,8 @@ declare global {
     image: string;
     mods: string[];
     manuallyEntered: boolean;
-    created: number;
+    created?: NumberOrString;
+    modified?: NumberOrString;
     apiVersion: number;
   }
 

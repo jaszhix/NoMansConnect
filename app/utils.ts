@@ -551,3 +551,7 @@ export const copyMetadata = (a, b, keys = syncedKeys) => {
   each(keys, (key) => a[key] = b[key]);
   return a;
 }
+
+export const numberWithCommas = (x: number): string => {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};

@@ -38978,6 +38978,17 @@ Profile
 .ProfileModal__eventGroupIsNonPlanet {
   border-color: #5399c2;
 }
+.ProfileModal__paginationCount {
+  position: relative;
+  top: 4px;
+}
+.ProfileModal__friendButton {
+  position: absolute !important;
+  top: -4px;
+  right: 0px;
+  left: unset !important;
+}
+
 /*
 Friend requests
 */
@@ -39011,6 +39022,25 @@ Friend requests
 }
 .SettingsModal__childHeader {
   margin-top: 8px !important;
+}
+
+.StatsModal__header {
+  position: absolute;
+  left: 8px;
+  right: 143px;
+  top: 14px;
+}
+.StatsModal__dropdown {
+  position: absolute;
+  left: 146px;
+  top: 16px;
+}
+.StatsModal__leftColumn {
+  position: relative;
+  top: 24px;
+}
+.StatsModal__rightColumn {
+  padding-right: 28px !important;
 }
 
 .UsernameOverrideModal__container {
