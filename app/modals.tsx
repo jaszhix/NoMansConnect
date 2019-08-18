@@ -68,17 +68,6 @@ export class UsernameOverrideModal extends React.Component<UsernameOverrideModal
     };
 
     assignIn(this.state, pick(state.get(), ['ps4User']))
-
-    this.modalStyle = {
-      padding: '8px',
-      textAlign: 'center',
-      zIndex: '1001',
-      WebkitTransformOrigin: '50% 25%',
-      boxShadow: 'none',
-      borderTop: '2px solid #95220E',
-      border: '1px solid #DA2600',
-      width: '400px'
-    };
   }
   handleClickOutside = () => {
     state.set({usernameOverride: false});
@@ -98,7 +87,7 @@ export class UsernameOverrideModal extends React.Component<UsernameOverrideModal
   }
   render() {
     return (
-      <div className="ui small modal active modal__compact" style={this.modalStyle}>
+      <div className="ui small modal active modal__compact UsernameOverrideModal__container">
         <span className="close" />
         <div className="modal__InputContainer">
           <input
@@ -320,7 +309,7 @@ export class LocationRegistrationModal extends React.Component<LocationRegistrat
           selectedGalaxy={this.state.galaxy} />
         </div>
         {this.state.error ? <div className="modal__error">{this.state.error}</div> : null}
-        <div style={{position: 'absolute', top: '50px', left: '50px'}}>
+        <div className="LocationRegistrationModal__inputContainer">
           <input
           className="modal__InputStyle"
           type="text"

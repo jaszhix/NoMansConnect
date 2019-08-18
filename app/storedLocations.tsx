@@ -67,23 +67,18 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps, Stored
         {this.props.location.base ?
         <span
         title={`${this.props.location.username === state.username ? 'Your' : this.props.location.username + '\'s'} Base`}
-        style={{position: 'absolute', left: `${iconShown ? 31 : 4}px`, top: '4px'}}>
-          <img style={{width: '21px', height: '21px'}} src={baseIcon} />
+        className="StoredLocationItem__iconSpan"
+        style={{left: `${iconShown ? 31 : 4}px`}}>
+          <img className="StoredLocationItem__icon" src={baseIcon} />
         </span> : null}
         {isSpaceStation ?
         <span title="Space Station" style={{position: 'absolute', left: `${iconShown ? 31 : 4}px`, top: '3px'}}>
-          <img style={{width: '21px', height: '21px'}} src={spaceStationIcon} />
+          <img className="StoredLocationItem__icon" src={spaceStationIcon} />
         </span> : null}
         {iconShown ?
         <i
         title={this.props.location.isHidden ? 'Hidden Location' : this.props.isCurrent ? 'Current Location' : 'Favorite Location'}
-        style={{
-          position: 'absolute',
-          top: '2px',
-          left: '6px',
-          cursor: 'pointer'
-        }}
-        className={`${this.props.location.isHidden ? 'hide' : this.props.isCurrent ? 'marker' : 'star'} icon`} /> : null}
+        className={`StoredLocationItem__marker ${this.props.location.isHidden ? 'hide' : this.props.isCurrent ? 'marker' : 'star'} icon`} /> : null}
         <p
         className={isMarquee ? 'marquee' : ''}
         style={{
@@ -296,10 +291,9 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       }
     ];
     return (
-      <div
-      className="ui segment"
-      style={{display: 'inline-flex', background: 'transparent', WebkitUserSelect: 'none'}}>
-        <div className="ui segment" style={this.uiSegmentStyle}>
+      <div className="ui segment StoredLocations__container">
+        <div className="ui segment"
+        style={this.uiSegmentStyle}>
           <h3>{`Stored Locations (${storedLocations.length})`}</h3>
           <div style={{
             position: 'absolute',

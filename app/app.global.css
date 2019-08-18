@@ -38690,6 +38690,7 @@ LocationBox
 .LocationBox__PositionEditContainer {
   max-height: 190px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 .LocationBox__PositionEditContainerTrash {
   position: absolute;
@@ -38785,6 +38786,35 @@ LocationBox
   z-index: 0 !important;
   cursor: pointer;
 }
+.LocationBox__glyphs {
+  height: 16px;
+  width: 16px;
+}
+.LocationBox__compactRemoteScrollBox {
+  max-height: 400px;
+  overflow-y: hidden;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+.LocationBox__modsMarkup {
+  padding: 0px 2px;
+  margin: 0px 3px 0px 0px;
+  background: rgba(23, 26, 22, 0.8);
+  font-size: 14px;
+  width: 300px;
+}
+.LocationBox__iconsContainer {
+  position: absolute;
+  left: 17px;
+  top: 16px;
+}
+.LocationBox__iconsSpan {
+  position: absolute;
+  top: 0px;
+}
+.LocationBox__positionContainer {
+  width: 200px;
+}
 
 /*
 Item
@@ -38824,6 +38854,13 @@ Item
   opacity: 0.6;
   cursor: default;
 }
+.Item__marginBottom {
+  margin-bottom: 12px;
+}
+.Item__icon {
+  position: relative;
+  top: -2px;
+}
 
 .BasicDropdown__root {
   font-size: 16px;
@@ -38836,6 +38873,37 @@ Item
   position: absolute !important;
   top: 0px;
   left: -43px;
+}
+
+.StoredLocations__container {
+  display: inline-flex;
+  background: transparent !important;
+  -webkit-user-select: none !important;
+}
+.StoredLocations__uiSegment {
+  background: rgba(23, 26, 22, 0.9) !important;
+  display: inline-table !important;
+  border-top: 2px solid #95220E !important;
+  min-width: 285px !important;
+  max-width: 285px !important;
+  text-align: center !important;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  z-index: 90 !important;
+}
+.StoredLocationItem__iconSpan {
+  position: absolute !important;
+  top: 4px !important;
+}
+.StoredLocationItem__icon {
+  width: 21px !important;
+  height: 21px !important;
+}
+.StoredLocationItem__marker {
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  cursor: pointer;
 }
 
 .item-disabled {
@@ -38936,6 +39004,23 @@ Friend requests
   margin-top: 8px !important;
 }
 
+.UsernameOverrideModal__container {
+  padding: 8px;
+  text-align: center;
+  z-index: 1001;
+  -webkit-transform-origin: 50% 25%;
+  box-shadow: none;
+  border-top: 2px solid #95220E;
+  border: 1px solid #DA2600;
+  width: 400p;
+}
+
+.LocationRegistrationModal__inputContainer {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+}
+
 /*
 Modals
 */
@@ -38989,6 +39074,7 @@ Modals
   max-width: 75% !important;
 }
 .modal__full__close {
+  position: absolute;
   top: 7px !important;
   right: 6px !important;
   color: #FFFFFF !important;
@@ -39038,4 +39124,20 @@ Modals
   font-weight: 600;
   letter-spacing: 2px;
   color: rgb(218, 38, 0);
+}
+
+.iconTransparent {
+  width: 250px;
+  -webkit-user-select: initial;
+  -webkit-app-region: no-drag;
+  font-size: 15px;
+}
+
+.cursorDefaultIcon {
+  cursor: default;
+  padding: 0px;
+}
+
+.noDrag {
+  -webkit-app-region: no-drag;
 }

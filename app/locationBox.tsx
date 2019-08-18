@@ -10,7 +10,7 @@ import {truncate, upperFirst, isEqual, last} from 'lodash';
 import moment from 'moment';
 import {each, map, tryFn} from '@jaszhix/utils';
 
-import {css, tip, cleanUp, formatForGlyphs, ajaxWorker, fsWorker, dirSep} from './utils';
+import {tip, cleanUp, formatForGlyphs, ajaxWorker, fsWorker, dirSep} from './utils';
 
 // @ts-ignore
 import baseIcon from './assets/images/base_icon.png';
@@ -20,22 +20,9 @@ import spaceStationIcon from './assets/images/spacestation_icon.png';
 import {BasicDropdown} from './dropdowns';
 import Item from './item';
 import Button from './buttons';
-import {locationItemStyle} from './constants';
 
 const glyphs = {};
 const glyphsChars = ['A', 'B', 'C', 'D', 'E', 'F', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
-const glyphStyle: CSSProperties = {
-  height: '16px',
-  width: '16px'
-};
-
-const compactRemoteScrollBoxStyle: CSSProperties = {
-  maxHeight: '500px',
-  overflowY: 'hidden',
-  paddingTop: '2px',
-  paddingBottom: '2px'
-};
 
 each(glyphsChars, character => {
   glyphs[character] = require(`./assets/images/glyphs/${character}.png`);
@@ -344,11 +331,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         return (
           <div
           key={i}
-          style={css(locationItemStyle, {
-            marginBottom: '0px',
-            fontSize: '14px',
-            width: '300px'
-          })}>
+          className="LocationBox__modsMarkup">
             {truncate(mod, {length: 43})}
           </div>
         );
@@ -361,9 +344,14 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   renderDetails = () => {
     let p = this.props;
     let {location, portalHex, image} = this.state;
-    let scrollBoxStyle = p.compactRemote ? compactRemoteScrollBoxStyle : {};
+
+    let className = 'LocationBox__scrollBoxStyle';
+
+    if (p.detailsOnly) className += ' LocationBox__scrollBoxProfileStyle';
+    if (p.compactRemote) className += ' LocationBox__compactRemoteScrollBox';
+
     return (
-      <div ref={this.getRef} style={scrollBoxStyle} className={`LocationBox__scrollBoxStyle${p.detailsOnly ? ' LocationBox__scrollBoxProfileStyle' : ''}`}>
+      <div ref={this.getRef} className={className}>
         {image ?
         <div className="textCentered">
           <img className="LocationBox__imageStyle" src={image} onClick={() => state.set({selectedImage: image})} />
@@ -374,7 +362,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         <Item label="Universe Address" value={location.dataId} />
         <Item label="Portal Address">
           {map(portalHex, (glyph, i) => {
-            return <img key={i} src={glyphs[glyph]} style={glyphStyle} />;
+            return <img key={i} src={glyphs[glyph]} className="LocationBox__glyphs" />;
           })}
         </Item>
         {location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[location.galaxy]} /> : null}
@@ -587,20 +575,24 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         {this.props.isVisible && !p.detailsOnly ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => p.onFav(location)} /> : null}
         {this.props.isVisible && !p.detailsOnly ? (
           <div
+          className="LocationBox__iconsContainer"
           style={{
-            position: 'absolute',
-            left: '17px',
             right: compact ? '143px' : 'initial',
-            top: '16px'
           }}>
             {leftOptions.length > 0 ? dropdown : null}
             {location.base ? (
-              <span data-tip={tip('Base')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+              <span
+              data-tip={tip('Base')}
+              className="LocationBox__iconsSpan"
+              style={{left: `${leftOptions.length > 0 ? 26 : 0}px`}}>
                 <img className="LocationBox__baseStyle" src={baseIcon} />
               </span>
             ) : null}
             {isSpaceStation ? (
-              <span data-tip={tip('Space Station')} style={{position: 'absolute', left: `${leftOptions.length > 0 ? 26 : 0}px`, top: '0px'}}>
+              <span
+              data-tip={tip('Space Station')}
+              className="LocationBox__iconsSpan"
+              style={{left: `${leftOptions.length > 0 ? 26 : 0}px`}}>
                 <img className="LocationBox__baseStyle" src={spaceStationIcon} />
               </span>
             ) : null}
@@ -613,8 +605,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
               return (
                 <div
                 key={i}
-                className="ui input"
-                style={{width: '200px'}}
+                className="ui input LocationBox__positionContainer"
                 onMouseEnter={() => this.setState({positionEditHover: i})}
                 onMouseLeave={() => this.setState({positionEditHover: -1})}>
                   <div
@@ -647,7 +638,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         : p.edit && this.props.isVisible ? (
           <div>
             <div className="ui segment LocationBox__uiSegmentEditStyle">
-              <div className="ui input" style={{width: '200px'}}>
+              <div className="ui input LocationBox__positionContainer">
                 <div className="row">
                   <input
                   className="LocationBox__inputStyle"
@@ -658,7 +649,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
                   placeholder="Name" />
                 </div>
               </div>
-              <div className="ui input" style={{width: '200px'}}>
+              <div className="ui input LocationBox__positionContainer">
                 <div className="row">
                   <textarea
                   className="LocationBox__textareaStyle"

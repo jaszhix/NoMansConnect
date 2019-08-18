@@ -1,16 +1,6 @@
 import state from './state';
 import React from 'react';
 
-const transparentIconInputStyle: CSSProperties = {
-  width: '250px',
-  WebkitUserSelect: 'initial',
-  WebkitAppRegion: 'no-drag',
-  fontSize: '15px'
-};
-const searchIconStyle: CSSProperties = {
-  cursor: 'default',
-  padding: '0px'
-};
 const letterSpacingStyle: CSSProperties = {
   letterSpacing: '2px'
 };
@@ -52,8 +42,7 @@ class Search extends React.Component<SearchProps, SearchState> {
     return (
       <div className="item">
         <div
-        className="ui transparent icon input"
-        style={transparentIconInputStyle}>
+        className="ui transparent icon input iconTransparent">
           <input
           type="text"
           style={letterSpacingStyle}
@@ -62,8 +51,7 @@ class Search extends React.Component<SearchProps, SearchState> {
           onChange={this.setValue}
           onKeyDown={this.handleEnter} />
           <i
-          className={state.searchInProgress ? 'remove link icon' : 'search link icon'}
-          style={searchIconStyle}
+          className={`cursorDefaultIcon ${state.searchInProgress ? 'remove link icon' : 'search link icon'}`}
           onClick={this.handleSearchIconClick} />
         </div>
       </div>
