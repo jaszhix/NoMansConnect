@@ -99,7 +99,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   };
   static getDerivedStateFromProps = (nextProps, nextState) => {
     const stateUpdate: LocationBoxState = {};
-    const {location} = nextProps;
+    let {location, profile} = nextProps;
 
     if (location.dataId !== nextState.location.dataId) {
       state.trigger('resetLocationScrollTop');
@@ -109,7 +109,12 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       stateUpdate.description = '';
       stateUpdate.location = location;
       stateUpdate.portalHex = formatForGlyphs(location.translatedId, location.PlanetIndex);
-      stateUpdate.profile = nextProps.profile ? nextProps.profile : nextProps.location.profile;
+
+      if (profile && profile.id === state.profile.id) {
+        profile = state.profile;
+      } else {
+        profile = location.profile;
+      }
     }
 
     return stateUpdate;
