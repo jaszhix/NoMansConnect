@@ -225,7 +225,6 @@ interface LocationRegistrationModalState {
   selectedGalaxy: number;
   preventClose: boolean;
   error: string;
-  name: string;
 }
 
 export class LocationRegistrationModal extends React.Component<LocationRegistrationModalProps, LocationRegistrationModalState> {
@@ -239,7 +238,6 @@ export class LocationRegistrationModal extends React.Component<LocationRegistrat
       selectedGalaxy: 0,
       preventClose: false,
       error: '',
-      name: '',
     };
   }
   componentDidMount() {
@@ -326,7 +324,7 @@ export class LocationRegistrationModal extends React.Component<LocationRegistrat
           <input
           className="modal__InputStyle"
           type="text"
-          value={this.state.name}
+          value={this.state.address}
           onChange={this.handleChange}
           maxLength={30}
           placeholder="Galactic Address" />
