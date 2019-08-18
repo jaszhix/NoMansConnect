@@ -23,7 +23,7 @@ class log {
       if (args[i] instanceof Error) {
         argsString += `${args[i].message}\n`;
         argsString += `${args[i].stack}\n`;
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && window.Raven) {
           window.Raven.captureException(args[i]);
         }
         continue;
