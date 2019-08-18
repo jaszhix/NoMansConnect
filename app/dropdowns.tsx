@@ -344,7 +344,7 @@ You should have received a copy of the GNU General Public License along with thi
     openExternal('https://github.com/jaszhix/NoMansConnect/blob/master/CHANGELOG.md');
   }
   handleSupport = () => {
-    openExternal('https://neuropuff.com/static/donate.html');
+    openExternal('https://www.patreon.com/jaszhix');
   }
   handleBugReport = () => {
     openExternal('https://github.com/jaszhix/NoMansConnect/issues');
@@ -407,8 +407,8 @@ You should have received a copy of the GNU General Public License along with thi
           className="item"
           onClick={this.handleSupport}
           data-place="left"
-          data-tip={tip('Help pay for server time. Total contributions since initial release: $280. Thanks a lot!')}>
-            Support NMC
+          data-tip={tip('Help pay for server time. :)')}>
+            Support NMC on Patreon
           </div>
           <div
           className="item"

@@ -48,3 +48,7 @@ Thanks to both of them, the supporters that have helped out with server maintena
 ## Support
 
 See the [wiki](https://github.com/jaszhix/NoMansConnect/wiki) for frequently asked questions.
+
+## Patreon
+
+If you like using NMC and want to be credited in the About dialog, or get exclusive access to early beta builds, please consider [becoming a Patreon](https://www.patreon.com/jaszhix) of the project. The main goal of using Patreon is to help cover server costs. NMC currently uses a VPS plan on Linode with backups, which costs $50 USD per month, and is the cheapest plan that can handle the app's traffic during peak hours. Thanks for your consideration!

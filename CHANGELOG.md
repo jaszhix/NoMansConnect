@@ -1,3 +1,14 @@
+# 1.6.0
+
+  * Added global stats. Accessible from the toolbar. It shows the total uploaded locations and discoveries from a select time period, and breaks it down by galaxies, users, and discovery types. The stats refresh once every three hours.
+  * Added a "Copy Portal Address" option to the location menu. (#109)
+  * Improved sync behavior when stored locations become out of sync after the app has already started.
+  * Fixed inability to type in the manual location registration modal.
+  * Fixed incorrect location counts for a user's own locations in the stored list.
+  * Fixed a couple bugs related to logging and error handling.
+  * Reduced inline styles in components, which are less efficient for the renderer.
+  * Replaced the donation page with a [Patreon page](https://www.patreon.com/jaszhix) for the project as a trial run. The goal is set to $50 USD/month, which covers the VPS plan on Linode with backups - this is the cheapest plan that can handle the bandwidth demands during peak hours. All previous supporters via Paypal will continue to be credited in the About dialog. Like NMC, the Patreon page may evolve over time, and I'm always open to suggestions. Thanks for your consideration.
+
 # 1.5.10
 
   * Reduced discovery sync time during startup. Only 500 discoveries are synced within a single request unless the new "Sync discoveries" option in Settings is used. (#114)
