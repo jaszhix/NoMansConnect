@@ -241,9 +241,11 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       }
     }).catch((err) => {
       if (!err.response) return;
-      console.log(err)
 
-      if (!this.props || (err.response && err.response.status === 404)) {
+      const notFound = err.response && err.response.status === 404;
+
+      if (!this.props || notFound) {
+        if (!state.offline && notFound) state.trigger('syncLocations');
         // cleanUp was already called
         return;
       }
