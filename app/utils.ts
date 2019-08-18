@@ -76,7 +76,7 @@ const ajaxWorkerCaller = (method: string, ...args: any[]) => {
       let [err, data] = e.data;
       state.set({navLoad: false});
       if (err) {
-        if (typeof err.response.data.alert !== 'undefined') {
+        if (err.response && err.response.data && err.response.data.alert) {
           log.error(`API error received (${err.response.status}):`);
           log.error(err.response.data.alert);
         }
