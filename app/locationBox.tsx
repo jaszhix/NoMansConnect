@@ -505,7 +505,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       });
       leftOptions.push({
         id: 'copyPortalHex',
-        label: 'Copy Portal Address',
+        label: 'Copy Portal Address to Clipboard',
         onClick: () => clipboard.writeText(portalHex.join(''))
       });
     }
