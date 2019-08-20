@@ -141,6 +141,9 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
     this.range = {start: 0, length: 0};
     this.needsUpdate = false;
   }
+  componentDidCatch(error, errorInfo) {
+    console.log('StoredLocations:', error, errorInfo);
+  }
   componentDidMount() {
     this.connectId = state.connect({
       selectedLocation: ({selectedLocation}) => {
@@ -194,6 +197,8 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       this.storedLocations.removeEventListener('scroll', this.handleScroll);
     }
     state.disconnect(this.connectId);
+
+    cleanUp(this);
   }
   setViewableRange = (node) => {
     if (!node) {

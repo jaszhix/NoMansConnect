@@ -676,6 +676,8 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
     each(this.connections, (connection) => {
       state.disconnect(connection);
     });
+
+    cleanUp(this);
   }
   buildGalaxyOptions = (init, r = 0) => {
     if (workerCount > window.coreCount) {

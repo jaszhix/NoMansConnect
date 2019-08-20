@@ -6,7 +6,7 @@ import axios from 'axios';
 import React from 'react';
 import ReactDOMServer from 'react-dom/server';
 import ReactTooltip from 'react-tooltip';
-import {truncate, upperFirst, isEqual, last} from 'lodash';
+import {truncate, upperFirst, last} from 'lodash';
 import moment from 'moment';
 import {each, map, tryFn} from '@jaszhix/utils';
 
@@ -86,7 +86,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   };
   static getDerivedStateFromProps = (nextProps, nextState) => {
     const stateUpdate: LocationBoxState = {};
-    let {location, profile} = nextProps;
+    let {location} = nextProps;
 
     if (location.dataId !== nextState.location.dataId) {
       state.trigger('resetLocationScrollTop');
@@ -96,12 +96,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       stateUpdate.description = '';
       stateUpdate.location = location;
       stateUpdate.portalHex = formatForGlyphs(location.translatedId, location.PlanetIndex);
-
-      if (profile && profile.id === state.profile.id) {
-        profile = state.profile;
-      } else {
-        profile = location.profile;
-      }
+      stateUpdate.profile = location.profile;
     }
 
     return stateUpdate;
@@ -122,7 +117,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       name: props.name,
       description: props.description,
       image: null,
-      profile: props.profile,
+      profile: props.location.profile,
       location: location,
       portalHex: formatForGlyphs(location.translatedId, location.PlanetIndex),
       positionSelect: false,
@@ -148,6 +143,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             || !selectedLocation) return;
 
           this.getImage(selectedLocation.image, {positionEdit: false, positionSelect: false});
+          if (!this.props.offline) this.updateLocation();
         },
         remoteChanged: ({remoteChanged}) => {
           if (!this.willUnmount
@@ -210,21 +206,15 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     state.trigger('updateLocation', location);
   }
   updateLocation = () => {
-    let {onUpdate, location, profile} = this.props;
+    let {location, profile} = this.props;
+
     if (state.offline || !location || !location.dataId || this.willUnmount) return;
-    if (!onUpdate) {
-      onUpdate = (...args) => state.trigger('updateRemoteLocation', ...args);
-    }
+
     ajaxWorker.get(`/nmslocation/${location.dataId}/`).then((res) => {
-      if (!this.willUnmount) {
-        if (location.modified !== res.data.modified || !isEqual(profile, res.data.profile)) {
-          onUpdate(location.dataId, res.data);
-          this.setState({
-            location: res.data,
-            portalHex: formatForGlyphs(location.translatedId, location.PlanetIndex),
-            profile: res.data.profile
-          });
-        }
+      if (this.willUnmount) return;
+
+      if (location.modified !== res.data.modified || profile.modified !== res.data.profile.modified) {
+        state.trigger('updateCachedLocation', location.dataId, res.data);
       }
     }).catch((err) => {
       if (!err.response) return;
@@ -232,12 +222,13 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       const notFound = err.response && err.response.status === 404;
 
       if (!this.props || notFound) {
-        if (!state.offline && notFound) state.trigger('syncLocations');
+        location.apiVersion = 3;
+        if (!state.offline && notFound) state.trigger('updateLocation', location);
         // cleanUp was already called
         return;
       }
 
-      onUpdate(location.dataId, null, true);
+      state.trigger('updateCachedLocation', location.dataId, null, true);
     });
   }
   getImage = (image, stateUpdate = {}) => {
@@ -265,7 +256,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           });
         })
         .catch((err) => log.error('LocationBox.getImage: ', err));
-      } else {
+      } else if (!this.willUnmount) {
         this.setState({image: `${file}`, ...stateUpdate});
       }
     });

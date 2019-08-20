@@ -380,26 +380,38 @@ class App extends React.Component<GlobalState> {
     if (!state.remoteLocations || !state.remoteLength) {
       return;
     }
+
+    const {storedLocations, remoteLocations, mode, username, machineId} = state;
+
     let locations = [];
-    each(state.storedLocations, (location) => {
+    let dirtyLocations = [];
+
+    each(storedLocations, (location) => {
       let existsInRemoteLocations = false;
-      each(state.remoteLocations.results, (remoteLocation) => {
+      each(remoteLocations.results, (remoteLocation) => {
         if (location && remoteLocation && remoteLocation.dataId === location.dataId) {
           existsInRemoteLocations = true;
           return false;
         };
       });
-      if (!existsInRemoteLocations && location && location.username === this.state.username) {
+      if (location.dirty) {
+        log.error(`Location ${location.dataId} changed while offline, will be synced.`);
+        dirtyLocations.push(location)
+      } else if (location && location.username === this.state.username && !existsInRemoteLocations) {
         locations.push(location);
       }
     });
+
     ajaxWorker.post('/nmslocationremotecheck/', {
       locations: map(locations, (location) => location.dataId),
-      mode: state.mode,
-      username: state.username,
+      mode,
+      username,
+      machineId
     }).then((missing) => {
-      missing = missing.data;
       let missingLocations = [];
+
+      missing = missing.data;
+
       each(missing, (dataId) => {
         let location = find(locations, (location) => location.dataId === dataId);
         if (location) {
@@ -407,13 +419,28 @@ class App extends React.Component<GlobalState> {
         }
       });
 
+      missingLocations = missingLocations.concat(dirtyLocations);
+
       let next = () => this.fetchRemoteLocations(page, sort, init, true);
 
       ajaxWorker.post('/nmslocationremotesync/', {
         locations: missingLocations,
-        mode: state.mode,
-        username: state.username,
-      }).then(() => next()).catch((err) => {
+        mode,
+        username,
+        machineId
+      }).then(() => {
+        each(dirtyLocations, (location) => {
+          location.dirty = false;
+        });
+
+        window.settingsWorker.postMessage({
+          method: 'set',
+          key: 'storedLocations',
+          value: storedLocations,
+        });
+
+        next();
+      }).catch((err) => {
         log.error('Failed to upload missing locations to the server');
         next();
       });
@@ -898,7 +925,7 @@ class App extends React.Component<GlobalState> {
     state.set({
       storedLocations: state.storedLocations,
       selectedLocation: state.selectedLocation.isHidden || !isOwnLocation ? null : state.selectedLocation
-    });
+    }, true);
   }
   stateChange = (e) => {
     this.setState(e);

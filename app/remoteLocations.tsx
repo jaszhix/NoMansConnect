@@ -1,9 +1,9 @@
 import state from './state';
 import React from 'react';
 import {delay, throttle} from 'lodash';
-import {each, findIndex} from '@jaszhix/utils';
+import {each} from '@jaszhix/utils';
 
-import {whichToShow} from './utils';
+import {whichToShow, cleanUp} from './utils';
 import {BasicDropdown} from './dropdowns';
 import LocationBox from './locationBox';
 
@@ -55,9 +55,6 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
         this.recentExplorations.scrollTop = 0;
       }),
       state.connect(['remoteLocationsColumns', 'compactRemote'], () => setTimeout(() => this.setViewableRange(this.recentExplorations), 0)),
-      state.connect({
-        updateRemoteLocation: (...args: [string, object, boolean]) => this.handleUpdate(...args)
-      })
     ];
     this.uiSegmentStyle = {
       background: 'rgba(23, 26, 22, 0.9)',
@@ -85,6 +82,8 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
       this.recentExplorations.removeEventListener('scroll', this.handleScroll);
     }
     each(this.connections, (id) => state.disconnect(id));
+
+    cleanUp(this);
   }
   setViewableRange = (node?) => {
     if (!node) {
@@ -130,25 +129,6 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
   }
   handleFavorite = (location, upvote?) => {
     this.props.onFav(location, upvote);
-  }
-  handleUpdate = (dataId: string, location: any, remove = false) => {
-    let {remoteLocations} = this.props.s;
-    dataId = location ? location.dataId : dataId;
-    let refIndex = findIndex(remoteLocations.results, (_location) => _location.dataId === location.dataId);
-    if (refIndex === -1) {
-      remoteLocations.results.push(location);
-    } else {
-      if (remove) {
-        remoteLocations.results.splice(refIndex, 1);
-      } else if (location) {
-        remoteLocations.results[refIndex] = location;
-      }
-    }
-    window.jsonWorker.postMessage({
-      method: 'set',
-      key: 'remoteLocations',
-      value: remoteLocations,
-    });
   }
   getRef = (ref) => {
     this.recentExplorations = ref;
@@ -304,7 +284,6 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
           onSaveBase={p.onSaveBase}
           onCompactRemoteSwitch={this.setViewableRange}
           onSearch={p.onSearch}
-          onUpdate={this.handleUpdate}
           ps4User={p.ps4User}
           compactRemote={p.s.compactRemote}
           offline={p.s.offline}

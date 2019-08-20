@@ -51,8 +51,9 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         this.setState({edit: false})
       },
       handleFavorite: (location) => this.handleFavorite(location),
-      updateLocation: (location) => this.updateLocation(location)
-    })
+      updateLocation: (location) => this.updateLocation(location),
+      updateCachedLocation: (...args: [string, object, boolean]) => this.handleCachedLocationUpdate(...args)
+    });
   }
   componentWillUnmount() {
     this.willUnmount = true;
@@ -108,33 +109,86 @@ class Container extends React.Component<ContainerProps, ContainerState> {
       log.error(`Failed to favorite remote location: ${err}`);
     });
   }
-  handleUpdate = (name, description) => {
+  handleCachedLocationUpdate = (dataId: string, location: any, remove = false) => {
+    let {remoteLocations, storedLocations} = this.props.s;
+    dataId = location ? location.dataId : dataId;
+    let refIndex = findIndex(remoteLocations.results, (_location) => _location.dataId === location.dataId);
+
+    if (refIndex === -1) {
+      remoteLocations.results.push(location);
+    } else {
+      if (remove) {
+        remoteLocations.results.splice(refIndex, 1);
+      } else if (location) {
+        remoteLocations.results[refIndex] = location;
+      }
+    }
+
+    refIndex = findIndex(storedLocations, (_location) => _location.dataId === location.dataId);
+
+    if (refIndex > -1) {
+      storedLocations[refIndex] = location;
+
+      window.settingsWorker.postMessage({
+        method: 'set',
+        key: 'storedLocations',
+        value: storedLocations,
+      });
+    }
+
+    window.jsonWorker.postMessage({
+      method: 'set',
+      key: 'remoteLocations',
+      value: remoteLocations,
+    });
+  }
+    const {storedLocations, remoteLocations, selectedLocation, offline, machineId, username} = this.props.s;
+
     this.setState({updating: true}, () => {
       if (description.length > 200) {
         this.setState({limit: true});
         return;
       }
       const update = () => {
-        let refLocation = findIndex(this.props.s.storedLocations, location => location.dataId === this.props.s.selectedLocation.dataId);
+
+
+        let refLocation = findIndex(storedLocations, location => location.dataId === selectedLocation.dataId);
+
         if (refLocation !== -1) {
-          this.props.s.storedLocations[refLocation].name = name;
-          this.props.s.storedLocations[refLocation].description = description;
+          storedLocations[refLocation].name = name;
+          storedLocations[refLocation].description = description;
+          storedLocations[refLocation].dirty = offline;
         }
-        let refRemoteLocation = findIndex(this.props.s.remoteLocations.results, (location) => {
-          return location.dataId === this.props.s.selectedLocation.dataId;
+
+        let refRemoteLocation = findIndex(remoteLocations.results, (location) => {
+          return location.dataId === selectedLocation.dataId;
         });
+
         if (refRemoteLocation !== -1) {
-          this.props.s.remoteLocations.results[refRemoteLocation].name = name;
-          this.props.s.remoteLocations.results[refRemoteLocation].description = description;
+          remoteLocations.results[refRemoteLocation].name = name;
+          remoteLocations.results[refRemoteLocation].description = description;
         }
-        this.props.s.selectedLocation.name = name;
-        this.props.s.selectedLocation.description = description;
+
+        selectedLocation.name = name;
+        selectedLocation.description = description;
+
+        window.settingsWorker.postMessage({
+          method: 'set',
+          key: 'storedLocations',
+          value: storedLocations,
+        });
+
+        window.jsonWorker.postMessage({
+          method: 'set',
+          key: 'remoteLocations',
+          value: remoteLocations,
+        });
+
         state.set({
-          storedLocations: this.props.s.storedLocations,
-          remoteLocations: this.props.s.remoteLocations,
-          selectedLocation: this.props.s.selectedLocation
+          selectedLocation
         }, () => {
           if (this.willUnmount) return;
+
           this.setState({
             updating: false,
             edit: false
@@ -142,17 +196,17 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         });
       };
 
-      if (this.props.s.offline) {
+      if (offline) {
         update();
         return;
       }
 
       ajaxWorker.post('/nmslocation/', {
-        machineId: this.props.s.machineId,
-        username: this.props.s.username,
+        machineId,
+        username,
         name,
         description,
-        dataId: this.props.s.selectedLocation.dataId,
+        dataId: selectedLocation.dataId,
         action: 1
       }).then((res) => {
         update();
@@ -460,7 +514,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
 
     if (filterOthers) {
       storedLocations = filter(storedLocations, (location) => {
-        return location.username === username;
+        return location.username === username || location.dataId === currentLocation;
       });
     }
     if (!showHidden) {
@@ -628,6 +682,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
               isOwnLocation={isOwnLocation}
               isVisible={true}
               location={selectedLocation}
+              profile={selectedLocation.profile}
               navLoad={navLoad}
               updating={this.state.updating}
               edit={this.state.edit}
