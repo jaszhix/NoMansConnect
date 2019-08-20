@@ -620,7 +620,6 @@ interface GalacticMapProps {
   width: number;
   height: number;
   remoteLocationsColumns: number;
-  onSearch: () => void;
   onRestart: () => void;
 };
 
@@ -725,15 +724,15 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
     window.travelTo = [0, 2, 0];
   }
   travelToGalacticHub = () => {
-    this.props.onSearch();
+    state.trigger('handleSearch');
     window.travelTo = [-3474, 865, 5516];
   }
   travelToAGT = () => {
-    this.props.onSearch();
+    state.trigger('handleSearch');
     window.travelTo = [2934, 71, -5277];
   }
   travelToPilgrimStar = () => {
-    this.props.onSearch();
+    state.trigger('handleSearch');
     window.travelTo = [-1770, 492, -6420];
   }
   render() {

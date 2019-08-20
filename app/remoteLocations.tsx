@@ -12,7 +12,6 @@ interface RemoteLocationsProps {
   onPagination: Function;
   onFav: Function;
   onSaveBase: Function;
-  onSearch: Function;
   ps4User: boolean;
   isOwnLocation: boolean;
   updating: boolean;
@@ -250,7 +249,12 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.locations;
     let parenthesis = `(${locations.length})`;
     let criteria = p.s.offline ? 'Cached' : p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular';
-    let title = p.s.searchCache.results.length > 0 ? p.s.searchCache.count === 0 ? `No results for "${p.s.search}"` : `${p.s.search} (${p.s.searchCache.count > 2000 ? 2000 : p.s.searchCache.count})` : p.s.remoteLocations.count === 0 ? 'Loading...' : `${criteria} Explorations ${parenthesis}`
+    let title = p.s.searchInProgress && p.s.searchCache.results.length > 0 ?
+      p.s.searchCache.count === 0 ? `No results for "${p.s.search}"`
+      : `${p.s.search} (${p.s.searchCache.count > 2000 ? 2000
+      : p.s.searchCache.count})`
+      : p.s.remoteLocations.count === 0 ? 'Loading...'
+      : `${criteria} Explorations ${parenthesis}`
     if (title.substr(0, 5) === 'user:') {
       title = title.split('user:')[1];
     }
@@ -283,7 +287,6 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
           onFav={this.handleFavorite}
           onSaveBase={p.onSaveBase}
           onCompactRemoteSwitch={this.setViewableRange}
-          onSearch={p.onSearch}
           ps4User={p.ps4User}
           compactRemote={p.s.compactRemote}
           offline={p.s.offline}

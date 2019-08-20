@@ -1,7 +1,8 @@
 import React, {Fragment} from 'react';
+import {map, each, filter, findIndex} from '@jaszhix/utils';
+import {uniqBy} from 'lodash';
 
 import state from './state';
-import {map} from '@jaszhix/utils';
 import {ajaxWorker} from './utils';
 
 interface SearchFieldProps {
@@ -20,12 +21,22 @@ interface SearchFieldState {
 }
 
 class SearchField extends React.Component<SearchFieldProps, SearchFieldState> {
+  connectId: number;
+
   constructor(props) {
     super(props);
 
     this.state = {
       results: []
     };
+  }
+  componentDidMount() {
+    this.connectId = state.connect({
+      clearTagResults: () => this.setState({results: []})
+    });
+  }
+  componentWillUnmount() {
+    state.disconnect(this.connectId);
   }
   handleChange = (e) => {
     const {onChange, resultsPrefix} = this.props;
@@ -97,30 +108,102 @@ interface SearchProps {
   onKeyDown: React.KeyboardEventHandler;
 }
 
-interface SearchState {
-  search: string;
-}
+interface SearchState {}
 
 class Search extends React.Component<SearchProps, SearchState> {
+  connectId: number;
+
   constructor(props) {
     super(props);
-    this.state = {
-      search: ''
-    }
+  }
+  componentDidMount() {
+    this.connectId = state.connect({
+      handleSearch: () => this.handleSearch(),
+      handleClearSearch: () => this.handleClearSearch(),
+    })
+  }
+  componentWillUnmount() {
+    state.disconnect(this.connectId);
   }
   setValue = (search) => {
-    this.setState({search}, () => {
-      if (search.length === 0 && state.searchInProgress) {
-        state.set({search}, () => this.props.onClick(null));
-      }
+    if (search.length === 0) {
+      state.trigger('clearTagResults');
+      this.handleClearSearch();
+    }
+
+    state.set({search});
+  }
+  handleSearch = () => {
+    const {offline, remoteLocations, search} = state;
+
+    if (offline) {
+      let results = filter(remoteLocations.results, (location) => {
+        return (location.dataId === search
+          || location.translatedId === search
+          || location.username === search
+          || location.name.indexOf(search) > -1
+          || location.description.indexOf(search) > -1)
+      });
+
+      state.set({
+        searchInProgress: true,
+        searchCache: {
+          results,
+          count: results.length,
+          next: null,
+          prev: null
+        }
+      });
+    } else {
+      state.trigger('fetchRemoteLocations');
+    }
+  }
+  handleClearSearch = () => {
+    const {offline, searchCache, remoteLocations} = state;
+
+    if (!offline) {
+      let diff = [];
+      each(searchCache.results, (location) => {
+        let refRemoteLocation = findIndex(remoteLocations.results, _location => _location.dataId === location.dataId);
+        if (refRemoteLocation === -1) {
+          diff.push(location);
+        }
+      });
+      remoteLocations.results = remoteLocations.results.concat(uniqBy(diff, (location) => {
+        return location.dataId;
+      }));
+    }
+
+    state.set({
+      search: '',
+      searchCache: {
+        results: [],
+        count: 0,
+        next: null,
+        prev: null
+      },
+      searchInProgress: false,
+      sort: '-created'
+    });
+
+    window.jsonWorker.postMessage({
+      method: 'set',
+      key: 'remoteLocations',
+      value: remoteLocations,
     });
   }
-  handleEnter = (e) => {
-    state.set({search: this.state.search}, () => this.props.onKeyDown(e));
-  }
   handleSearchIconClick = () => {
-    if (state.searchInProgress) this.setState({search: ''});
-    state.set({search: this.state.search}, () => this.props.onClick(null));
+    let {search} = this.props;
+
+    if (state.searchInProgress) search = '';
+
+    state.set({search}, () => {
+      if (state.searchInProgress) {
+        this.handleClearSearch();
+      } else {
+        this.handleSearch();
+      }
+    });
   }
   render() {
     return (
@@ -132,10 +215,10 @@ class Search extends React.Component<SearchProps, SearchState> {
           resultsClassName="Search__resultsContainer"
           resultClassName="Search__item"
           placeholder="Search..."
-          value={this.state.search || this.props.search}
+          value={this.props.search}
           resultsPrefix="tag:"
           onChange={this.setValue}
-          onEnter={this.handleEnter} />
+          onEnter={this.handleSearch} />
           <i
           className={`cursorDefaultIcon ${state.searchInProgress ? 'remove link icon' : 'search link icon'}`}
           onClick={this.handleSearchIconClick} />

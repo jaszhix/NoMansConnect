@@ -14,7 +14,6 @@ import RemoteLocations from './remoteLocations';
 
 interface ContainerProps {
   s: GlobalState;
-  onSearch: () => void;
   onRemoveStoredLocation: () => void;
   onSaveBase: (baseData: any) => void;
   onPagination: Function;
@@ -682,7 +681,6 @@ class Container extends React.Component<ContainerProps, ContainerState> {
               username={p.s.username}
               show={show}
               onRestart={handleRestart}
-              onSearch={p.onSearch}
               searchCache={searchCache.results} /> : null}
               {selectedLocation && !multiSelectedLocation ?
               <LocationBox
@@ -721,7 +719,6 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         {remoteLocationsLoaded ?
         <RemoteLocations
         s={p.s}
-        onSearch={p.onSearch}
         locations={locations}
         isOwnLocation={isOwnLocation}
         updating={this.state.updating}

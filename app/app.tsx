@@ -135,8 +135,6 @@ class App extends React.Component<GlobalState> {
         restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
         setWaypoint: (location) => this.setWaypoint(location),
         getMonitor: () => this.monitor,
-        handleSearch: () => this.handleSearch(),
-        handleClearSearch: () => this.handleClearSearch(),
         teleport: (...args: [any, any, any, any]) => this.handleTeleport(...args),
         syncLocations: () => this.handleSync(1, state.sort, state.init)
       })
@@ -943,57 +941,8 @@ class App extends React.Component<GlobalState> {
   }
   handleSort = (e: React.MouseEvent, sort?: string) => {
     sort = typeof sort === 'string' ? sort : '-created';
-    state.set({sort: sort, navLoad: true}, () => {
+    state.set({sort, navLoad: true}, () => {
       this.fetchRemoteLocations(1, sort, false, true);
-    });
-  }
-  handleSearch = () => {
-    if (this.state.offline) {
-      let searchCache = filter(this.state.remoteLocations.results, (location) => {
-        return (location.dataId === this.state.search
-          || location.translatedId === this.state.search
-          || location.username === this.state.search
-          || location.name.indexOf(this.state.search) > -1
-          || location.description.indexOf(this.state.search) > -1)
-      });
-      state.set({
-        searchInProgress: true,
-        searchCache: {
-          results: searchCache,
-          count: searchCache.length,
-          next: null,
-          prev: null
-        }
-      });
-    } else {
-      this.fetchRemoteLocations(1);
-    }
-  }
-  handleClearSearch = () => {
-    if (!this.state.offline) {
-      let diff = [];
-      each(this.state.searchCache.results, (location) => {
-        let refRemoteLocation = findIndex(this.state.remoteLocations.results, _location => _location.dataId === location.dataId);
-        if (refRemoteLocation === -1) {
-          diff.push(location);
-        }
-      });
-      this.state.remoteLocations.results = concat(this.state.remoteLocations.results, uniqBy(diff, (location) => {
-        return location.dataId;
-      }));
-    }
-
-    state.set({
-      search: '',
-      searchCache: {
-        results: [],
-        count: 0,
-        next: null,
-        prev: null
-      },
-      remoteLocations: this.state.remoteLocations,
-      searchInProgress: false,
-      sort: '-created'
     });
   }
   handlePagination = () => {
@@ -1024,13 +973,7 @@ class App extends React.Component<GlobalState> {
     state.set({closing: true});
     setTimeout(() => win.close(), 500);
   }
-  handleSearchIconClick = () => {
-    if (this.state.searchInProgress) {
-      this.handleClearSearch();
-    } else {
-      this.handleSearch();
-    }
-  }
+
   handleSetUsernameOverride = () => {
     state.set({usernameOverride: true});
   }
@@ -1068,8 +1011,6 @@ class App extends React.Component<GlobalState> {
             </div> : null}
             {!s.init ?
             <Search
-            onKeyDown={this.handleSearch}
-            onClick={this.handleSearchIconClick}
             search={s.search} /> : null}
             {!s.offline ?
             <StatsContainer height={this.state.height} /> : null}
@@ -1152,8 +1093,7 @@ class App extends React.Component<GlobalState> {
         s={s}
         onPagination={this.handlePagination}
         onRemoveStoredLocation={this.handleRemoveStoredLocation}
-        onSaveBase={this.handleSaveBase}
-        onSearch={this.handleSearch} />}
+        onSaveBase={this.handleSaveBase} />}
         {this.state.displayProfile ?
         <ProfileModal
         username={this.state.username}

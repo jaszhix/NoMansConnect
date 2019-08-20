@@ -92,7 +92,8 @@ onmessage = function(e) {
 
     stateUpdate.remoteLocations.results = orderBy(
       uniqBy(
-        filter(stateUpdate.remoteLocations.results, (location) => location.dataId != null),
+        filter(stateUpdate.remoteLocations.results, (location) => location.dataId != null)
+        .concat(results),
         'dataId'
       ),
       order,
