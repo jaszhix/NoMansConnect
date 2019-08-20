@@ -1,3 +1,7 @@
+# 1.7.1
+
+  * Fixed a bug preventing new users from creating profiles.
+
 # 1.7.0
 
   * Added tags to locations. Editable via the "Edit Details" view in the selected location box. Clicking a tag will filter locations with the same tag. Tags can also be queried from the Search field in the toolbar with the `tag:` prefix, e.g. `tag:lush`.
