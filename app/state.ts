@@ -162,6 +162,9 @@ const state: GlobalState = initStore({
   showOnlyFriends: false,
   sortByDistance: false,
   sortByModded: false,
+  sortByFavorites: false,
+  sortByTeleports: false,
+  sortByModified: false,
   show: cloneDeep(showDefault),
   compactRemote: false,
   maintenanceTS: Date.now(),
@@ -210,7 +213,10 @@ const state: GlobalState = initStore({
     'showOnlyCompatible',
     'showOnlyFriends',
     'sortByDistance',
-    'sortByModded'
+    'sortByModded',
+    'sortByFavorites',
+    'sortByTeleports',
+    'sortByModified',
   ],
   _init: (cb: Function) => {
     state.windowId = state.connect('window', () => win);

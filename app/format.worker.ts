@@ -5,7 +5,18 @@ let lastSort = null;
 
 onmessage = function(e) {
   const {sort, partial, page, pagination, init, state} = e.data;
-  const {remoteLocations, storedLocations, search, favorites, remoteNext} = state;
+  const {
+    remoteLocations,
+    storedLocations,
+    search,
+    favorites,
+    remoteNext,
+    sortByDistance,
+    sortByModded,
+    sortByFavorites,
+    sortByTeleports,
+    sortByModified,
+  } = state;
   const {data} = e.data.res;
   const {next, prev, count, results} = data;
   const stateUpdate: State = {navLoad: false};
@@ -82,23 +93,32 @@ onmessage = function(e) {
     stateUpdate.searchCache = data;
     delete stateUpdate.remoteLocations;
   } else {
-    if (order === 'created') {
-      each(stateUpdate.remoteLocations.results, (location) => {
-        if (!location) return;
-        location.intCreated = new Date(location.created).getTime();
-      });
-      order = 'intCreated';
-    }
+    remoteLocations.results = uniqBy(
+      filter(stateUpdate.remoteLocations.results, (location) => location.dataId != null)
+      .concat(results),
+      'dataId'
+    )
 
-    stateUpdate.remoteLocations.results = orderBy(
-      uniqBy(
-        filter(stateUpdate.remoteLocations.results, (location) => location.dataId != null)
-        .concat(results),
-        'dataId'
-      ),
-      order,
-      'desc'
-    );
+    remoteLocations.results = orderBy(remoteLocations.results, (location)=>{
+      let score = 0;
+
+      if (!location.score) location.score = 0;
+      if (!location.distanceToCenter) location.distanceToCenter = 400;
+
+      if (!location || (sortByModded && !location.mods)) return score;
+
+      if (sortByDistance || sortByModded || sortByTeleports || sortByFavorites || sortByModified) {
+        if (sortByDistance) score -= location.distanceToCenter;
+        if (sortByModded) score += location.mods.length;
+        if (sortByTeleports) score += location.teleports;
+        if (sortByFavorites) score += location.score;
+        if (sortByModified) score += location.modified;
+      } else {
+        score = new Date(location.created).getTime();
+      }
+
+      return score;
+    }, 'desc');
 
     if (next) {
       stateUpdate.remoteLocations.count = count

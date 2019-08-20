@@ -38633,11 +38633,12 @@ body {
   border-color: rgba(0, 0, 0, 0);
 }
 
-.StoredLocations__spacer {
-  height: 29px;
-  padding: 3px 8px;
-  border: 8px solid rgba(23, 26, 22, 0.9);
-  background: rgba(255, 255, 255, 0.1);
+.textCentered {
+  text-align: center;
+}
+
+.cursorPointer {
+  cursor: pointer;
 }
 
 /*
@@ -38646,12 +38647,18 @@ Components
 
 */
 
-.textCentered {
-  text-align: center;
+.StoredLocations__spacer {
+  height: 29px;
+  padding: 3px 8px;
+  border: 8px solid rgba(23, 26, 22, 0.9);
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.cursorPointer {
-  cursor: pointer;
+.RemoteLocations__dropdownContainer {
+  position: absolute;
+  left: 17px;
+  top: 13px;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 /*

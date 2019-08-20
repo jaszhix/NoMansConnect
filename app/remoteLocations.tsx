@@ -176,6 +176,36 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
         onClick: () => state.set({compactRemote: !p.s.compactRemote})
       },
       {
+        id: 'sortByModified',
+        label: 'Sort by Last Updated',
+        toggle: this.props.s.sortByModified,
+        onClick: () => state.set({sortByModified: !this.props.s.sortByModified})
+      },
+      {
+        id: 'sortByFavorites',
+        label: 'Sort by Favorites',
+        toggle: this.props.s.sortByFavorites,
+        onClick: () => state.set({sortByFavorites: !this.props.s.sortByFavorites})
+      },
+      {
+        id: 'sortByTeleports',
+        label: 'Sort by Teleports',
+        toggle: this.props.s.sortByTeleports,
+        onClick: () => state.set({sortByTeleports: !this.props.s.sortByTeleports})
+      },
+      {
+        id: 'sortByDistance',
+        label: 'Sort by Distance to Center',
+        toggle: this.props.s.sortByDistance,
+        onClick: () => state.set({sortByDistance: !this.props.s.sortByDistance})
+      },
+      {
+        id: 'sortByModded',
+        label: 'Sort by Least Modded',
+        toggle: this.props.s.sortByModded,
+        onClick: () => state.set({sortByModded: !this.props.s.sortByModded})
+      },
+      {
         id: 'showOnlyGalaxy',
         label: `Filter by Locations From ${state.galaxies[p.s.selectedGalaxy]}`,
         toggle: this.props.s.showOnlyGalaxy,
@@ -223,18 +253,6 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
         toggle: this.props.s.showOnlyFriends,
         onClick: () => state.set({showOnlyFriends: !this.props.s.showOnlyFriends})
       },
-      {
-        id: 'sortByDistance',
-        label: 'Sort by Distance to Center',
-        toggle: this.props.s.sortByDistance,
-        onClick: () => state.set({sortByDistance: !this.props.s.sortByDistance})
-      },
-      {
-        id: 'sortByModded',
-        label: 'Sort by Least Modded',
-        toggle: this.props.s.sortByModded,
-        onClick: () => state.set({sortByModded: !this.props.s.sortByModded})
-      }
     ];
     if (p.s.remoteLocations
       && !p.s.searchInProgress
@@ -248,13 +266,14 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
     }
     let locations = p.s.searchCache.results.length > 0 ? p.s.searchCache.results : p.locations;
     let parenthesis = `(${locations.length})`;
-    let criteria = p.s.offline ? 'Cached' : p.s.sort === '-created' ? 'Recent' : p.s.sort === '-score' ? 'Favorite' : 'Popular';
+    let criteria = p.s.offline ? 'Cached' : 'Registered';
     let title = p.s.searchInProgress && p.s.searchCache.results.length > 0 ?
       p.s.searchCache.count === 0 ? `No results for "${p.s.search}"`
       : `${p.s.search} (${p.s.searchCache.count > 2000 ? 2000
       : p.s.searchCache.count})`
       : p.s.remoteLocations.count === 0 ? 'Loading...'
-      : `${criteria} Explorations ${parenthesis}`
+      : `${criteria} Locations ${parenthesis}`;
+
     if (title.substr(0, 5) === 'user:') {
       title = title.split('user:')[1];
     }
@@ -307,15 +326,11 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
         <div className="ui segments" style={uiSegmentsStyle}>
           <div className="ui segment" style={this.uiSegmentStyle}>
             <h3>{title}</h3>
-            <div style={{
-              position: 'absolute',
-              left: '17px',
-              top: '16px'
-            }}>
+            <div className="RemoteLocations__dropdownContainer">
               <BasicDropdown
               height={p.s.height}
               width={350}
-              icon="ellipsis horizontal"
+              icon="sliders horizontal"
               showValue={null}
               persist={true}
               options={leftOptions} />

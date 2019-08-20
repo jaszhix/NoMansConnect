@@ -482,8 +482,6 @@ class Container extends React.Component<ContainerProps, ContainerState> {
       showOnlyNames,
       showOnlyPC,
       showOnlyScreenshots,
-      sortByDistance,
-      sortByModded,
       username,
       profile,
       saveVersion,
@@ -624,18 +622,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         );
       });
     }
-    if (sortByDistance || sortByModded) {
-      locations = orderBy(locations, (location)=>{
-        if (!location || !location.mods) return 0;
-        if (sortByModded && sortByDistance) {
-          return location.mods.length + location.distanceToCenter;
-        } else if (sortByDistance) {
-          return location.distanceToCenter;
-        } else if (sortByModded) {
-          return location.mods.length;
-        }
-      });
-    }
+
     return (
       <div className="ui grid row Container__root">
         <input

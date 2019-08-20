@@ -261,10 +261,14 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
               tryFn(() => this.setState({image: `${file}`, ...stateUpdate}));
             } else {
               log.error('LocationBox.getImage: ', err);
+              setTimeout(this.removeImageFromSelected, 0);
             }
           });
         })
-        .catch((err) => log.error('LocationBox.getImage: ', err));
+        .catch((err) => {
+          log.error('LocationBox.getImage: ', err);
+          setTimeout(this.removeImageFromSelected, 0);
+        });
       } else if (!this.willUnmount) {
         this.setState({image: `${file}`, ...stateUpdate});
       }
@@ -287,6 +291,14 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         cb();
       });
     });
+  }
+  removeImageFromSelected = () => {
+    if (this.props.selectType) {
+      const {selectedLocation} = state;
+      selectedLocation.image = null;
+      state.set({selectedLocation});
+      state.trigger('markStoredLocationsDirty');
+    }
   }
   handleNameChange = (e) => {
     this.setState({name: e.target.value});

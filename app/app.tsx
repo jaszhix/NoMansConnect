@@ -131,12 +131,16 @@ class App extends React.Component<GlobalState> {
       }),
       state.connect({
         fetchRemoteLocations: () => this.fetchRemoteLocations(1),
+        sortByModified: () => this.handleSort(null, '-modified'),
+        sortByTeleports: () => this.handleSort(null, '-teleports'),
+        sortByFavorites: () => this.handleSort(null, '-score'),
+        sortByDistance: () => this.handleSort(null, 'distanceToCenter'),
         pollSaveData: () => this.pollSaveData(),
         restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
         setWaypoint: (location) => this.setWaypoint(location),
         getMonitor: () => this.monitor,
         teleport: (...args: [any, any, any, any]) => this.handleTeleport(...args),
-        syncLocations: () => this.handleSync(1, state.sort, state.init)
+        syncLocations: () => this.handleSync(1, state.sort, state.init),
       })
     ];
     state._init(() => this.init());
@@ -447,11 +451,28 @@ class App extends React.Component<GlobalState> {
     }).catch((err) => log.error('handleSync: ', err.message));
   }
   formatRemoteLocations = (res, page=1, sort, init, partial, pagination, cb=null) => {
-    if (this.state.offline || this.state.closing) {
+    let {
+      remoteLocations,
+      remoteLength,
+      remoteNext,
+      search,
+      favorites,
+      storedLocations,
+      pageSize,
+      sortByDistance,
+      sortByModded,
+      sortByFavorites,
+      sortByTeleports,
+      sortByModified,
+      offline,
+      closing,
+    } = this.state;
+
+    if (offline || closing) {
       return;
     }
-    if (!this.state.remoteLocations || this.state.remoteLocations.length === 0) {
-      this.state.remoteLocations = {
+    if (!remoteLocations || remoteLocations.length === 0) {
+      remoteLocations = {
         results: [],
       };
     }
@@ -475,13 +496,18 @@ class App extends React.Component<GlobalState> {
       partial,
       pagination,
       state: {
-        remoteLocations: this.state.remoteLocations,
-        remoteLength: this.state.remoteLength,
-        remoteNext: this.state.remoteNext,
-        search: this.state.search,
-        favorites: this.state.favorites,
-        storedLocations: this.state.storedLocations,
-        pageSize: this.state.pageSize,
+        remoteLocations,
+        remoteLength,
+        remoteNext,
+        search,
+        favorites,
+        storedLocations,
+        pageSize,
+        sortByDistance,
+        sortByModded,
+        sortByFavorites,
+        sortByTeleports,
+        sortByModified,
         loading: 'Loading remote locations...'
       }
     });
@@ -496,9 +522,9 @@ class App extends React.Component<GlobalState> {
       return;
     }
 
-    let {sort, pollRate, remoteLocations} = this.state;
+    let {pollRate, remoteLocations} = this.state;
 
-    if (sort !== '-created' || (remoteLocations.results && remoteLocations.results.length === 0) || init) {
+    if (init || (remoteLocations.results && remoteLocations.results.length === 0)) {
       this.timeout = setTimeout(() => this.pollRemoteLocations(), pollRate);
       return;
     }
@@ -875,11 +901,12 @@ class App extends React.Component<GlobalState> {
     })
   }
   pollSaveData = (mode=this.state.mode, init=false, machineId=this.state.machineId) => {
-    if (!state.ready) {
-      return;
-    }
+    if (!state.ready) return;
+
     let now = Date.now();
+
     if ((now - this.lastPoll) < 15000) return;
+
     this.lastPoll = now;
 
     pollSaveData({mode, init, machineId, next: (error = false, ...args) => {
@@ -940,7 +967,10 @@ class App extends React.Component<GlobalState> {
     });
   }
   handleSort = (e: React.MouseEvent, sort?: string) => {
+    if (this.state.init) return;
+
     sort = typeof sort === 'string' ? sort : '-created';
+
     state.set({sort, navLoad: true}, () => {
       this.fetchRemoteLocations(1, sort, false, true);
     });
@@ -988,27 +1018,6 @@ class App extends React.Component<GlobalState> {
           <h2 style={this.titleStyle}>{s.title}</h2>
           <div className="right menu">
             {!s.init && s.navLoad ? <Loader loading={null} /> : null}
-            {!s.init && !s.offline ?
-            <div
-            style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-created' ? ' selected' : ''}`}
-            onClick={(e) => this.handleSort(e, '-created')}>
-              Recent
-            </div> : null}
-            {!s.init && !s.offline ?
-            <div
-            style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-teleports' ? ' selected' : ''}`}
-            onClick={(e) => this.handleSort(e, '-teleports')}>
-              Popular
-            </div> : null}
-            {!s.init  && !s.offline ?
-            <div
-            style={this.noDragStyle}
-            className={`${this.headerItemClasses}${s.sort === '-score' ? ' selected' : ''}`}
-            onClick={(e) => this.handleSort(e, '-score')}>
-              Favorites
-            </div> : null}
             {!s.init ?
             <Search
             search={s.search} /> : null}

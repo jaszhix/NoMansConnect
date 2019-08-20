@@ -168,6 +168,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
   dragging: boolean;
   dragCancelled: boolean;
   lastMove: number;
+  friendsCount: number;
 
   constructor(props) {
     super(props);
@@ -223,6 +224,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
     };
     this.allowZoom = true;
     this.dragCount = 0;
+    this.friendsCount = state.profile ? state.profile.length : 0;
   }
   componentDidMount() {
     this.connections = [
@@ -265,6 +267,13 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
           if (this.willUnmount) return;
           if (state.mapLines !== this.props.mapLines) {
             this.setState({mapLines: state.mapLines});
+          }
+        },
+        profile: ({profile}) => {
+          let count = profile.friends.length;
+          if (count !== this.friendsCount) {
+            this.friendsCount = count;
+            this.handlePostMessage();
           }
         }
       })
