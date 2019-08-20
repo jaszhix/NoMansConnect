@@ -38697,7 +38697,8 @@ LocationBox
 */
 
 .LocationBox__PositionEditContainer {
-  max-height: 190px;
+  height: 338px;
+  max-height: 338px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -38734,8 +38735,40 @@ LocationBox
   letter-spacing: 2px;
   margin-bottom: 7px !important;
 }
+.LocationBox__inputCol {
+  padding-left: 0px !important;
+}
+.LocationBox__addTagButtonContainer {
+  position: relative;
+  top: 11px;
+  left: 24px;
+}
+.LocationBox__tagResultsContainer {
+  width: 236px;
+  max-height: 183px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgb(23, 26, 22);
+  border: 1px solid #DA2600;
+  position: absolute;
+  top: 46px;
+  left: 28px;
+  z-index: 1;
+  padding: 3px 0px;
+}
+.LocationBox__tagItem {
+  background: rgb(23, 26, 22);
+  padding-left: 11px;
+}
+.LocationBox__tagItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+.LocationBox__addTagButton {
+  width: 10px;
+}
 .LocationBox__textareaStyle {
   width: 300px;
+  /* height: 234px; */
   position: relative;
   left: 28px;
   top: 7px;
@@ -38764,9 +38797,10 @@ LocationBox
   height: 21px;
 }
 .LocationBox__uiSegmentEditStyle {
+  height: 294px;
   padding: 3px 3px !important;
   cursor: pointer;
-  background: rgba(0, 0, 0, 0);
+  background: unset !important;
 }
 .LocationBox__scrollBoxStyle {
   max-height: 177px;
@@ -38782,7 +38816,6 @@ LocationBox
   overflow-y: unset;
   overflow-x: unset;
 }
-
 .LocationBox__badge {
   position: absolute;
   top: 1em !important;
@@ -38794,6 +38827,27 @@ LocationBox
   border: 1px solid rgba(255, 255, 255, 0.27) !important;
   z-index: 0 !important;
   cursor: pointer;
+}
+.LocationBox__tag {
+  margin: initial !important;
+  margin-left: 8px !important;
+  margin-bottom: 5px !important;
+  background-color: rgba(0, 0, 0, 0) !important;
+  color: rgba(255, 255, 255, 0.61);
+  border: 1px solid rgba(255, 255, 255, 0.27) !important;
+  z-index: 0 !important;
+  cursor: pointer;
+}
+.LocationBox__tag > span {
+  margin-left: 12px;
+  position: relative;
+  top: -1px;
+}
+.LocationBox__tag > span:hover {
+  color: #fff;
+}
+.LocationBox__tagRow {
+  margin-left: 9px;
 }
 .LocationBox__glyphs {
   height: 16px;
@@ -38821,9 +38875,6 @@ LocationBox
   position: absolute;
   top: 0px;
 }
-.LocationBox__positionContainer {
-  width: 200px;
-}
 
 /*
 Item
@@ -38837,6 +38888,10 @@ Item
   margin: 0px 3px;
   background: rgba(23, 26, 22, 0.8);
   font-size: 16px;
+}
+
+.Item__noBorder {
+  border-bottom: unset !important;
 }
 
 .Item__portal {
@@ -39058,6 +39113,32 @@ Friend requests
   position: absolute;
   top: 50px;
   left: 50px;
+}
+
+.Search__input {
+  letter-spacing: 2px;
+}
+.Search__resultsContainer {
+  width: 146px;
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgb(23, 26, 22);
+  border: 1px solid #DA2600;
+  position: absolute;
+  top: 29px;
+  left: -2px;
+  z-index: 1;
+  padding: 3px 0px;
+  font-size: 15px;
+}
+.Search__item {
+  background: rgb(23, 26, 22);
+  padding: 2px 0px 5px 11px;
+  cursor: pointer;
+}
+.Search__item:hover {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /*

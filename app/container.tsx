@@ -23,6 +23,7 @@ interface ContainerProps {
 interface ContainerState {
   updating: boolean;
   edit: boolean;
+  positionEdit: boolean;
   limit: boolean;
   mapRender: string;
 }
@@ -39,6 +40,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
     this.state = {
       updating: false,
       edit: false,
+      positionEdit: false,
       limit: false,
       mapRender: '<div />'
     };
@@ -142,6 +144,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
       value: remoteLocations,
     });
   }
+  handleLocationMetadataUpdate = (name, description, tags) => {
     const {storedLocations, remoteLocations, selectedLocation, offline, machineId, username} = this.props.s;
 
     this.setState({updating: true}, () => {
@@ -157,6 +160,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         if (refLocation !== -1) {
           storedLocations[refLocation].name = name;
           storedLocations[refLocation].description = description;
+          storedLocations[refLocation].tags = tags;
           storedLocations[refLocation].dirty = offline;
         }
 
@@ -167,10 +171,12 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         if (refRemoteLocation !== -1) {
           remoteLocations.results[refRemoteLocation].name = name;
           remoteLocations.results[refRemoteLocation].description = description;
+          remoteLocations.results[refRemoteLocation].tags = tags;
         }
 
         selectedLocation.name = name;
         selectedLocation.description = description;
+        selectedLocation.tags = tags;
 
         window.settingsWorker.postMessage({
           method: 'set',
@@ -206,6 +212,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         username,
         name,
         description,
+        tags,
         dataId: selectedLocation.dataId,
         action: 1
       }).then((res) => {
@@ -439,6 +446,9 @@ class Container extends React.Component<ContainerProps, ContainerState> {
   toggleEdit = () => {
     this.setState({edit: !this.state.edit});
   }
+  togglePositionEdit = (value?) => {
+    this.setState({positionEdit: value != null ? value : !this.state.positionEdit});
+  }
   screenshotRefClick = () => {
     this.screenshotRef.click();
   }
@@ -642,6 +652,8 @@ class Container extends React.Component<ContainerProps, ContainerState> {
             onSelect={this.handleSelectLocation}
             storedLocations={storedLocations}
             selectedLocationId={selectedLocation ? selectedLocation.dataId : null}
+            selectedLocationEdit={this.state.edit}
+            selectedLocationPositionEdit={this.state.positionEdit}
             multiSelectedLocation={multiSelectedLocation}
             currentLocation={currentLocation}
             height={height}
@@ -686,6 +698,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
               navLoad={navLoad}
               updating={this.state.updating}
               edit={this.state.edit}
+              positionEdit={this.state.positionEdit}
               favorites={favorites}
               image={selectedLocation.image}
               version={selectedLocation.version === saveVersion}
@@ -696,9 +709,10 @@ class Container extends React.Component<ContainerProps, ContainerState> {
               onDeleteScreen={this.handleDeleteScreen}
               onFav={this.handleFavorite}
               onEdit={this.toggleEdit}
+              onPositionEdit={this.togglePositionEdit}
               onMarkCompatible={this.handleCompatibility}
               onRemoveStoredLocation={p.onRemoveStoredLocation}
-              onSubmit={this.handleUpdate}
+              onSubmit={this.handleLocationMetadataUpdate}
               onSaveBase={p.onSaveBase}
               ps4User={ps4User} /> : null}
             </div>

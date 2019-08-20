@@ -18,6 +18,7 @@ import baseIcon from './assets/images/base_icon.png';
 import spaceStationIcon from './assets/images/spacestation_icon.png';
 
 import {BasicDropdown} from './dropdowns';
+import {SearchField} from './search';
 import Item from './item';
 import Button from './buttons';
 
@@ -41,6 +42,7 @@ interface LocationBoxProps {
   detailsOnly?: boolean;
   isOwnLocation: boolean;
   edit: boolean;
+  positionEdit: boolean;
   navLoad?: boolean;
   ps4User: boolean;
   isSelectedLocationRemovable: boolean;
@@ -54,13 +56,14 @@ interface LocationBoxProps {
   favorites: string[];
   onCompactRemoteSwitch?: () => void;
   onEdit: () => void;
+  onPositionEdit: (value?) => void;
   onUpdate?: (dataId: string, data: any /* location */, remove?: boolean) => void;
   onSaveBase: (baseData: any) => void;
   onMarkCompatible: () => void;
   onDeleteScreen: () => void;
   onUploadScreen: () => void;
   onRemoveStoredLocation: () => void;
-  onSubmit: (name: string, description: string) => void;
+  onSubmit: (name: string, description: string, tags: string[]) => void;
   onFav: (location: any) => void;
 }
 
@@ -69,12 +72,13 @@ interface LocationBoxState {
   limit?: boolean;
   name?: string;
   description?: string;
+  tagName?: string;
+  tags?: string[];
   image?: string;
   profile?: any;
   location?: NMSLocation;
   portalHex?: string[];
   positionSelect?: boolean;
-  positionEdit?: boolean;
   positionEditHover?: number;
   compactRemote?: boolean;
 }
@@ -97,6 +101,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       stateUpdate.location = location;
       stateUpdate.portalHex = formatForGlyphs(location.translatedId, location.PlanetIndex);
       stateUpdate.profile = location.profile;
+      stateUpdate.tags = location.tags;
     }
 
     return stateUpdate;
@@ -116,12 +121,13 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       limit: false,
       name: props.name,
       description: props.description,
+      tagName: '',
+      tags: props.location.tags,
       image: null,
       profile: props.location.profile,
       location: location,
       portalHex: formatForGlyphs(location.translatedId, location.PlanetIndex),
       positionSelect: false,
-      positionEdit: false,
       positionEditHover: -1,
       compactRemote: false
     };
@@ -180,19 +186,22 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     cleanUp(this);
   }
   toggleEditDetails = () => {
-    const stateUpdate = {positionEdit: false};
+    if (this.props.positionEdit) this.togglePositionEdit();
 
     if (this.props.edit) {
-      Object.assign(stateUpdate, {
+      this.setState({
         name: '',
-        description: ''
-      });
+        description: '',
+      }, this.props.onEdit);
+      return;
     }
 
-    this.setState(stateUpdate, this.props.onEdit);
+    this.props.onEdit();
   }
   togglePositionEdit = () => {
-    this.setState({positionEdit: !this.state.positionEdit})
+    if (this.props.edit) this.toggleEditDetails();
+
+    this.props.onPositionEdit();
   }
   unmarkBaseLocation = () => {
     const {location} = this.props;
@@ -285,6 +294,33 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   handleDescriptionChange = (e) => {
     this.setState({description: e.target.value});
   }
+  handleTagNameChange = (tagName) => {
+    this.setState({tagName});
+  }
+  handleAddTag = () => {
+    const {tagName, tags} = this.state;
+
+    if (!tagName.trim()) return;
+
+    if (tags.indexOf(tagName) === -1) {
+      tags.push(tagName);
+    };
+
+    this.setState({
+      tags,
+      tagName: '',
+    })
+  }
+  handleRemoveTag = (tag) => {
+    const {tags} = this.state;
+    const index = tags.indexOf(tag);
+
+    if (index > -1) {
+      tags.splice(index, 1);
+    }
+
+    this.setState({tags});
+  }
   handlePositionNameChange = (e, index) => {
     let {location} = this.state;
     location.positions[index].name = e.target.value;
@@ -296,7 +332,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     this.setState({location});
   }
   handlePositionSave = () => {
-    this.setState({positionEdit: false});
+    this.props.onPositionEdit(false);
     state.trigger('updateLocation', this.state.location);
   }
   handleTeleport = (position?) => {
@@ -315,6 +351,10 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       state.trigger('deleteScreenshot', this.state.location.dataId);
       this.props.onDeleteScreen();
     });
+  }
+  handleTagClick = (tag) => {
+    state.set({search: `tag:${tag}`});
+    state.trigger('handleSearch');
   }
   getModMarkup = (mods) => {
     return ReactDOMServer.renderToString(
@@ -342,13 +382,32 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     if (p.compactRemote) className += ' LocationBox__compactRemoteScrollBox';
 
     return (
-      <div ref={this.getRef} className={className}>
+      <div
+      ref={this.getRef}
+      style={p.selectType && (image || p.edit || p.positionEdit) ? {maxHeight: '338px'} : null}
+      className={className}>
         {image ?
         <div className="textCentered">
           <img className="LocationBox__imageStyle" src={image} onClick={() => state.set({selectedImage: image})} />
         </div> : null}
         {this.props.detailsOnly ? <Item label="Name" value={p.name || 'Unknown'} /> : null}
-        {location.description || this.props.description ? <Item label="Description" value={this.props.description ? this.props.description : location.description} /> : null}
+        {location.description || this.props.description ?
+        <Item
+        label="Description"
+        value={this.props.description ? this.props.description : location.description}
+        border={!location.tags.length} /> : null}
+
+        {map(location.tags, (tag) => {
+          return (
+            <div
+            key={tag}
+            className="ui black label LocationBox__tag"
+            onClick={() => this.handleTagClick(tag)}>
+              {tag}
+            </div>
+          )
+        })}
+
         <Item label="Galactic Address" value={location.translatedId} />
         <Item label="Universe Address" value={location.dataId} />
         <Item label="Portal Address">
@@ -377,8 +436,12 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   }
   render() {
     let p = this.props;
-    let {location, portalHex} = this.state;
+    let {location, portalHex, image, tags} = this.state;
+
+    const needsExpand = p.selectType && (image || p.edit || p.positionEdit);
+
     if (location.results || location.data) return null;
+
     let upvote = p.favorites.indexOf(location.dataId) > -1;
     let isOwnLocation = p.isOwnLocation && p.selectType && location.username === p.username;
     let deleteArg = location.image && location.image.length > 0;
@@ -446,13 +509,13 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       if (isOwnLocation) {
         leftOptions.push({
           id: 'edit',
-          label: p.edit ? 'Cancel' : 'Edit Details',
+          label: p.edit ? 'Cancel Details Edit' : 'Edit Details',
           onClick: this.toggleEditDetails
         });
         if (location.positions && location.positions.length > 0) {
           leftOptions.push({
             id: 'edit-positions',
-            label: this.state.positionEdit ? 'Cancel' : 'Edit Places',
+            label: p.positionEdit ? 'Cancel Places Edit' : 'Edit Places',
             onClick: this.togglePositionEdit
           });
         }
@@ -513,11 +576,11 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       minWidth: p.detailsOnly ? 'unset' : `${compact ? 358 : 386}px`,
       maxWidth: p.detailsOnly ? 'unset' : '386px',
       minHeight: p.detailsOnly ? 'unset' : p.compactRemote ? '68px' : '245px',
-      maxHeight: p.detailsOnly ? 'unset' : '289px',
+      maxHeight: p.detailsOnly ? 'unset' : needsExpand ? '500px' : '289px',
       zIndex: p.selectType ? '91' : 'inherit',
       position: p.selectType ? 'fixed' : '', // TBD
       left: p.selectType ? '28px' : 'inherit',
-      top: p.selectType ? `${p.height - 271}px` : 'inherit',
+      top: p.selectType ? `${p.height - (needsExpand ? 432 : 271)}px` : 'inherit',
       WebkitUserSelect: 'none'
     };
 
@@ -589,14 +652,15 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             ) : null}
           </div>
         ) : null}
-        {this.state.positionEdit ?
-        <div className="LocationBox__PositionEditContainer">
+        {p.positionEdit ?
+        <div
+        className="LocationBox__PositionEditContainer">
           <div className="ui segment LocationBox__uiSegmentEditStyle">
             {map(location.positions, (position, i) => {
               return (
                 <div
                 key={i}
-                className="ui input LocationBox__positionContainer"
+                className="ui input"
                 onMouseEnter={() => this.setState({positionEditHover: i})}
                 onMouseLeave={() => this.setState({positionEditHover: -1})}>
                   <div
@@ -619,17 +683,26 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
 
           </div>
           <div className="row">
-            <div className="col-xs-6">
-              <Button onClick={() => this.handlePositionSave()}>
-                {p.updating ? 'Updating...' : 'Update Location'}
-              </Button>
+            <div className="col-xs-12 LocationBox__inputCol">
+              <div className="row">
+                <div className="col-xs-6">
+                  <Button onClick={this.handlePositionSave}>
+                    {p.updating ? 'Updating...' : 'Update Location'}
+                  </Button>
+                </div>
+                <div className="col-xs-6">
+                  <Button onClick={this.togglePositionEdit}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         : p.edit && this.props.isVisible ? (
           <div>
             <div className="ui segment LocationBox__uiSegmentEditStyle">
-              <div className="ui input LocationBox__positionContainer">
+              <div className="ui input">
                 <div className="row">
                   <input
                   className="LocationBox__inputStyle"
@@ -640,7 +713,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
                   placeholder="Name" />
                 </div>
               </div>
-              <div className="ui input LocationBox__positionContainer">
+              <div className="ui input">
                 <div className="row">
                   <textarea
                   className="LocationBox__textareaStyle"
@@ -650,12 +723,57 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
                   placeholder="Description... (200 character limit)" />
                 </div>
               </div>
+              <div className="ui input">
+                <div className="row">
+                  <div className="col-xs-8 LocationBox__inputCol">
+                    <SearchField
+                    className="LocationBox__inputStyle"
+                    resultsClassName="LocationBox__tagResultsContainer"
+                    resultClassName="LocationBox__tagItem"
+                    value={this.state.tagName}
+                    placeholder="Tag Name"
+                    resultsPrefix=""
+                    onChange={this.handleTagNameChange}
+                    onEnter={this.handleAddTag} />
+                  </div>
+                  <div className="col-xs-4 LocationBox__addTagButtonContainer">
+                    <Button
+                    className="LocationBox__addTagButton"
+                    onClick={this.handleAddTag}>
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <div className="ui input">
+                <div className="row LocationBox__tagRow">
+                  {map(tags, (tag) => {
+                    return (
+                      <div
+                      key={tag}
+                      className="ui black label LocationBox__tag">
+                        {tag}
+                        <span onClick={() => this.handleRemoveTag(tag)}>x</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
             <div className="row">
-              <div className="col-xs-6">
-                <Button onClick={() => p.onSubmit(this.state.name, this.state.description)}>
-                  {p.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
-                </Button>
+              <div className="col-xs-12 LocationBox__inputCol">
+                <div className="row">
+                  <div className="col-xs-6">
+                    <Button onClick={() => p.onSubmit(this.state.name, this.state.description, this.state.tags)}>
+                      {p.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
+                    </Button>
+                  </div>
+                  <div className="col-xs-6">
+                    <Button onClick={this.toggleEditDetails}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

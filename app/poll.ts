@@ -96,7 +96,7 @@ const updateDiscoveries = ({saveData, profile, init = false, fullSync = false, n
     machineId: state.machineId,
     username: state.username,
     discoveries: newDiscoveries,
-    apiVersion: 2
+    apiVersion: 3
   }).then(() => {
     if (init) {
       next(false);
@@ -228,7 +228,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         manuallyEntered,
         created: Date.now(),
         version: saveData.result.Version,
-        apiVersion: 2
+        apiVersion: 3
       });
 
       location.jumps = Math.ceil(location.distanceToCenter / 400);

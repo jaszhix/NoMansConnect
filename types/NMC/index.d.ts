@@ -252,11 +252,13 @@ declare global {
     baseData: any;
     upvote: boolean;
     image: string;
+    tags: string[];
     mods: string[];
     manuallyEntered: boolean;
     created?: NumberOrString;
     modified?: NumberOrString;
     apiVersion: number;
+    dirty?: boolean;
   }
 
   interface DiscoveryRecord {

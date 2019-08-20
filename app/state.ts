@@ -74,7 +74,7 @@ const state: GlobalState = initStore({
   apiBase: 'https://neuropuff.com/api/',
   staticBase: 'https://neuropuff.com',
   winVersion: os.release(),
-  apiVersion: 2,
+  apiVersion: 3,
   machineId: null,
   protected: false,
   ready: false,

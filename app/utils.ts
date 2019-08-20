@@ -210,9 +210,10 @@ export const fromHex = (str: string, username: string, galaxy: number): NMSLocat
     upvote: false,
     image: '',
     mods: [],
+    tags: [],
     manuallyEntered: true,
     created: Date.now(),
-    apiVersion: 2
+    apiVersion: 3
   };
 
   manualLocation = formatTranslatedID(manualLocation);

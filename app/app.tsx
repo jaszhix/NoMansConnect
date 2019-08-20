@@ -33,7 +33,7 @@ import {
   SettingsModal,
   StatsContainer
 } from './modals';
-import Search from './search';
+import {Search} from './search';
 import Container from './container';
 import {defaultPosition} from './constants';
 
@@ -135,6 +135,7 @@ class App extends React.Component<GlobalState> {
         restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
         setWaypoint: (location) => this.setWaypoint(location),
         getMonitor: () => this.monitor,
+        handleSearch: () => this.handleSearch(),
         handleClearSearch: () => this.handleClearSearch(),
         teleport: (...args: [any, any, any, any]) => this.handleTeleport(...args),
         syncLocations: () => this.handleSync(1, state.sort, state.init)
@@ -414,6 +415,7 @@ class App extends React.Component<GlobalState> {
 
       each(missing, (dataId) => {
         let location = find(locations, (location) => location.dataId === dataId);
+
         if (location) {
           missingLocations.push(location);
         }

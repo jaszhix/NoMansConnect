@@ -3,11 +3,6 @@ import ReactMarkdown from 'react-markdown';
 import openExternal from 'open-external';
 import {cleanUp} from './utils';
 
-const iconStyle: CSSProperties = {
-  position: 'relative',
-  top: '-2px'
-};
-
 interface ItemProps {
   dataTip?: any;
   dataPlace?: string;
@@ -17,11 +12,15 @@ interface ItemProps {
   value?: string;
   icon?: string;
   disabled?: boolean;
+  border?: boolean;
 }
 
 class Item extends React.Component<ItemProps> {
   descriptionRef: HTMLElement;
- // onWindowResize: Function;
+
+  static defaultProps = {
+    border: true,
+  }
 
   constructor(props) {
     super(props);
@@ -49,22 +48,21 @@ class Item extends React.Component<ItemProps> {
     this.descriptionRef = ref;
   }
   render(){
-    let {label, value, icon, className, onValueClick, dataTip, disabled, children} = this.props;
+    let {label, value, icon, className, onValueClick, dataTip, disabled, border, children} = this.props;
+
+    className = `Item__wrapperStyle${className ? ` ${className}` : ''}${onValueClick ? ' cursorPointer' : ''}`;
+
+    if (disabled) className += ' Item__disabled';
+    if (!border) className += ' Item__noBorder';
 
     if (label === 'Description') {
       return (
         <div
         ref={this.getRef}
-        className="Item__wrapperStyle">
+        className={className}>
           <ReactMarkdown className="md-p" source={value} />
         </div>
       );
-    }
-
-    className = `Item__wrapperStyle${className ? ` ${className}` : ''}${onValueClick ? ' cursorPointer' : ''}`;
-
-    if (disabled) {
-      className += ' Item__disabled';
     }
 
     return (
@@ -74,7 +72,7 @@ class Item extends React.Component<ItemProps> {
       data-place="top"
       data-tip={dataTip}>
         <span className="Item__labelStyle">{`${label}`}</span>
-        {label === 'Portal Address' ?
+          {label === 'Portal Address' ?
         <span className="Item__valueStyle Item__portal">
           {children}
         </span>

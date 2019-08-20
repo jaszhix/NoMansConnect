@@ -100,6 +100,8 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps, Stored
 interface StoredLocationsProps {
   storedLocations: any[];
   selectedLocationId: string;
+  selectedLocationEdit: boolean;
+  selectedLocationPositionEdit: boolean;
   height: number;
   filterOthers: boolean;
   useGAFormat: boolean;
@@ -177,7 +179,14 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
     };
     checkStored();
   }
-  shouldComponentUpdate(nextProps) {
+  componentDidUpdate(prevProps: StoredLocationsProps) {
+    if (prevProps.selectedLocationId !== this.props.selectedLocationId
+      && state.selectedLocation
+      && !state.selectedLocation.image) {
+      this.handleScroll();
+    }
+  }
+  shouldComponentUpdate(nextProps: StoredLocationsProps) {
     let shouldUpdate = (nextProps.storedLocations !== this.props.storedLocations
       || nextProps.selectedLocationId !== this.props.selectedLocationId
       || nextProps.height !== this.props.height
@@ -229,9 +238,11 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
     this.storedLocations = ref;
   }
   render() {
-    let {
+    const {
       storedLocations,
       selectedLocationId,
+      selectedLocationEdit,
+      selectedLocationPositionEdit,
       multiSelectedLocation,
       currentLocation,
       height,
@@ -243,6 +254,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       filterStoredByScreenshot,
       useGAFormat
     } = this.props;
+    const needsExpand = (state.selectedLocation && state.selectedLocation.image) || selectedLocationEdit || selectedLocationPositionEdit;
 
     let leftOptions = [
       {
@@ -317,7 +329,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
           ref={this.getRef}
           className="ui segments"
           style={{
-            maxHeight: `${height - (selectedLocationId && !multiSelectedLocation ? 404 : 125)}px`,
+            maxHeight: `${height - (selectedLocationId && !multiSelectedLocation ? needsExpand ? 565 : 404 : 125)}px`,
             WebkitTransition: 'max-height 0.1s',
             overflowY: 'auto',
             overflowX: 'hidden'}}>
