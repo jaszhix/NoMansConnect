@@ -362,8 +362,7 @@ class App extends React.Component<GlobalState> {
       }, () => {
         this.formatRemoteLocations(res, state.page, state.sort, state.init, false, false, () => {
           if (state.init) {
-            this.handleSync(1, state.sort, state.init);
-            this.checkMods();
+            this.checkMods(() => this.handleSync(1, state.sort, state.init));
           } else {
             state.set({navLoad: false});
           }
@@ -373,6 +372,10 @@ class App extends React.Component<GlobalState> {
       console.log(err)
       log.error('Failed to download missing locations from the server.');
       state.set({navLoad: false});
+
+      if (state.init && err.response && err.response.status === 404) {
+        this.checkMods(() => state.set({newUser: true}));
+      }
     });
   }
   handleSync = (page=1, sort=this.state.sort, init=false) => {
@@ -900,7 +903,7 @@ class App extends React.Component<GlobalState> {
       log.error(err);
     })
   }
-  pollSaveData = (mode=this.state.mode, init=false, machineId=this.state.machineId) => {
+  pollSaveData = (mode = this.state.mode, init = false, machineId = this.state.machineId) => {
     if (!state.ready) return;
 
     let now = Date.now();
@@ -913,6 +916,12 @@ class App extends React.Component<GlobalState> {
       if (error) {
         log.error(`getLastSave -> next -> ${error}`);
       }
+
+      if (state.newUser) {
+        state.set({newUser: false, init: true}, () => this.syncRemoteOwned(state.username));
+        return;
+      }
+
       if (init) {
         if (!state.ps4User) {
           if (!this.monitor) {

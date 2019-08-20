@@ -98,7 +98,7 @@ const updateDiscoveries = ({saveData, profile, init = false, fullSync = false, n
     discoveries: newDiscoveries,
     apiVersion: 3
   }).then(() => {
-    if (init) {
+    if (init || state.newUser) {
       next(false);
     }
   }).catch(errorHandler);
