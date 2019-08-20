@@ -1,3 +1,15 @@
+# 1.7.0
+
+  * Added tags to locations. Editable via the "Edit Details" view in the selected location box. Clicking a tag will filter locations with the same tag. Tags can also be queried from the Search field in the toolbar with the `tag:` prefix, e.g. `tag:lush`.
+  * Improved offline location editing. Changes made to names, descriptions, and tags in offline mode will now sync with the server when in online mode.
+  * Current location is now excluded from the "Show My Locations" filter in the stored location list.
+  * Selected location box will now expand more vertically when editing, or to accomodate screenshots.
+  * Friends' locations are now synced automatically.
+  * Moved the "Popular" and "Favorites" sort buttons to the Registered Locations dropdown menu.
+  * Fixed incomplete results displaying when sorting by favorites or teleports.
+  * Fixed a bug preventing stored locations from being removed after an NMC restart.
+  * Fixed search results not getting cached.
+
 # 1.6.0
 
   * Added global stats. Accessible from the toolbar. It shows the total uploaded locations and discoveries from a select time period, and breaks it down by galaxies, users, and discovery types. The stats refresh once every three hours.

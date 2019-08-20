@@ -65,7 +65,7 @@ const state: GlobalState = initStore({
   galaxies,
   defaultLegendKeys: Object.keys(showDefault),
   completedMigration: false,
-  version: '1.6.0',
+  version: '1.7.0',
   notification: {
     message: '',
     type: 'info'
