@@ -83,11 +83,12 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
 
       fs.readFile(lastModifiedSave.result, {}, (err, json) => {
         if (err) {
-          log.error('getLastGameModeSave -> next: ', err);
+          err.message = `getLastGameModeSave -> next:\n${err.message}`;
           if (err.message.indexOf('EBUSY') > -1) {
-            log.error(`Unable to read your last modified save file because it is in use by another program. Please make sure you are only teleporting, restoring bases, or using the cheat menu while the game is closed or paused.`);
+            err.message += `\nUnable to read your last modified save file because it is in use by another program. `
+              + 'Please make sure you are only teleporting, restoring bases, or using the cheat menu while the game is closed or paused.';
           }
-          cb(new Error());
+          cb(err);
           return;
         }
 
@@ -113,11 +114,10 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
           } else {
             lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
           }
-        }, (e) => {
+        }, (err) => {
           lastModifiedSave.result = null;
-          log.error(e);
-          log.error(`There was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`);
-          cb(new Error());
+          err.message += `\nThere was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`;
+          cb(err);
         });
         cb(null, lastModifiedSave);
       });
