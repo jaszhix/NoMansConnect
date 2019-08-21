@@ -166,7 +166,8 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
           this.setViewableRange(this.storedLocations);
         }
       },
-      markStoredLocationsDirty: () => this.needsUpdate = true
+      markStoredLocationsDirty: () => this.needsUpdate = true,
+      favorites: () => this.needsUpdate = true,
     });
     let checkStored = () => {
       if (this.storedLocations) {

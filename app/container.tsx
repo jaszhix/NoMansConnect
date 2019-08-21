@@ -61,51 +61,67 @@ class Container extends React.Component<ContainerProps, ContainerState> {
     state.disconnect(this.connectId);
   }
   handleFavorite = (location) => {
-    if (this.props.s.offline) {
+    const {storedLocations, remoteLocations, machineId, username, favorites, offline} = this.props.s;
+    const {updating} = this.state;
+    let favIndex: number, upvote: boolean;
+
+    if (offline) {
       state.set({error: `Unable to favorite location in offline mode.`});
       return;
     }
-    let refFav = findIndex(this.props.s.favorites, (fav) => {
+
+    if (!updating) {
+      this.setState({updating: true}, () => this.handleFavorite(location));
+      return;
+    }
+
+    favIndex = findIndex(favorites, (fav) => {
       return fav === location.dataId;
     });
-    let upvote = refFav === -1;
-    let {storedLocations, remoteLocations, machineId, username, favorites} = this.props.s;
+
+    upvote = favIndex === -1;
 
     ajaxWorker.post('/nmslocation/', {
-      machineId: machineId,
-      username: username,
+      machineId,
+      username,
       score: location.score,
-      upvote: upvote,
+      upvote,
       dataId: location.dataId,
       action: 1
     }).then((res) => {
-      res.data.upvote = upvote;
+      const {modified, dataId} = res.data;
 
-      let refRemoteLocation = findIndex(remoteLocations.results, (location) => {
-        return location.dataId === res.data.dataId;
+      let location = find(remoteLocations.results, (location) => {
+        return location.dataId === dataId;
       });
-      if (refRemoteLocation > -1) {
-        remoteLocations.results[refRemoteLocation] = res.data;
+
+      if (location) {
+        location.upvote = upvote;
+        location.modified = modified;
       }
-      let refLocation = findIndex(storedLocations, _location => _location.dataId === location.dataId);
+
+      location = find(storedLocations, _location => _location.dataId === location.dataId);
+
+      if (location) {
+        location.upvote = upvote;
+        location.modified = modified;
+      } else {
+        storedLocations.push(res.data);
+      }
+
       if (upvote) {
-        if (refLocation > -1) {
-          storedLocations[refLocation] = res.data;
-        } else {
-          storedLocations.push(res.data);
-        }
         favorites.push(location.dataId);
       } else {
-        favorites.splice(refFav, 1);
-        if (refLocation > -1) {
-          storedLocations.splice(refLocation, 1);
-        }
+        favorites.splice(favIndex, 1);
       }
+
       state.set({
         storedLocations,
         remoteLocations,
         favorites: uniq(favorites)
-      });
+      }, true);
+
+      this.setState({updating: false});
     }).catch((err) => {
       log.error(`Failed to favorite remote location: ${err}`);
     });
