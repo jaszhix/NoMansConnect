@@ -38854,6 +38854,8 @@ LocationBox
   color: #fff;
 }
 .LocationBox__tagRow {
+  overflow-y: auto;
+  max-height: 126px;
   margin-left: 9px;
 }
 .LocationBox__glyphs {
