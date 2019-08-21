@@ -302,6 +302,7 @@
     "react-tooltip": "3.10.0",
     "recharts": "1.7.1",
     "resolve-dir": "^1.0.1",
+    "sendkeys": "^1.1.1",
     "source-map-support": "0.5.13",
     "threact": "0.4.7",
     "three": "0.107.0",

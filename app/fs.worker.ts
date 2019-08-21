@@ -218,7 +218,7 @@ onmessage = function(e) {
     backupSaveFile(...args, (err) => next(err));
   } else {
     each(args, (arg, i) => {
-      if (arg.buffer) {
+      if (arg && arg.buffer) {
         args[i] = Buffer.from(arg.buffer, 'binary');
       }
     });

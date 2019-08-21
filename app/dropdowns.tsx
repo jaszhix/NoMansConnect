@@ -44,6 +44,7 @@ interface BasicDropdownProps {
   height?: number;
   width?: number;
   detailsOnly?: boolean;
+  value: any;
 }
 
 interface BasicDropdownState {

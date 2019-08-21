@@ -121,6 +121,7 @@ declare global {
     title?: string;
     installDirectory?: string | null;
     saveDirectory?: string | null;
+    steamInstallDirectory?: string | null;
     saveFileName?: string;
     saveVersion?: number | null;
     mode?: string;
@@ -146,6 +147,7 @@ declare global {
     selectedImage?: null;
     autoCapture?: boolean;
     autoCaptureSpaceStations?: boolean;
+    autoCaptureBackend?: 'steam' | 'legacy';
     backupSaveFile?: true;
     selectedGalaxy?: number;
     galaxyOptions?: any[];

@@ -35,7 +35,7 @@ import {
 } from './modals';
 import {Search} from './search';
 import Container from './container';
-import {defaultPosition} from './constants';
+import {defaultPosition, letters} from './constants';
 
 const {dialog} = remote;
 let win: Electron.BrowserWindow;
@@ -247,8 +247,8 @@ class App extends React.Component<GlobalState> {
       if (cb) cb();
     };
 
-    let letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
     let indexModsInUse = (_path: string, modPath: string) => {
+      const usingSteamCapturer = state.autoCaptureBackend === 'steam';
       let nmsIsFullscreen = false, fullscreenValue;
 
       fsWorker.readFile(`${_path}${dirSep}Binaries${dirSep}SETTINGS${dirSep}TKGRAPHICSSETTINGS.MXML`, (err, data) => {
@@ -258,15 +258,20 @@ class App extends React.Component<GlobalState> {
           return;
         }
 
-        if (data) {
+        if (data && !usingSteamCapturer) {
           fullscreenValue = Buffer.from(data).toString().split('<Property name="FullScreen" value="')[1].substr(0, 4);
           nmsIsFullscreen = fullscreenValue === 'true';
         }
 
         if (nmsIsFullscreen || err) {
-          log.error('NMS is currently set to fullscreen mode. Auto capture only works in borderless fullscreen mode, and is being disabled.');
+
+
+          if (!usingSteamCapturer) {
+            log.error('NMS is currently set to fullscreen mode. Auto capture only works in borderless fullscreen mode, and is being disabled.');
+          }
+
           state.set({
-            autoCapture: false,
+            autoCapture: usingSteamCapturer,
             nmsIsFullscreen,
             loading: 'Checking for mods...'
           });

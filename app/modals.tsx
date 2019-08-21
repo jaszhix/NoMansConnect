@@ -1131,9 +1131,23 @@ interface SettingsModalState {}
 
 export class SettingsModal extends React.Component<SettingsModalProps, SettingsModalState> {
   willUnmount: boolean;
+  autoCaptureBackendOptions: any[];
 
   constructor(props) {
     super(props);
+
+    this.autoCaptureBackendOptions = [
+      {
+        id: 'steam',
+        label: 'Steam',
+        onClick: () => state.set({autoCaptureBackend: 'steam'})
+      },
+      {
+        id: 'legacy',
+        label: 'Legacy',
+        onClick: () => state.set({autoCaptureBackend: 'legacy'})
+      }
+    ];
   }
   componentDidMount() {
     ReactTooltip.rebuild();
@@ -1285,6 +1299,18 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
           value={p.s.autoCapture ? 'Auto' : 'Manual'} /> : null}
           {!p.s.ps4User && !p.s.offline && p.s.autoCapture ?
           <div className="ui segment SettingsModal__child">
+            <Item
+            disabled={p.s.nmsIsFullscreen}
+            className="Item__hover"
+            dataTip={tip('Steam capturer works in fullscreen mode, unlike legacy. Make sure F12 is mapped as your screenshot capture key in Steam settings.')}
+            label="Screenshot Capturer Backend"
+            value={
+              <BasicDropdown
+              height={p.s.height}
+              isGalaxies={false}
+              selectedGalaxy={p.s.autoCaptureBackend === 'steam' ? 0 : 1}
+              options={this.autoCaptureBackendOptions}  />
+            } />
             <Item
             disabled={p.s.nmsIsFullscreen}
             className="Item__hover"

@@ -236,4 +236,6 @@ const saveKeyMapping = {
 
 const syncedKeys = ['image', 'name', 'description', 'teleports', 'profile'];
 
-export {sortStoredByKeyMap, defaultPosition, saveKeyMapping, syncedKeys};
+const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
+
+export {sortStoredByKeyMap, defaultPosition, saveKeyMapping, syncedKeys, letters};
