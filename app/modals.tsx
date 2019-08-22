@@ -769,6 +769,7 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
                 </Button> : null}
               </div>
               <div className="ui segment">
+                {profile.supporter ? <span title="Gravitino" className="ProfileModal__badge"><img src={require('./static/gravitino.png')} /></span> : null}
                 <Item className="Item__marginBottom" label="Joined" value={moment(profile.created).format('MMMM D, Y')} />
                 <Item className="Item__marginBottom" label="Registered Locations" value={numberWithCommas(profile.exp)} />
                 {profile.discoveriesCount > 0 ?
