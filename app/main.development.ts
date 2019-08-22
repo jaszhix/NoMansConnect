@@ -1,6 +1,7 @@
 import {app, BrowserWindow, Menu, globalShortcut, systemPreferences} from 'electron';
 import windowStateKeeper from 'electron-window-state';
 import fs from 'graceful-fs';
+import path from 'path';
 import log from './log';
 
 const userData = app.getPath('userData');
@@ -132,13 +133,29 @@ app.on('ready', async (): Promise<any> => {
 
   Menu.setApplicationMenu(null);
 
-  globalShortcut.register('Insert', ()=>{
-    if (mainWindow.isFocused()) {
-      mainWindow.minimize();
-    } else {
-      mainWindow.maximize();
-      mainWindow.focus();
-    }
+  const settingsJson = path.resolve(app.getPath('userData'), 'settings.json');
+
+  fs.exists(settingsJson, () => {
+    fs.readFile(settingsJson, (err, data) => {
+      if (err) return;
+
+      let focusKey = false;
+
+      try {
+        focusKey = JSON.parse(data.toString()).focusKey;
+      } catch (e) {}
+
+      if (!focusKey) return;
+
+      globalShortcut.register('Insert', ()=>{
+        if (mainWindow.isFocused()) {
+          mainWindow.minimize();
+        } else {
+          mainWindow.maximize();
+          mainWindow.focus();
+        }
+      });
+    });
   });
 
   globalShortcut.register('Control+Shift+P+]', ()=>{

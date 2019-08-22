@@ -1249,6 +1249,9 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
       offline: !this.props.s.offline
     }, handleRestart);
   }
+  handleFocusKeyToggle = () => {
+    state.set({focusKey: !this.props.s.focusKey}, handleRestart);
+  }
   handleBackupToggle = (e) => {
     e.stopPropagation();
     state.set({backupSaveFile: !this.props.s.backupSaveFile});
@@ -1399,6 +1402,12 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
           dataTip={tip(`Prevents NMC from making network requests to the server, and attempts to keep most features in a functional state.`)}
           label="Offline Mode"
           icon={p.s.offline ? 'check' : 'remove'} />
+          <Item
+          className="Item__hover"
+          onValueClick={this.handleFocusKeyToggle}
+          dataTip={tip(`When enabled, pressing Insert focuses the NMC window.`)}
+          label="Focus Key"
+          icon={p.s.focusKey ? 'check' : 'remove'} />
           <Item
           className="SettingsModal__childHeader"
           label="Maintenance" />

@@ -115,6 +115,7 @@ const state: GlobalState = initStore({
   autoCapture: false,
   autoCaptureSpaceStations: false,
   autoCaptureBackend: 'steam', // or 'legacy'
+  focusKey: false,
   nmsIsFullscreen: false,
   backupSaveFile: true,
   selectedGalaxy: 0,
@@ -205,6 +206,7 @@ const state: GlobalState = initStore({
     'autoCapture',
     'autoCaptureSpaceStations',
     'autoCaptureBackend',
+    'focusKey',
     'backupSaveFile',
     'ps4User',
     'compactRemote',
