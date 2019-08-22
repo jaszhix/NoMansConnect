@@ -11,4 +11,6 @@ Use Pastebin of directly attach these files (Users/<Username>/AppData/Roaming/No
 - NMC.log
 - settings.json
 
+If requested, please email your save file to jaszhix@gmail.com. This file will not be used in the game, or on NMC's production server.
+
 - How can this bug be reproduced?
