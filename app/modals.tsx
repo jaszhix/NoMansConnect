@@ -298,6 +298,7 @@ export class LocationRegistrationModal extends React.Component<LocationRegistrat
         ...location
       }).then((res) => {
         state.trigger('fetchRemoteLocations');
+        state.trigger('markStoredLocationsDirty');
         this.handleClickOutside();
       }).catch((err) => {
         this.setState({
