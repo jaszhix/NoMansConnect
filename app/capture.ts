@@ -49,7 +49,10 @@ const steamCapture = (callback) => {
         callback(`data:image/jpg;base64,${Buffer.from(data).toString('base64')}`);
       });
     });
-  }, 2000));
+  }, 2000)).catch((err) => {
+    log.error(err);
+    callback('');
+  });
 }
 
 const screenshot = function(proceed: boolean, callback: Function) {

@@ -1,3 +1,11 @@
+# 1.8.0
+
+  * The auto screenshot capturer now uses Steam's built-in screenshot capturing utility by default, and the game no longer needs to be in borderless window mode while the capturing method is set to Steam in Settings. (#120)
+  * The map can now be toggled on or off in Settings. (#108)
+  * Pressing the Insert key no longer focuses NMC by default. To restore the old behavior, it can be enabled in Settings. (#121)
+  * Fixed tags clipping out of the screen during editing. (#123)
+  * Fixed toggling favorites causing a location to be removed from the stored list. (#124)
+
 # 1.7.1
 
   * Fixed a bug preventing new users from creating profiles.
