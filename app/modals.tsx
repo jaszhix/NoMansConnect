@@ -69,6 +69,9 @@ export class UsernameOverrideModal extends React.Component<UsernameOverrideModal
 
     assignIn(this.state, pick(state.get(), ['ps4User']))
   }
+  componentWillUnmount = () => {
+    cleanUp(this);
+  }
   handleClickOutside = () => {
     state.set({usernameOverride: false});
   }
@@ -82,8 +85,8 @@ export class UsernameOverrideModal extends React.Component<UsernameOverrideModal
     }
     handleUsernameOverride(this.state.name)
   }
-  componentWillUnmount = () => {
-    cleanUp(this);
+  handleEnter = (e) => {
+    if (e.keyCode === 13) this.handleSave();
   }
   render() {
     return (
@@ -95,6 +98,7 @@ export class UsernameOverrideModal extends React.Component<UsernameOverrideModal
           type="text"
           value={this.state.name}
           onChange={this.handleChange}
+          onKeyDown={this.handleEnter}
           maxLength={30}
           placeholder="Username" />
           <Button onClick={this.handleSave}>
@@ -147,6 +151,7 @@ export class RecoveryModal extends React.Component<RecoveryModalProps, RecoveryM
       errorMessage = 'There was an error associating your email address.';
       url = '/nmssetemail/';
       prop = 'email'
+      console.log(this.state.value)
       if (!validateEmail(this.state.value)) {
         this.setState({
           address: '',
@@ -180,6 +185,9 @@ export class RecoveryModal extends React.Component<RecoveryModalProps, RecoveryM
       });
     });
   }
+  handleEnter = (e) => {
+    if (e.keyCode === 13) this.handleSave();
+  }
   render() {
     return (
       <div className="ui small modal active modal__compact">
@@ -191,6 +199,7 @@ export class RecoveryModal extends React.Component<RecoveryModalProps, RecoveryM
           type="text"
           value={this.state.value}
           onChange={this.handleChange}
+          onKeyDown={this.handleEnter}
           placeholder={this.props.placeholder} />
           <Button onClick={this.handleSave}>
             Save
@@ -298,6 +307,9 @@ export class LocationRegistrationModal extends React.Component<LocationRegistrat
       });
     });
   }
+  handleEnter = (e) => {
+    if (e.keyCode === 13) this.handleSave();
+  }
   render() {
     return (
       <div className="ui small modal active modal__compact">
@@ -315,6 +327,7 @@ export class LocationRegistrationModal extends React.Component<LocationRegistrat
           type="text"
           value={this.state.address}
           onChange={this.handleChange}
+          onKeyDown={this.handleEnter}
           maxLength={30}
           placeholder="Galactic Address" />
           <Button onClick={this.handleSave}>
