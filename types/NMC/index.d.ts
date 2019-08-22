@@ -148,6 +148,7 @@ declare global {
     autoCapture?: boolean;
     autoCaptureSpaceStations?: boolean;
     autoCaptureBackend?: 'steam' | 'legacy';
+    focusKey: boolean;
     backupSaveFile?: true;
     selectedGalaxy?: number;
     galaxyOptions?: any[];
@@ -193,6 +194,7 @@ declare global {
     sortByDistance?: boolean;
     sortByModded?: boolean;
     show?: object;
+    showMap: boolean;
     compactRemote?: boolean;
     maintenanceTS?: number;
     offline?: boolean;

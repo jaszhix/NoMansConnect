@@ -508,6 +508,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
       mapDrawDistance,
       mapLines,
       show,
+      showMap,
       navLoad
     } = p.s;
 
@@ -667,7 +668,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
             filterStoredByScreenshot={filterStoredByScreenshot}
             useGAFormat={useGAFormat} />
             <div className="ui segments Container__mapAndSelected">
-              {remoteLocationsLoaded ?
+              {remoteLocationsLoaded && showMap ?
               <GalacticMap
               map3d={map3d}
               mapDrawDistance={mapDrawDistance}

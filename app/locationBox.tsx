@@ -589,7 +589,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       maxWidth: p.detailsOnly ? 'unset' : '386px',
       minHeight: p.detailsOnly ? 'unset' : p.compactRemote ? '68px' : '245px',
       maxHeight: p.detailsOnly ? 'unset' : needsExpand ? '500px' : '289px',
-      zIndex: p.selectType ? '91' : 'inherit',
+      zIndex: p.selectType ? '92' : 'inherit',
       position: p.selectType ? 'fixed' : '', // TBD
       left: p.selectType ? '28px' : 'inherit',
       top: p.selectType ? `${p.height - (needsExpand ? 432 : 271)}px` : 'inherit',

@@ -1249,6 +1249,9 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
       offline: !this.props.s.offline
     }, handleRestart);
   }
+  handleShowMapToggle = () => {
+    state.set({showMap: !this.props.s.showMap});
+  }
   handleFocusKeyToggle = () => {
     state.set({focusKey: !this.props.s.focusKey}, handleRestart);
   }
@@ -1402,6 +1405,12 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
           dataTip={tip(`Prevents NMC from making network requests to the server, and attempts to keep most features in a functional state.`)}
           label="Offline Mode"
           icon={p.s.offline ? 'check' : 'remove'} />
+          <Item
+          className="Item__hover"
+          onValueClick={this.handleShowMapToggle}
+          dataTip={tip(`Toggles the map on or off.`)}
+          label="Show Map"
+          icon={p.s.showMap ? 'check' : 'remove'} />
           <Item
           className="Item__hover"
           onValueClick={this.handleFocusKeyToggle}
