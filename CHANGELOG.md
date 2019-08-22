@@ -1,3 +1,7 @@
+# 1.8.1
+
+  * Fixed an error causing the map to not load correctly.
+
 # 1.8.0
 
   * The auto screenshot capturer now uses Steam's built-in screenshot capturing utility by default, and the game no longer needs to be in borderless window mode while the capturing method is set to Steam in Settings. (#120)

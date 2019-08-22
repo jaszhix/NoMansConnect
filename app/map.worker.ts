@@ -173,7 +173,7 @@ onmessage = function(e) {
             break;
           case (location.username !== e.data.p.username
             && (location.playerPosition
-              || (location.positions
+              || (location.positions.length
                 && location.positions[0].playerPosition)
                 && !location.manuallyEntered)):
             if (e.data.p.show.Shared.value) {
