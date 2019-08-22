@@ -513,10 +513,9 @@ export const formatForGlyphs = (translatedId: string, planetIndex): string[] => 
   return result;
 };
 
-export const validateEmail = (email): boolean => {
-  let re = /dsad^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/g;
-  return re.test(email);
-}
+export const validateEmail = (value) => {
+  return value.search(/^[-a-z0-9~!$%^&*_=+}{\'?]+(\.[-a-z0-9~!$%^&*_=+}{\'?]+)*@([a-z0-9_][-a-z0-9_]*(\.[-a-z0-9_]+)*\.(aero|arpa|biz|com|coop|edu|gov|info|int|mil|museum|name|net|org|pro|travel|mobi|[a-z][a-z])|([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}))(:[0-9]{1,5})?$/i) > -1;
+};
 
 export const css = (styleObject, newObject): CSSProperties => {
   return assignIn({}, styleObject, newObject);
