@@ -15,7 +15,7 @@ let key = 'bounds';
 const steamCapture = (callback) => {
   // Trigger F12 key press, then find the newest screenshot in NMS' screenshot directory.
   // Timestamps are conveniently in the file name.
-  sendkeys('{F12}').then(() => {
+  sendkeys('{F12}').then(() => setTimeout(() => {
     fsWorker.walk(state.steamInstallDirectory, (err, paths) => {
       if (err) {
         log.error(err);
@@ -49,7 +49,7 @@ const steamCapture = (callback) => {
         callback(`data:image/jpg;base64,${Buffer.from(data).toString('base64')}`);
       });
     });
-  });
+  }, 2000));
 }
 
 const screenshot = function(proceed: boolean, callback: Function) {
