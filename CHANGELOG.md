@@ -1,3 +1,10 @@
+# 1.8.2
+
+  * Added keyboard navigation to the tag suggestions dropdown.
+  * Fixed a bug causing new users to get stuck in the initial loading step.
+  * Fixed inability to set recovery email.
+  * Fixed an issue with the stored location list not updating after registering a manual location.
+
 # 1.8.1
 
   * Fixed an error causing the map to not load correctly.
