@@ -5,6 +5,8 @@ import {uniqBy} from 'lodash';
 import state from './state';
 import {ajaxWorker} from './utils';
 
+const resultHeight = 22;
+
 interface SearchFieldProps {
   className: string;
   resultsClassName: string;
@@ -18,16 +20,20 @@ interface SearchFieldProps {
 
 interface SearchFieldState {
   results: string[];
+  selectedResult: number;
 }
 
 class SearchField extends React.Component<SearchFieldProps, SearchFieldState> {
   connectId: number;
+  resultsRef: any;
+  height: number;
 
   constructor(props) {
     super(props);
 
     this.state = {
-      results: []
+      results: [],
+      selectedResult: -1,
     };
   }
   componentDidMount() {
@@ -36,6 +42,7 @@ class SearchField extends React.Component<SearchFieldProps, SearchFieldState> {
     });
   }
   componentWillUnmount() {
+    if (this.resultsRef) this.resultsRef.removeEventListener('resize', this.handleResize);
     state.disconnect(this.connectId);
   }
   handleChange = (e) => {
@@ -66,12 +73,58 @@ class SearchField extends React.Component<SearchFieldProps, SearchFieldState> {
 
     this.setState({results: []}, onEnter);
   }
-  handleEnter = (e) => {
-    if (e.keyCode === 13) this.setState({results: []}, () => this.props.onEnter(e));
+  handleKeyDown = (e) => {
+    let {results, selectedResult} = this.state;
+
+    switch (e.keyCode) {
+      case 13: // Enter
+        if (selectedResult > -1) {
+          this.handleResultClick(results[selectedResult]);
+        } else {
+          this.setState({results: []}, () => this.props.onEnter(e));
+        }
+        break;
+      case 38: // Up
+        selectedResult -= 1;
+
+        if (selectedResult < 0) selectedResult = results.length - 1;
+
+        this.setState({selectedResult}, () => {
+          if (!this.resultsRef) return;
+
+          this.resultsRef.scrollTo(0, selectedResult * resultHeight);
+        });
+        break;
+      case 40: // Down
+        selectedResult += 1;
+
+        if (selectedResult > results.length - 1) selectedResult = 0;
+
+        this.setState({selectedResult}, () => {
+          if (!this.resultsRef) return;
+
+          let visibleCount = Math.floor(this.height / resultHeight);
+
+          if (selectedResult % visibleCount === 0) {
+            this.resultsRef.scrollTo(0, selectedResult * resultHeight);
+          }
+        });
+        break;
+    }
+  }
+  handleResize = () => {
+    this.height = this.resultsRef.clientHeight;
+  }
+  getResultsRef = (ref) => {
+    if (!ref) return;
+
+    this.resultsRef = ref;
+    this.height = ref.clientHeight;
+    ref.addEventListener('resize', this.handleResize);
   }
   render() {
     const {value, placeholder, className, resultsClassName, resultClassName} = this.props;
-    const {results} = this.state;
+    const {results, selectedResult} = this.state;
 
     return (
       <Fragment>
@@ -80,16 +133,20 @@ class SearchField extends React.Component<SearchFieldProps, SearchFieldState> {
         type="text"
         value={value}
         onChange={this.handleChange}
-        onKeyDown={this.handleEnter}
+        onKeyDown={this.handleKeyDown}
         maxLength={30}
         placeholder={placeholder} />
         {results.length ?
-        <div className={resultsClassName}>
-          {map(results, (result) => {
+        <div
+        ref={this.getResultsRef}
+        className={resultsClassName}
+        onMouseLeave={() => this.setState({selectedResult: -1})}>
+          {map(results, (result, i) => {
           return (
             <div
             key={result}
-            className={resultClassName}
+            className={`${resultClassName}${selectedResult === i ? ' SearchField__selected' : ''}`}
+            onMouseEnter={() => this.setState({selectedResult: i})}
             onClick={() => this.handleResultClick(result)}>
               {result}
             </div>

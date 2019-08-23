@@ -38751,7 +38751,7 @@ LocationBox
   left: 24px;
 }
 .LocationBox__tagResultsContainer {
-  width: 236px;
+  width: 240px;
   max-height: 183px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -38766,9 +38766,7 @@ LocationBox
 .LocationBox__tagItem {
   background: rgb(23, 26, 22);
   padding-left: 11px;
-}
-.LocationBox__tagItem:hover {
-  background: rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
 }
 .LocationBox__addTagButton {
   width: 10px;
@@ -39143,7 +39141,7 @@ Friend requests
   letter-spacing: 2px;
 }
 .Search__resultsContainer {
-  width: 146px;
+  width: 240px;
   max-height: 600px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -39160,8 +39158,9 @@ Friend requests
   background: rgb(23, 26, 22);
   padding: 2px 0px 5px 11px;
   cursor: pointer;
+  white-space: nowrap;
 }
-.Search__item:hover {
+.SearchField__selected {
   background: rgba(255, 255, 255, 0.05);
 }
 
