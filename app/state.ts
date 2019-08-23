@@ -402,7 +402,7 @@ const state: GlobalState = initStore({
 });
 
 if (process.env.NODE_ENV === 'development') {
-  window.state = state.default;
+  window.state = state;
 }
 
 export default state;

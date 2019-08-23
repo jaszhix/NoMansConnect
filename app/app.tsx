@@ -378,7 +378,7 @@ class App extends React.Component<GlobalState> {
       log.error('Failed to download missing locations from the server.');
       state.set({navLoad: false});
 
-      if (state.init && err.response && err.response.status === 404) {
+      if (state.init && err.response && err.response.status >= 400 && err.response.status < 500) {
         this.checkMods(() => state.set({newUser: true}));
       }
     });
@@ -924,28 +924,25 @@ class App extends React.Component<GlobalState> {
 
       if (state.newUser) {
         state.set({newUser: false, init: true}, () => this.syncRemoteOwned(state.username));
-        return;
       }
 
-      if (init) {
-        if (!state.ps4User) {
-          if (!this.monitor) {
-            watch.createMonitor(state.saveDirectory, {
-              ignoreDotFiles: true,
-              ignoreNotPermitted: true,
+      if (init && !state.ps4User) {
+        if (!this.monitor) {
+          watch.createMonitor(state.saveDirectory, {
+            ignoreDotFiles: true,
+            ignoreNotPermitted: true,
 
-            }, (monitor) => {
-              this.monitor = monitor;
-              this.monitor.on('changed', (f, curr, prev) => {
-                this.pollSaveData();
-              });
+          }, (monitor) => {
+            this.monitor = monitor;
+            this.monitor.on('changed', (f, curr, prev) => {
+              this.pollSaveData();
             });
-          }
-          if (state.username.toLowerCase() === 'explorer') {
-            state.set({usernameOverride: true});
-          }
+          });
         }
-        return;
+
+        if (state.username.toLowerCase() === 'explorer') {
+          state.set({usernameOverride: true});
+        }
       }
       this.fetchRemoteLocations(1, state.sort, init);
     }});
