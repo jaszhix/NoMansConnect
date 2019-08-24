@@ -90,9 +90,6 @@ class App extends React.Component<GlobalState> {
     this.connections = [];
     this.monitor = undefined;
   }
-  componentDidCatch(error, errorInfo) {
-    window.Sentry.captureException(error)
-  }
   componentDidMount() {
     this.connections = [
       state
