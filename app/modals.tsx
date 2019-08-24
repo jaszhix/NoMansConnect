@@ -611,7 +611,10 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
   }
   fetchProfile = (id = this.props.profileId, discoveriesPage = 1, isPagination = false) => {
     ajaxWorker.get(`/nmsprofile/${id}/`, {
-      params: {discoveriesPage}
+      params: {
+        apiVersion: state.apiVersion,
+        discoveriesPage
+      }
     }).then((profile) => {
       this.setState({
         profile: profile.data,
@@ -788,11 +791,18 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
                 <Item label="Discoveries" value={numberWithCommas(profile.discoveriesCount)} /> : null}
                 {profile.discoveriesCount > 0 ?
                 <div className="ui segment ProfileModal__content">
-                  {profile.solarSystemCount ? <Item label="Systems" value={numberWithCommas(profile.solarSystemCount)} /> : null}
-                  {profile.planetCount ? <Item label="Planets" value={numberWithCommas(profile.planetCount)} /> : null}
-                  {profile.interactableCount ? <Item label="Interactables" value={numberWithCommas(profile.interactableCount)} /> : null}
-                  {profile.animalCount ?<Item label="Fauna" value={numberWithCommas(profile.animalCount)} /> : null}
-                  {profile.floraCount ? <Item label="Flora" value={numberWithCommas(profile.floraCount)} /> : null}
+                  {map(profile.counts, (item) => {
+                    const {type, count} = item;
+
+                    if (!count) return null;
+
+                    return (
+                      <Item
+                      key={type}
+                      label={type}
+                      value={numberWithCommas(count)} />
+                    )
+                  })}
                 </div> : null}
                 {profile.friends.length > 0 ?
                 <Item label="Friends" /> : null}
