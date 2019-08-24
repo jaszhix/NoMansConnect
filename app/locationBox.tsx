@@ -232,7 +232,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
 
       if (!this.props || notFound) {
         location.apiVersion = 3;
-        if (!state.offline && notFound) state.trigger('updateLocation', location);
+        if (!detailsOnly && !state.offline && notFound) state.trigger('updateLocation', location);
         // cleanUp was already called
         return;
       }
