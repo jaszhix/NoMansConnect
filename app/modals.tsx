@@ -1150,14 +1150,41 @@ interface SettingsModalProps {
   onUsernameOverride: () => void;
 }
 
-interface SettingsModalState {}
+interface SettingsModalState {
+  pollRate: number;
+}
 
 export class SettingsModal extends React.Component<SettingsModalProps, SettingsModalState> {
   willUnmount: boolean;
   autoCaptureBackendOptions: any[];
+  pollRateOptions: any[];
 
   constructor(props) {
     super(props);
+
+    let pollRate;
+
+    switch (props.s.pollRate) {
+      case 15000:
+        pollRate = 0;
+        break;
+      case 30000:
+        pollRate = 1;
+        break;
+      case 45000:
+        pollRate = 2;
+        break;
+      case 60000:
+        pollRate = 3;
+        break;
+      case 90000:
+        pollRate = 4;
+        break;
+    }
+
+    this.state = {
+      pollRate,
+    }
 
     this.autoCaptureBackendOptions = [
       {
@@ -1171,9 +1198,42 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
         onClick: () => state.set({autoCaptureBackend: 'legacy'})
       }
     ];
+
+    this.pollRateOptions = [
+      {
+        id: '15',
+        label: '15 Seconds',
+        onClick: () => this.setState({pollRate: 0})
+      },
+      {
+        id: '30',
+        label: '30 Seconds',
+        onClick: () => this.setState({pollRate: 1})
+      },
+      {
+        id: '45',
+        label: '45 Seconds',
+        onClick: () => this.setState({pollRate: 2})
+      },
+      {
+        id: '60',
+        label: '60 Seconds',
+        onClick: () => this.setState({pollRate: 3})
+      },
+      {
+        id: '90',
+        label: '90 Seconds',
+        onClick: () => this.setState({pollRate: 4})
+      }
+    ];
   }
   componentDidMount() {
     ReactTooltip.rebuild();
+  }
+  componentDidUpdate(pP, pS) {
+    if (pS.pollRate !== this.state.pollRate) {
+      this.handlePollRate();
+    }
   }
   componentWillUnmount() {
     this.willUnmount = true;
@@ -1252,16 +1312,29 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
   handleModeSwitch = (mode) => {
     state.set({mode: mode});
   }
-  handlePollRate = (e) => {
-    e.stopPropagation();
+  handlePollRate = () => {
+    const {pollRate} = this.state
+
     let rate;
-    if (this.props.s.pollRate === 45000) {
-      rate = 60000;
-    } else if (this.props.s.pollRate === 60000) {
-      rate = 90000;
-    } else {
-      rate = 45000;
+
+    switch (pollRate) {
+      case 0:
+        rate = 15000;
+        break;
+      case 1:
+        rate = 30000;
+        break;
+      case 2:
+        rate = 45000;
+        break;
+      case 3:
+        rate = 60000;
+        break;
+      case 4:
+        rate = 90000;
+        break;
     }
+
     state.set({pollRate: rate});
   }
   handleOfflineModeToggle = (e) => {
@@ -1384,10 +1457,15 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
           {!p.s.offline ?
           <Item
           className="Item__hover"
-          onValueClick={this.handlePollRate}
           dataTip={tip('Controls how often the client will check the server for new locations. If you experience performance issues, consider increasing this value.')}
           label="Polling Rate"
-          value={`${p.s.pollRate / 1000} Seconds`} /> : null}
+          value={
+            <BasicDropdown
+            height={p.s.height}
+            isGalaxies={false}
+            selectedGalaxy={this.state.pollRate}
+            options={this.pollRateOptions}  />
+          } /> : null}
           {p.s.profile ?
           <Item
           className="Item__hover"
