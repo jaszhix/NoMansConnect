@@ -1,5 +1,5 @@
 import * as CSS from 'csstype';
-import * as Raven from 'raven-js';
+import * as Sentry from '@sentry/browser';
 import * as recharts from 'recharts';
 import Json from '../../app/json';
 
@@ -42,7 +42,7 @@ declare global {
     jsonWorker: Worker;
     map3DWorker: Worker;
     settingsWorker: Worker;
-    Raven: Raven.RavenStatic;
+    Sentry: any;
   }
 
   module NodeJS  {
@@ -76,6 +76,7 @@ declare global {
   interface NotificationInfo {
     message: string;
     type: string;
+    onClick: () => void | null;
   }
 
   interface APIResult {

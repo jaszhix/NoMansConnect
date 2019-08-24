@@ -19,6 +19,7 @@ import {parseSaveKeys} from './lang';
 // @ts-ignore
 import baseIcon from './assets/images/base_icon.png';
 
+import ErrorBoundary from './errorBoundary';
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDropdown} from './dropdowns';
 import {
   ImageModal,
@@ -88,6 +89,9 @@ class App extends React.Component<GlobalState> {
     this.headerItemClasses = 'ui dropdown icon item';
     this.connections = [];
     this.monitor = undefined;
+  }
+  componentDidCatch(error, errorInfo) {
+    window.Sentry.captureException(error)
   }
   componentDidMount() {
     this.connections = [
@@ -1021,6 +1025,11 @@ class App extends React.Component<GlobalState> {
   handleLocationRegistrationToggle = () => {
     state.set({registerLocation: !this.state.registerLocation});
   }
+  resetProfileModal = () => state.set({displayProfile: false})
+  resetFriendRequestModal = () => state.set({displayFriendRequest: false})
+  resetBaseRestorationModal = () => state.set({displayBaseRestoration: false})
+  resetLogModal = () => state.set({displayLog: false})
+  resetSettingsModal = () => state.set({displaySettings: false})
   render() {
     var s = this.state;
     return (
@@ -1115,28 +1124,40 @@ class App extends React.Component<GlobalState> {
         onRemoveStoredLocation={this.handleRemoveStoredLocation}
         onSaveBase={this.handleSaveBase} />}
         {this.state.displayProfile ?
-        <ProfileModal
-        username={this.state.username}
-        machineId={this.state.machineId}
-        profileId={this.state.displayProfile}
-        profile={this.state.profile}
-        height={this.state.height}
-        favorites={this.state.favorites} /> : null}
+        <ErrorBoundary onError={this.resetProfileModal}>
+          <ProfileModal
+          username={this.state.username}
+          machineId={this.state.machineId}
+          profileId={this.state.displayProfile}
+          profile={this.state.profile}
+          height={this.state.height}
+          favorites={this.state.favorites} />
+        </ErrorBoundary> : null}
         {this.state.displayFriendRequest ?
-        <FriendRequestModal
-        notification={this.state.displayFriendRequest}
-        profile={this.state.profile}
-        username={this.state.username}
-        machineId={this.state.machineId} /> : null}
+        <ErrorBoundary onError={this.resetFriendRequestModal}>
+          <FriendRequestModal
+          notification={this.state.displayFriendRequest}
+          profile={this.state.profile}
+          username={this.state.username}
+          machineId={this.state.machineId} />
+        </ErrorBoundary> : null}
         {this.state.displayBaseRestoration ?
-        <BaseRestorationModal
-        baseData={this.state.displayBaseRestoration}
-        height={this.state.height} /> : null}
-        {this.state.displayLog ? <LogModal  /> : null}
-        {this.state.displaySettings ? <SettingsModal
-        s={s}
-        onSync={this.handleSync}
-        onUsernameOverride={this.handleSetUsernameOverride} /> : null}
+        <ErrorBoundary onError={this.resetBaseRestorationModal}>
+          <BaseRestorationModal
+          baseData={this.state.displayBaseRestoration}
+          height={this.state.height} />
+        </ErrorBoundary> : null}
+        {this.state.displayLog ?
+        <ErrorBoundary onError={this.resetLogModal}>
+          <LogModal  />
+        </ErrorBoundary> : null}
+        {this.state.displaySettings ?
+        <ErrorBoundary onError={this.resetSettingsModal}>
+          <SettingsModal
+          s={s}
+          onSync={this.handleSync}
+          onUsernameOverride={this.handleSetUsernameOverride} />
+        </ErrorBoundary> : null}
         <ReactTooltip
         className="nmcTip"
         globalEventOff="click mouseleave"

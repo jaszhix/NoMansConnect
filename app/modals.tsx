@@ -382,11 +382,18 @@ export class Notification extends React.Component<NotificationProps> {
       }
     });
   }
+  handleClick() {
+    const {onClick} = this.props.notification;
+
+    if (typeof onClick === 'function') onClick();
+  }
   render() {
-    const {type, message} = this.props.notification;
+    const {type, message, onClick} = this.props.notification;
     let renderedMessage = <ReactMarkdown className="md-p" source={message} />;
     return (
-      <div className="ui small modal active" style={this.modalStyle}>
+      <div
+      className={`ui small modal active${onClick ? ' cursorPointer' : ''}`}
+      style={this.modalStyle}>
         <span className="close" />
         {type === 'error' ?
         <div className="modal__error">

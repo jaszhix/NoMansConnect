@@ -18,6 +18,7 @@ import {delay, isEqual, last} from 'lodash';
 import v from 'vquery';
 import {each, map} from '@jaszhix/utils';
 
+import ErrorBoundary from './errorBoundary';
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
 import {cleanUp} from './utils';
@@ -744,6 +745,8 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
     state.trigger('handleSearch');
     window.travelTo = [-1770, 492, -6420];
   }
+  resetMap3D = () => state.set({map3d: false})
+  resetThreeDimScatterChart = () => state.set({showMap: false})
   render() {
     let p = this.props;
     if (p.selectedGalaxy < 0) {
@@ -865,32 +868,36 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
         </div>
         <div style={this.mapWrapper}>
           {p.map3d ?
-          <Map3D
-          size={size}
-          selectedGalaxy={p.selectedGalaxy}
-          storedLocations={p.storedLocations}
-          remoteLocationsColumns={p.remoteLocationsColumns}
-          remoteLocations={p.remoteLocations}
-          selectedLocation={p.selectedLocation}
-          searchCache={p.searchCache}
-          currentLocation={p.currentLocation}
-          mapDrawDistance={p.mapDrawDistance} />
+          <ErrorBoundary onError={this.resetMap3D}>
+            <Map3D
+            size={size}
+            selectedGalaxy={p.selectedGalaxy}
+            storedLocations={p.storedLocations}
+            remoteLocationsColumns={p.remoteLocationsColumns}
+            remoteLocations={p.remoteLocations}
+            selectedLocation={p.selectedLocation}
+            searchCache={p.searchCache}
+            currentLocation={p.currentLocation}
+            mapDrawDistance={p.mapDrawDistance} />
+          </ErrorBoundary>
           :
-          <ThreeDimScatterChart
-          size={size}
-          mapLines={p.mapLines}
-          show={p.show}
-          selectedGalaxy={p.selectedGalaxy}
-          storedLocations={p.storedLocations}
-          width={p.width}
-          height={p.height}
-          remoteLocationsColumns={p.remoteLocationsColumns}
-          remoteLocations={p.remoteLocations}
-          selectedLocation={p.selectedLocation}
-          currentLocation={p.currentLocation}
-          username={p.username}
-          init={this.state.init}
-          onInit={this.handleInit} />}
+          <ErrorBoundary onError={this.resetThreeDimScatterChart}>
+            <ThreeDimScatterChart
+            size={size}
+            mapLines={p.mapLines}
+            show={p.show}
+            selectedGalaxy={p.selectedGalaxy}
+            storedLocations={p.storedLocations}
+            width={p.width}
+            height={p.height}
+            remoteLocationsColumns={p.remoteLocationsColumns}
+            remoteLocations={p.remoteLocations}
+            selectedLocation={p.selectedLocation}
+            currentLocation={p.currentLocation}
+            username={p.username}
+            init={this.state.init}
+            onInit={this.handleInit} />
+          </ErrorBoundary>}
         </div>
       </div>
     );

@@ -69,7 +69,8 @@ const state: GlobalState = initStore({
   version: '1.8.3',
   notification: {
     message: '',
-    type: 'info'
+    type: 'info',
+    onClick: null,
   },
   newsId: '',
   apiBase: 'https://neuropuff.com/api/',
@@ -227,33 +228,24 @@ const state: GlobalState = initStore({
     'sortByTeleports',
     'sortByModified',
   ],
-  _init: (cb: Function) => {
+  _init: (cb: () => void) => {
     state.windowId = state.connect('window', () => win);
 
     if (process.env.NODE_ENV === 'production') {
-      Raven
-        .config('https://9729d511f78f40d0ae5ebdeabc9217fc@sentry.io/180778', {
-          environment: process.env.NODE_ENV,
-          release: state.version,
-          dataCallback: (data) => {
-            assignIn(data.user, {
-              username: state.username,
-              resourceUsage: remote.app.getAppMetrics(),
-              winVersion: state.winVersion,
-              remoteLength: state.remoteLength,
-              map3d: state.map3d,
-              mapDrawDistance: state.mapDrawDistance,
-              pollRate: state.pollRate
-            });
-            return data;
-          }
-        })
-        .install();
-        window.Raven = Raven;
+      import(/* webpackChunkName: "sentry" */ '@sentry/browser').then((Sentry) => {
+        Sentry.init({dsn: 'https://9729d511f78f40d0ae5ebdeabc9217fc@sentry.io/180778'});
+        Sentry.setExtras(pick(state, ['version', 'username', 'winVersion', 'remoteLength', 'map3d', 'pollRate', 'ps4User', 'offline']));
+        Sentry.setExtra('NODE_ENV', process.env.NODE_ENV);
+        window.Sentry = Sentry;
+
+        state.initStorageWorkers(cb);
+      });
     } else {
       state.staticBase = 'http://z.npff.co:8000';
+      state.initStorageWorkers(cb);
     }
-
+  },
+  initStorageWorkers: (cb: () => void) => {
     let saveDirPath;
     let basePath = state.configDir.split('\\AppData')[0];
     let steamPath = `${basePath}\\AppData\\Roaming\\HelloGames\\NMS`;

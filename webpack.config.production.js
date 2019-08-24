@@ -2,6 +2,7 @@
  * Build config for electron 'Renderer Process' file
  */
 
+import fs from 'fs';
 import path from 'path';
 import webpack from 'webpack';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
@@ -9,9 +10,10 @@ import {BundleAnalyzerPlugin} from 'webpack-bundle-analyzer';
 import merge from 'webpack-merge';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
+import SentryWebpackPlugin from '@sentry/webpack-plugin';
 import baseConfig from './webpack.config.base';
 
-export default merge.smart(baseConfig, {
+const config = merge.smart(baseConfig, {
   mode: 'production',
   devtool: 'source-map',
 
@@ -170,6 +172,26 @@ export default merge.smart(baseConfig, {
   target: 'electron-renderer',
 
   optimization: {
+    splitChunks: {
+      chunks: 'async',
+      minSize: 30000,
+      minChunks: 2,
+      maxAsyncRequests: 5,
+      maxInitialRequests: 3,
+      name: true,
+      cacheGroups: {
+        default: {
+          minChunks: 2,
+          priority: -20,
+          reuseExistingChunk: true,
+        },
+        vendors: {
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10,
+          chunks: 'all'
+        }
+      }
+    },
     minimizer: [
       new TerserPlugin({
         parallel: true,
@@ -197,3 +219,15 @@ export default merge.smart(baseConfig, {
     ],
   },
 });
+
+if (fs.existsSync('./.sentryclirc')) {
+  config.plugins.push(
+    new SentryWebpackPlugin({
+      include: './dist',
+      ignoreFile: '.sentrycliignore',
+      configFile: 'sentry.properties'
+    })
+  );
+}
+
+export default config;

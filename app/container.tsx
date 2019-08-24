@@ -7,6 +7,7 @@ import state from './state';
 import {ajaxWorker, copyMetadata} from './utils';
 import {handleRestart} from './dialog';
 
+import ErrorBoundary from './errorBoundary';
 import GalacticMap from './map';
 import LocationBox from './locationBox';
 import StoredLocations from './storedLocations';
@@ -28,7 +29,6 @@ interface ContainerState {
 }
 
 class Container extends React.Component<ContainerProps, ContainerState> {
-
   connectId: number;
   willUnmount: boolean;
   screenshotRef: HTMLInputElement;
@@ -470,6 +470,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
   getScreenshotRef = (ref) => {
     this.screenshotRef = ref;
   }
+  resetLocationBox = () => state.set({selectedLocation: null})
   render() {
     let p = this.props;
     let {
@@ -651,83 +652,91 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         multiple={false} />
         <div className="columns">
           <div className="ui segments stackable grid container Container__left">
-            <StoredLocations
-            onSelect={this.handleSelectLocation}
-            storedLocations={storedLocations}
-            selectedLocationId={selectedLocation ? selectedLocation.dataId : null}
-            selectedLocationEdit={this.state.edit}
-            selectedLocationPositionEdit={this.state.positionEdit}
-            multiSelectedLocation={multiSelectedLocation}
-            currentLocation={currentLocation}
-            height={height}
-            filterOthers={filterOthers}
-            showHidden={showHidden}
-            sortStoredByTime={sortStoredByTime}
-            sortStoredByKey={sortStoredByKey}
-            filterStoredByBase={filterStoredByBase}
-            filterStoredByScreenshot={filterStoredByScreenshot}
-            useGAFormat={useGAFormat} />
+            <ErrorBoundary>
+              <StoredLocations
+              onSelect={this.handleSelectLocation}
+              storedLocations={storedLocations}
+              selectedLocationId={selectedLocation ? selectedLocation.dataId : null}
+              selectedLocationEdit={this.state.edit}
+              selectedLocationPositionEdit={this.state.positionEdit}
+              multiSelectedLocation={multiSelectedLocation}
+              currentLocation={currentLocation}
+              height={height}
+              filterOthers={filterOthers}
+              showHidden={showHidden}
+              sortStoredByTime={sortStoredByTime}
+              sortStoredByKey={sortStoredByKey}
+              filterStoredByBase={filterStoredByBase}
+              filterStoredByScreenshot={filterStoredByScreenshot}
+              useGAFormat={useGAFormat} />
+            </ErrorBoundary>
             <div className="ui segments Container__mapAndSelected">
               {remoteLocationsLoaded && showMap ?
-              <GalacticMap
-              map3d={map3d}
-              mapDrawDistance={mapDrawDistance}
-              mapLines={mapLines}
-              galaxyOptions={galaxyOptions}
-              selectedGalaxy={selectedGalaxy}
-              storedLocations={storedLocations}
-              width={width}
-              height={height}
-              remoteLocationsColumns={remoteLocationsColumns}
-              remoteLocations={locations}
-              selectedLocation={selectedLocation}
-              currentLocation={currentLocation}
-              username={p.s.username}
-              show={show}
-              onRestart={handleRestart}
-              searchCache={searchCache.results} /> : null}
+              <ErrorBoundary onError={this.resetGalacticMap}>
+                <GalacticMap
+                map3d={map3d}
+                mapDrawDistance={mapDrawDistance}
+                mapLines={mapLines}
+                galaxyOptions={galaxyOptions}
+                selectedGalaxy={selectedGalaxy}
+                storedLocations={storedLocations}
+                width={width}
+                height={height}
+                remoteLocationsColumns={remoteLocationsColumns}
+                remoteLocations={locations}
+                selectedLocation={selectedLocation}
+                currentLocation={currentLocation}
+                username={p.s.username}
+                show={show}
+                onRestart={handleRestart}
+                searchCache={searchCache.results} />
+              </ErrorBoundary> : null}
               {selectedLocation && !multiSelectedLocation ?
-              <LocationBox
-              username={username}
-              selectType={true}
-              currentLocation={currentLocation}
-              isOwnLocation={isOwnLocation}
-              isVisible={true}
-              location={selectedLocation}
-              profile={selectedLocation.profile}
-              navLoad={navLoad}
-              updating={this.state.updating}
-              edit={this.state.edit}
-              positionEdit={this.state.positionEdit}
-              favorites={favorites}
-              image={selectedLocation.image}
-              version={selectedLocation.version === saveVersion}
-              width={width}
-              height={height}
-              isSelectedLocationRemovable={isSelectedLocationRemovable}
-              onUploadScreen={this.screenshotRefClick}
-              onDeleteScreen={this.handleDeleteScreen}
-              onFav={this.handleFavorite}
-              onEdit={this.toggleEdit}
-              onPositionEdit={this.togglePositionEdit}
-              onMarkCompatible={this.handleCompatibility}
-              onRemoveStoredLocation={p.onRemoveStoredLocation}
-              onSubmit={this.handleLocationMetadataUpdate}
-              onSaveBase={p.onSaveBase}
-              ps4User={ps4User} /> : null}
+              <ErrorBoundary onError={this.resetLocationBox}>
+                <LocationBox
+                username={username}
+                selectType={true}
+                currentLocation={currentLocation}
+                isOwnLocation={isOwnLocation}
+                isVisible={true}
+                location={selectedLocation}
+                profile={selectedLocation.profile}
+                navLoad={navLoad}
+                updating={this.state.updating}
+                edit={this.state.edit}
+                positionEdit={this.state.positionEdit}
+                favorites={favorites}
+                image={selectedLocation.image}
+                version={selectedLocation.version === saveVersion}
+                width={width}
+                height={height}
+                isSelectedLocationRemovable={isSelectedLocationRemovable}
+                onUploadScreen={this.screenshotRefClick}
+                onDeleteScreen={this.handleDeleteScreen}
+                onFav={this.handleFavorite}
+                onEdit={this.toggleEdit}
+                onPositionEdit={this.togglePositionEdit}
+                onMarkCompatible={this.handleCompatibility}
+                onRemoveStoredLocation={p.onRemoveStoredLocation}
+                onSubmit={this.handleLocationMetadataUpdate}
+                onSaveBase={p.onSaveBase}
+                ps4User={ps4User} />
+              </ErrorBoundary> : null}
             </div>
           </div>
         </div>
         {remoteLocationsLoaded ?
-        <RemoteLocations
-        s={p.s}
-        locations={locations}
-        isOwnLocation={isOwnLocation}
-        updating={this.state.updating}
-        onPagination={p.onPagination}
-        onFav={this.handleFavorite}
-        onSaveBase={p.onSaveBase}
-        ps4User={ps4User} /> : null}
+        <ErrorBoundary>
+          <RemoteLocations
+          s={p.s}
+          locations={locations}
+          isOwnLocation={isOwnLocation}
+          updating={this.state.updating}
+          onPagination={p.onPagination}
+          onFav={this.handleFavorite}
+          onSaveBase={p.onSaveBase}
+          ps4User={ps4User} />
+        </ErrorBoundary> : null}
       </div>
     );
   }
