@@ -112,7 +112,7 @@ onmessage = function(e) {
         if (sortByModded) score += location.mods.length;
         if (sortByTeleports) score += location.teleports;
         if (sortByFavorites) score += location.score;
-        if (sortByModified) score += location.modified;
+        if (sortByModified) score += new Date(location.modified).getTime();
       } else {
         score = new Date(location.created).getTime();
       }
