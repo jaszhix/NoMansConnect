@@ -32,12 +32,11 @@ const steamCapture = (callback) => {
           captures.push({
             path: match.input,
             time: parseInt(time),
-            n: parseInt(n)
           });
         }
       });
 
-      captures = orderBy(captures, ['time', 'n'], ['desc', 'desc']);
+      captures = orderBy(captures, ['time'], ['desc']);
 
       fsWorker.readFile(captures[0].path, (err, data) => {
         if (err) {
