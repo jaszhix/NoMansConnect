@@ -1540,12 +1540,12 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
     this.leaderboardTypeOptions = [
       {
         id: 'locations',
-        label: 'Most Locations',
+        label: 'Locations',
         onClick: () => this.setState({leaderboardType: 0})
       },
       {
         id: 'locations',
-        label: 'Most Discoveries',
+        label: 'Discoveries',
         onClick: () => this.setState({leaderboardType: 1})
       }
     ];
