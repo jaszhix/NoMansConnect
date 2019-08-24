@@ -1,3 +1,15 @@
+# 1.8.3
+
+  * Added per-user discovery stats.
+  * Added missing minerals discovery type to profile stats.
+  * Optimized server-side processing of stats queries, which are now updated hourly.
+  * Sorting options are now applied to search queries.
+  * Fixed an issue with locations from discovery data on profiles attempting to be synced with the server as normal locations (resulting in a 400 error). These locations don't have precise player position data, and when teleported to, are handled as manual locations.
+  * Fixed various errors occurring on the server.
+  * Fixed existing name and description values not populating fields in the Edit Details location view.
+  * Fixed an issue with duplicate screenshots being uploaded with Steam's capturer. This is caused by holding shift (sprint) while the app triggers a screenshot with an F12 key event.
+  * Upgraded Electron, which fixes an issue with the app flashing a white background when being restored.
+
 # 1.8.2
 
   * Added keyboard navigation to the tag suggestions dropdown.
