@@ -292,9 +292,7 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
           i={i}
           scrollTop={this.recentExplorations ? this.recentExplorations.scrollTop : 0}
           isVisible={true}
-          name={location.name}
           profile={location.profile}
-          description={location.description}
           username={p.s.username}
           isOwnLocation={p.isOwnLocation}
           location={location}

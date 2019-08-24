@@ -688,8 +688,6 @@ class Container extends React.Component<ContainerProps, ContainerState> {
               searchCache={searchCache.results} /> : null}
               {selectedLocation && !multiSelectedLocation ?
               <LocationBox
-              name={selectedLocation.name}
-              description={selectedLocation.description}
               username={username}
               selectType={true}
               currentLocation={currentLocation}

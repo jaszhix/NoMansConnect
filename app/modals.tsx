@@ -456,7 +456,7 @@ class EventItem extends React.Component<EvenItemProps> {
     cleanUp(this);
   }
   render() {
-    let {profile, name, type, created, image, dataId, score, version, shouldShowPlanetType, isStart, isEnd, isLocation, location} = this.props;
+    let {profile, type, created, image, dataId, score, version, shouldShowPlanetType, isStart, isEnd, isLocation, location} = this.props;
     let isOwnLocation = profile ? profile.username === state.username : false;
     if (type === 'Planet' && !shouldShowPlanetType) {
       return null;
@@ -491,8 +491,6 @@ class EventItem extends React.Component<EvenItemProps> {
           </div>
           {dataId || (type === 'Planet' && location) ?
           <LocationBox
-          name={name}
-          description={''}
           username={profile ? profile.username : ''}
           selectType={false}
           currentLocation={state.currentLocation}

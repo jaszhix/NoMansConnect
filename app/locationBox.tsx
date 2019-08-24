@@ -96,8 +96,8 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       state.trigger('resetLocationScrollTop');
 
       stateUpdate.image = null;
-      stateUpdate.name = '';
-      stateUpdate.description = '';
+      stateUpdate.name = location.name;
+      stateUpdate.description = location.description;
       stateUpdate.location = location;
       stateUpdate.portalHex = formatForGlyphs(location.translatedId, location.PlanetIndex);
       stateUpdate.profile = location.profile;
@@ -119,8 +119,8 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     this.state = {
       hover: '',
       limit: false,
-      name: props.name,
-      description: props.description,
+      name: location.name,
+      description: location.description,
       tagName: '',
       tags: props.location.tags,
       image: null,
@@ -186,13 +186,15 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     cleanUp(this);
   }
   toggleEditDetails = () => {
-    if (this.props.positionEdit) this.togglePositionEdit();
+    const {location, positionEdit, edit, onEdit} = this.props;
 
-    if (this.props.edit) {
+    if (positionEdit) this.togglePositionEdit();
+
+    if (edit) {
       this.setState({
-        name: '',
-        description: '',
-      }, this.props.onEdit);
+        name: location.name,
+        description: location.description,
+      }, onEdit);
       return;
     }
 
@@ -215,7 +217,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     state.trigger('updateLocation', location);
   }
   updateLocation = () => {
-    let {location, profile} = this.props;
+    let {location, profile, detailsOnly} = this.props;
 
     if (state.offline || !location || !location.dataId || this.willUnmount) return;
 
@@ -402,12 +404,6 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         <div className="textCentered">
           <img className="LocationBox__imageStyle" src={image} onClick={() => state.set({selectedImage: image})} />
         </div> : null}
-        {this.props.detailsOnly ? <Item label="Name" value={p.name || 'Unknown'} /> : null}
-        {location.description || this.props.description ?
-        <Item
-        label="Description"
-        value={this.props.description ? this.props.description : location.description}
-        border={!location.tags.length} /> : null}
 
         {map(location.tags, (tag) => {
           return (
@@ -420,6 +416,16 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           )
         })}
 
+        {this.props.detailsOnly ?
+        <Item
+        label="Name"
+        value={location.name || 'Unknown'} /> : null}
+
+        {location.description || this.props.description ?
+        <Item
+        label="Description"
+        value={this.props.description ? this.props.description : location.description} /> : null}
+
         <Item label="Galactic Address" value={location.translatedId} />
         <Item label="Universe Address" value={location.dataId} />
         <Item label="Portal Address">
@@ -430,7 +436,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         {location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[location.galaxy]} /> : null}
         {location.distanceToCenter ? <Item label="Distance to Center" value={`${location.distanceToCenter.toFixed(0)} LY / ${location.jumps} Jumps`} /> : null}
         {location.mode ? <Item label="Mode" value={upperFirst(location.mode)} /> : null}
-        {(p.name.length > 0 || location.baseData) && !p.detailsOnly ? <Item label="Explored by" value={location.username} /> : null}
+        {(location.name || location.baseData) && !p.detailsOnly ? <Item label="Explored by" value={location.username} /> : null}
         {location.teleports ? <Item label="Teleports" value={location.teleports} /> : null}
         {location.score ? <Item label="Favorites" value={location.score} /> : null}
         {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
@@ -460,7 +466,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     let compact = p.width && p.width <= 1212;
     let isSpaceStation = location.dataId[location.dataId.length - 1] === '0';
     let leftOptions = [];
-    let name = p.edit && this.state.name.length > 0 ? this.state.name : location.username ? (p.name.length > 0 ? p.name : `${location.username} explored`) : 'Selected';
+    let name = p.edit && this.state.name.length > 0 ? this.state.name : location.username ? (location.name.length > 0 ? location.name : `${location.username} explored`) : 'Selected';
 
     if (this.state.positionSelect) {
       leftOptions.push({
