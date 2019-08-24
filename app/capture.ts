@@ -11,6 +11,7 @@ const steamScreenshotPathRegex = /\\remote\\275850\\screenshots\\(\d+_\d+)\.jpg/
 const primaryDisplay = remote.screen.getPrimaryDisplay();
 const types = ['window'];
 let key = 'bounds';
+let screenshotTimeStampsUsed = [];
 
 const steamCapture = (callback) => {
   // Trigger F12 key press, then find the newest screenshot in NMS' screenshot directory.
@@ -23,7 +24,7 @@ const steamCapture = (callback) => {
         return;
       }
 
-      let captures = [];
+      let captures = [], time;
 
       each(paths, (path) => {
         const match = path.match(steamScreenshotPathRegex);
@@ -37,6 +38,13 @@ const steamCapture = (callback) => {
       });
 
       captures = orderBy(captures, ['time'], ['desc']);
+      time = captures[0].time;
+
+      // When holding down the shift key (sprinting in NMS), it prevents the screenshot capturer
+      // from working, and the last uploaded image is re-uploaded as a result.
+      if (screenshotTimeStampsUsed.indexOf(time) > -1) return callback('');
+
+      screenshotTimeStampsUsed.push(time);
 
       fsWorker.readFile(captures[0].path, (err, data) => {
         if (err) {
