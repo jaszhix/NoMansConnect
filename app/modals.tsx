@@ -11,7 +11,7 @@ import {each, findIndex, find, map, filter} from '@jaszhix/utils';
 import state from './state';
 import log from './log';
 import {syncDiscoveries} from './poll';
-import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip, numberWithCommas} from './utils';
+import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip, numberWithCommas, whichToShow} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
 
 import {BasicDropdown} from './dropdowns';
@@ -1484,13 +1484,18 @@ interface StatsModalState {
   height: number;
   stats: any;
   selected: number;
+  leaderboardType: number;
   loading: boolean;
 }
 
 class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
   willUnmount: boolean;
   ref: any;
+  rightColumnRef: any;
   periodOptions: any[];
+  leaderboardTypeOptions: any[];
+  range: VisibleRange;
+  scrollTimeout: NodeJS.Timeout;
 
   constructor(props) {
     super(props);
@@ -1498,66 +1503,105 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
       height: 0,
       stats: null,
       selected: 1,
+      leaderboardType: 0,
       loading: true,
     };
+
+    this.range = {start: 0, length: 0};
+
     this.periodOptions = [
       {
         id: 'day',
         label: 'Time Period: Past Day',
-        onClick: () => {
-          this.setState({selected: 0});
-          this.fetchStats('day');
-        }
+        onClick: () => this.setState({selected: 0})
       },
       {
         id: 'week',
         label: 'Time Period: Past Week',
-        onClick: () => {
-          this.setState({selected: 1});
-          this.fetchStats('week');
-        }
+        onClick: () => this.setState({selected: 1})
       },
       {
         id: 'month',
         label: 'Time Period: Past Month',
-        onClick: () => {
-          this.setState({selected: 2});
-          this.fetchStats('month');
-        }
+        onClick: () => this.setState({selected: 2})
       },
       {
         id: 'year',
         label: 'Time Period: Past Year',
-        onClick: () => {
-          this.setState({selected: 3});
-          this.fetchStats('year');
-        }
+        onClick: () => this.setState({selected: 3})
       },
       {
         id: 'all',
         label: 'Time Period: All',
-        onClick: () => {
-          this.setState({selected: 4});
-          this.fetchStats('all');
-        }
+        onClick: () => this.setState({selected: 4})
+      }
+    ];
+
+    this.leaderboardTypeOptions = [
+      {
+        id: 'locations',
+        label: 'Most Locations',
+        onClick: () => this.setState({leaderboardType: 0})
+      },
+      {
+        id: 'locations',
+        label: 'Most Discoveries',
+        onClick: () => this.setState({leaderboardType: 1})
       }
     ];
   }
   componentDidMount() {
     this.fetchStats();
   }
+  componentDidUpdate(pP, pS) {
+    const {selected} = this.state;
+
+    if (pS.selected !== this.state.selected) {
+      this.fetchStats(selected);
+    }
+  }
   componentWillUnmount = () => {
     this.willUnmount = true;
+
+    if (this.ref) this.ref.removeEventListener('resize', this.handleResize);
+    if (this.rightColumnRef) this.rightColumnRef.removeEventListener('scroll', this.handleScroll);
+
     cleanUp(this);
   }
-  fetchStats = (period = 'week') => {
+  fetchStats = (period = 0) => {
     this.setState({loading: true});
     ajaxWorker.get('/nmsstats/', {
-      params: {period}
+      params: {
+        apiVersion: state.apiVersion,
+        period,
+      }
     }).then((res) => {
       if (this.willUnmount) return;
-      this.setState({stats: res.data, loading: false});
+      this.setState({stats: res.data, loading: false}, () => {
+        if (this.rightColumnRef) this.setViewableRange(this.rightColumnRef);
+      });
     });
+  }
+  setViewableRange = (node) => {
+    if (!node) {
+      return;
+    }
+    this.range = whichToShow({
+      outerHeight: node.clientHeight,
+      scrollTop: node.scrollTop,
+      itemHeight: 23,
+      columns: 1
+    });
+    this.forceUpdate();
+  }
+  handleScroll = (timeout = 25) => {
+    if (this.scrollTimeout) {
+      clearTimeout(this.scrollTimeout);
+    }
+    this.scrollTimeout = setTimeout(this.scrollListener, timeout);
+  }
+  scrollListener = () => {
+    this.setViewableRange(this.rightColumnRef);
   }
   handleClickOutside = () => {
     this.props.onClose();
@@ -1570,14 +1614,19 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
       ref.addEventListener('resize', this.handleResize);
     }
   }
+  getRightColumnRef = (ref) => {
+    if (ref && !this.rightColumnRef) {
+      ref.addEventListener('scroll', this.handleScroll);
+      this.setViewableRange(ref);
+    }
+
+    this.rightColumnRef = ref;
+  }
   handleResize = () => {
     this.setState({height: this.ref.clientHeight});
   }
-  handleProfileClick = () => {
-
-  }
   render() {
-    const {selected, height, stats, loading} = this.state;
+    const {selected, leaderboardType, height, stats, loading} = this.state;
 
     return (
       <div ref={this.getRef} className="ui large modal active modal__large">
@@ -1594,7 +1643,7 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
             <div
             className="StatsModal__header"
             data-place="bottom"
-            data-tip="Stats update once every three hours.">
+            data-tip="Stats update every hour.">
               <h3>{loading ? 'Loading...' : 'Global Stats'}</h3>
             </div>
             <div className="StatsModal__dropdown">
@@ -1604,11 +1653,18 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
               selectedGalaxy={selected}
               options={this.periodOptions} />
             </div>
+            <div className="StatsModal__dropdownRight">
+              <BasicDropdown
+              height={height}
+              isGalaxies={false}
+              selectedGalaxy={leaderboardType}
+              options={this.leaderboardTypeOptions} />
+            </div>
             <div
             className="ui feed eight wide column left floated segment ProfileModal__container ProfileModal__lgColumn StatsModal__leftColumn"
             style={{maxHeight: `${height - 40}px`}}>
               {stats.discoveries.count ?
-              <div className="ui segment">
+              <div className="ui segment StatsModal__segment">
                 <Item
                 label="Discoveries"
                 value={numberWithCommas(stats.discoveries.count)} />
@@ -1627,7 +1683,7 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
                   })}
                 </div>
               </div> : null}
-              <div className="ui segment">
+              <div className="ui segment StatsModal__segment">
                 <Item
                 label="Registered Locations"
                 value={numberWithCommas(stats.locations.count)} />
@@ -1636,14 +1692,14 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
                   className="Item__marginBottom"
                   label="Bases"
                   value={numberWithCommas(stats.locations.bases)} />
-                  {map(stats.locations.galaxies, (galaxy) => {
+                  {map(stats.locations.galaxies, (galaxy, i) => {
                     const {name, count} = galaxy;
 
                     if (!count) return null;
 
                     return (
                       <Item
-                      key={name}
+                      key={i}
                       label={name}
                       value={numberWithCommas(count)} />
                     );
@@ -1652,17 +1708,29 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
               </div>
             </div>
             <div
+            ref={this.getRightColumnRef}
             className="ui eight wide column right floated ProfileModal__container ProfileModal__mdColumn StatsModal__rightColumn"
-            style={{maxHeight: `${height - 1}px`}}>
-              {map(stats.leaderboard, (item, i) => {
+            style={{maxHeight: `${height - 40}px`}}>
+              {map(stats[leaderboardType ? 'discoveries' : 'locations'].leaderboard, (item, i) => {
                 const {username, count} = item;
+                const isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
+
+                if (isVisible) {
+                  return (
+                    <Item
+                    key={i}
+                    label={username}
+                    value={numberWithCommas(count)}
+                    onValueClick={() => state.set({displayProfile: username})} />
+                  );
+                }
+
                 return (
-                  <Item
-                  key={username}
-                  label={username}
-                  value={numberWithCommas(count)}
-                  onValueClick={() => state.set({displayProfile: username})} />
-                )
+                  <div
+                  key={i}
+                  className="StatsModal__spacer" />
+                );
+
               })}
             </div>
           </div> : <div>Loading fresh stats, this may take a few moments...</div>}

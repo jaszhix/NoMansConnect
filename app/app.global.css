@@ -39112,12 +39112,31 @@ Friend requests
   left: 146px;
   top: 16px;
 }
+
+.StatsModal__dropdownRight {
+  position: absolute;
+  right: 381px;
+  top: 16px;
+  min-width: 186px;
+}
+
 .StatsModal__leftColumn {
   position: relative;
   top: 24px;
 }
 .StatsModal__rightColumn {
+  position: relative;
+  top: 38px;
   padding-right: 28px !important;
+}
+.StatsModal__spacer {
+  height: 23px;
+  padding: 3px 8px;
+  border: 8px solid rgba(23, 26, 22, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+.StatsModal__segment {
+  padding: 0px !important;
 }
 
 .UsernameOverrideModal__container {
