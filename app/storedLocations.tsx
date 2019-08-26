@@ -120,8 +120,9 @@ interface StoredLocationsState {}
 class StoredLocations extends React.Component<StoredLocationsProps, StoredLocationsState> {
   uiSegmentStyle: CSSProperties;
   range: VisibleRange;
+  lastRange: VisibleRange;
   connectId: number;
-  storedLocations: HTMLElement;
+  storedLocationsRef: HTMLElement;
   selecting: boolean;
   needsUpdate: boolean;
   scrollTimeout: NodeJS.Timeout;
@@ -141,47 +142,41 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       zIndex: 90
     };
     this.range = {start: 0, length: 0};
+    this.lastRange = {...this.range};
     this.needsUpdate = false;
   }
   componentDidMount() {
     this.connectId = state.connect({
       selectedLocation: ({selectedLocation}) => {
-        if (!this.storedLocations || !selectedLocation) {
-          if (this.storedLocations) this.handleScroll();
+        if (!this.storedLocationsRef || !selectedLocation) {
+          if (this.storedLocationsRef) this.handleScroll(null);
           return;
         }
         let refIndex = findIndex(this.props.storedLocations, (location) => {
           return location.dataId === selectedLocation.dataId;
         });
         if (!this.selecting && refIndex > -1) {
-          this.storedLocations.scrollTop = refIndex * 29;
+          this.storedLocationsRef.scrollTop = refIndex * 29;
         }
         this.selecting = false;
         if (state.multiSelectedLocation || !selectedLocation) {
-          this.handleScroll();
+          this.handleScroll(null);
         } else {
-          this.setViewableRange(this.storedLocations);
+          this.setViewableRange(this.storedLocationsRef);
         }
       },
-      markStoredLocationsDirty: () => this.needsUpdate = true,
+      markStoredLocationsDirty: () => {
+        this.needsUpdate = true
+        setTimeout(() => this.setViewableRange(this.storedLocationsRef), 0);
+      },
       favorites: () => this.needsUpdate = true,
     });
-    let checkStored = () => {
-      if (this.storedLocations) {
-        // @ts-ignore
-        this.storedLocations.addEventListener('scroll', this.handleScroll);
-        this.setViewableRange(this.storedLocations);
-      } else {
-        delay(() => checkStored(), 500);
-      }
-    };
-    checkStored();
   }
   componentDidUpdate(prevProps: StoredLocationsProps) {
     if (prevProps.selectedLocationId !== this.props.selectedLocationId
       && state.selectedLocation
       && !state.selectedLocation.image) {
-      this.handleScroll();
+      this.handleScroll(null);
     }
   }
   shouldComponentUpdate(nextProps: StoredLocationsProps) {
@@ -189,7 +184,9 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       || nextProps.selectedLocationId !== this.props.selectedLocationId
       || nextProps.height !== this.props.height
       || nextProps.filterOthers !== this.props.filterOthers
-      || nextProps.useGAFormat !== this.props.useGAFormat);
+      || nextProps.useGAFormat !== this.props.useGAFormat
+      || this.range.start !== this.lastRange.start
+      || this.range.length !== this.lastRange.length);
 
     if (this.needsUpdate) {
       this.needsUpdate = false;
@@ -199,41 +196,47 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
     return shouldUpdate;
   }
   componentWillUnmount() {
-    if (this.storedLocations) {
-      // @ts-ignore
-      this.storedLocations.removeEventListener('scroll', this.handleScroll);
+    if (this.storedLocationsRef) {
+      this.storedLocationsRef.removeEventListener('scroll', this.handleScroll);
+      this.storedLocationsRef.removeEventListener('resize', this.handleScroll);
     }
-    state.disconnect(this.connectId);
 
+    state.disconnect(this.connectId);
     cleanUp(this);
   }
   setViewableRange = (node) => {
-    if (!node) {
-      return;
-    }
+    if (!node) return;
+
     this.range = whichToShow({
       outerHeight: node.clientHeight,
       scrollTop: node.scrollTop,
       itemHeight: 29,
       columns: 1
     });
-    this.forceUpdate();
+
+    setTimeout(() => this.forceUpdate(), 25);
   }
-  handleScroll = (timeout = 25) => {
+  handleScroll: EventListener = (e, timeout = 25) => {
     if (this.scrollTimeout) {
       clearTimeout(this.scrollTimeout);
     }
     this.scrollTimeout = setTimeout(this.scrollListener, timeout);
   }
   scrollListener = () => {
-    this.setViewableRange(this.storedLocations);
+    this.setViewableRange(this.storedLocationsRef);
   }
   handleSelect = (location) => {
     this.selecting = true;
     this.props.onSelect(location);
   }
   getRef = (ref) => {
-    this.storedLocations = ref;
+    if (ref && !this.storedLocationsRef) {
+      ref.addEventListener('scroll', this.handleScroll);
+      ref.addEventListener('resize', this.handleScroll);
+      this.setViewableRange(ref);
+    }
+
+    this.storedLocationsRef = ref;
   }
   render() {
     const {
@@ -252,6 +255,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       filterStoredByScreenshot,
       useGAFormat
     } = this.props;
+    this.lastRange = {...this.range};
     const needsExpand = (state.selectedLocation && state.selectedLocation.image) || selectedLocationEdit || selectedLocationPositionEdit;
 
     let leftOptions = [
