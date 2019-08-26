@@ -1,3 +1,9 @@
+# 1.8.4
+
+  * Fixed the default stats view showing "Past Week" in the dropdown, but showing data from the past day.
+  * Fixed a rendering issue with visible items in the stored list when the selected location box size changes.
+  * Fixed incomplete base restoration occurring due to filtering base objects against an old product list. Note: the base restoration feature is only meant to be used to backup and restore bases in their original locations.
+
 # 1.8.3
 
   * Added per-user discovery stats.
