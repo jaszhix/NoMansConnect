@@ -1653,7 +1653,7 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
 
     cleanUp(this);
   }
-  fetchStats = (period = 0) => {
+  fetchStats = (period = 1) => {
     this.setState({loading: true});
     ajaxWorker.get('/nmsstats/', {
       params: {
