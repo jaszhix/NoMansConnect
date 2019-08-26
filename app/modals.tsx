@@ -13,6 +13,7 @@ import log from './log';
 import {syncDiscoveries} from './poll';
 import {validateEmail, fromHex, cleanUp, uaToObject, formatTranslatedID, fsWorker, ajaxWorker, tip, numberWithCommas, whichToShow} from './utils';
 import {handleUsernameOverride, handleSetWallpaper, handleSelectInstallDirectory, handleSelectSaveDirectory, handleRestart} from './dialog';
+import {modes} from './constants';
 
 import {BasicDropdown} from './dropdowns';
 import Button from './buttons';
@@ -519,7 +520,6 @@ class EventItem extends React.Component<EvenItemProps> {
           onMarkCompatible={null}
           onRemoveStoredLocation={null}
           onSubmit={null}
-          onSaveBase={null}
           ps4User={false}
           detailsOnly={true} /> : null}
         </div>
@@ -564,7 +564,6 @@ class ProfileModalPagination extends React.Component<ProfileModalPaginationProps
 }
 
 interface ProfileModalProps {
-  width: number;
   height: number;
   profileId: string;
   username: string;
@@ -1062,8 +1061,10 @@ export class BaseRestorationModal extends React.Component<BaseRestorationModalPr
           selectedGalaxy={this.state.selectedBase[1]} />
         </div>
         <div style={{position: 'absolute', bottom: '10px', left: '145px'}}>
-          <Button onClick={this.handleConfirm}>
-            Confirm
+          <Button
+          disabled={state.navLoad}
+          onClick={this.handleConfirm}>
+            {state.navLoad ? 'Working...' : 'Confirm'}
           </Button>
         </div>
       </div>
@@ -1362,8 +1363,7 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
     state.set({backupSaveFile: !this.props.s.backupSaveFile});
   }
   render() {
-    var p = this.props;
-    let modes = ['permadeath', 'survival', 'normal', 'creative'];
+    const p = this.props;
     let autoCaptureTip;
 
     if (!p.s.ps4User && !p.s.offline) {

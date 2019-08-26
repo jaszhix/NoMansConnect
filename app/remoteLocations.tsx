@@ -11,7 +11,6 @@ interface RemoteLocationsProps {
   s: GlobalState;
   onPagination: Function;
   onFav: Function;
-  onSaveBase: Function;
   ps4User: boolean;
   isOwnLocation: boolean;
   updating: boolean;
@@ -302,7 +301,6 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
           image={location.image}
           version={p.s.saveVersion ? location.version === p.s.saveVersion : null}
           onFav={this.handleFavorite}
-          onSaveBase={p.onSaveBase}
           onCompactRemoteSwitch={this.setViewableRange}
           ps4User={p.ps4User}
           compactRemote={p.s.compactRemote}

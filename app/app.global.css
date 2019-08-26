@@ -38640,12 +38640,35 @@ body {
 .cursorPointer {
   cursor: pointer;
 }
+.cursorDefault {
+  cursor: default !important;
+}
 
 /*
 
 Components
 
 */
+
+.App__topAttachedMenu {
+  position: absolute;
+  max-height: 42px;
+  z-index: 99;
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+}
+.App__title {
+  position: absolute;
+  left: 16px;
+  top: 5px;
+  margin: initial;
+  -webkit-transition: left 0.1s;
+  text-transform: uppercase;
+}
+.App__titleBarControls {
+  -webkit-app-region: no-drag;
+  padding-right: 0px;
+}
 
 .StoredLocations__spacer {
   height: 29px;
@@ -38693,6 +38716,10 @@ Button
   padding: 3px 3px !important;
   text-align: center;
   cursor: pointer;
+}
+.Button__disabled {
+  opacity: 0.8;
+  cursor: default !important;
 }
 
 .Button__div:hover {
@@ -39181,6 +39208,36 @@ Friend requests
 }
 .SearchField__selected {
   background: rgba(255, 255, 255, 0.05);
+}
+
+/*
+Dropdowns
+*/
+
+.dropdown__menuContainer {
+  min-width: 183px;
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+  border-top: 1px solid rgb(149, 34, 14)
+}
+.dropdown__menuContainer .dropdown__baseMenuContainer {
+  width: 260px;
+}
+.dropdown__baseItem {
+  height: 36px !important;
+}
+.dropdown__trashIconContainer {
+  position: relative;
+  top: -14px;
+  left: 92%;
+  width: 179px;
+  cursor: pointer;
+}
+
+.NotificationDropdown__trashIconContainer {
+  position: relative;
+  top: 14px;
+  cursor: pointer;
 }
 
 /*

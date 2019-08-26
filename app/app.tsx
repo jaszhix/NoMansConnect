@@ -12,7 +12,7 @@ import log from './log';
 import state from './state';
 import Loader from './loader';
 import * as utils from './utils';
-const {dirSep, getLastGameModeSave, exc, formatBase, css, tip, fsWorker, ajaxWorker} = utils;
+const {dirSep, getLastGameModeSave, exc, formatBase, tip, fsWorker, ajaxWorker} = utils;
 import {pollSaveData} from './poll';
 import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
 import {parseSaveKeys} from './lang';
@@ -43,11 +43,9 @@ let win: Electron.BrowserWindow;
 
 let formatCount = 1;
 
+const headerItemClasses = 'ui dropdown icon item App__titleBarControls';
+
 class App extends React.Component<GlobalState> {
-  topAttachedMenuStyle: CSSProperties;
-  titleStyle: CSSProperties;
-  titleBarControlsStyle: CSSProperties;
-  noDragStyle: CSSProperties;
   connections: any[];
   monitor: watch.Monitor | void;
   state: GlobalState;
@@ -55,7 +53,6 @@ class App extends React.Component<GlobalState> {
   lastMove: number;
   saveJSON: string;
   saveTool: string;
-  headerItemClasses: string;
   searchIconStyle: string;
   timeout: NodeJS.Timeout;
 
@@ -64,29 +61,6 @@ class App extends React.Component<GlobalState> {
 
     this.state = state.get();
 
-    this.topAttachedMenuStyle = {
-      position: 'absolute',
-      maxHeight: '42px',
-      zIndex: 99,
-      WebkitUserSelect: 'none',
-      WebkitAppRegion: 'drag',
-    };
-    this.titleStyle = {
-      position: 'absolute',
-      left: '16px',
-      top: '5px',
-      margin: 'initial',
-      WebkitTransition: 'left 0.1s',
-      textTransform: 'uppercase'
-    };
-    this.titleBarControlsStyle = {
-      WebkitAppRegion: 'no-drag',
-      paddingRight: '0px'
-    };
-    this.noDragStyle = {
-      WebkitAppRegion: 'no-drag'
-    };
-    this.headerItemClasses = 'ui dropdown icon item';
     this.connections = [];
     this.monitor = undefined;
   }
@@ -137,6 +111,7 @@ class App extends React.Component<GlobalState> {
         sortByFavorites: () => this.handleSort(null, '-score'),
         sortByDistance: () => this.handleSort(null, 'distanceToCenter'),
         pollSaveData: () => this.pollSaveData(),
+        saveBase: (baseData) => this.handleSaveBase(baseData),
         restoreBase: (restoreBase, selected) => this.handleRestoreBase(restoreBase, selected),
         setWaypoint: (location) => this.setWaypoint(location),
         getMonitor: () => this.monitor,
@@ -628,27 +603,46 @@ class App extends React.Component<GlobalState> {
       this.handleTeleport(currentLocation, 0, dataId, n);
     }
   }
-  handleSaveBase = (baseData = null) => {
+  handleSaveBase = (baseData: NMSBase = null) => {
     const {storedBases} = this.state;
-    if (baseData) {
-      storedBases.push(cloneDeep(baseData));
-      state.set({storedBases});
-      return;
-    }
-    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
-      each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
+
+    state.set({navLoad: true});
+
+    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User).then((saveData: SaveDataMeta) => {
+      const {PersistentPlayerBases} = saveData.result.PlayerStateData;
+
+      if (baseData) {
+        let index = findIndex(storedBases, (item) => item.Name === baseData.Name);
+        let refBase = find(PersistentPlayerBases, (item) => item.Name === baseData.Name)
+
+        if (refBase) baseData = formatBase(refBase);
+
+        if (index > -1) {
+          storedBases[index] = baseData;
+        } else {
+          storedBases.push(baseData);
+        }
+
+        state.set({storedBases, navLoad: false}, true);
+        return;
+      }
+
+      each(saveData.result.PlayerStateData.PersistentPlayerBases, (base: NMSBase) => {
         if (!base.GalacticAddress || !base.Name) {
           return;
         }
-        base = formatBase(saveData, state.knownProducts, i);
-        let refBase = findIndex(storedBases, _base => _base.Name === base.Name);
+
+        base = formatBase(base);
+
+        let refBase = findIndex(storedBases, (item) => item.Name === base.Name);
         if (refBase === -1 && isArray(storedBases)) {
           storedBases.push(base);
         } else {
           storedBases[refBase] = base;
         }
-        state.set({storedBases});
       });
+
+      state.set({storedBases, navLoad: false}, true);
     }).catch(baseError);
   }
   _signSaveData = (absoluteSaveDir, slot, cb) => {
@@ -703,7 +697,7 @@ class App extends React.Component<GlobalState> {
   }
   handleRestoreBase = (base, confirmed = false) => {
     state.set({navLoad: true});
-    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User).then((saveData: SaveDataMeta) => {
       const {PersistentPlayerBases} = saveData.result.PlayerStateData
       if (confirmed === false) {
         state.set({
@@ -716,7 +710,7 @@ class App extends React.Component<GlobalState> {
         return;
       }
       if (PersistentPlayerBases.length === 0) {
-        baseError();
+        baseError(new Error('No bases found in save file.'));
         return;
       }
       if (!confirmed || typeof confirmed !== 'object') {
@@ -736,6 +730,7 @@ class App extends React.Component<GlobalState> {
       let fwdOriginal = storedBase.Forward;
       // 3-vector
       let upOriginal;
+      console.log('storedBase:', storedBase)
       if (storedBase.Objects.length > 0) {
         // @ts-ignore
         upOriginal = last(storedBase.Objects).Up;
@@ -806,7 +801,7 @@ class App extends React.Component<GlobalState> {
   handleTeleport = (location, i, action = null, n = null) => {
     const _location = cloneDeep(location);
     state.set({navLoad: true});
-    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User).then((saveData: SaveDataMeta) => {
 
       if (action && typeof action === 'object' && action.playerPosition) {
         assignIn(_location, action);
@@ -877,7 +872,7 @@ class App extends React.Component<GlobalState> {
   setWaypoint = (location) => {
     log.error('Setting waypoint:', location.dataId);
     state.set({navLoad: true});
-    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User, log).then((saveData) => {
+    getLastGameModeSave(this.state.saveDirectory, this.state.ps4User).then((saveData: SaveDataMeta) => {
       let {Waypoints} = saveData.result.GameKnowledgeData;
       if (!Waypoints) Waypoints = [];
       let {PlanetIndex, SolarSystemIndex, VoxelX, VoxelY, VoxelZ} = location;
@@ -1031,13 +1026,12 @@ class App extends React.Component<GlobalState> {
     var s = this.state;
     return (
       <div>
-        <div className="ui top attached menu" style={this.topAttachedMenuStyle}>
-          <h2 style={this.titleStyle}>{s.title}</h2>
+        <div className="ui top attached menu App__topAttachedMenu">
+          <h2 className="App__title">{s.title}</h2>
           <div className="right menu">
             {!s.init && s.navLoad ? <Loader loading={null} /> : null}
             {!s.init ?
-            <Search
-            search={s.search} /> : null}
+            <Search search={s.search} /> : null}
             {!s.offline ?
             <StatsContainer height={this.state.height} /> : null}
             {this.state.profile && this.state.profile.notifications && this.state.profile.notifications.length > 0 ?
@@ -1048,18 +1042,14 @@ class App extends React.Component<GlobalState> {
             height={this.state.height} /> : null}
             {!s.ps4User ?
             <BaseDropdownMenu
-            onSaveBase={this.handleSaveBase}
-            onRestoreBase={this.handleRestoreBase}
             baseIcon={baseIcon}
-            storedBases={this.state.storedBases}
-            /> : null}
+            storedBases={this.state.storedBases} /> : null}
             {s.profile && !s.ps4User && s.displaySaveEditor ?
             <SaveEditorDropdownMenu
             profile={s.profile}
             onCheat={this.handleCheat} /> : null}
             <a
-            style={css(this.noDragStyle, {cursor: 'default'})}
-            className={`ui icon item`}
+            className="ui icon item noDrag cursorDefault"
             onClick={this.handleLocationRegistrationToggle}
             data-place="bottom"
             data-tip={tip('Manually Register Location')}>
@@ -1068,8 +1058,7 @@ class App extends React.Component<GlobalState> {
             <DropdownMenu s={s} />
           </div>
           <div
-          style={this.titleBarControlsStyle}
-          className={this.headerItemClasses}
+          className={headerItemClasses}
           onClick={this.handleSort}>
             <div className="titlebar-controls">
               <div className="titlebar-minimize" onClick={this.handleMinimize}>
@@ -1099,7 +1088,7 @@ class App extends React.Component<GlobalState> {
             </div>
           </div>
         </div>
-        {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} width={this.state.width} /> : null}
+        {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} /> : null}
         {this.state.usernameOverride ? <UsernameOverrideModal ps4User={this.state.ps4User} /> : null}
         {this.state.registerLocation ? <LocationRegistrationModal s={pick(this.state, ['machineId', 'username', 'height', 'storedLocations'])} /> : null}
         {this.state.setEmail ?
@@ -1118,8 +1107,7 @@ class App extends React.Component<GlobalState> {
         <Container
         s={s}
         onPagination={this.handlePagination}
-        onRemoveStoredLocation={this.handleRemoveStoredLocation}
-        onSaveBase={this.handleSaveBase} />}
+        onRemoveStoredLocation={this.handleRemoveStoredLocation} />}
         {this.state.displayProfile ?
         <ErrorBoundary onError={this.resetProfileModal}>
           <ProfileModal
@@ -1127,14 +1115,12 @@ class App extends React.Component<GlobalState> {
           machineId={this.state.machineId}
           profileId={this.state.displayProfile}
           profile={this.state.profile}
-          height={this.state.height}
-          favorites={this.state.favorites} />
+          height={this.state.height} />
         </ErrorBoundary> : null}
         {this.state.displayFriendRequest ?
         <ErrorBoundary onError={this.resetFriendRequestModal}>
           <FriendRequestModal
           notification={this.state.displayFriendRequest}
-          profile={this.state.profile}
           username={this.state.username}
           machineId={this.state.machineId} />
         </ErrorBoundary> : null}

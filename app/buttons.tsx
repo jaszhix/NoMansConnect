@@ -2,9 +2,10 @@ import React from 'react';
 import {cleanUp} from './utils';
 
 interface ButtonProps {
-  className: string;
-  style: CSSProperties;
-  onClick: React.MouseEventHandler;
+  className?: string;
+  disabled?: boolean;
+  style?: CSSProperties;
+  onClick?: React.MouseEventHandler;
 }
 
 interface ButtonState {
@@ -26,11 +27,12 @@ class Button extends React.Component<ButtonProps, ButtonState> {
     cleanUp(this);
   }
   render() {
+    const {className, disabled, onClick, children} = this.props;
     return (
       <div
-      className={`ui segment Button__div ${this.props.className}`}
-      onClick={this.props.onClick}>
-        {this.props.children}
+      className={`ui segment Button__div${disabled ? ' Button__disabled' : ''} ${className}`}
+      onClick={disabled ? null : onClick}>
+        {children}
       </div>
     );
   }

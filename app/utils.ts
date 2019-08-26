@@ -1,8 +1,8 @@
 import fs from 'graceful-fs';
 import {exec} from 'child_process';
 import axios from 'axios';
-import {cloneDeep, assignIn, last, trimStart} from 'lodash';
-import {each, findIndex, filter} from '@jaszhix/utils';
+import {cloneDeep, assignIn, last, trimStart, pick} from 'lodash';
+import {each, filter} from '@jaszhix/utils';
 
 import state from './state';
 import log from './log';
@@ -257,9 +257,9 @@ export const fromHex = (str: string, username: string, galaxy: number): NMSLocat
   return manualLocation;
 }
 
-export const getLastGameModeSave = (saveDirectory: string, ps4User: boolean) => {
+export const getLastGameModeSave = (saveDirectory: string, ps4User: boolean): Promise<SaveDataMeta> => {
   return new Promise((resolve, reject) => {
-    fsWorker.getLastGameModeSave(saveDirectory, ps4User, (err, data) => {
+    fsWorker.getLastGameModeSave(saveDirectory, ps4User, (err, data: SaveDataMeta) => {
       if (err) {
         reject(err);
         return;
@@ -366,26 +366,8 @@ export const modifyUnits = (saveData, n=100000) => {
   return saveData.result;
 };
 
-export const formatBase = (saveData, knownProducts, i = 0) => {
-  let base = cloneDeep(saveData.result.PlayerStateData.PersistentPlayerBases[i]);
-  // Check for modded objects and remove them
-  let moddedObjectKeys = [];
-  each(base.Objects, (object, key) => {
-    let refProduct = findIndex(knownProducts, product => product === object.ObjectID);
-    if (refProduct === -1) {
-      moddedObjectKeys.push(key);
-    }
-  });
-  each(moddedObjectKeys, (key) => {
-    base.Objects.splice(key, 1);
-  });
-  let cachedBase = {
-    Objects: base.Objects,
-    Forward: base.Forward,
-    Position: base.Position,
-    Name: base.Name
-  };
-  return cloneDeep(cachedBase);
+export const formatBase = (base): NMSBase => {
+  return pick(base, ['BaseType', 'BaseVersion', 'Forward', 'Objects', 'Position', 'Name']);
 };
 
 const flip = (string: string): string => {

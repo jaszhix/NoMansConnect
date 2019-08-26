@@ -314,7 +314,7 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
       if (refStoredLocation && (!refStoredLocation.base || !refStoredLocation.baseData)) {
         Object.assign(refStoredLocation, {
           base: true,
-          baseData: formatBase(saveData, state.knownProducts, i)
+          baseData: formatBase(saveData.result.PlayerStateData.PersistentPlayerBases[i]),
         });
 
         updateLocation({

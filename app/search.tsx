@@ -161,8 +161,6 @@ class SearchField extends React.Component<SearchFieldProps, SearchFieldState> {
 
 interface SearchProps {
   search: string;
-  onClick: React.MouseEventHandler;
-  onKeyDown: React.KeyboardEventHandler;
 }
 
 interface SearchState {}

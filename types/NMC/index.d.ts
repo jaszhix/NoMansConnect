@@ -79,13 +79,6 @@ declare global {
     onClick: () => void | null;
   }
 
-  interface APIResult {
-    results: any[];
-    count: number;
-    next: string | null;
-    prev: string | null
-  }
-
   interface LocationQueryParams {
     page?: number;
     page_size?: number;
@@ -96,6 +89,29 @@ declare global {
   interface VisibleRange {
     start: number;
     length: number;
+  }
+
+  interface NMSBaseType {
+    PersistentBaseTypes: string;
+  }
+
+  interface NMSBaseObject {
+    At: MatrixSide;
+    ObjectID: string;
+    Position: MatrixSide;
+    Timestamp: number;
+    Up: MatrixSide;
+    UserData: number;
+  }
+
+  interface NMSBase {
+    BaseType: NMSBaseType;
+    BaseVersion: number;
+    Forward: MatrixSide;
+    Objects: NMSBaseObject[];
+    Position: MatrixSide;
+    Name: string;
+    GalacticAddress?: NumberOrString;
   }
 
   interface _GlobalState extends State {
@@ -126,7 +142,7 @@ declare global {
     saveFileName?: string;
     saveVersion?: number | null;
     mode?: string;
-    storedBases?: any[];
+    storedBases?: NMSBase[];
     storedLocations?: NMSLocation[];
     remoteLocations?: any[];
     remoteLength?: 0;
@@ -251,19 +267,29 @@ declare global {
     planetData?: any;
     username: string;
     positions: NMSPosition[];
+    playerPosition: Transform; // deprecated
     galaxy: number;
     distanceToCenter: number;
+    jumps: number;
     base: boolean;
-    baseData: any;
+    baseData: NMSBase;
+    mode: 'permadeath' | 'survival' | 'normal' | 'creative';
     upvote: boolean;
+    name: string;
+    description: string;
     image: string;
     tags: string[];
     mods: string[];
+    teleports: number;
+    score: number;
     manuallyEntered: boolean;
     created?: NumberOrString;
     modified?: NumberOrString;
     apiVersion: number;
     dirty?: boolean;
+    isHidden: boolean;
+    results?: NMSLocation[]; // deprecated
+    data?: NMSLocation; // deprecated
   }
 
   interface DiscoveryRecord {
@@ -365,7 +391,7 @@ declare global {
     NPCWorkers: any[];
     NewAtlasStationAdressData: GalacticAddress[];
     OnOtherSideOfPortal: boolean;
-    PersistentPlayerBases: any[];
+    PersistentPlayerBases: NMSBase[];
     PersonalMaintenanceInteractions: any[];
     PlanetPositions: MatrixSide[];
     PlanetSeeds: [boolean, NumberOrString][];
@@ -432,5 +458,12 @@ declare global {
     path: string;
     slot: number;
     result: SaveData;
+  }
+
+  interface APIResult {
+    results: NMSLocation[];
+    count: number;
+    next: string | null;
+    prev: string | null
   }
 }

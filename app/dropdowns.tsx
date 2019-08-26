@@ -3,7 +3,6 @@ import React from 'react';
 import ReactTooltip from 'react-tooltip';
 import onClickOutside from 'react-onclickoutside';
 import openExternal from 'open-external';
-import {assignIn, clone} from 'lodash';
 import moment from 'moment';
 import {findIndex, map} from '@jaszhix/utils';
 
@@ -15,25 +14,6 @@ import {handleRestart} from './dialog';
 
 const {dialog} = remote;
 
-const menuContainerStyle: CSSProperties = {
-  minWidth: '183px',
-  borderBottomLeftRadius: '0px',
-  borderBottomRightRadius: '0px',
-  borderTop: '1px solid rgb(149, 34, 14)'
-};
-const trashIconContainerStyle: CSSProperties = {
-  position: 'relative',
-  left: '92%',
-  width: '179px',
-  top: '-14px',
-  cursor: 'pointer'
-};
-const notificationTrashIconContainerStyle: CSSProperties = {
-  position: 'relative',
-  top: '14px',
-  cursor: 'pointer'
-};
-
 interface BasicDropdownProps {
   options?: any[];
   selectedGalaxy?: number;
@@ -44,7 +24,7 @@ interface BasicDropdownProps {
   height?: number;
   width?: number;
   detailsOnly?: boolean;
-  value: any;
+  value?: any;
 }
 
 interface BasicDropdownState {
@@ -53,8 +33,6 @@ interface BasicDropdownState {
 }
 
 interface BaseDropdownMenuProps {
-  onSaveBase: Function;
-  onRestoreBase: Function;
   storedBases: any[]; // TODO: create base interface
   baseIcon: string;
 }
@@ -64,21 +42,13 @@ interface BaseDropdownMenuState extends BasicDropdownState {
 }
 
 export class BaseDropdownMenu extends React.Component<BaseDropdownMenuProps, BaseDropdownMenuState> {
-  baseItemStyle: CSSProperties;
-  menuContainerStyle: CSSProperties;
-
   constructor(props) {
     super(props);
+
     this.state = {
       hover: -1,
-      open: false
+      open: false,
     };
-    this.baseItemStyle = {
-      height: '36px'
-    };
-    this.menuContainerStyle = assignIn(clone(menuContainerStyle), {
-      width: '260px'
-    });
   }
   componentDidMount() {
     ReactTooltip.rebuild();
@@ -90,7 +60,8 @@ export class BaseDropdownMenu extends React.Component<BaseDropdownMenuProps, Bas
   }
   handleSave = (e) => {
     e.stopPropagation();
-    this.props.onSaveBase();
+
+    state.trigger('saveBase', null);
   }
   handleDelete = (e, base) => {
     e.stopPropagation();
@@ -121,15 +92,13 @@ export class BaseDropdownMenu extends React.Component<BaseDropdownMenuProps, Bas
         <img
         style={{width: '19px'}}
         src={p.baseIcon} />
-        <div
-        style={this.menuContainerStyle}
-        className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
+        <div className={`menu transition dropdown__menuContainer dropdown__baseMenuContainer ${this.state.open ? 'visible' : 'hidden'}`}>
           <div
           className="item"
           onClick={this.handleSave}
           data-place="left"
           data-tip={tip('Saves all active bases found in the save file to NMC\'s storage.')}>
-            Save Bases
+            {state.navLoad ? 'Working...' : 'Save Bases'}
           </div>
           {p.storedBases && p.storedBases.length > 0 ? <div className="divider" /> : null}
           {p.storedBases && p.storedBases.length > 0 ? map(p.storedBases, (base, i)=>{
@@ -141,18 +110,17 @@ export class BaseDropdownMenu extends React.Component<BaseDropdownMenuProps, Bas
               <div
               key={i}
               id={i}
-              style={this.baseItemStyle}
-              className="item"
+              className="item dropdown__baseItem"
               onMouseEnter={this.handleOnMouseEnter}
               onMouseLeave={this.handleOnMouseLeave}>
                 <div
-                onClick={() => this.props.onRestoreBase(base)}
+                onClick={() => state.trigger('restoreBase', base)}
                 data-place="left"
                 data-tip={tip('Import this base over a currently existing base from the save. Choose the base to import, and then you will be prompted to choose which base to write over.')}>
                   {baseName}
                 </div>
                 <div
-                style={trashIconContainerStyle}
+                className="dropdown__trashIconContainer"
                 onClick={(e) => this.handleDelete(e, base)}
                 data-place="bottom"
                 data-tip={tip('Remove Base')}>
@@ -239,9 +207,7 @@ export class SaveEditorDropdownMenu extends React.Component<SaveEditorDropdownMe
       data-place="bottom"
       data-tip={tip('Save Editor')}>
         <i className="database icon" />
-        <div
-        style={menuContainerStyle}
-        className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
+        <div className={`menu transition dropdown__menuContainer ${this.state.open ? 'visible' : 'hidden'}`}>
           <div
           id="repairInventory|50"
           style={{opacity: p.profile.exp >= 50 ? 1 : 0.5}}
@@ -367,9 +333,7 @@ You should have received a copy of the GNU General Public License along with thi
       data-tip={tip('Options')}>
         <i className="wrench icon" />
         {p.s.username.length > 0 ? <span style={{paddingLeft: '12px'}}>{p.s.username}</span> : null}
-        <div
-        style={menuContainerStyle}
-        className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
+        <div className={`menu transition dropdown__menuContainer ${this.state.open ? 'visible' : 'hidden'}`}>
           {this.props.s.profile ?
           <React.Fragment>
             <div
@@ -653,7 +617,7 @@ export class NotificationDropdown extends React.Component<NotificationDropdownPr
                   </div>
                   <div className="ui two wide column right floated">
                     <div
-                    style={notificationTrashIconContainerStyle}
+                    className="NotificationDropdown__trashIconContainer"
                     onClick={() => this.handleDelete(option)}
                     data-place="bottom"
                     data-tip={tip('Remove Notification')}>

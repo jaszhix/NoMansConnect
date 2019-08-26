@@ -16,7 +16,6 @@ import RemoteLocations from './remoteLocations';
 interface ContainerProps {
   s: GlobalState;
   onRemoveStoredLocation: () => void;
-  onSaveBase: (baseData: any) => void;
   onPagination: Function;
 }
 
@@ -355,10 +354,11 @@ class Container extends React.Component<ContainerProps, ContainerState> {
         selectedLocation: this.props.s.selectedLocation
       }, () => {
         if (this.willUnmount) return;
+
         this.setState({
           updating: false,
           edit: false
-        });
+        }, () => setTimeout(() => state.trigger('markStoredLocationsDirty'), 25));
       });
     });
   }
@@ -471,6 +471,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
     this.screenshotRef = ref;
   }
   resetLocationBox = () => state.set({selectedLocation: null})
+  resetGalacticMap = () => state.set({showMap: false})
   render() {
     let p = this.props;
     let {
@@ -719,7 +720,6 @@ class Container extends React.Component<ContainerProps, ContainerState> {
                 onMarkCompatible={this.handleCompatibility}
                 onRemoveStoredLocation={p.onRemoveStoredLocation}
                 onSubmit={this.handleLocationMetadataUpdate}
-                onSaveBase={p.onSaveBase}
                 ps4User={ps4User} />
               </ErrorBoundary> : null}
             </div>
@@ -734,7 +734,6 @@ class Container extends React.Component<ContainerProps, ContainerState> {
           updating={this.state.updating}
           onPagination={p.onPagination}
           onFav={this.handleFavorite}
-          onSaveBase={p.onSaveBase}
           ps4User={ps4User} />
         </ErrorBoundary> : null}
       </div>

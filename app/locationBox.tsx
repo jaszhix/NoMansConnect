@@ -58,7 +58,6 @@ interface LocationBoxProps {
   onEdit: () => void;
   onPositionEdit: (value?) => void;
   onUpdate?: (dataId: string, data: any /* location */, remove?: boolean) => void;
-  onSaveBase: (baseData: any) => void;
   onMarkCompatible: () => void;
   onDeleteScreen: () => void;
   onUploadScreen: () => void;
@@ -513,7 +512,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         leftOptions.push({
           id: 'storeBase',
           label: 'Store Base',
-          onClick: () => p.onSaveBase(location.baseData)
+          onClick: () => state.trigger('saveBase', location.baseData)
         });
 
         if (isOwnLocation) {
@@ -582,7 +581,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       });
     }
 
-    let visibleStyle: CSSProperties = {
+    let visibleStyle: React.CSSProperties = {
       background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
       display: p.detailsOnly ? 'WebkitBox' : 'inline-table',
       opacity: 1,
@@ -595,8 +594,8 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       maxWidth: p.detailsOnly ? 'unset' : '386px',
       minHeight: p.detailsOnly ? 'unset' : p.compactRemote ? '68px' : '245px',
       maxHeight: p.detailsOnly ? 'unset' : needsExpand ? '500px' : '289px',
-      zIndex: p.selectType ? '92' : 'inherit',
-      position: p.selectType ? 'fixed' : '', // TBD
+      zIndex: p.selectType ? 92 : 'inherit',
+      position: p.selectType ? 'fixed' : 'inherit',
       left: p.selectType ? '28px' : 'inherit',
       top: p.selectType ? `${p.height - (needsExpand ? 432 : 271)}px` : 'inherit',
       WebkitUserSelect: 'none'

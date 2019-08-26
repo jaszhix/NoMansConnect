@@ -12,7 +12,9 @@ import defaultWallpaper from './assets/images/default_wallpaper.png';
 
 const {dialog} = remote;
 
-export const baseError = () => {
+export const baseError = (err: Error) => {
+  log.error(err);
+
   dialog.showMessageBox({
     type: 'info',
     buttons: [],

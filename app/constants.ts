@@ -234,8 +234,10 @@ const saveKeyMapping = {
   C: 'bLr'
 };
 
+const modes = ['permadeath', 'survival', 'normal', 'creative'];
+
 const syncedKeys = ['image', 'name', 'description', 'teleports', 'profile'];
 
 const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
 
-export {sortStoredByKeyMap, defaultPosition, saveKeyMapping, syncedKeys, letters};
+export {sortStoredByKeyMap, defaultPosition, saveKeyMapping, modes, syncedKeys, letters};
