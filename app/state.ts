@@ -1,8 +1,7 @@
 import {remote} from 'electron';
 import os from 'os';
 import path from 'path';
-import Raven from 'raven-js';
-import {assignIn, pick, uniqBy, cloneDeep} from 'lodash';
+import {pick, uniqBy, cloneDeep} from 'lodash';
 import {each, filter} from '@jaszhix/utils';
 import initStore from '@jaszhix/state';
 
