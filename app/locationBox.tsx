@@ -257,7 +257,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           responseType: 'arraybuffer',
         })
         .then(res => {
-          fsWorker.writeFile(file, Buffer.from(res.data, 'binary'), {flag: 'w'}, (err, data) => {
+          fsWorker.writeFile(file, Buffer.from(res.data, 'binary'), {flag: 'w'}, (err/* , data */) => {
             if (!err && !this.willUnmount && this.scrollBox) {
               tryFn(() => this.setState({image: `${file}`, ...stateUpdate}));
             } else {
@@ -386,18 +386,25 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     this.scrollBox = ref;
   }
   renderDetails = () => {
-    let p = this.props;
+    const {
+      version,
+      detailsOnly,
+      compactRemote,
+      selectType,
+      edit,
+      positionEdit,
+    } = this.props;
     let {location, portalHex, image} = this.state;
 
     let className = 'LocationBox__scrollBoxStyle';
 
-    if (p.detailsOnly) className += ' LocationBox__scrollBoxProfileStyle';
-    if (p.compactRemote) className += ' LocationBox__compactRemoteScrollBox';
+    if (detailsOnly) className += ' LocationBox__scrollBoxProfileStyle';
+    if (compactRemote) className += ' LocationBox__compactRemoteScrollBox';
 
     return (
       <div
       ref={this.getRef}
-      style={p.selectType && (image || p.edit || p.positionEdit) ? {maxHeight: '338px'} : null}
+      style={selectType && (image || edit || positionEdit) ? {maxHeight: '338px'} : null}
       className={className}>
         {image ?
         <div className="textCentered">
@@ -435,12 +442,12 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         {location.galaxy !== undefined ? <Item label="Galaxy" value={state.galaxies[location.galaxy]} /> : null}
         {location.distanceToCenter ? <Item label="Distance to Center" value={`${location.distanceToCenter.toFixed(0)} LY / ${location.jumps} Jumps`} /> : null}
         {location.mode ? <Item label="Mode" value={upperFirst(location.mode)} /> : null}
-        {(location.name || location.baseData) && !p.detailsOnly ? <Item label="Explored by" value={location.username} /> : null}
+        {(location.name || location.baseData) && !detailsOnly ? <Item label="Explored by" value={location.username} /> : null}
         {location.teleports ? <Item label="Teleports" value={location.teleports} /> : null}
         {location.score ? <Item label="Favorites" value={location.score} /> : null}
-        {p.version != null ? <Item label="Version Compatibility" icon={p.version ? 'checkmark' : 'remove'} /> : null}
+        {version != null ? <Item label="Version Compatibility" icon={version ? 'checkmark' : 'remove'} /> : null}
         <Item label="Created" value={moment(location.created).format('MMMM D, Y')} />
-        {location.mods && location.mods.length > 0 && !p.compactRemote ? (
+        {location.mods && location.mods.length > 0 && !compactRemote ? (
           <Item label={`Mods Used (${location.mods.length})`} dataPlace="top" dataTip={tip(this.getModMarkup(location.mods))} />
         ) : null}
       </div>
@@ -452,33 +459,57 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     state.set({displayProfile: this.state.profile.id});
   }
   render() {
-    let p = this.props;
-    let {location, portalHex, image, tags} = this.state;
+    let {
+      i,
+      version,
+      width,
+      height,
+      detailsOnly,
+      compactRemote,
+      navLoad,
+      updating,
+      selectType,
+      edit,
+      positionEdit,
+      isOwnLocation,
+      currentLocation,
+      isSelectedLocationRemovable,
+      username,
+      ps4User,
+      favorites,
+      onMarkCompatible,
+      onRemoveStoredLocation,
+      onFav,
+      onSubmit,
+    } = this.props;
+    const {location, portalHex, image, tags} = this.state;
 
-    const needsExpand = p.selectType && (image || p.edit || p.positionEdit);
+    const needsExpand = selectType && (image || edit || positionEdit);
 
     if (location.results || location.data) return null;
 
-    let upvote = p.favorites.indexOf(location.dataId) > -1;
-    let isOwnLocation = p.isOwnLocation && p.selectType && location.username === p.username;
+    let upvote = favorites.indexOf(location.dataId) > -1;
+    isOwnLocation = isOwnLocation && selectType && location.username === username;
     let deleteArg = location.image && location.image.length > 0;
-    let compact = p.width && p.width <= 1212;
+    let compact = width && width <= 1212;
     let isSpaceStation = location.dataId[location.dataId.length - 1] === '0';
     let leftOptions = [];
-    let name = p.edit && this.state.name.length > 0 ? this.state.name : location.username ? (location.name.length > 0 ? location.name : `${location.username} explored`) : 'Selected';
+    let name = edit && this.state.name.length > 0 ? this.state.name
+      : location.username ? (location.name && location.name.length > 0 ? location.name : `${location.username} explored`)
+      : 'Selected';
 
     if (this.state.positionSelect) {
       leftOptions.push({
         id: 'back',
-        label: p.navLoad ? 'Working...' : 'Go back',
-        disabled: p.navLoad,
+        label: navLoad ? 'Working...' : 'Go back',
+        disabled: navLoad,
         onClick: () => this.setState({positionSelect: false})
       });
       if (location.positions) {
         each(location.positions, (position, i) => {
           leftOptions.push({
             id: `position-${i}`,
-            disabled: p.navLoad,
+            disabled: navLoad,
             label: position.name || `Location ${i + 1}`,
             onClick: () => this.handleTeleport(position)
           })
@@ -491,20 +522,20 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         })
       }
     } else {
-      if (location.dataId !== p.currentLocation && !p.ps4User) {
+      if (location.dataId !== currentLocation && !ps4User) {
         let saveFileInfoTip = `<strong>Current save file: ${tryFn(() => last(state.saveFileName.split(dirSep)))}</strong><br /> Ensure the game is paused first, and afterwards, select "Reload current" from the game's options menu.`;
         leftOptions.push({
           id: 'teleport',
           tooltip: saveFileInfoTip,
-          label: p.navLoad ? 'Working...' : 'Teleport To...',
-          disabled: p.navLoad,
+          label: navLoad ? 'Working...' : 'Teleport To...',
+          disabled: navLoad,
           onClick: () => this.setState({positionSelect: true})
         });
         leftOptions.push({
           id: 'waypoint',
           tooltip: saveFileInfoTip,
           label: 'Set Waypoint',
-          disabled: p.navLoad,
+          disabled: navLoad,
           onClick: () => state.trigger('setWaypoint', location)
         });
       }
@@ -526,21 +557,21 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       if (isOwnLocation) {
         leftOptions.push({
           id: 'edit',
-          label: p.edit ? 'Cancel Details Edit' : 'Edit Details',
+          label: edit ? 'Cancel Details Edit' : 'Edit Details',
           onClick: this.toggleEditDetails
         });
         if (location.positions && location.positions.length > 0) {
           leftOptions.push({
             id: 'edit-positions',
-            label: p.positionEdit ? 'Cancel Places Edit' : 'Edit Places',
+            label: positionEdit ? 'Cancel Places Edit' : 'Edit Places',
             onClick: this.togglePositionEdit
           });
         }
-        if (!p.version) {
+        if (!version) {
           leftOptions.push({
             id: 'markCompatibility',
             label: 'Mark as Compatible',
-            onClick: () => p.onMarkCompatible()
+            onClick: () => onMarkCompatible()
           });
         }
         if (deleteArg) {
@@ -557,11 +588,11 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           });
         }
       }
-      if (p.selectType && location.dataId !== p.currentLocation && p.isSelectedLocationRemovable) {
+      if (selectType && location.dataId !== currentLocation && isSelectedLocationRemovable) {
         leftOptions.push({
           id: 'removeStored',
           label: `${isOwnLocation ? location.isHidden ? 'Show In' : 'Hide From' : 'Remove From'} Storage`,
-          onClick: () => p.onRemoveStoredLocation()
+          onClick: () => onRemoveStoredLocation()
         });
       }
       leftOptions.push({
@@ -582,26 +613,26 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     }
 
     let visibleStyle: React.CSSProperties = {
-      background: p.selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
-      display: p.detailsOnly ? 'WebkitBox' : 'inline-table',
+      background: selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
+      display: detailsOnly ? 'WebkitBox' : 'inline-table',
       opacity: 1,
-      borderTop: p.detailsOnly ? 'unset' : '2px solid #95220E',
+      borderTop: detailsOnly ? 'unset' : '2px solid #95220E',
       textAlign: 'left',
-      marginTop: p.selectType ? '26px' : 'initial',
-      marginBottom: p.detailsOnly ? 'unset' : '26px',
-      marginRight: !p.selectType && p.i % 1 === 0 ? '26px' : 'initial',
-      minWidth: p.detailsOnly ? 'unset' : `${compact ? 358 : 386}px`,
-      maxWidth: p.detailsOnly ? 'unset' : '386px',
-      minHeight: p.detailsOnly ? 'unset' : p.compactRemote ? '68px' : '245px',
-      maxHeight: p.detailsOnly ? 'unset' : needsExpand ? '500px' : '289px',
-      zIndex: p.selectType ? 92 : 'inherit',
-      position: p.selectType ? 'fixed' : 'inherit',
-      left: p.selectType ? '28px' : 'inherit',
-      top: p.selectType ? `${p.height - (needsExpand ? 432 : 271)}px` : 'inherit',
+      marginTop: selectType ? '26px' : 'initial',
+      marginBottom: detailsOnly ? 'unset' : '26px',
+      marginRight: !selectType && i % 1 === 0 ? '26px' : 'initial',
+      minWidth: detailsOnly ? 'unset' : `${compact ? 358 : 386}px`,
+      maxWidth: detailsOnly ? 'unset' : '386px',
+      minHeight: detailsOnly ? 'unset' : compactRemote ? '68px' : '245px',
+      maxHeight: detailsOnly ? 'unset' : needsExpand ? '500px' : '289px',
+      zIndex: selectType ? 92 : 'inherit',
+      position: selectType ? 'fixed' : 'inherit',
+      left: selectType ? '28px' : 'inherit',
+      top: selectType ? `${height - (needsExpand ? 432 : 271)}px` : 'inherit',
       WebkitUserSelect: 'none'
     };
 
-    if (p.detailsOnly) {
+    if (detailsOnly) {
       Object.assign(visibleStyle, {
         paddingTop: '0px',
         paddingLeft: '0px',
@@ -611,12 +642,12 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
 
     let dropdown = (
       <BasicDropdown
-      height={p.height}
+      height={height}
       icon="ellipsis horizontal"
       showValue={null}
-      persist={p.edit || this.state.positionSelect}
+      persist={edit || this.state.positionSelect}
       options={leftOptions}
-      detailsOnly={p.detailsOnly} />
+      detailsOnly={detailsOnly} />
     );
 
     return (
@@ -624,8 +655,8 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       className="ui segment"
       style={visibleStyle}
       data-place="left"
-      data-tip={this.props.isVisible && !p.selectType && p.compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
-        {this.props.isVisible && !p.detailsOnly ? (
+      data-tip={this.props.isVisible && !selectType && compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
+        {this.props.isVisible && !detailsOnly ? (
           <h3
           style={{
             fontSize: name.length > 28 ? '14px' : '17.92px',
@@ -634,7 +665,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             color: (location.playerPosition
               || (location.positions && location.positions.length > 0 && location.positions[0].playerPosition))
               && !location.manuallyEntered ? 'inherit' : '#7fa0ff',
-            cursor: p.selectType ? 'default' : 'pointer'
+            cursor: selectType ? 'default' : 'pointer'
           }}
           onClick={() => state.set({selectedLocation: location, selectedGalaxy: location.galaxy})}>
             {name}
@@ -643,8 +674,8 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
           </h3>
         ) : null}
 
-        {this.props.isVisible && !p.detailsOnly ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => p.onFav(location)} /> : null}
-        {this.props.isVisible && !p.detailsOnly ? (
+        {this.props.isVisible && !detailsOnly ? <i className={`${upvote ? '' : 'empty '}star icon LocationBox__starStyle`} onClick={() => onFav(location)} /> : null}
+        {this.props.isVisible && !detailsOnly ? (
           <div
           className="LocationBox__iconsContainer"
           style={{
@@ -669,7 +700,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             ) : null}
           </div>
         ) : null}
-        {p.positionEdit ?
+        {positionEdit ?
         <div
         className="LocationBox__PositionEditContainer">
           <div className="ui segment LocationBox__uiSegmentEditStyle">
@@ -704,7 +735,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
               <div className="row">
                 <div className="col-xs-6">
                   <Button onClick={this.handlePositionSave}>
-                    {p.updating ? 'Updating...' : 'Update Location'}
+                    {updating ? 'Updating...' : 'Update Location'}
                   </Button>
                 </div>
                 <div className="col-xs-6">
@@ -716,7 +747,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             </div>
           </div>
         </div>
-        : p.edit && this.props.isVisible ? (
+        : edit && this.props.isVisible ? (
           <div>
             <div className="ui segment LocationBox__uiSegmentEditStyle">
               <div className="ui input">
@@ -781,8 +812,8 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
               <div className="col-xs-12 LocationBox__inputCol">
                 <div className="row">
                   <div className="col-xs-6">
-                    <Button onClick={() => p.onSubmit(this.state.name, this.state.description, this.state.tags)}>
-                      {p.updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
+                    <Button onClick={() => onSubmit(this.state.name, this.state.description, this.state.tags)}>
+                      {updating ? 'Updating...' : this.state.limit ? `Limit exceeded (${this.state.description.length} characters)` : 'Update Location'}
                     </Button>
                   </div>
                   <div className="col-xs-6">
@@ -794,9 +825,9 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
               </div>
             </div>
           </div>
-        ) : p.selectType || (this.props.isVisible && !p.compactRemote) ? (
+        ) : selectType || (this.props.isVisible && !compactRemote) ? (
           <div>
-            {p.detailsOnly ? dropdown : null}
+            {detailsOnly ? dropdown : null}
             {this.renderDetails()}
           </div>
         ) : null}
