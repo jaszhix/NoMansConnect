@@ -327,6 +327,8 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
       .to({ x: vector3.x, y: vector3.y, z: vector3.z }, 2200)
       .easing(TWEEN.Easing.Quadratic.In)
       .onUpdate(function () {
+        if (!_this.controls) return;
+
         let tween = new THREE.Vector3(this.x, this.y, this.z);
         _this.controls.needsUpdate = false;
         _this.camera.position.copy(tween);
