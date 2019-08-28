@@ -597,7 +597,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
     let locations = filter(p.s.remoteLocations.results || [], (location) => location != null);
     if (showOnlyScreenshots) {
       locations = filter(locations, (location)=>{
-        return location.image.length > 0;
+        return location.image && location.image.length > 0;
       });
     }
     if (showOnlyNames) {
