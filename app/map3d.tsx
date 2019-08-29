@@ -495,13 +495,13 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
     );
     each(el.find('.planetLabel').ns, (label) => {
       label.addEventListener('click', () => {
-        if (!this.props
-          || !this.willUnmount
-          || !this.props.remoteLocations
-          || !this.props.remoteLocations.results) {
+        if (this.willUnmount
+          || !state.remoteLocations
+          || !state.remoteLocations.results) {
           return;
         }
-        let refLocation = find(this.props.remoteLocations.results, (location) => {
+
+        let refLocation = find(state.remoteLocations.results, (location) => {
           return location.name === label.innerText || location.dataId === label.innerText;
         });
         if (refLocation) {
