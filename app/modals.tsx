@@ -396,10 +396,11 @@ export class Notification extends React.Component<NotificationProps> {
       className={`ui small modal active${onClick ? ' cursorPointer' : ''}`}
       style={this.modalStyle}>
         <span className="close" />
-        {type === 'error' ?
-        <div className="modal__error">
+        <div
+        className={type === 'error' ? 'modal__error' : null}
+        onClick={onClick}>
           {renderedMessage}
-        </div> : renderedMessage}
+        </div>
         <div style={{width: '50px', position: 'absolute', right: '46px', bottom: '10px'}}>
           <Button onClick={this.handleDismiss}>
             Dismiss

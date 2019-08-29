@@ -36,7 +36,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
         }
 
         this.setState({eventId: Sentry.captureException(error)}, () => {
-          if (typeof onError === 'function') this.callbackOnError(Sentry)
+          if (typeof onError === 'function') this.callbackOnError();
         });
       });
     }).catch(() => this.callbackOnError());
@@ -46,7 +46,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     this.willUnmount = true;
   }
 
-  callbackOnError = (Sentry?) => {
+  callbackOnError = () => {
     const {eventId} = this.state;
     const {onError} = this.props;
 
@@ -54,13 +54,15 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       notification: {
         message: `An error occurred during rendering. Click to add more details about this incident.${eventId ? '\nEvent ID: ' + eventId : ''}`,
         type: 'error',
-        onClick: Sentry ? () => this.handleClick(Sentry) : null
+        onClick: () => this.handleClick()
       }
-    }, onError)
+    }, onError, true);
   }
 
-  handleClick = (Sentry) => {
-    Sentry.showReportDialog({eventId: this.state.eventId});
+  handleClick = () => {
+    import(/* webpackChunkName: "sentry" */ '@sentry/browser').then((Sentry) => {
+      Sentry.showReportDialog({eventId: this.state.eventId});
+    });
   }
 
   render() {
