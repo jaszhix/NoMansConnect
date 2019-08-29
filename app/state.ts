@@ -65,7 +65,7 @@ const state: GlobalState = initStore({
   defaultLegendKeys: Object.keys(showDefault),
   completedMigration: false,
   newUser: false,
-  version: '1.8.4',
+  version: '1.9.0',
   notification: {
     message: '',
     type: 'info',
@@ -142,7 +142,7 @@ const state: GlobalState = initStore({
   maximized: win.isMaximized(),
   mapLines: false,
   map3d: false,
-  mapDrawDistance: false,
+  mapDrawDistance: true,
   mapLODFar: false,
   mapSkyBox: true,
   wallpaper: null,

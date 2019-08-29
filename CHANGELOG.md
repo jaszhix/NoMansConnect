@@ -1,3 +1,19 @@
+# 1.9.0
+
+  * Several improvements to the 3D map:
+    - Added a compass.
+    - Added an optional sky box.
+    - Added LOD adjustment.
+    - Star points are more visible from long distances, and increase in size the further away from the camera they are.
+    - Made the colors of the stars points more consistent with the 2D map's scheme. Friends' locations now show up as a light green color, favorites are purple, and manual locations are dark blue.
+    - Fixed the selected location color not being shown.
+    - Fixed the camera duplicating a movement when re-selecting the same sector, or systems in the same sector.
+    - Fixed inability to select systems from the HUD.
+    - Fixed HUD elements getting stuck when switching to the 2D map.
+  * Fixed the error notification popup not showing the error details modal when clicked.
+  * Fixed the username protection value not changing when toggled in Settings.
+  * Fixed various rendering errors.
+
 # 1.8.4
 
   * Fixed the default stats view showing "Past Week" in the dropdown, but showing data from the past day.
