@@ -144,11 +144,10 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
   anisotropy: any;
   raycaster: THREE.Raycaster;
   mouse: THREE.Vector3;
+  lastTraveled: THREE.Vector3;
+  skipTravel: boolean;
   travelTo: Map3DCoordinates;
 
-  lastTraveled(vector3: THREE.Vector3, lastTraveled: any) {
-    throw new Error('Method not implemented.');
-  }
   constructor(props) {
     super(props);
 
@@ -310,7 +309,8 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
   }
   handleAnimation = (c, time) => {
     if (this.willUnmount) return;
-    TWEEN.update(time)
+
+    TWEEN.update(time);
 
     if (this.props.selectedLocation && this.selected) {
       this.selected = false;
@@ -367,9 +367,18 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
 
     document.getElementById('arrow').style.transform = `rotate(${((-Math.PI / 2) - this.controls.theta) + 0.79}rad)`;
   }
-  handleTravel = (vector3) => {
+  handleTravel = (vector3: THREE.Vector3) => {
+    if (isEqual(this.lastTraveled, vector3)) {
+      this.skipTravel = true;
+    }
+
     this.lastTraveled = vector3;
     const _this = this;
+
+    if (this.skipTravel) {
+      setTimeout(() => this.skipTravel = false, 1000);
+      return;
+    }
 
     let onComplete = function () {
       if (!_this.controls) return;
@@ -505,6 +514,7 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
           return location.name === label.innerText || location.dataId === label.innerText;
         });
         if (refLocation) {
+          this.skipTravel = true;
           state.set({selectedLocation: refLocation});
         }
       });
