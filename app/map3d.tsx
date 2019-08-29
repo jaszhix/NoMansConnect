@@ -108,6 +108,7 @@ interface Map3DState {
 
 class Map3D extends React.Component<Map3DProps, Map3DState> {
   mounted: boolean;
+  needsUpdate: boolean;
   loader: THREE.TextureLoader;
   starRed: any;
   starWhite: any;
@@ -228,18 +229,34 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
         state.connect(['remoteLocations', 'searchCache'], (partial) => this.updateLocations(partial)),
         state.connect({
           selectedLocation: ({selectedLocation}) => {
+            this.setNeedsUpdate();
+
             if (!selectedLocation) return;
 
             this.selected = true;
           },
           selectedGalaxy: () => this.galaxyChanged = true,
-          currentLocation: () => window.travelToCurrent = true
+          currentLocation: () => {
+            this.setNeedsUpdate();
+
+            if (state.selectedLocation) return;
+
+            window.travelToCurrent = true
+          },
+          mapLODFar: () => this.setNeedsUpdate()
         })
       ];
 
       this.setState({ready: true});
     });
   }
+
+  setNeedsUpdate() {
+    this.needsUpdate = true;
+
+    setTimeout(() => this.needsUpdate = false, 1000);
+  }
+
   componentDidMount() {
     window.map3DWorker.onmessage = (e) => {
       if (this.willUnmount) return;
@@ -556,18 +573,17 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
     const {userData} = instance;
     const isSelected = selectedLocation && userData.translatedId === selectedLocation.translatedId;
     const isCurrent = userData.dataId === currentLocation;
-    const needsUpdate = isSelected || isCurrent;
 
     // Make the stars larger the further away from the camera they are.
     // This makes it so they are always visible from any distance.
     instance.scale.x = instance.scale.y = instance.scale.z = convertRange(distance, [0, 19000], [1, 10]);
 
     switch (true) {
-      case (!mapLODFar && c.material && distance > 2000):
+      case (!mapLODFar && distance > 2000):
         c.instance.material = this.blueMaterial;
         break;
       default:
-        if (!c.material || needsUpdate) {
+        if (!c.material || this.needsUpdate || c.distance !== distance) {
           if (isSelected) {
             c.material = this.orangeMaterial;
           } else if (isCurrent) {
@@ -586,11 +602,11 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
           }
 
           c.instance.material = c.material;
-
         }
-
-        c.instance.material.uniforms.time = {type: 'f', value: time};
     }
+
+    c.instance.material.uniforms.time = {type: 'f', value: time};
+    c.distance = distance;
 
     if (distance < 100 && isSelected) {
       let screen = toScreenPosition(instance, camera, controls, this.renderer.domElement)

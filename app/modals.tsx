@@ -1297,7 +1297,7 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
     dialog.showMessageBox({
       title: 'Important Information',
       message: helpMessage,
-      buttons: ['Cancel', `${this.props.s.profile.protected ? 'Unp' : 'P'}rotect Username`]
+      buttons: ['Cancel', `${profile.protected ? 'Unp' : 'P'}rotect Username`]
     }, result=>{
       if (result === 1) {
         ajaxWorker.post('/nmsprofile/', {
