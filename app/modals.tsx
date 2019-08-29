@@ -1287,10 +1287,13 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
     handleRestart();
   }
   handleUsernameProtection = () => {
+    const {profile, username, machineId} = this.props.s;
     let helpMessage = 'When you protect your username, the app will associate your computer with your username to prevent impersonation. If you plan on using the app on another computer, you will need to disable protection before switching.';
-    if (this.props.s.profile.protected) {
+
+    if (profile.protected) {
       helpMessage = 'Are you sure you want to unprotect your username?'
     }
+
     dialog.showMessageBox({
       title: 'Important Information',
       message: helpMessage,
@@ -1298,12 +1301,12 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
     }, result=>{
       if (result === 1) {
         ajaxWorker.post('/nmsprofile/', {
-          username: this.props.s.username,
-          machineId: this.props.s.machineId,
-          protected: !this.props.s.profile.protected
-        }).then(() => {
-          this.props.s.profile.protected = !this.props.s.profile.protected;
-          state.set({profile: this.props.s.profile});
+          username,
+          machineId,
+          protected: !profile.protected,
+        }).then((res) => {
+          profile.protected = !profile.protected;
+          state.set({profile}, true);
         }).catch((err) => {
           log.error(`Error enabling username protection: ${err}`);
         });
