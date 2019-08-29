@@ -508,6 +508,8 @@ class Container extends React.Component<ContainerProps, ContainerState> {
       ps4User,
       map3d,
       mapDrawDistance,
+      mapLODFar,
+      mapSkyBox,
       mapLines,
       show,
       showMap,
@@ -677,6 +679,8 @@ class Container extends React.Component<ContainerProps, ContainerState> {
                 <GalacticMap
                 map3d={map3d}
                 mapDrawDistance={mapDrawDistance}
+                mapLODFar={mapLODFar}
+                mapSkyBox={mapSkyBox}
                 mapLines={mapLines}
                 galaxyOptions={galaxyOptions}
                 selectedGalaxy={selectedGalaxy}

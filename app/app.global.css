@@ -39004,8 +39004,27 @@ Item
   cursor: pointer;
 }
 
-.item-disabled {
-  opacity: 0.7 !important;
+.Map3D__arrow {
+  position: absolute;
+  bottom: 20px;
+  right: -11px;
+  font-size: 30px !important;
+  transform: rotate(5.47rad);
+  transform-style: preserve-3d;
+}
+.Map3D__hudElement {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #FFFFFF;
+  border-top: 2px solid rgb(149, 34, 14);
+  text-shadow: 2px 2px #000000;
+  -webkit-user-select: none;
+  cursor: default;
+  padding: 4px 8px;
+  letter-spacing: 3px;
+  font-size: 16px;
+}
+.Map3D__hudUser {
+  font-weight: 600;
 }
 
 /*
@@ -39359,4 +39378,8 @@ Modals
 
 .noDrag {
   -webkit-app-region: no-drag;
+}
+
+.item-disabled {
+  opacity: 0.7 !important;
 }

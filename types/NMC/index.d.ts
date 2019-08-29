@@ -187,6 +187,8 @@ declare global {
     mapLines?: boolean;
     map3d?: boolean;
     mapDrawDistance?: boolean;
+    mapLODFar: boolean;
+    mapSkyBox: boolean;
     wallpaper?: any;
     filterOthers?: boolean;
     useGAFormat?: boolean;

@@ -624,6 +624,8 @@ interface GalacticMapProps {
   galaxyOptions: any[];
   map3d: boolean;
   mapDrawDistance: boolean;
+  mapLODFar: boolean;
+  mapSkyBox: boolean;
   mapLines: boolean;
   show: boolean;
   selectedGalaxy: number;
@@ -767,6 +769,16 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
         onClick: () => state.set({mapDrawDistance: !p.mapDrawDistance}, p.onRestart)
       });
       leftOptions.push({
+        id: 'mapLODFar',
+        label: `LOD: ${p.mapLODFar ? 'Far' : 'Normal'}`,
+        onClick: () => state.set({mapLODFar: !p.mapLODFar})
+      });
+      leftOptions.push({
+        id: 'mapSkyBox',
+        label: `Sky Box: ${p.mapSkyBox ? 'On' : 'Off'}`,
+        onClick: () => state.set({mapSkyBox: !p.mapSkyBox})
+      });
+      leftOptions.push({
         id: 'travelTo',
         label: `Go to Center`,
         onClick: this.travelToCenter
@@ -878,7 +890,9 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
             selectedLocation={p.selectedLocation}
             searchCache={p.searchCache}
             currentLocation={p.currentLocation}
-            mapDrawDistance={p.mapDrawDistance} />
+            mapDrawDistance={p.mapDrawDistance}
+            mapLODFar={p.mapLODFar}
+            mapSkyBox={p.mapSkyBox} />
           </ErrorBoundary>
           :
           <ErrorBoundary onError={this.resetThreeDimScatterChart}>

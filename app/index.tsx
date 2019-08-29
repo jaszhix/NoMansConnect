@@ -1,3 +1,4 @@
+import {cpus} from 'os';
 import React from 'react';
 import {render} from 'react-dom';
 import state from './state';
@@ -15,7 +16,7 @@ import formatWorker from './format.worker';
 window.jsonWorker = new jsonWorker();
 window.settingsWorker = new jsonWorker();
 
-let coreCount = Math.max(Math.ceil(require('os').cpus().length / 2), 2);
+let coreCount = Math.max(Math.ceil(cpus().length / 2), 2);
 let count = coreCount;
 
 while (count > 0) {
@@ -35,11 +36,12 @@ render(
 
 if (module.hot) {
   module.hot.accept('./app', () => {
-    const NextApp = require('./app').default;
-    render(
-      <NextApp />,
-      document.getElementById('app')
-    );
+    import('./app').then((NextApp) => {
+      render(
+        <NextApp.default />,
+        document.getElementById('app')
+      );
+    });
   });
 }
 

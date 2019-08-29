@@ -492,7 +492,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     isOwnLocation = isOwnLocation && selectType && location.username === username;
     let deleteArg = location.image && location.image.length > 0;
     let compact = width && width <= 1212;
-    let isSpaceStation = location.dataId[location.dataId.length - 1] === '0';
+    let isSpaceStation = location.dataId && location.dataId[location.dataId.length - 1] === '0';
     let leftOptions = [];
     let name = edit && this.state.name.length > 0 ? this.state.name
       : location.username ? (location.name && location.name.length > 0 ? location.name : `${location.username} explored`)
