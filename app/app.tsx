@@ -176,7 +176,12 @@ class App extends React.Component<GlobalState> {
         console.log({username})
         this.syncRemoteOwned(username);
       }).catch((err) => {
-        if (!err.response && !state.offline) {
+        if (state.offline) {
+          this.syncRemoteOwned();
+          return;
+        }
+
+        if (!err.response) {
           let {title} = state;
           title = title.replace(/CONNECT/, 'DISCONNECT');
           log.error('No response from the server was received, switching to offline mode.');
@@ -189,8 +194,8 @@ class App extends React.Component<GlobalState> {
               type: 'info'
             }
           }, true);
-          return;
         }
+
         log.error('Failed to check for newer version');
       });
     });
@@ -322,8 +327,13 @@ class App extends React.Component<GlobalState> {
       indexModsInUse(...args);
     }
   }
-  syncRemoteOwned = (username) => {
-    if (this.state.offline || this.state.closing) {
+  syncRemoteOwned = (username?) => {
+    let {closing, offline, storedLocations} = this.state;
+
+    if (closing) return;
+
+    if (offline) {
+      this.checkMods();
       return;
     }
 
@@ -335,8 +345,8 @@ class App extends React.Component<GlobalState> {
         page_size: 9999
       }
     }).then((res) => {
-      let {storedLocations} = this.state;
       storedLocations = uniqBy(concat(storedLocations, res.data.results), 'dataId');
+
       state.set({
         storedLocations,
         loading: 'Syncing locations...'

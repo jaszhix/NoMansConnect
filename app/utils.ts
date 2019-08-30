@@ -59,17 +59,28 @@ const axiosKeys = Object.keys(axios);
 export const ajaxWorker: any = {};
 
 const ajaxWorkerCaller = (method: string, ...args: any[]) => {
+  const route = args[0];
+
+  // The only API request made to the server while offline is the initial version check,
+  // in case an update contains critical bug fixes.
+  if (state.offline && route !== '/nmsversion/') return Promise.resolve({data: null});
+
   state.set({navLoad: true});
+
   if (ajaxCount > window.coreCount) {
     ajaxCount = 1;
   }
+
   let worker = `ajaxWorker${ajaxCount}`;
   if (window[worker].onmessage) {
     ajaxCount++;
     return new Promise((resolve, reject) => setTimeout(() => resolve(ajaxWorkerCaller(method, ...args)), 50));
   }
+
   window[worker].postMessage([method, ...args]);
+
   ajaxCount++;
+
   return new Promise((resolve, reject) => {
     window[worker].onmessage = (e) => {
       window[worker].onmessage = null;
@@ -87,6 +98,7 @@ const ajaxWorkerCaller = (method: string, ...args: any[]) => {
     }
   });
 }
+
 each(axiosKeys, (key) => {
   ajaxWorker[key] = (...args) => ajaxWorkerCaller(key, ...args);
 });
