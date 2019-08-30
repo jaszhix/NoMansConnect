@@ -1,7 +1,7 @@
 import fs from 'graceful-fs';
 import {exec} from 'child_process';
 import axios from 'axios';
-import {cloneDeep, assignIn, last, trimStart, pick} from 'lodash';
+import {assignIn, last, trimStart, pick} from 'lodash';
 import {each, filter} from '@jaszhix/utils';
 
 import state from './state';
