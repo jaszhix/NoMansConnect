@@ -1,3 +1,9 @@
+# 1.9.1
+
+  * Fixed the save file not being monitored in offline mode.
+  * Fixed stray API requests being made to the server while in offline mode. The only API request made while offline is the initial version check, in case an update contains critical bug or security fixes. The startup routine will continue if this request fails.
+  * Fixed the compass in the 3D map not always pointing north.
+
 # 1.9.0
 
   * Several improvements to the 3D map:
