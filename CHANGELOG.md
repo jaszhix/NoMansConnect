@@ -1,3 +1,9 @@
+# 1.9.2
+
+  * Fixed offline location editing.
+  * Fixed locations created while offline not syncing on startup when online.
+  * Fixed the galaxies dropdown not displaying initially when starting NMC with the 3D map enabled.
+
 # 1.9.1
 
   * Fixed the save file not being monitored in offline mode.
