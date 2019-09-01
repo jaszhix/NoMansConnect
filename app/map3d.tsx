@@ -99,6 +99,7 @@ interface Map3DProps {
   mapLODFar: boolean;
   mapSkyBox: boolean;
   searchCache: APIResult;
+  onInit: () => void;
 }
 
 interface Map3DState {
@@ -246,7 +247,7 @@ class Map3D extends React.Component<Map3DProps, Map3DState> {
         })
       ];
 
-      this.setState({ready: true});
+      this.setState({ready: true}, props.onInit);
     });
   }
 

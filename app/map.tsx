@@ -892,7 +892,8 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
             currentLocation={p.currentLocation}
             mapDrawDistance={p.mapDrawDistance}
             mapLODFar={p.mapLODFar}
-            mapSkyBox={p.mapSkyBox} />
+            mapSkyBox={p.mapSkyBox}
+            onInit={this.handleInit} />
           </ErrorBoundary>
           :
           <ErrorBoundary onError={this.resetThreeDimScatterChart}>
