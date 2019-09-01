@@ -136,7 +136,7 @@ class SearchField extends React.Component<SearchFieldProps, SearchFieldState> {
         onKeyDown={this.handleKeyDown}
         maxLength={30}
         placeholder={placeholder} />
-        {results.length ?
+        {results && results.length ?
         <div
         ref={this.getResultsRef}
         className={resultsClassName}

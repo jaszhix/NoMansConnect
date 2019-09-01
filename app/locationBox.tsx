@@ -95,12 +95,12 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       state.trigger('resetLocationScrollTop');
 
       stateUpdate.image = null;
-      stateUpdate.name = location.name;
-      stateUpdate.description = location.description;
+      stateUpdate.name = location.name || '';
+      stateUpdate.description = location.description || '';
       stateUpdate.location = location;
       stateUpdate.portalHex = formatForGlyphs(location.translatedId, location.PlanetIndex);
       stateUpdate.profile = location.profile;
-      stateUpdate.tags = location.tags;
+      stateUpdate.tags = location.tags || [];
     }
 
     return stateUpdate;
@@ -118,12 +118,12 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     this.state = {
       hover: '',
       limit: false,
-      name: location.name,
-      description: location.description,
+      name: location.name || '',
+      description: location.description || '',
       tagName: '',
-      tags: props.location.tags,
+      tags: location.tags || [],
       image: null,
-      profile: props.location.profile,
+      profile: location.profile,
       location: location,
       portalHex: formatForGlyphs(location.translatedId, location.PlanetIndex),
       positionSelect: false,
@@ -250,6 +250,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     const {configDir} = state;
     let img = image.replace(/:/g, '~').replace(/NMSLocation-/, '');
     let file = path.resolve(`${configDir}${img}`);
+
     fsWorker.exists(file, (exists) => {
       if (!exists) {
         axios
