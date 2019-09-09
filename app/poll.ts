@@ -1,6 +1,7 @@
 import log from './log';
 const ps = require('win-ps');
 import {assignIn, uniqBy, isEqual} from 'lodash';
+import tc from 'tinycolor2';
 import {each, find, findIndex, tryFn} from '@jaszhix/utils';
 
 import screenshot from './capture';
@@ -349,22 +350,33 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
         if (show[friend.username]) {
           return;
         }
+
+        let color;
+
+        // Avoid dark colors for better contrast
+        while (!color || tc(color).isDark()) {
+          color = `#${(Math.random() * 0xFFFFFF << 0).toString(16)}`;
+        }
+
         show[friend.username] = {
-          color: `#${(Math.random() * 0xFFFFFF << 0).toString(16)}`,
+          color,
           value: true,
           listKey: `${friend.username}Locations`
         };
       });
+
       // Make sure stale/removed friends get removed from the legend
       each(show, (val, key) => {
         if (state.defaultLegendKeys.indexOf(key) > -1) {
           return;
         }
+
         let refIndex = findIndex(profile.data.friends, (friend) => friend.username === key);
         if (refIndex === -1) {
           delete show[key];
         }
       });
+
       stateUpdate.show = show;
     }
 
