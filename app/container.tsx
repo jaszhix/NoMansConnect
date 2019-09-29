@@ -664,6 +664,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
               selectedLocationPositionEdit={this.state.positionEdit}
               multiSelectedLocation={multiSelectedLocation}
               currentLocation={currentLocation}
+              favorites={favorites}
               height={height}
               filterOthers={filterOthers}
               showHidden={showHidden}

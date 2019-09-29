@@ -17,6 +17,7 @@ interface StoredLocationItemProps {
   isSelected: boolean;
   useGAFormat: boolean;
   isCurrent: boolean;
+  upvote: boolean;
   i: number;
 }
 
@@ -41,7 +42,7 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps, Stored
     if (!this.props.location || !this.props.location.dataId) return null;
     let uiSegmentStyle: CSSProperties = {
       fontSize: '16px',
-      fontWeight: this.props.location.upvote ? 600 : 400,
+      fontWeight: this.props.upvote ? 600 : 400,
       cursor: 'pointer',
       padding: '3px 12px 3px 3px',
       background: this.state.hover || this.props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'inherit',
@@ -56,7 +57,7 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps, Stored
     let isMarquee = (this.state.hover || this.props.isSelected) && name.length >= 25;
     name = isMarquee ? name : truncate(name, {length: 23});
     let isSpaceStation = this.props.location.dataId[this.props.location.dataId.length - 1] === '0';
-    let iconShown = this.props.location.upvote || this.props.isCurrent || this.props.location.isHidden;
+    let iconShown = this.props.upvote || this.props.isCurrent || this.props.location.isHidden;
     return (
       <div
       className="ui segment"
@@ -112,6 +113,7 @@ interface StoredLocationsProps {
   filterStoredByBase: boolean;
   filterStoredByScreenshot: boolean;
   currentLocation: any;
+  favorites: string[];
   onSelect: Function;
 }
 
@@ -246,6 +248,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       selectedLocationPositionEdit,
       multiSelectedLocation,
       currentLocation,
+      favorites,
       height,
       filterOthers,
       showHidden,
@@ -311,7 +314,8 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
     ];
     return (
       <div className="ui segment StoredLocations__container">
-        <div className="ui segment"
+        <div
+        className="ui segment"
         style={this.uiSegmentStyle}>
           <h3>{`Stored Locations (${storedLocations.length})`}</h3>
           <div style={{
@@ -348,6 +352,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
                   isSelected={selectedLocationId === location.dataId}
                   isCurrent={currentLocation === location.dataId}
                   location={location}
+                  upvote={favorites.indexOf(location.dataId) > -1}
                   useGAFormat={useGAFormat} />
                 );
               } else {
