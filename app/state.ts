@@ -65,7 +65,7 @@ const state: GlobalState = initStore({
   defaultLegendKeys: Object.keys(showDefault),
   completedMigration: false,
   newUser: false,
-  version: '1.9.2',
+  version: '1.9.3',
   notification: {
     message: '',
     type: 'info',

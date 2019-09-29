@@ -1,3 +1,8 @@
+# 1.9.3
+
+  * Fixed friend scatter points being too dark and hard to see on the 2D map.
+  * Fixed location favorite states becoming out of sync in the stored location list after editing a location.
+
 # 1.9.2
 
   * Fixed offline location editing.
