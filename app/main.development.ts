@@ -46,9 +46,7 @@ app.commandLine.appendSwitch('gpu-rasterization-msaa-sample-count', '0');
 app.commandLine.appendSwitch('ignore-gpu-blacklist');
 app.commandLine.appendSwitch('enable-hardware-overlays', 'single-fullscreen');
 app.commandLine.appendSwitch('disable-smooth-scrolling');
-// TODO: Reenable after Electron is updated with patched Chromium for CR bug 1004117
-// https://bugs.chromium.org/p/chromium/issues/detail?id=1004117
-//app.commandLine.appendSwitch('use-angle', 'gl');
+app.commandLine.appendSwitch('use-angle', 'gl');
 app.commandLine.appendSwitch('default-background-color', '000000');
 app.commandLine.appendSwitch('js-flags', '--max_old_space_size=32768,--nolazy');
 app.commandLine.appendSwitch('enable-features', chromiumFeatures);

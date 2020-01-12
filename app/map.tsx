@@ -14,7 +14,7 @@ import {
   ScaleType,
   PolarRadiusAxisDomain
 } from 'recharts';
-import {delay, isEqual, last} from 'lodash';
+import {isEqual, last} from 'lodash';
 import v from 'vquery';
 import {each, map} from '@jaszhix/utils';
 
