@@ -39383,3 +39383,7 @@ Modals
 .item-disabled {
   opacity: 0.7 !important;
 }
+
+.recharts-legend-wrapper:hover {
+  cursor: pointer;
+}
