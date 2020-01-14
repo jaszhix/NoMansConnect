@@ -25,8 +25,8 @@ import Button from './buttons';
 const glyphs = {};
 const glyphsChars = ['A', 'B', 'C', 'D', 'E', 'F', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
-each(glyphsChars, character => {
-  glyphs[character] = require(`./assets/images/glyphs/${character}.png`);
+each(glyphsChars, (character) => {
+  glyphs[character] = require(`./assets/images/glyphs/${character}.png`).default;
 });
 
 interface LocationBoxProps {
