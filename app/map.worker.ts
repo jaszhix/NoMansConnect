@@ -37,30 +37,39 @@ const buildGalaxyOptions = function(state) {
 };
 
 const getLocationsByTranslatedId = function(locations: NMSLocation[]) {
-  if (!locations || !locations[0]) {
-    return null;
-  }
-  let systems = uniqBy(locations, (location) => {
-    return location && location.translatedX && location.translatedY && location.translatedZ;
-  });
+  if (!locations || !locations[0]) return null;
+
+  each(locations, (location) => {
+    if (!location) return;
+    location.xyz = `${location.translatedX}${location.translatedY}${location.translatedZ}`;
+  })
+
+  let systems = uniqBy(locations, 'xyz');
+
   each(systems, (location) => {
     if (!location) return;
+
     let planets = filter(locations, (planet) => {
-      if (!planet) return;
+      if (!planet) return false;
       return (location.translatedX === planet.translatedX
         && location.translatedY === planet.translatedY
         && location.translatedZ === planet.translatedZ);
     });
     let planetData = [];
+
     each(planets, (planet) => {
       planet = planet ? planet : {data: planet};
+
       if (!planetData[planet.username]) {
         planetData[planet.username] = [];
       }
+
       let label = planet.name ? planet.name : planet.dataId;
       let refPlanetData = findIndex(planetData, item => item && item.username === planet.username);
+
       if (refPlanetData > -1) {
         let refEntry = planetData[refPlanetData].entries.indexOf(label);
+
         if (refEntry === -1) {
           planetData[refPlanetData].entries.push(label);
         }
@@ -71,6 +80,7 @@ const getLocationsByTranslatedId = function(locations: NMSLocation[]) {
         });
       }
     });
+
     location.planetData = planetData;
   });
   return systems
@@ -110,7 +120,7 @@ onmessage = function(e) {
 
     if (e.data.p.remoteLocations && e.data.p.remoteLocations) {
       each(e.data.p.remoteLocations, (location) => {
-        if (location.galaxy !== e.data.p.selectedGalaxy) {
+        if (!location || location.galaxy !== e.data.p.selectedGalaxy) {
           return;
         }
 
@@ -151,14 +161,14 @@ onmessage = function(e) {
               stateUpdate.selectedLocation = [obj];
             }
             break;
-          case (location.upvote):
-            if (e.data.p.show.Favorite.value) {
-              stateUpdate.favLocations.push(obj);
-            }
-            break;
           case (location.dataId === e.data.p.currentLocation):
             if (e.data.p.show.Current.value) {
               stateUpdate.currentLocation.push(obj);
+            }
+            break;
+          case (location.upvote):
+            if (e.data.p.show.Favorite.value) {
+              stateUpdate.favLocations.push(obj);
             }
             break;
           case (location.base):

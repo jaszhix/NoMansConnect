@@ -16,7 +16,7 @@ import {
 } from 'recharts';
 import {isEqual, last} from 'lodash';
 import v from 'vquery';
-import {each, map} from '@jaszhix/utils';
+import {each, map, findIndex} from '@jaszhix/utils';
 
 import ErrorBoundary from './errorBoundary';
 import {BasicDropdown} from './dropdowns';
@@ -122,7 +122,7 @@ interface ThreeDimScatterChartProps {
   selectedLocation: any;
   currentLocation: string;
   username: string;
-  show: boolean;
+  show: any;
   mapLines: boolean;
   init: boolean;
   size: number;
@@ -154,6 +154,7 @@ interface ThreeDimScatterChartState {
   endCoordinates: number[] | null;
   scale: ScaleType;
   mapLines: boolean;
+  showList: object[];
 }
 
 class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, ThreeDimScatterChartState> {
@@ -170,6 +171,37 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
   dragCancelled: boolean;
   lastMove: number;
   friendsCount: number;
+
+  static getDerivedStateFromProps(nextProps) {
+    const {show} = nextProps;
+
+    let showList = [];
+    let showKeys = Object.keys(show);
+
+    for (let i = 0, len = showKeys.length; i < len; i++) {
+      let label = showKeys[i];
+
+      showList.push({
+        label,
+        obj: show[label],
+      })
+    }
+
+    let index = findIndex(showList, (item) => item.obj.listKey === 'selectedLocation');
+    let item = showList[index];
+
+    showList.splice(index, 1);
+
+    showList = showList.concat([item]);
+
+    index = findIndex(showList, (item) => item.obj.listKey === 'currentLocation');
+    item = showList[index];
+
+    showList.splice(index, 1);
+    showList = showList.concat([item]);
+
+    return {showList};
+  }
 
   constructor(props) {
     super(props);
@@ -197,7 +229,8 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       startCoordinates: null,
       endCoordinates: null,
       scale: 'linear',
-      mapLines: props.mapLines
+      mapLines: props.mapLines,
+      showList: []
     };
     each(props.show, (legendItem, key) => {
       if (state.defaultLegendKeys.indexOf(key) > -1) {
@@ -243,6 +276,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
         'storedLocations',
         'remoteLocations',
         'selectedLocation',
+        'currentLocation',
       ], () => {
         if (this.willUnmount) return;
         this.handlePostMessage()
@@ -437,7 +471,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
   }
   handleLegendClick = (e) => {
     this.props.show[e.payload.name].value = !this.props.show[e.payload.name].value;
-    state.set({show: this.props.show, navLoad: true});
+    state.set({show: this.props.show, navLoad: true}, true);
 
     if (e.payload.name === 'Center') {
       this.handlePostMessageSize();
@@ -528,14 +562,16 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       startCoordinates,
       endCoordinates,
       zoom,
-      mapLines
-    } = this.state
+      mapLines,
+      showList,
+    } = this.state;
 
-    const {show} = this.props;
     let isZoom = zoom > 0;
     let legends = [];
 
-    each(show, (obj, label) => {
+    each(showList, (item, i) => {
+      let {obj, label} = item;
+
       legends.push(
         <Scatter
         key={label}
