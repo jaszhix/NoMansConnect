@@ -192,8 +192,6 @@ class App extends React.Component<GlobalState> {
         log.error('Failed to check for newer version');
       });
     });
-
-
   }
   componentWillUnmount() {
     if (win) {
@@ -204,6 +202,7 @@ class App extends React.Component<GlobalState> {
     if (this.monitor) {
       this.monitor.stop();
     }
+
     state.destroy();
   }
   checkMods = (cb?: Function) => {
@@ -986,11 +985,8 @@ class App extends React.Component<GlobalState> {
       this.fetchRemoteLocations(state.page, state.sort, false, true);
     });
   }
-  handleMaximizeEvent = () => {
-    let maximized = win.isMaximized();
-    state.set({maximized});
-  }
-  }
+
+  handleMaximizeEvent = () => state.set({maximized: win.isMaximized()})
 
   handleSetUsernameOverride = () => {
     state.set({usernameOverride: true});

@@ -4,15 +4,12 @@ import {find} from '@jaszhix/utils';
 
 import state from './state';
 import Loader from './loader';
-import * as utils from './utils';
-const {tip} = utils;
+import {tip} from './utils';
 // @ts-ignore
 import baseIcon from './assets/images/base_icon.png';
 
 import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDropdown} from './dropdowns';
-import {
-  StatsContainer
-} from './modals';
+import {StatsContainer} from './modals';
 import {Search} from './search';
 
 const headerItemClasses = 'ui dropdown icon item App__titleBarControls';
@@ -22,14 +19,13 @@ interface TitleBarProps {
   monitor: watch.Monitor | void;
 }
 
-interface TitleBarState {
-
-}
+interface TitleBarState {}
 
 class TitleBar extends React.Component<TitleBarProps, TitleBarState> {
   handleMaximize = () => {
     let win = state.trigger('window');
-    let maximized = win.isMaximized();
+    let {maximized} = this.props.s;
+
     if (maximized) {
       win.unmaximize();
     } else {
@@ -65,7 +61,9 @@ class TitleBar extends React.Component<TitleBarProps, TitleBarState> {
     const {s} = this.props;
 
     return (
-      <div className="ui top attached menu App__topAttachedMenu">
+      <div
+      className="ui top attached menu App__topAttachedMenu"
+      onDoubleClick={this.handleMaximize}>
         <h2 className="App__title">{s.title}</h2>
         <div className="right menu">
           {!s.init && s.navLoad ? <Loader loading={null} /> : null}
