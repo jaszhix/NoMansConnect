@@ -55,7 +55,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
 
-/* const installExtensions = async (): Promise<any> => {
+const installExtensions = async (): Promise<any> => {
   if (process.env.NODE_ENV === 'development') {
     const installer = require('electron-devtools-installer'); // eslint-disable-line global-require
 
@@ -72,11 +72,10 @@ app.on('window-all-closed', () => {
       .all(extensions.map(name => installer.default(installer[name], forceDownload)))
       .catch(console.log);
   }
-}; */
+};
 
 app.on('ready', async (): Promise<any> => {
-  // Bug: https://github.com/electron/electron/issues/19468
-  //await installExtensions();
+  await installExtensions();
 
   let mainWindowState = windowStateKeeper({
     defaultWidth: 1421,
