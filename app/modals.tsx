@@ -411,10 +411,10 @@ export class Notification extends React.Component<NotificationProps> {
   }
 };
 
-const planetIcon = require('./assets/images/planet_discovery.png');
-const organicIcon = require('./assets/images/organic_discovery.png');
-const mineralIcon = require('./assets/images/mineral_discovery.png');
-const interactableIcon = require('./assets/images/interactable_discovery.png');
+const planetIcon = require('./assets/images/planet_discovery.png').default;
+const organicIcon = require('./assets/images/organic_discovery.png').default;
+const mineralIcon = require('./assets/images/mineral_discovery.png').default;
+const interactableIcon = require('./assets/images/interactable_discovery.png').default;
 
 const discoveryIconMap = {
   Animal: organicIcon,
@@ -791,7 +791,7 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
                 </Button> : null}
               </div>
               <div className="ui segment">
-                {profile.supporter ? <span title="Gravitino" className="ProfileModal__badge"><img src={require('./static/gravitino.png')} /></span> : null}
+                {profile.supporter ? <span title="Gravitino" className="ProfileModal__badge"><img src={require('./static/gravitino.png').default} /></span> : null}
                 <Item className="Item__marginBottom" label="Joined" value={moment(profile.created).format('MMMM D, Y')} />
                 <Item className="Item__marginBottom" label="Registered Locations" value={numberWithCommas(profile.exp)} />
                 {profile.discoveriesCount > 0 ?
