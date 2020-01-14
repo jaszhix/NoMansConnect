@@ -93,7 +93,6 @@ app.on('ready', async (): Promise<any> => {
     minWidth: 1280,
     minHeight: 720,
     frame: !aeroEnabled,
-    thickFrame: !aeroEnabled,
     transparent: false,
     webPreferences: {
       nodeIntegration: true,
