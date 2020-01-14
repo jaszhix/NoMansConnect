@@ -11,16 +11,12 @@ import log from './log';
 
 import state from './state';
 import Loader from './loader';
-import * as utils from './utils';
-const {dirSep, getLastGameModeSave, exc, formatBase, tip, fsWorker, ajaxWorker} = utils;
+import {dirSep, getLastGameModeSave, exc, formatBase, fsWorker, ajaxWorker} from './utils';
 import {pollSaveData} from './poll';
 import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
 import {parseSaveKeys} from './lang';
-// @ts-ignore
-import baseIcon from './assets/images/base_icon.png';
 
 import ErrorBoundary from './errorBoundary';
-import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDropdown} from './dropdowns';
 import {
   ImageModal,
   UsernameOverrideModal,
@@ -32,18 +28,15 @@ import {
   BaseRestorationModal,
   LogModal,
   SettingsModal,
-  StatsContainer
 } from './modals';
-import {Search} from './search';
 import Container from './container';
+import TitleBar from './titlebar';
 import {defaultPosition, letters} from './constants';
 
 const {dialog} = remote;
 let win: Electron.BrowserWindow;
 
 let formatCount = 1;
-
-const headerItemClasses = 'ui dropdown icon item App__titleBarControls';
 
 class App extends React.Component<GlobalState> {
   connections: any[];
@@ -607,12 +600,7 @@ class App extends React.Component<GlobalState> {
       state.set(stateUpdate);
     });
   }
-  handleCheat = (dataId, n) => {
-    let currentLocation = find(this.state.storedLocations, location => location.dataId === this.state.currentLocation);
-    if (currentLocation) {
-      this.handleTeleport(currentLocation, 0, dataId, n);
-    }
-  }
+
   handleSaveBase = (baseData: NMSBase = null) => {
     const {storedBases} = this.state;
 
@@ -998,35 +986,16 @@ class App extends React.Component<GlobalState> {
       this.fetchRemoteLocations(state.page, state.sort, false, true);
     });
   }
-  handleMaximize = () => {
-    let maximized = win.isMaximized();
-    if (maximized) {
-      win.unmaximize();
-    } else {
-      win.maximize();
-    }
-  }
   handleMaximizeEvent = () => {
     let maximized = win.isMaximized();
     state.set({maximized});
   }
-  handleMinimize = () => {
-    win.minimize();
-  }
-  handleClose = () => {
-    if (this.monitor && !module.hot) {
-      this.monitor.stop();
-    }
-    state.set({closing: true});
-    setTimeout(() => win.close(), 500);
   }
 
   handleSetUsernameOverride = () => {
     state.set({usernameOverride: true});
   }
-  handleLocationRegistrationToggle = () => {
-    state.set({registerLocation: !this.state.registerLocation});
-  }
+
   resetProfileModal = () => state.set({displayProfile: false})
   resetFriendRequestModal = () => state.set({displayFriendRequest: false})
   resetBaseRestorationModal = () => state.set({displayBaseRestoration: false})
@@ -1036,68 +1005,7 @@ class App extends React.Component<GlobalState> {
     var s = this.state;
     return (
       <div>
-        <div className="ui top attached menu App__topAttachedMenu">
-          <h2 className="App__title">{s.title}</h2>
-          <div className="right menu">
-            {!s.init && s.navLoad ? <Loader loading={null} /> : null}
-            {!s.init ?
-            <Search search={s.search} /> : null}
-            {!s.offline ?
-            <StatsContainer height={this.state.height} /> : null}
-            {this.state.profile && this.state.profile.notifications && this.state.profile.notifications.length > 0 ?
-            <NotificationDropdown
-            machineId={this.state.machineId}
-            username={this.state.username}
-            options={this.state.profile.notifications}
-            height={this.state.height} /> : null}
-            {!s.ps4User ?
-            <BaseDropdownMenu
-            baseIcon={baseIcon}
-            storedBases={this.state.storedBases} /> : null}
-            {s.profile && !s.ps4User && s.displaySaveEditor ?
-            <SaveEditorDropdownMenu
-            profile={s.profile}
-            onCheat={this.handleCheat} /> : null}
-            <a
-            className="ui icon item noDrag cursorDefault"
-            onClick={this.handleLocationRegistrationToggle}
-            data-place="bottom"
-            data-tip={tip('Manually Register Location')}>
-              <i className="location arrow icon" />
-            </a>
-            <DropdownMenu s={s} />
-          </div>
-          <div
-          className={headerItemClasses}
-          onClick={this.handleSort}>
-            <div className="titlebar-controls">
-              <div className="titlebar-minimize" onClick={this.handleMinimize}>
-                <svg x="0px" y="0px" viewBox="0 0 10 1">
-                  <rect fill="#FFFFFF" width="10" height="1" />
-                </svg>
-              </div>
-              <div className="titlebar-resize" onClick={this.handleMaximize}>
-                {!s.maximized ?
-                <svg className="fullscreen-svg" x="0px" y="0px" viewBox="0 0 10 10">
-                  <path fill="#FFFFFF" d="M 0 0 L 0 10 L 10 10 L 10 0 L 0 0 z M 1 1 L 9 1 L 9 9 L 1 9 L 1 1 z " />
-                </svg>
-                :
-                <svg className="maximize-svg" x="0px" y="0px" viewBox="0 0 10 10">
-                  <mask id="Mask">
-                    <path fill="#FFFFFF" d="M 3 1 L 9 1 L 9 7 L 8 7 L 8 2 L 3 2 L 3 1 z" />
-                    <path fill="#FFFFFF" d="M 1 3 L 7 3 L 7 9 L 1 9 L 1 3 z" />
-                  </mask>
-                  <path fill="#FFFFFF" d="M 2 0 L 10 0 L 10 8 L 8 8 L 8 10 L 0 10 L 0 2 L 2 2 L 2 0 z" mask="url(#Mask)" />
-                </svg>}
-              </div>
-              <div className="titlebar-close" onClick={this.handleClose}>
-                <svg x="0px" y="0px" viewBox="0 0 10 10">
-                  <polygon fill="#FFFFFF" points="10,1 9,0 5,4 1,0 0,1 4,5 0,9 1,10 5,6 9,10 10,9 6,5" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
+        <TitleBar s={this.state} monitor={this.monitor} />
         {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} /> : null}
         {this.state.usernameOverride ? <UsernameOverrideModal ps4User={this.state.ps4User} /> : null}
         {this.state.registerLocation ? <LocationRegistrationModal s={pick(this.state, ['machineId', 'username', 'height', 'storedLocations'])} /> : null}
