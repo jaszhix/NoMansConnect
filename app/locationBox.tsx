@@ -648,7 +648,8 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       showValue={null}
       persist={edit || this.state.positionSelect}
       options={leftOptions}
-      detailsOnly={detailsOnly} />
+      detailsOnly={detailsOnly}
+      tipPlacement="right" />
     );
 
     return (

@@ -25,6 +25,7 @@ interface BasicDropdownProps {
   width?: number;
   detailsOnly?: boolean;
   value?: any;
+  tipPlacement?: string;
 }
 
 interface BasicDropdownState {
@@ -420,7 +421,8 @@ export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDrop
     showValue: true,
     persist: false,
     isGalaxies: true,
-    height: 0
+    height: 0,
+    tipPlacement: 'left',
   };
 
   connectId: number;
@@ -481,6 +483,7 @@ export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDrop
   }
   render() {
     const {maxHeight} = this.state;
+
     return (
       <div
       ref={this.getRef}
@@ -513,7 +516,7 @@ export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDrop
               key={i}
               className={`item${option.disabled ? ' disabled' : ''}`}
               onClick={option.disabled ? null : (e) => this.handleOptionClick(e, option)}
-              data-place="left"
+              data-place={this.props.tipPlacement}
               data-tip={tip(tooltip)}>
                 {option.label}
                 {option.hasOwnProperty('toggle') ?
