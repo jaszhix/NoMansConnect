@@ -122,7 +122,7 @@ const syncDiscoveries = () => {
   }).catch(() => state.set({navLoad: false}));
 }
 
-let processData = (opts, saveData, location, refLocation, username, profile=null) => {
+let processData = async (opts, saveData, location, refLocation, username, profile=null) => {
   let {init, machineId, NMSRunning, next} = opts;
   let {storedLocations} = state;
   let stateUpdate: GlobalState = {};
@@ -195,238 +195,248 @@ let processData = (opts, saveData, location, refLocation, username, profile=null
     }
   }
 
-  let refFav = findIndex(favorites || [], (fav) => {
-    return fav === location.dataId;
-  });
+  let refFav = findIndex(favorites || [], (fav) => fav === location.dataId);
   let upvote = refFav !== -1;
   let {PlanetIndex} = saveData.result.PlayerStateData.UniverseAddress.GalacticAddress;
+  let shouldCaptureScreenshot = !init
+    && NMSRunning
+    && state.autoCapture
+    && (state.autoCaptureSpaceStations || PlanetIndex > 0);
+  let image = '';
 
-  screenshot(!init && NMSRunning && state.autoCapture && (state.autoCaptureSpaceStations || PlanetIndex > 0), (image) => {
-    let currentPosition = {
-      playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
-      playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
-      shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
-      shipTransform: saveData.result.SpawnStateData.ShipTransformAt,
-    };
-    let manuallyEntered = isEqual(defaultPosition, currentPosition);
-    assignIn(currentPosition, {
-      name: '',
-      image: '',
+  let currentPosition = {
+    playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
+    playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
+    shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
+    shipTransform: saveData.result.SpawnStateData.ShipTransformAt,
+  };
+  let manuallyEntered = isEqual(defaultPosition, currentPosition);
+  assignIn(currentPosition, {
+    name: '',
+    image: '',
+  });
+  let isLocationUpdate = false;
+
+  if (refLocation === -1) {
+    if (shouldCaptureScreenshot) image = await screenshot();
+
+    assignIn(location, {
+      username,
+      positions: [currentPosition],
+      galaxy: saveData.result.PlayerStateData.UniverseAddress.RealityIndex,
+      distanceToCenter: calculateDistanceToCenter(location.VoxelX, location.VoxelY, location.VoxelZ),
+      base: false,
+      baseData: null,
+      upvote: upvote,
+      image,
+      mods: state.mods,
+      manuallyEntered,
+      created: Date.now(),
+      version: saveData.result.Version,
+      apiVersion: 3
     });
-    let isLocationUpdate = false;
 
-    if (refLocation === -1) {
-      assignIn(location, {
-        username,
-        positions: [currentPosition],
-        galaxy: saveData.result.PlayerStateData.UniverseAddress.RealityIndex,
-        distanceToCenter: calculateDistanceToCenter(location.VoxelX, location.VoxelY, location.VoxelZ),
-        base: false,
-        baseData: null,
-        upvote: upvote,
-        image,
-        mods: state.mods,
-        manuallyEntered,
-        created: Date.now(),
-        version: saveData.result.Version,
-        apiVersion: 3
+    location.jumps = Math.ceil(location.distanceToCenter / 400);
+    location = formatTranslatedID(location);
+
+    if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
+      log.error(`translatedId formatting is NaN: ${location}`);
+      state.set({username: location.username}, () => {
+        next();
       });
+      return;
+    }
+    if (!location.positions[0].playerPosition) {
+      location.manuallyEntered = true;
+    }
+    storedLocations.push(location);
+  } else {
+    let existingLocation = storedLocations[refLocation];
 
-      location.jumps = Math.ceil(location.distanceToCenter / 400);
-      location = formatTranslatedID(location);
-
-      if (location.translatedId.toLowerCase().indexOf('nan') !== -1) {
-        log.error(`translatedId formatting is NaN: ${location}`);
-        state.set({username: location.username}, () => {
-          next();
-        });
-        return;
-      }
-      if (!location.positions[0].playerPosition) {
-        location.manuallyEntered = true;
-      }
-      storedLocations.push(location);
-    } else {
-      let existingLocation = storedLocations[refLocation];
-
-      if (existingLocation.positions) {
-        let refPosition = find(existingLocation.positions, (position) => {
-          return (
-            isEqual(position.playerPosition, currentPosition.playerPosition) &&
-            isEqual(position.playerTransform, currentPosition.playerTransform) &&
-            isEqual(position.shipPosition, currentPosition.shipPosition) &&
-            isEqual(position.shipTransform, currentPosition.shipTransform)
-          );
-        });
-        if (!refPosition) {
-          existingLocation.positions.push(currentPosition);
-          isLocationUpdate = true;
-        }
-        if (!existingLocation.image && image) {
-          existingLocation.image = image;
-          isLocationUpdate = true;
-        }
-      } else if (existingLocation.playerPosition) {
-        existingLocation.positions = [
-          {
-            name: '',
-            image: '',
-            playerPosition: existingLocation.playerPosition,
-            playerTransform: existingLocation.playerTransform,
-            shipPosition: existingLocation.shipPosition,
-            shipTransform: existingLocation.shipTransform
-          }
-        ];
-        delete existingLocation.playerPosition;
-        delete existingLocation.playerTransform;
-        delete existingLocation.shipPosition;
-        delete existingLocation.shipTransform;
+    if (existingLocation.positions) {
+      let refPosition = find(existingLocation.positions, (position) => {
+        return (
+          isEqual(position.playerPosition, currentPosition.playerPosition) &&
+          isEqual(position.playerTransform, currentPosition.playerTransform) &&
+          isEqual(position.shipPosition, currentPosition.shipPosition) &&
+          isEqual(position.shipTransform, currentPosition.shipTransform)
+        );
+      });
+      if (!refPosition) {
+        existingLocation.positions.push(currentPosition);
         isLocationUpdate = true;
       }
 
-      if (isLocationUpdate) {
-        location = storedLocations[refLocation] = existingLocation;
+      if (!existingLocation.image && shouldCaptureScreenshot) {
+        image = existingLocation.image = await screenshot();
+        isLocationUpdate = true;
       }
+    } else if (existingLocation.playerPosition) {
+      existingLocation.positions = [
+        {
+          name: '',
+          image: '',
+          playerPosition: existingLocation.playerPosition,
+          playerTransform: existingLocation.playerTransform,
+          shipPosition: existingLocation.shipPosition,
+          shipTransform: existingLocation.shipTransform
+        }
+      ];
+      delete existingLocation.playerPosition;
+      delete existingLocation.playerTransform;
+      delete existingLocation.shipPosition;
+      delete existingLocation.shipTransform;
+      isLocationUpdate = true;
     }
 
-    // Detect player bases
-    each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
-      if (!base || !base.BaseType) return;
-
-      let galacticAddress;
-
-      if (!base.GalacticAddress || base.BaseType.PersistentBaseTypes !== 'HomePlanetBase') {
-        return;
-      }
-      galacticAddress = gaToObject(base.GalacticAddress);
-
-      let refStoredLocation = find(storedLocations, (storedLocation) => {
-        return (
-          storedLocation
-          && galacticAddress.VoxelX === storedLocation.VoxelX
-          && galacticAddress.VoxelY === storedLocation.VoxelY
-          && galacticAddress.VoxelZ === storedLocation.VoxelZ
-          && galacticAddress.SolarSystemIndex === storedLocation.SolarSystemIndex
-          && galacticAddress.PlanetIndex === storedLocation.PlanetIndex
-          && (!galacticAddress.RealityIndex || galacticAddress.RealityIndex === storedLocation.galaxy)
-        );
-      });
-
-      if (refStoredLocation && (!refStoredLocation.base || !refStoredLocation.baseData)) {
-        Object.assign(refStoredLocation, {
-          base: true,
-          baseData: formatBase(saveData.result.PlayerStateData.PersistentPlayerBases[i]),
-        });
-
-        updateLocation({
-          location: refStoredLocation,
-          isLocationUpdate: true,
-          stateUpdate,
-          errorHandler: () => log.error('Unable to update base data for location: ', refStoredLocation.dataId)
-        });
-      }
-    });
-
-    stateUpdate = Object.assign(stateUpdate, {
-      storedLocations,
-      currentLocation: location.dataId,
-      selectedGalaxy: tryFn(() => parseInt(location.dataId.split(':')[3])),
-      username,
-      favorites,
-      saveDirectory: state.saveDirectory,
-      saveFileName: saveData.path,
-      saveVersion: saveData.result.Version,
-      machineId,
-      loading: 'Syncing discoveries...',
-    });
-
-    if (profile) {
-      stateUpdate.profile = profile.data;
-
-      // Add friends to the map legend
-      let {show} = state;
-
-      each(profile.data.friends, (friend) => {
-        if (show[friend.username]) {
-          return;
-        }
-
-        let color;
-
-        // Avoid dark colors for better contrast
-        while (!color || tc(color).isDark()) {
-          color = `#${(Math.random() * 0xFFFFFF << 0).toString(16)}`;
-        }
-
-        show[friend.username] = {
-          color,
-          value: true,
-          listKey: `${friend.username}Locations`
-        };
-      });
-
-      // Make sure stale/removed friends get removed from the legend
-      each(show, (val, key) => {
-        if (state.defaultLegendKeys.indexOf(key) > -1) {
-          return;
-        }
-
-        let refIndex = findIndex(profile.data.friends, (friend) => friend.username === key);
-        if (refIndex === -1) {
-          delete show[key];
-        }
-      });
-
-      stateUpdate.show = show;
+    if (isLocationUpdate) {
+      location = storedLocations[refLocation] = existingLocation;
     }
+  }
 
-    if (init) {
-      log.error(`Username: ${stateUpdate.username}`);
-      log.error(`Active save file: ${stateUpdate.saveFileName}`);
-      log.error(`Current location: ${stateUpdate.currentLocation}`);
-    }
+  // Detect player bases
+  each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
+    if (!base || !base.BaseType) return;
 
-    if (state.offline) {
-      state.set(stateUpdate);
-      next();
+    let galacticAddress;
+
+    if (!base.GalacticAddress || base.BaseType.PersistentBaseTypes !== 'HomePlanetBase') {
       return;
     }
+    galacticAddress = gaToObject(base.GalacticAddress);
 
-    state.set(stateUpdate, () => {
-      let errorHandler = (err) => {
-        if (err.response && err.response.data && err.response.data.status) {
-          log.error('processData -> errorHandler:', err.stack, err.response.data.status);
-        }
-        next([err, err.message, err.stack]);
-      };
+    let refStoredLocation = find(storedLocations, (storedLocation) => {
+      return (
+        storedLocation
+        && galacticAddress.VoxelX === storedLocation.VoxelX
+        && galacticAddress.VoxelY === storedLocation.VoxelY
+        && galacticAddress.VoxelZ === storedLocation.VoxelZ
+        && galacticAddress.SolarSystemIndex === storedLocation.SolarSystemIndex
+        && galacticAddress.PlanetIndex === storedLocation.PlanetIndex
+        && (!galacticAddress.RealityIndex || galacticAddress.RealityIndex === storedLocation.galaxy)
+      );
+    });
 
-      if (profile && !state.offline && (init || refLocation === -1 || isLocationUpdate)) {
-        updateDiscoveries({
-          saveData,
-          profile: profile.data,
-          init,
-          next,
-          errorHandler
-        }).then(() => {
-          if (!init || isLocationUpdate) {
-            updateLocation({
-              location,
-              isLocationUpdate,
-              image,
-              stateUpdate,
-              next,
-              errorHandler
-            });
-          }
-        }).catch(errorHandler);
+    if (refStoredLocation && (!refStoredLocation.base || !refStoredLocation.baseData)) {
+      Object.assign(refStoredLocation, {
+        base: true,
+        baseData: formatBase(saveData.result.PlayerStateData.PersistentPlayerBases[i]),
+      });
+
+      updateLocation({
+        location: refStoredLocation,
+        isLocationUpdate: true,
+        stateUpdate,
+        errorHandler: () => log.error('Unable to update base data for location: ', refStoredLocation.dataId)
+      });
+    }
+  });
+
+  stateUpdate = Object.assign(stateUpdate, {
+    storedLocations,
+    currentLocation: location.dataId,
+    selectedGalaxy: tryFn(() => parseInt(location.dataId.split(':')[3])),
+    username,
+    favorites,
+    saveDirectory: state.saveDirectory,
+    saveFileName: saveData.path,
+    saveVersion: saveData.result.Version,
+    machineId,
+    loading: 'Syncing discoveries...',
+  });
+
+  if (profile) {
+    stateUpdate.profile = profile.data;
+
+    // Add friends to the map legend
+    let {show} = state;
+
+    each(profile.data.friends, (friend) => {
+      if (show[friend.username]) {
         return;
       }
-      next(false);
+
+      let color;
+
+      // Avoid dark colors for better contrast
+      while (!color || tc(color).isDark()) {
+        color = `#${(Math.random() * 0xFFFFFF << 0).toString(16)}`;
+      }
+
+      show[friend.username] = {
+        color,
+        value: true,
+        listKey: `${friend.username}Locations`
+      };
     });
+
+    // Make sure stale/removed friends get removed from the legend
+    each(show, (val, key) => {
+      if (state.defaultLegendKeys.indexOf(key) > -1) {
+        return;
+      }
+
+      let refIndex = findIndex(profile.data.friends, (friend) => friend.username === key);
+      if (refIndex === -1) {
+        delete show[key];
+      }
+    });
+
+    stateUpdate.show = show;
+  }
+
+  if (init) {
+    log.error(`Username: ${stateUpdate.username}`);
+    log.error(`Active save file: ${stateUpdate.saveFileName}`);
+    log.error(`Current location: ${stateUpdate.currentLocation}`);
+  }
+
+  if (state.offline) {
+    state.set(stateUpdate);
+    next();
+    return;
+  }
+
+  state.set(stateUpdate, () => {
+    let errorHandler = (err) => {
+      if (err.response && err.response.data && err.response.data.status) {
+        log.error('processData -> errorHandler:', err.stack, err.response.data.status);
+      }
+      next([err, err.message, err.stack]);
+    };
+
+    if (profile && !state.offline && (init || refLocation === -1 || isLocationUpdate)) {
+      updateDiscoveries({
+        saveData,
+        profile: profile.data,
+        init,
+        next,
+        errorHandler
+      }).then(() => {
+        if (!init || isLocationUpdate) {
+          updateLocation({
+            location,
+            isLocationUpdate,
+            image,
+            stateUpdate,
+            next,
+            errorHandler
+          });
+        }
+      }).catch(errorHandler);
+      return;
+    }
+    next(false);
   });
 }
 
-let pollSaveData: Function;
+let pollSaveData: (opts: {
+  mode: string,
+  init: boolean;
+  machineId: string;
+  NMSRunning?: boolean;
+}) => void;
+
 let getLastSave = (opts) => {
   let {mode, machineId} = opts;
   if (mode && mode !== state.mode) {

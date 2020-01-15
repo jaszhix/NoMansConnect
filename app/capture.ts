@@ -13,14 +13,14 @@ const types = ['window'];
 let key = 'bounds';
 let screenshotTimeStampsUsed = [];
 
-const steamCapture = (callback) => {
+const steamCapture = (resolve) => {
   // Trigger F12 key press, then find the newest screenshot in NMS' screenshot directory.
   // Timestamps are conveniently in the file name.
   sendkeys('{F12}').then(() => setTimeout(() => {
     fsWorker.walk(state.steamInstallDirectory, (err, paths) => {
       if (err) {
         log.error(err);
-        callback('');
+        resolve('');
         return;
       }
 
@@ -42,85 +42,82 @@ const steamCapture = (callback) => {
 
       // When holding down the shift key (sprinting in NMS), it prevents the screenshot capturer
       // from working, and the last uploaded image is re-uploaded as a result.
-      if (screenshotTimeStampsUsed.indexOf(time) > -1) return callback('');
+      if (screenshotTimeStampsUsed.indexOf(time) > -1) return resolve('');
 
       screenshotTimeStampsUsed.push(time);
 
       fsWorker.readFile(captures[0].path, (err, data) => {
         if (err) {
           log.error(err);
-          callback('');
+          resolve('');
           return;
         }
 
-        callback(`data:image/jpg;base64,${Buffer.from(data).toString('base64')}`);
+        resolve(`data:image/jpg;base64,${Buffer.from(data).toString('base64')}`);
       });
     });
   }, 2000)).catch((err) => {
     log.error(err);
-    callback('');
+    resolve('');
   });
 }
 
-const screenshot = function(proceed: boolean, callback: Function) {
-  if (!proceed) {
-    callback('');
-    return;
-  }
+const screenshot = (): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    if (process.platform === 'win32' && types.indexOf('screen') === -1) {
+      types.push('screen');
+      key = 'workArea';
+    }
 
-  if (process.platform === 'win32') {
-    types.push('screen');
-    key = 'workArea';
-  }
-
-  switch (state.autoCaptureBackend) {
-    case 'steam':
-      // Find the system Steam directory. This looks similar to the way NMS' install directory is found,
-      // but the NMS install directory might be on another drive. Once it's found, result is stored.
-      fsWorker.exists(state.steamInstallDirectory, (exists) => {
-        if (exists) {
-          steamCapture(callback);
-          return;
-        }
-
-        rEach(letters, (letter, i, next) => {
-          const steamInstallDirectory = `${letter}:\\Program Files (x86)\\Steam\\userdata`;
-          fsWorker.exists(steamInstallDirectory, (exists) => {
-            if (exists) {
-              state.set({steamInstallDirectory});
-              steamCapture(callback);
-              return;
-            }
-            next();
-          });
-        });
-      });
-      break;
-    case 'legacy':
-      desktopCapturer.getSources({
-        types,
-        thumbnailSize: {
-          width: Math.floor(primaryDisplay[key].width / 2),
-          height: Math.floor(primaryDisplay[key].height / 2)
-        }
-      }, (error, sources) => {
-        if (error) {
-          log.error(`Unable to get desktop capturer sources: ${error}`);
-          callback('');
-          return;
-        };
-        for (let i = 0; i < sources.length; ++i) {
-          if (sources[i].name === 'Screen 1' || sources[i].name === 'Entire screen' || sources[i].name === `No Man's Sky`) {
-            // @ts-ignore
-            callback(sources[i].thumbnail.toDataURL('image/jpeg', 0.75));
+    switch (state.autoCaptureBackend) {
+      case 'steam': {
+        // Find the system Steam directory. This looks similar to the way NMS' install directory is found,
+        // but the NMS install directory might be on another drive. Once it's found, result is stored.
+        fsWorker.exists(state.steamInstallDirectory, (exists) => {
+          if (exists) {
+            steamCapture(resolve);
             return;
           }
-        }
-        log.error('No screen found for screenshot auto-capture.');
-        callback('');
-      });
-      break;
-  }
+
+          rEach(letters, (letter, i, next) => {
+            const steamInstallDirectory = `${letter}:\\Program Files (x86)\\Steam\\userdata`;
+            fsWorker.exists(steamInstallDirectory, (exists) => {
+              if (exists) {
+                state.set({steamInstallDirectory});
+                steamCapture(resolve);
+                return;
+              }
+              next();
+            });
+          });
+        });
+        break;
+      }
+      case 'legacy': {
+        desktopCapturer.getSources({
+          types,
+          thumbnailSize: {
+            width: Math.floor(primaryDisplay[key].width / 2),
+            height: Math.floor(primaryDisplay[key].height / 2)
+          }
+        }).then((sources) => {
+          for (let i = 0; i < sources.length; ++i) {
+            if (sources[i].name === 'Screen 1' || sources[i].name === 'Entire screen' || sources[i].name === `No Man's Sky`) {
+              // @ts-ignore
+              resolve(sources[i].thumbnail.toDataURL('image/jpeg', 0.75));
+              return;
+            }
+          }
+          log.error('No screen found for screenshot auto-capture.');
+          resolve('');
+        }).catch((error) => {
+          log.error(`Unable to get desktop capturer sources: ${error}`);
+          resolve('');
+        })
+        break;
+      }
+    }
+  });
 }
 
 export default screenshot;
