@@ -402,6 +402,12 @@ class Container extends React.Component<ContainerProps, ContainerState> {
       });
     });
   }
+
+  handleVisibility = (location) => {
+    location.private = !location.private;
+    this.updateLocation(location);
+  }
+
   handleSelectLocation = (location) => {
     let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.dataId === location.dataId;
     let _location = null;
@@ -723,6 +729,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
                 onEdit={this.toggleEdit}
                 onPositionEdit={this.togglePositionEdit}
                 onMarkCompatible={this.handleCompatibility}
+                onMarkPrivate={this.handleVisibility}
                 onRemoveStoredLocation={p.onRemoveStoredLocation}
                 onSubmit={this.handleLocationMetadataUpdate}
                 ps4User={ps4User} />

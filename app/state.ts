@@ -2,12 +2,12 @@ import {remote} from 'electron';
 import os from 'os';
 import path from 'path';
 import {pick, uniqBy, cloneDeep} from 'lodash';
-import {each, filter} from '@jaszhix/utils';
+import {each, filter, findIndex} from '@jaszhix/utils';
 import initStore from '@jaszhix/state';
 
 import {handleRestart} from './dialog';
 import log from './log';
-import {fsWorker} from './utils';
+import {fsWorker, ajaxWorker} from './utils';
 import galaxies from './static/galaxies.json';
 import knownProducts from './static/knownProducts.json';
 
@@ -344,41 +344,83 @@ const state: GlobalState = initStore({
       }, true);
     }
   },
-  handleMaintenance: (obj, cb) => {
-    // This function will purge 25% of cached remote loccations after 4000 are
-    // stored, so performance isn't compromised in the interim of a better solution.
-    // Favorites will always stay in the list.
-    // TODO: Find a beter way to handle cache
-    if ((state.maintenanceTS + 86400000 < Date.now())) {
-      let remoteLength = obj.remoteLocations.results.length;
-      state.set({loading: 'Validating locations Please wait...', remoteLength});
-      obj.maintenanceTS = Date.now();
-      if (remoteLength < 6000) {
-        cb(obj);
-        return;
-      }
+  validateCache: (obj) => {
+    let remoteLength = obj.remoteLocations.results.length;
+    state.set({loading: 'Validating locations Please wait...', remoteLength});
 
-      let locations = filter(obj.remoteLocations.results, (location: NMSLocation) => {
-        return (location.upvote
-          || (location.VoxelY > -128 && location.VoxelY < 127
-          && location.VoxelZ > -2048 && location.VoxelZ < 2047
-          && location.VoxelX > -2048 && location.VoxelX < 2047));
-      });
+    // Only reset the maintenance routine wait period if the client is online,
+    // since it partially depends on an API query.
+    if (!state.offline && !obj.offline) obj.maintenanceTS = Date.now();
 
-      locations = uniqBy(locations, (location: NMSLocation) => {
-        return location.dataId;
-      });
+    let locations = filter(obj.remoteLocations.results, (location: NMSLocation) => {
+      return (location.upvote
+        || (location.VoxelY > -128 && location.VoxelY < 127
+        && location.VoxelZ > -2048 && location.VoxelZ < 2047
+        && location.VoxelX > -2048 && location.VoxelX < 2047));
+    });
 
-      obj.remoteLocations.results = locations;
-      obj.remoteLocations.count = locations.length;
+    locations = uniqBy(locations, (location: NMSLocation) => {
+      return location.dataId;
+    });
 
-      obj.page = Math.ceil(obj.remoteLocations.results.length / state.pageSize)
-      obj.remoteLocations.page = obj.page;
+    obj.remoteLocations.results = locations;
+    obj.remoteLocations.count = locations.length;
+
+    obj.page = Math.ceil(obj.remoteLocations.results.length / state.pageSize)
+    obj.remoteLocations.page = obj.page;
+  },
+  handleMaintenance: async (obj, cb) => {
+    let {maintenanceTS} = state;
+
+    // Maintenance runs once every 24 hours, and only during startup.
+    // It clears locations with invalid coordinates that will result in NMS or NMC not
+    // working properly, and purges locations from cache other users marked private.
+    let needsMaintenance = maintenanceTS + 86400000 < Date.now();
+
+    if (!needsMaintenance) return cb();
+
+    let next = () => {
+      state.validateCache(obj);
+
+      cb();
+    };
+
+    if (!state.offline && !obj.offline) {
+      // Fetch a list of private location IDs that will be removed from client cache.
+      // The API is also filtering these from responses, but if a location later becomes
+      // private after being cached locally, it needs to be removed during maintenance.
+      ajaxWorker.get('/nmslocationmaintenance/').then((res) => {
+        let ids = res.data;
+
+        each(ids, (id) => {
+          let index = findIndex(obj.remoteLocations.results, (location) => {
+            let isFriendOfPrivateOwner = false;
+
+            // Friends can see each other's private locations.
+            if (state.profile) {
+              let {friends} = state.profile;
+
+              each(friends, (friend) => {
+                if (friend.username === state.username) isFriendOfPrivateOwner = true;
+              })
+            }
+            return location.id === id && location.username !== state.username && !isFriendOfPrivateOwner;
+          });
+
+          if (index > -1) obj.remoteLocations.results.splice(index, 1);
+        });
+
+        next();
+      }).catch(next)
+
+      return;
     }
 
-    cb(obj);
+    next();
   },
   handleState: (obj) => {
+    console.log(`STATE: `, obj);
+
     each(obj, (value, key) => {
       if (state.settingsKeys.indexOf(key) > -1) {
         console.log('Storing: ', key, value)

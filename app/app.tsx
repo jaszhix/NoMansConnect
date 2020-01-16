@@ -78,24 +78,22 @@ class App extends React.Component<GlobalState> {
           && state.remoteLocations
           && state.remoteLocations.results
           && state.remoteLocations.results.length > 0
-          && !state.closing) {
-          state.handleMaintenance(obj, (nextObject) => {
+          && !state.closing
+          && state.init) {
+          state.handleMaintenance(obj, () => {
             window.jsonWorker.postMessage({
               method: 'set',
               key: 'remoteLocations',
-              value: nextObject.remoteLocations,
+              value: obj.remoteLocations,
             });
-            this.setState(nextObject, () => state.handleState(obj));
+            this.setState(obj, () => state.handleState(obj));
           });
           return;
         }
-        this.setState(obj, () => {
-          state.handleState(obj);
-        });
+
+        this.setState(obj, () => state.handleState(obj));
 
         if (obj.loading) log.error(obj.loading);
-
-        console.log(`STATE: `, this.state);
       }),
       state.connect({
         fetchRemoteLocations: () => this.fetchRemoteLocations(1),
@@ -560,25 +558,25 @@ class App extends React.Component<GlobalState> {
     })
   }
   fetchRemoteLocations = (page = this.state.page, sort = this.state.sort, init = false, pagination = false) => {
-    if (this.state.offline || this.state.closing) {
-      return;
-    }
-    if (!state.navLoad) {
-      state.set({navLoad: true});
-    }
+    let {offline, closing, username} = this.state;
+
+    if (offline || closing) return;
+
     let q = state.search.length > 0 ? state.search : null;
     let path = q ? '/nmslocationsearch' : '/nmslocation';
+
+    if (!state.navLoad) state.set({navLoad: true});
+
     sort = sort === 'search' ? '-created' : sort;
 
     let params: LocationQueryParams = {
       page: page ? page : 1,
-      sort: sort,
-      q: q
+      sort,
+      q,
+      username,
     };
 
-    if (q) {
-      params.page_size = q.substr(0, 5) === 'user:' ? 2000 : 200;
-    }
+    if (q) params.page_size = q.substr(0, 5) === 'user:' ? 2000 : 200;
 
     ajaxWorker.get(path, {params}).then((res) => {
       this.formatRemoteLocations(res, page, sort, false, false, pagination && !state.offline, () => {

@@ -59,6 +59,7 @@ interface LocationBoxProps {
   onPositionEdit: (value?) => void;
   onUpdate?: (dataId: string, data: any /* location */, remove?: boolean) => void;
   onMarkCompatible: () => void;
+  onMarkPrivate: (location: NMSLocation) => void;
   onDeleteScreen: () => void;
   onUploadScreen: () => void;
   onRemoveStoredLocation: () => void;
@@ -479,6 +480,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       ps4User,
       favorites,
       onMarkCompatible,
+      onMarkPrivate,
       onRemoveStoredLocation,
       onFav,
       onSubmit,
@@ -568,11 +570,16 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             onClick: this.togglePositionEdit
           });
         }
+        leftOptions.push({
+          id: 'edit',
+          label: `Mark as ${location.private ? 'Public' : 'Private'}`,
+          onClick: () => onMarkPrivate(location)
+        });
         if (!version) {
           leftOptions.push({
             id: 'markCompatibility',
             label: 'Mark as Compatible',
-            onClick: () => onMarkCompatible()
+            onClick: onMarkCompatible
           });
         }
         if (deleteArg) {
@@ -593,7 +600,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         leftOptions.push({
           id: 'removeStored',
           label: `${isOwnLocation ? location.isHidden ? 'Show In' : 'Hide From' : 'Remove From'} Storage`,
-          onClick: () => onRemoveStoredLocation()
+          onClick: onRemoveStoredLocation
         });
       }
       leftOptions.push({

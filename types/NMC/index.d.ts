@@ -84,6 +84,7 @@ declare global {
     page_size?: number;
     sort?: string;
     q?: string;
+    username?: string;
   }
 
   interface VisibleRange {
@@ -290,6 +291,7 @@ declare global {
     apiVersion: number;
     dirty?: boolean;
     isHidden: boolean;
+    private?: boolean;
     results?: NMSLocation[]; // deprecated
     data?: NMSLocation; // deprecated
   }
