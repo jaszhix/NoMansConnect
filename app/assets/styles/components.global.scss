@@ -1,0 +1,735 @@
+.App__topAttachedMenu {
+  position: absolute;
+  max-height: 42px;
+  z-index: 99;
+  -webkit-user-select: none;
+  -webkit-app-region: drag;
+}
+.App__title {
+  position: absolute;
+  left: 16px;
+  top: 5px;
+  margin: initial;
+  -webkit-transition: left 0.1s;
+  text-transform: uppercase;
+}
+.App__titleBarControls {
+  -webkit-app-region: no-drag;
+  padding-right: 0px;
+}
+
+.StoredLocations__spacer {
+  height: 29px;
+  padding: 3px 8px;
+  border: 8px solid rgba(23, 26, 22, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.RemoteLocations__dropdownContainer {
+  position: absolute;
+  left: 17px;
+  top: 13px;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/*
+Container
+*/
+
+.Container__root {
+  padding-top: 51px !important;
+  float: left;
+  position: absolute;
+  margin: 0px auto !important;
+  left: 0px;
+  right: 0px;
+}
+.Container__mapAndSelected {
+  display: inline-flex  !important;
+  padding-top: 14px  !important;
+  margin-left: 0px !important;
+}
+.Container__left {
+  max-width: 800px !important;
+}
+
+/*
+Button
+*/
+
+.Button__div {
+  left: 9px !important;
+  letter-spacing: 3px;
+  font-size: 16px;
+  padding: 3px 3px !important;
+  text-align: center;
+  cursor: pointer;
+}
+.Button__disabled {
+  opacity: 0.8;
+  cursor: default !important;
+}
+
+.Button__div:hover {
+  font-weight: 600;
+}
+
+/*
+LocationBox
+*/
+
+.LocationBox__PositionEditContainer {
+  height: 338px;
+  max-height: 338px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.LocationBox__PositionEditContainerTrash {
+  position: absolute;
+  top: 16px;
+  float: right;
+  z-index: 100
+}
+.LocationBox__wrapperStyle {
+  min-height: 245px
+}
+.LocationBox__inputRow {
+  max-width: 100%;
+  margin: 0em;
+  flex: 1 0 auto;
+  outline: none;
+  padding: 0.67861429em 0em;
+  border: 1px solid rgba(34, 36, 38, 0.15);
+  border-radius: 0.28571429rem;
+  -webkit-transition: box-shadow 0.1s ease, border-color 0.1s ease;
+}
+.LocationBox__inputStyle {
+  width: 300px;
+  position: relative;
+  left: 28px;
+  top: 7px;
+  color: #FFF;
+  background: rgb(23, 26, 22) !important;
+  padding: 0.67861429em !important;
+  border-radius: 0px !important;
+  border: 1px solid #DA2600 !important;
+  font-size: 15px;
+  letter-spacing: 2px;
+  margin-bottom: 7px !important;
+}
+.LocationBox__inputCol {
+  padding-left: 0px !important;
+}
+.LocationBox__addTagButtonContainer {
+  position: relative;
+  top: 11px;
+  left: 24px;
+}
+.LocationBox__tagResultsContainer {
+  width: 240px;
+  max-height: 183px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgb(23, 26, 22);
+  border: 1px solid #DA2600;
+  position: absolute;
+  top: 46px;
+  left: 28px;
+  z-index: 1;
+  padding: 3px 0px;
+}
+.LocationBox__tagItem {
+  background: rgb(23, 26, 22);
+  padding-left: 11px;
+  white-space: nowrap;
+}
+.LocationBox__addTagButton {
+  width: 10px;
+}
+.LocationBox__textareaStyle {
+  width: 300px;
+  /* height: 234px; */
+  position: relative;
+  left: 28px;
+  top: 7px;
+  color: #FFF;
+  background: rgba(0, 0, 0, 0);
+  padding: 0.67861429em;
+  border: 1px solid #DA2600 !important;
+  font-size: 15px;
+  letter-spacing: 2px;
+  outline-color: none;
+}
+.LocationBox__imageStyle {
+  cursor: pointer;
+  max-height: 144.5px;
+  max-width: 386px;
+  width: 99%;
+}
+.LocationBox__starStyle {
+  position: absolute;
+  top: 15px;
+  right: 10px;
+  cursor: pointer;
+}
+.LocationBox__baseStyle {
+  width: 21px;
+  height: 21px;
+}
+.LocationBox__uiSegmentEditStyle {
+  height: 294px;
+  padding: 3px 3px !important;
+  cursor: pointer;
+  background: unset !important;
+}
+.LocationBox__scrollBoxStyle {
+  max-height: 177px;
+  min-height: 185px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  width: 363px;
+}
+.LocationBox__scrollBoxProfileStyle {
+  width: unset !important;
+  min-height: unset !important;
+  max-height: unset !important;
+  overflow-y: unset;
+  overflow-x: unset;
+}
+.LocationBox__badge {
+  position: absolute;
+  top: 1em !important;
+  left: initial !important;
+  margin: initial !important;
+  margin-left: 8px !important;
+  background-color: rgba(0, 0, 0, 0) !important;
+  color: rgba(255, 255, 255, 0.61);
+  border: 1px solid rgba(255, 255, 255, 0.27) !important;
+  z-index: 0 !important;
+  cursor: pointer;
+}
+.LocationBox__tag {
+  margin: initial !important;
+  margin-left: 8px !important;
+  margin-bottom: 5px !important;
+  background-color: rgba(0, 0, 0, 0) !important;
+  color: rgba(255, 255, 255, 0.61);
+  border: 1px solid rgba(255, 255, 255, 0.27) !important;
+  z-index: 0 !important;
+  cursor: pointer;
+}
+.LocationBox__tag > span {
+  margin-left: 12px;
+  position: relative;
+  top: -1px;
+}
+.LocationBox__tag > span:hover {
+  color: #fff;
+}
+.LocationBox__tagRow {
+  overflow-y: auto;
+  max-height: 126px;
+  margin-left: 9px;
+}
+.LocationBox__glyphs {
+  height: 16px;
+  width: 16px;
+}
+.LocationBox__compactRemoteScrollBox {
+  max-height: 400px;
+  overflow-y: hidden;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+.LocationBox__modsMarkup {
+  padding: 0px 2px;
+  margin: 0px 3px 0px 0px;
+  background: rgba(23, 26, 22, 0.8);
+  font-size: 14px;
+  width: 300px;
+}
+.LocationBox__iconsContainer {
+  position: absolute;
+  left: 17px;
+  top: 16px;
+}
+.LocationBox__iconsSpan {
+  position: absolute;
+  top: 0px;
+}
+
+/*
+Item
+*/
+
+.Item__wrapperStyle {
+  position: relative;
+  box-shadow: 0px 1px 2px 0 rgba(34, 36, 38, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.27);
+  padding: 0px 2px;
+  margin: 0px 3px;
+  background: rgba(23, 26, 22, 0.8);
+  font-size: 16px;
+}
+
+.Item__noBorder {
+  border-bottom: unset !important;
+}
+
+.Item__portal {
+  position: relative;
+  top: 3px !important;
+}
+
+.Item__valueStyle {
+  float: right;
+  position: relative;
+  top: 1px;
+  -webkit-user-select: initial;
+}
+.Item__labelStyle {
+  font-weight: 600;
+}
+.Item__descriptionStyle {
+  margin-bottom: 8px;
+}
+.Item__hover:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.Item__disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.Item__marginBottom {
+  margin-bottom: 12px;
+}
+.Item__icon {
+  position: relative;
+  top: -2px;
+}
+
+.BasicDropdown__root {
+  font-size: 16px;
+}
+.BasicDropdown__alignRight {
+  position: absolute;
+  right: 8px;
+}
+.BasicDropdown__profile {
+  position: absolute !important;
+  top: 0px;
+  left: -43px;
+}
+
+.StoredLocations__container {
+  display: inline-flex;
+  background: transparent !important;
+  -webkit-user-select: none !important;
+}
+.StoredLocations__uiSegment {
+  background: rgba(23, 26, 22, 0.9) !important;
+  display: inline-table !important;
+  border-top: 2px solid #95220E !important;
+  min-width: 285px !important;
+  max-width: 285px !important;
+  text-align: center !important;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  z-index: 90 !important;
+}
+.StoredLocationItem__iconSpan {
+  position: absolute !important;
+  top: 4px !important;
+}
+.StoredLocationItem__icon {
+  width: 21px !important;
+  height: 21px !important;
+}
+.StoredLocationItem__marker {
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  cursor: pointer;
+}
+
+.Map3D__arrow {
+  position: absolute;
+  bottom: 20px;
+  right: -11px;
+  font-size: 30px !important;
+  transform: rotate(5.47rad);
+  transform-style: preserve-3d;
+}
+.Map3D__hudElement {
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #FFFFFF;
+  border-top: 2px solid rgb(149, 34, 14);
+  text-shadow: 2px 2px #000000;
+  -webkit-user-select: none;
+  cursor: default;
+  padding: 4px 8px;
+  letter-spacing: 3px;
+  font-size: 16px;
+}
+.Map3D__hudUser {
+  font-weight: 600;
+}
+
+/*
+Profile
+*/
+
+.ProfileModal__content {
+  margin-top: 0px !important;
+}
+
+.ProfileModal__container {
+  padding-top: 14px !important;
+  overflow: auto;
+}
+
+.ProfileModal__lgColumn {
+  max-width: 689px !important;
+}
+
+.ProfileModal__mdColumn {
+  max-width: 572px !important;
+}
+
+.ProfileModal__meta {
+  position: absolute;
+  right: 20px;
+  margin: 0px !important;
+}
+
+.ProfileModal__feed {
+  margin-bottom: 25px !important;
+}
+
+.ProfileModal__eventGroupCommon {
+  padding: 6px;
+}
+
+.ProfileModal__eventGroupStartDashed {
+  border-top: 1px dashed;
+}
+.ProfileModal__eventGroupStartSolid {
+  border-top: 1px solid;
+}
+.ProfileModal__eventGroupMidDashed {
+  border-right: 1px dashed;
+}
+.ProfileModal__eventGroupMidSolid {
+  border-right: 1px solid;
+}
+.ProfileModal__eventGroupEndDashed {
+  border-bottom: 1px dashed;
+}
+.ProfileModal__eventGroupEndSolid {
+  border-bottom: 1px solid;
+}
+.ProfileModal__eventGroupIsPlanet {
+  border-color: #95220E;
+}
+.ProfileModal__eventGroupIsNonPlanet {
+  border-color: #5399c2;
+}
+.ProfileModal__paginationCount {
+  position: relative;
+  top: 4px;
+}
+.ProfileModal__friendButton {
+  position: absolute !important;
+  top: -4px;
+  right: 0px;
+  left: unset !important;
+}
+.ProfileModal__badge {
+  position: relative;
+  top: -19px !important;
+  margin-left: 4px !important;
+  color: rgba(255, 255, 255, 0.61);
+  border: 1px solid rgba(255, 255, 255, 0.27) !important;
+  padding: 8px 4px 8px 4px;
+}
+
+.ProfileModal__badge > img {
+  width: 28px;
+  top: 9px;
+  position: relative;
+  opacity: 0.9;
+}
+
+/*
+Friend requests
+*/
+
+.FriendRequestModal__description {
+  margin-top: 20px;
+}
+
+.FriendRequestModal__buttonContainer {
+  position: absolute;
+  bottom: 20px;
+  left: 105px;
+}
+
+.ImageModal__root {
+  z-index: 1002 !important;
+}
+
+.LogModal__container {
+  overflow-y: auto;
+  overflow-x: none;
+}
+.LogModal__button {
+  width: 40px !important;
+}
+
+.SettingsModal__child {
+  margin-top: 0px !important;
+  padding-top: 0px !important;
+  padding-bottom: 0px !important;
+}
+.SettingsModal__childHeader {
+  margin-top: 8px !important;
+}
+
+.StatsModal__header {
+  position: absolute;
+  left: 8px;
+  right: 143px;
+  top: 14px;
+}
+.StatsModal__dropdown {
+  position: absolute;
+  left: 146px;
+  top: 16px;
+}
+
+.StatsModal__dropdownRight {
+  position: absolute;
+  right: 381px;
+  top: 16px;
+  min-width: 186px;
+}
+
+.StatsModal__leftColumn {
+  position: relative;
+  top: 24px;
+}
+.StatsModal__rightColumn {
+  position: relative;
+  top: 38px;
+  padding-right: 28px !important;
+}
+.StatsModal__spacer {
+  height: 23px;
+  padding: 3px 8px;
+  border: 8px solid rgba(23, 26, 22, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+.StatsModal__segment {
+  padding: 0px !important;
+}
+
+.UsernameOverrideModal__container {
+  padding: 8px;
+  text-align: center;
+  z-index: 1001;
+  -webkit-transform-origin: 50% 25%;
+  box-shadow: none;
+  border-top: 2px solid #95220E;
+  border: 1px solid #DA2600;
+  width: 400p;
+}
+
+.LocationRegistrationModal__inputContainer {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+}
+
+.Search__input {
+  letter-spacing: 2px;
+}
+.Search__resultsContainer {
+  width: 240px;
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgb(23, 26, 22);
+  border: 1px solid #DA2600;
+  position: absolute;
+  top: 29px;
+  left: -2px;
+  z-index: 1;
+  padding: 3px 0px;
+  font-size: 15px;
+}
+.Search__item {
+  background: rgb(23, 26, 22);
+  padding: 2px 0px 5px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.SearchField__selected {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/*
+Dropdowns
+*/
+
+.dropdown__menuContainer {
+  min-width: 183px;
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+  border-top: 1px solid rgb(149, 34, 14)
+}
+.dropdown__menuContainer .dropdown__baseMenuContainer {
+  width: 260px;
+}
+.dropdown__baseItem {
+  height: 36px !important;
+}
+.dropdown__trashIconContainer {
+  position: relative;
+  top: -14px;
+  left: 92%;
+  width: 179px;
+  cursor: pointer;
+}
+
+.NotificationDropdown__trashIconContainer {
+  position: relative;
+  top: 14px;
+  cursor: pointer;
+}
+
+/*
+Modals
+*/
+
+.modal__InputStyle {
+  width: 300px;
+  position: relative;
+  top: 7px;
+  color: #FFFFFF;
+  background: rgb(23, 26, 22);
+  padding: 0.67861429em;
+  border-radius: 0px;
+  border: 1px solid #DA2600;
+  font-size: 15px;
+  letter-spacing: 2px;
+}
+.modal__InputContainer {
+  position: absolute;
+  top: 35px;
+  left: 50px;
+}
+
+.modal__compact {
+  padding: 8px !important;
+  text-align: center !important;
+  z-index: 1001 !important;
+  -webkit-transform-origin: 50% 25% !important;
+  box-shadow: none !important;
+  border-top: 2px solid #95220E !important;
+  border: 1px solid #DA2600 !important;
+  width: 400px !important;
+  height: 145px !important;
+  position: absolute !important;
+  left: 0px !important;
+  right: 0px !important;
+  top: 45% !important;
+  margin: 0px auto !important;
+}
+
+.modal__full {
+  background: rgb(23, 26, 22) !important;
+  border-top: 2px solid #95220E !important;
+  position: fixed !important;
+  left: 0px !important;
+  top: 6% !important;
+  bottom: 5% !important;
+  z-index: 1001;
+  -webkit-transform-origin: 50% 25% !important;
+  box-shadow: none !important;
+  border: 1px solid #DA2600 !important;
+  max-width: 75% !important;
+}
+.modal__full__close {
+  position: absolute;
+  top: 7px !important;
+  right: 6px !important;
+  color: #FFFFFF !important;
+  padding-top: 0px !important;
+}
+
+.modal__medium {
+  background: rgb(23, 26, 22) !important;
+  border-top: 2px solid #95220E !important;
+  position: fixed !important;
+  top: 6% !important;
+  z-index: 1000 !important;
+  -webkit-transform-origin: 50% 25% !important;
+  box-shadow: none !important;
+  border: 1px solid #DA2600 !important;
+}
+.modal__large {
+  background: rgb(23, 26, 22) !important;
+  border-top: 2px solid #95220E !important;
+  position: fixed !important;
+  top: 6% !important;
+  z-index: 1000 !important;
+  -webkit-transform-origin: 50% 25% !important;
+  box-shadow: none !important;
+  border: 1px solid #DA2600 !important;
+  min-width: 1156px !important;
+  width: 75% !important;
+  max-width: 1343px !important;
+  height: 90% !important;
+}
+.modal__medium__close {
+  top: 7px !important;
+  right: 0px !important;
+  color: #FFFFFF !important;
+  padding-top: 0px !important;
+}
+
+.modal__log__close {
+  position: fixed !important;
+  right: 14px !important;
+  font-size: 18px !important;
+  cursor: pointer !important;
+}
+
+.modal__error {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  color: rgb(218, 38, 0);
+}
+
+.LegendColorPicker__container {
+  position: absolute;
+  top: 1px;
+  z-index: 9999;
+  border: 1px solid rgb(149, 34, 14);
+  user-select: none;
+  background: rgba(23, 26, 22, 0.9);
+  text-align: center;
+}
+
+.LegendColorPicker__resetButton {
+  position: unset !important;
+  margin-top: 0px !important;
+  border: 1px solid rgb(149, 34, 14) !important;
+  margin: 8px !important;
+}
+
+.LegendColorPicker__shapeSelect > *,
+.LegendColorPicker__shapeSelect > * > * {
+  font-size: 12px !important;
+}
