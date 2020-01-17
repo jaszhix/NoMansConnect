@@ -403,18 +403,21 @@ class Container extends React.Component<ContainerProps, ContainerState> {
     });
   }
 
-  handleVisibility = (location) => {
+  handleVisibility = (location: NMSLocation) => {
     location.private = !location.private;
     this.updateLocation(location);
   }
 
-  handleSelectLocation = (location) => {
+  handleSelectLocation = (location: NMSLocation) => {
     let deselected = this.props.s.selectedLocation && this.props.s.selectedLocation.dataId === location.dataId;
-    let _location = null;
+    let _location: NMSLocation = null;
+    let currentLocation: NMSLocation = null;
+
     if (!deselected) {
       let refRemoteLocation = find(this.props.s.remoteLocations.results, (remoteLocation) => {
         return remoteLocation && remoteLocation.dataId === location.dataId;
       });
+
       if (refRemoteLocation) {
         _location = copyMetadata(refRemoteLocation, location, ['isHidden', 'positions', 'version']);
       } else {
@@ -428,6 +431,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
             locations: [location.dataId]
           }).then((res) => {
             let stateUpdate: GlobalState = {};
+
             if (res.data[0]) {
               _location = res.data[0];
               let {remoteLocations} = this.props.s;
@@ -441,8 +445,8 @@ class Container extends React.Component<ContainerProps, ContainerState> {
 
             state.set(
               Object.assign(stateUpdate, {
-                selectedLocation: deselected ? null : _location,
-                selectedGalaxy: deselected ? 0 : _location.galaxy,
+                selectedLocation: _location,
+                selectedGalaxy: _location.galaxy,
                 multiSelectedLocation: false
               })
             );
@@ -458,9 +462,11 @@ class Container extends React.Component<ContainerProps, ContainerState> {
       state.trigger('handleClearSearch');
     }
 
+    currentLocation = find(this.props.s.storedLocations, (location) => location.dataId === this.props.s.currentLocation);
+
     state.set({
       selectedLocation: deselected ? null : _location,
-      selectedGalaxy: deselected ? 0 : _location.galaxy,
+      selectedGalaxy: deselected ? currentLocation && currentLocation.galaxy || 0 : _location.galaxy,
       multiSelectedLocation: false
     });
   }
@@ -698,7 +704,7 @@ class Container extends React.Component<ContainerProps, ContainerState> {
                 remoteLocations={locations}
                 selectedLocation={selectedLocation}
                 currentLocation={currentLocation}
-                username={p.s.username}
+                username={username}
                 show={show}
                 onRestart={handleRestart}
                 searchCache={searchCache.results} />
