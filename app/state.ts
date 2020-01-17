@@ -401,7 +401,7 @@ const state: GlobalState = initStore({
               let {friends} = state.profile;
 
               each(friends, (friend) => {
-                if (friend.username === state.username) isFriendOfPrivateOwner = true;
+                if (friend.username === location.username) isFriendOfPrivateOwner = true;
               })
             }
             return location.id === id && location.username !== state.username && !isFriendOfPrivateOwner;
