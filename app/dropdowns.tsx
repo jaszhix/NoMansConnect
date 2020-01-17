@@ -15,6 +15,7 @@ import {handleRestart} from './dialog';
 const {dialog} = remote;
 
 interface BasicDropdownProps {
+  className?: string;
   options?: any[];
   selectedGalaxy?: number;
   icon?: string;
@@ -22,10 +23,12 @@ interface BasicDropdownProps {
   persist?: boolean;
   isGalaxies?: boolean;
   height?: number;
+  maxHeight?: number;
   width?: number;
   detailsOnly?: boolean;
   value?: any;
   tipPlacement?: string;
+  onOptionClick?: (id: string) => void;
 }
 
 interface BasicDropdownState {
@@ -449,14 +452,19 @@ export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDrop
   }
   handleOptionClick = (e, option) => {
     let persist = this.props.persist || option.id === 'teleport';
+
     if (persist) {
       e.stopPropagation();
     }
+
     if (typeof option.id === 'number') {
       state.set({selectedGalaxy: option.id});
     } else if (typeof option.onClick === 'function') {
       option.onClick(option.id);
+    } else if (typeof this.props.onOptionClick === 'function') {
+      this.props.onOptionClick(option.id);
     }
+
     this.setState({open: persist});
   }
   handleClickOutside = () => {
@@ -470,7 +478,8 @@ export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDrop
   getRef = (ref) => {
     if (!ref) return;
     this.ref = ref;
-    this.calculateHeight(ref, this.props.height);
+
+    if (!this.props.maxHeight) this.calculateHeight(ref, this.props.height);
 
   }
   calculateHeight = (ref, height) => {
@@ -482,29 +491,30 @@ export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDrop
     }
   }
   render() {
-    const {maxHeight} = this.state;
+    const {detailsOnly, className, showValue, options, isGalaxies, selectedGalaxy, icon, value, width, tipPlacement} = this.props;
+    const {maxHeight, open} = this.state;
 
     return (
       <div
       ref={this.getRef}
-      className={`ui dropdown BasicDropdown__root${this.state.open ? ' active visible' : ''}${this.props.detailsOnly ? ' BasicDropdown__profile' : ''}`}
+      className={`ui dropdown ${className ? className : 'BasicDropdown__root'}${open ? ' active visible' : ''}${detailsOnly ? ' BasicDropdown__profile' : ''}`}
       onClick={this.handleToggleOpen}>
-        {this.props.showValue && this.props.options.length > 0 ?
+        {showValue && options.length > 0 ?
         <div className="text">
-          {this.props.isGalaxies ? state.galaxies[this.props.selectedGalaxy] : this.props.options[this.props.selectedGalaxy].label}
+          {isGalaxies ? state.galaxies[selectedGalaxy] : value ? value : options[selectedGalaxy].label}
         </div> : null}
-        <i className={`${this.props.icon} icon`} />
+        <i className={`${icon} icon`} />
         <div
         style={{
-          display: this.state.open ? 'block !important' : 'none',
+          display: open ? 'block !important' : 'none',
           borderRadius: '0px',
           background: 'rgb(23, 26, 22)',
-          maxHeight: `${maxHeight}px`,
-          minWidth: `${this.props.width || '132.469'}px`,
+          maxHeight: `${this.props.maxHeight ? this.props.maxHeight : maxHeight}px`,
+          minWidth: `${width || '132.469'}px`,
           overflowY: 'auto'
         }}
-        className={`menu transition ${this.state.open ? 'visible' : 'hidden'}`}>
-          {this.props.options.length > 0 ? map(this.props.options, (option, i) => {
+        className={`menu transition ${open ? 'visible' : 'hidden'}`}>
+          {options.length > 0 ? map(options, (option, i) => {
             if (option.hidden) return null;
 
             let tooltip = '';
@@ -516,7 +526,7 @@ export class BasicDropdown extends React.Component<BasicDropdownProps, BasicDrop
               key={i}
               className={`item${option.disabled ? ' disabled' : ''}`}
               onClick={option.disabled ? null : (e) => this.handleOptionClick(e, option)}
-              data-place={this.props.tipPlacement}
+              data-place={tipPlacement}
               data-tip={tip(tooltip)}>
                 {option.label}
                 {option.hasOwnProperty('toggle') ?

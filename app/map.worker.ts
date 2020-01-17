@@ -107,7 +107,7 @@ onmessage = function(e) {
       remoteLocations: [],
       favLocations: [],
       baseLocations: [],
-      ps4Locations: [],
+      manualLocations: [],
       selectedLocation: []
     })
 
@@ -191,8 +191,8 @@ onmessage = function(e) {
             }
             break;
           default:
-            if (e.data.p.show.PS4.value) {
-              stateUpdate.ps4Locations.push(obj);
+            if (e.data.p.show.Manual.value) {
+              stateUpdate.manualLocations.push(obj);
             }
         }
       });

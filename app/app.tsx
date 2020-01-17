@@ -31,6 +31,7 @@ import {
 } from './modals';
 import Container from './container';
 import TitleBar from './titlebar';
+import LegendColorPicker from './legendColorPicker';
 import {defaultPosition, letters} from './constants';
 
 const {dialog} = remote;
@@ -995,64 +996,88 @@ class App extends React.Component<GlobalState> {
   resetBaseRestorationModal = () => state.set({displayBaseRestoration: false})
   resetLogModal = () => state.set({displayLog: false})
   resetSettingsModal = () => state.set({displaySettings: false})
+
   render() {
-    var s = this.state;
+    const {
+      init,
+      selectedImage,
+      usernameOverride,
+      registerLocation,
+      setEmail,
+      ps4User,
+      recoveryToken,
+      loading,
+      username,
+      machineId,
+      profile,
+      height,
+      displayProfile,
+      displayFriendRequest,
+      displayBaseRestoration,
+      displayLog,
+      displaySettings,
+      displayColorPicker,
+      notification,
+      show,
+    } = this.state;
+
     return (
       <div>
         <TitleBar s={this.state} monitor={this.monitor} />
-        {this.state.selectedImage ? <ImageModal image={this.state.selectedImage} /> : null}
-        {this.state.usernameOverride ? <UsernameOverrideModal ps4User={this.state.ps4User} /> : null}
-        {this.state.registerLocation ? <LocationRegistrationModal s={pick(this.state, ['machineId', 'username', 'height', 'storedLocations'])} /> : null}
-        {this.state.setEmail ?
+        {selectedImage ? <ImageModal image={selectedImage} /> : null}
+        {usernameOverride ? <UsernameOverrideModal ps4User={ps4User} /> : null}
+        {registerLocation ? <LocationRegistrationModal s={pick(this.state, ['machineId', 'username', 'height', 'storedLocations'])} /> : null}
+        {setEmail ?
         <RecoveryModal
         type="setEmail"
         placeholder="Recovery Email Address"
         s={pick(this.state, ['machineId', 'username', 'profile'])} /> : null}
-        {this.state.recoveryToken ?
+        {recoveryToken ?
         <RecoveryModal
         type="recoveryToken"
         placeholder="Recovery Token"
         s={pick(this.state, ['machineId', 'username', 'profile'])} /> : null}
-        {s.init ?
-        <Loader loading={this.state.loading} />
+        {init ?
+        <Loader loading={loading} />
         :
         <Container
-        s={s}
+        s={this.state}
         onPagination={this.handlePagination}
         onRemoveStoredLocation={this.handleRemoveStoredLocation} />}
-        {this.state.displayProfile ?
+        {displayProfile ?
         <ErrorBoundary onError={this.resetProfileModal}>
           <ProfileModal
-          username={this.state.username}
-          machineId={this.state.machineId}
-          profileId={this.state.displayProfile}
-          profile={this.state.profile}
-          height={this.state.height} />
+          username={username}
+          machineId={machineId}
+          profileId={displayProfile}
+          profile={profile}
+          height={height} />
         </ErrorBoundary> : null}
-        {this.state.displayFriendRequest ?
+        {displayFriendRequest ?
         <ErrorBoundary onError={this.resetFriendRequestModal}>
           <FriendRequestModal
-          notification={this.state.displayFriendRequest}
-          username={this.state.username}
-          machineId={this.state.machineId} />
+          notification={displayFriendRequest}
+          username={username}
+          machineId={machineId} />
         </ErrorBoundary> : null}
-        {this.state.displayBaseRestoration ?
+        {displayBaseRestoration ?
         <ErrorBoundary onError={this.resetBaseRestorationModal}>
           <BaseRestorationModal
-          baseData={this.state.displayBaseRestoration}
-          height={this.state.height} />
+          baseData={displayBaseRestoration}
+          height={height} />
         </ErrorBoundary> : null}
-        {this.state.displayLog ?
+        {displayLog ?
         <ErrorBoundary onError={this.resetLogModal}>
           <LogModal  />
         </ErrorBoundary> : null}
-        {this.state.displaySettings ?
+        {displaySettings ?
         <ErrorBoundary onError={this.resetSettingsModal}>
           <SettingsModal
-          s={s}
+          s={this.state}
           onSync={this.handleSync}
           onUsernameOverride={this.handleSetUsernameOverride} />
         </ErrorBoundary> : null}
+        {displayColorPicker ? <LegendColorPicker name={displayColorPicker} show={show} height={height} /> : null}
         <ReactTooltip
         className="nmcTip"
         globalEventOff="click mouseleave"
@@ -1061,8 +1086,8 @@ class App extends React.Component<GlobalState> {
         multiline={false}
         html={true}
         offset={{top: 0, left: 6}}  />
-        {this.state.notification && this.state.notification.message ?
-        <Notification notification={this.state.notification} /> : null}
+        {notification && notification.message ?
+        <Notification notification={notification} /> : null}
       </div>
     );
   }

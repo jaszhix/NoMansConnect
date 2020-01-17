@@ -1,7 +1,6 @@
 import log from './log';
 const ps = require('win-ps');
 import {assignIn, uniqBy, isEqual} from 'lodash';
-import tc from 'tinycolor2';
 import {each, find, findIndex, tryFn} from '@jaszhix/utils';
 
 import screenshot from './capture';
@@ -15,7 +14,8 @@ import {
   formatBase,
   calculateDistanceToCenter,
   gaToObject,
-  uaToObject
+  uaToObject,
+  generateHexColor
 } from './utils';
 
 import {handleSaveDataFailure, handleProtectedSession} from './dialog';
@@ -356,15 +356,9 @@ let processData = async (opts, saveData, location, refLocation, username, profil
         return;
       }
 
-      let color;
-
-      // Avoid dark colors for better contrast
-      while (!color || tc(color).isDark()) {
-        color = `#${(Math.random() * 0xFFFFFF << 0).toString(16)}`;
-      }
-
       show[friend.username] = {
-        color,
+        color: generateHexColor(),
+        shape: 'wye',
         value: true,
         listKey: `${friend.username}Locations`
       };

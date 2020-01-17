@@ -10,53 +10,10 @@ import log from './log';
 import {fsWorker, ajaxWorker} from './utils';
 import galaxies from './static/galaxies.json';
 import knownProducts from './static/knownProducts.json';
-
+import {showDefault} from './constants';
 
 const {dialog} = remote;
 const win = remote.getCurrentWindow();
-
-const showDefault = {
-  Shared: {
-    color: '#0080db',
-    value: true,
-    listKey: 'remoteLocations'
-  },
-  PS4: {
-    color: '#0039db',
-    value: true,
-    listKey: 'ps4Locations'
-  },
-  Explored: {
-    color: '#5fcc93',
-    value: true,
-    listKey: 'locations'
-  },
-  Center: {
-    color: '#ba3935',
-    value: true,
-    listKey: 'center'
-  },
-  Favorite: {
-    color: '#9c317c',
-    value: true,
-    listKey: 'favLocations'
-  },
-  Current: {
-    color: '#FFF',
-    value: true,
-    listKey: 'currentLocation'
-  },
-  Selected: {
-    color: '#ffc356',
-    value: true,
-    listKey: 'selectedLocation'
-  },
-  Base: {
-    color: '#9A9D99',
-    value: true,
-    listKey: 'baseLocations'
-  }
-};
 
 const state: GlobalState = initStore({
   // Core
@@ -65,7 +22,7 @@ const state: GlobalState = initStore({
   defaultLegendKeys: Object.keys(showDefault),
   completedMigration: false,
   newUser: false,
-  version: '1.9.3',
+  version: '1.10.0',
   notification: {
     message: '',
     type: 'info',
@@ -173,6 +130,7 @@ const state: GlobalState = initStore({
   sortByModified: false,
   show: cloneDeep(showDefault),
   showMap: true,
+  displayColorPicker: false,
   compactRemote: false,
   maintenanceTS: Date.now(),
   offline: false,
@@ -324,14 +282,15 @@ const state: GlobalState = initStore({
       });
 
       // Temporary migration for legend data
-      if (stateUpdate.show && typeof stateUpdate.show.Center === 'boolean') {
+      if (!stateUpdate.show.Center.shape) {
         each(stateUpdate.show, (val, key) => {
-          each(showDefault, (_val, _key) => {
-            if (key === _key) {
-              stateUpdate.show[key] = _val;
-            }
-          });
+          stateUpdate.show[key].shape = 'circle';
         });
+      }
+
+      if (stateUpdate.show.PS4) {
+        stateUpdate.show.Manual = showDefault.Manual;
+        delete stateUpdate.show.PS4;
       }
 
       if (!state.ready) stateUpdate.ready = true;

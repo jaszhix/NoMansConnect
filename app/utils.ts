@@ -1,6 +1,7 @@
 import fs from 'graceful-fs';
 import {exec} from 'child_process';
 import axios from 'axios';
+import tc from 'tinycolor2';
 import {assignIn, last, trimStart, pick} from 'lodash';
 import {each, filter} from '@jaszhix/utils';
 
@@ -549,3 +550,14 @@ export const copyMetadata = (a, b, keys = syncedKeys) => {
 export const numberWithCommas = (x: number): string => {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 };
+
+export const generateHexColor = (): string => {
+  let color;
+
+  // Avoid dark colors for better contrast
+  while (!color || tc(color).isDark()) {
+    color = `#${(Math.random() * 0xFFFFFF << 0).toString(16)}`;
+  }
+
+  return color;
+}

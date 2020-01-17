@@ -35,7 +35,7 @@ This is a location manager that syncs your current game's coordinates, uploads t
 * Download other people's bases and import them into your game
 * Automatic save file backups
 * Global stats tracking
-* Support for Windows 7, 8.1, 10, and most Linux distributions
+* Support for Windows 8.1, 10, and most Linux distributions
 
 ## Attribution
 

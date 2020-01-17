@@ -4,7 +4,7 @@ import {render} from 'react-dom';
 import state from './state';
 import App from './app';
 import konami from 'konami';
-import './app.global.css';
+import './app.global.scss';
 
 import jsonWorker from './json.worker';
 import fsWorker from './fs.worker';

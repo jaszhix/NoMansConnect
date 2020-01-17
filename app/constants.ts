@@ -240,4 +240,82 @@ const syncedKeys = ['image', 'name', 'description', 'teleports', 'profile'];
 
 const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y', 'X', 'Z'];
 
-export {sortStoredByKeyMap, defaultPosition, saveKeyMapping, modes, syncedKeys, letters};
+const showDefault = {
+  Shared: {
+    color: '#0080db',
+    shape: 'circle',
+    value: true,
+    listKey: 'remoteLocations'
+  },
+  Manual: {
+    color: '#0039db',
+    shape: 'circle',
+    value: true,
+    listKey: 'manualLocations'
+  },
+  Explored: {
+    color: '#5fcc93',
+    shape: 'circle',
+    value: true,
+    listKey: 'locations'
+  },
+  Center: {
+    color: '#ba3935',
+    shape: 'circle',
+    value: true,
+    listKey: 'center'
+  },
+  Favorite: {
+    color: '#9c317c',
+    shape: 'circle',
+    value: true,
+    listKey: 'favLocations'
+  },
+  Current: {
+    color: '#FFF',
+    shape: 'star',
+    value: true,
+    listKey: 'currentLocation'
+  },
+  Selected: {
+    color: '#ffc356',
+    shape: 'circle',
+    value: true,
+    listKey: 'selectedLocation'
+  },
+  Base: {
+    color: '#9A9D99',
+    shape: 'triangle',
+    value: true,
+    listKey: 'baseLocations'
+  }
+};
+
+const shapeOptions = [
+  {
+    id: 'circle',
+    label: 'Circle',
+  },
+  {
+    id: 'cross',
+    label: 'Cross',
+  },
+  {
+    id: 'star',
+    label: 'Star',
+  },
+  {
+    id: 'circle',
+    label: 'Circle',
+  },
+  {
+    id: 'triangle',
+    label: 'Triangle',
+  },
+  {
+    id: 'wye',
+    label: 'Wye',
+  },
+];
+
+export {sortStoredByKeyMap, defaultPosition, saveKeyMapping, modes, syncedKeys, letters, showDefault, shapeOptions};

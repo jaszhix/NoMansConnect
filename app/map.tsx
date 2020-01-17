@@ -14,6 +14,7 @@ import {
   ScaleType,
   PolarRadiusAxisDomain
 } from 'recharts';
+import tc from 'tinycolor2';
 import {isEqual, last} from 'lodash';
 import v from 'vquery';
 import {each, map, findIndex} from '@jaszhix/utils';
@@ -21,6 +22,7 @@ import {each, map, findIndex} from '@jaszhix/utils';
 import ErrorBoundary from './errorBoundary';
 import {BasicDropdown} from './dropdowns';
 import Map3D from './map3d';
+
 import {cleanUp} from './utils';
 
 const toolTipHeaderStyle: CSSProperties = {
@@ -140,7 +142,7 @@ interface ThreeDimScatterChartState {
   selectedLocation: any;
   favLocations: any[];
   baseLocations: any[];
-  ps4Locations: any[];
+  manualLocations: any[];
   center: MapCoordinate[];
   size: number;
   zRange: number[];
@@ -212,7 +214,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
       selectedLocation: null,
       favLocations: [],
       baseLocations: [],
-      ps4Locations: [],
+      manualLocations: [],
       center: [{
         x: 2048,
         y: 2048,
@@ -463,9 +465,32 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
     state.set(stateUpdate);
   }
   handleUpdateLegend = () => {
-    each(this.props.show, (obj, name) => {
+    let {show} = this.props;
+
+    each(show, (obj, name) => {
       v(`.${name}`).css({
         opacity: obj.value ? '1' : '0.5'
+      });
+
+      v(`.${name} > svg > path`).on('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        let {displayColorPicker} = state;
+
+        if (displayColorPicker === name) return;
+
+        state.set({displayColorPicker: name});
+      });
+
+      v(`.${name} > svg > path`).on('mouseenter', (e) => {
+        let {show} = state;
+        e.target.setAttribute('fill', tc(show[name].color).brighten(20).toString());
+      });
+
+      v(`.${name} > svg > path`).on('mouseleave', (e) => {
+        let {show} = state;
+        e.target.setAttribute('fill', show[name].color);
       });
     });
   }
@@ -578,7 +603,8 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
         name={label}
         data={this.state[obj.listKey]}
         fill={obj.color}
-        shape="circle"
+        shape={obj.shape}
+        legendType={obj.shape}
         line={label === 'Explored' ? mapLines : null}
         isAnimationActive={false}
         animationDuration={100}
@@ -633,7 +659,7 @@ class ThreeDimScatterChart extends React.Component<ThreeDimScatterChartProps, Th
         // @ts-ignore */}
         <Tooltip cursor={this.tooltipCursor} content={<TooltipChild />} selectedLocation={this.props.selectedLocation} />
         <Legend align="right" wrapperStyle={this.legendStyle} iconSize={12} onClick={this.handleLegendClick} />
-        {map(legends, (l) => l)}
+        {legends}
         {startCoordinates && endCoordinates ?
         <ReferenceArea
         y1={startCoordinates[1]}

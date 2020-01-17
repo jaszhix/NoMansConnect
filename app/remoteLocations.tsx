@@ -83,6 +83,9 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
 
     cleanUp(this);
   }
+  shouldComponentUpdate() {
+    return !this.props.s.displayColorPicker;
+  }
   setViewableRange = (node?) => {
     if (!node) {
       return;

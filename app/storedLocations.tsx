@@ -195,7 +195,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       shouldUpdate = true;
     }
 
-    return shouldUpdate;
+    return shouldUpdate && !state.displayColorPicker;
   }
   componentWillUnmount() {
     if (this.storedLocationsRef) {

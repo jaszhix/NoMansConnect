@@ -1,3 +1,4 @@
+ @import "./assets/styles/colorPicker.global.scss";
  /*
  * # Semantic UI - 2.2.6
  * https://github.com/Semantic-Org/Semantic-UI
@@ -18010,7 +18011,7 @@ ol.ui.horizontal.list li:before,
 
 .ui.form .nine.fields > .fields,
 .ui.form .nine.fields > .field {
-  width: 11.171A16171A1611%;
+  width: 11.171%;
 }
 
 .ui.form .ten.fields > .fields,
@@ -18594,7 +18595,7 @@ ol.ui.horizontal.list li:before,
 
 .ui[class*="nine column"].grid > .row > .column,
 .ui[class*="nine column"].grid > .column:not(.row) {
-  width: 11.171A16171A1611%;
+  width: 11.171%;
 }
 
 .ui[class*="ten column"].grid > .row > .column,
@@ -18667,7 +18668,7 @@ ol.ui.horizontal.list li:before,
 }
 
 .ui.grid > [class*="nine column"].row > .column {
-  width: 11.171A16171A1611% !important;
+  width: 11.171% !important;
 }
 
 .ui.grid > [class*="ten column"].row > .column {
@@ -24267,7 +24268,7 @@ Floated Menu / Item
 }
 
 .ui.nine.column.table td {
-  width: 11.171A16171A1611%;
+  width: 11.171%;
 }
 
 .ui.ten.column.table td {
@@ -25775,7 +25776,7 @@ a.ui.card:hover,
 }
 
 .ui.nine.cards > .card {
-  width: calc( 11.171A16171A1611%  -  1em );
+  width: calc( 11.171%  -  1em );
   margin-left: 0.5em;
   margin-right: 0.5em;
   font-size: 10px;
@@ -27372,7 +27373,7 @@ a.ui.card:hover,
 }
 
 .ui.nine.statistics .statistic {
-  min-width: 11.171A16171A1611%;
+  min-width: 11.171%;
   margin: 0em 0em 2em;
 }
 
@@ -39364,6 +39365,28 @@ Modals
   color: rgb(218, 38, 0);
 }
 
+.LegendColorPicker__container {
+  position: absolute;
+  top: 1px;
+  z-index: 9999;
+  border: 1px solid rgb(149, 34, 14);
+  user-select: none;
+  background: rgba(23, 26, 22, 0.9);
+  text-align: center;
+}
+
+.LegendColorPicker__resetButton {
+  position: unset !important;
+  margin-top: 0px !important;
+  border: 1px solid rgb(149, 34, 14) !important;
+  margin: 8px !important;
+}
+
+.LegendColorPicker__shapeSelect > *,
+.LegendColorPicker__shapeSelect > * > * {
+  font-size: 12px !important;
+}
+
 .iconTransparent {
   width: 250px;
   -webkit-user-select: initial;
@@ -39384,6 +39407,6 @@ Modals
   opacity: 0.7 !important;
 }
 
-.recharts-legend-wrapper:hover {
+.recharts-legend-item-text:hover, .recharts-legend-wrapper > ul > li > svg > path:hover {
   cursor: pointer;
 }
