@@ -86,6 +86,19 @@ body {
           transform-origin: 50% 50%;
   -webkit-transform: translate3d(-50%, -50%, 0);
           transform: translate3d(-50%, -50%, 0);
+
+  &.initial {
+    font-size: 6px;
+    left: 0px;
+    position: relative;
+  }
+
+  .text {
+    position: relative;
+    top: 140px;
+    font-size: 28px;
+    width: 300px;
+  }
 }
 .loader span,
 .loader span:after {
