@@ -4,9 +4,9 @@ import watch from 'watch';
 import {machineId} from 'node-machine-id';
 import React from 'react';
 import ReactTooltip from 'react-tooltip';
-import {assignIn, cloneDeep, orderBy, uniqBy, concat, first, isArray, pick, last} from 'lodash';
+import {assignIn, orderBy, uniqBy, concat, first, isArray, pick, last} from 'lodash';
 import * as math from 'mathjs';
-import {each, find, findIndex, map, filter} from '@jaszhix/utils';
+import {each, find, findIndex, map, filter, cloneDeep} from '@jaszhix/utils';
 import log from './log';
 
 import state from './state';
@@ -868,6 +868,7 @@ class App extends React.Component<GlobalState> {
   setWaypoint = (location) => {
     log.error('Setting waypoint:', location.dataId);
     state.set({navLoad: true});
+
     getLastGameModeSave(this.state.saveDirectory, this.state.ps4User).then((saveData: SaveDataMeta) => {
       let {Waypoints} = saveData.result.GameKnowledgeData;
       if (!Waypoints) Waypoints = [];
@@ -909,7 +910,7 @@ class App extends React.Component<GlobalState> {
 
     this.lastPoll = now;
 
-    pollSaveData({mode, init, machineId, next: (error = false, ...args) => {
+    pollSaveData({mode, init, machineId, next: (error = false) => {
       if (error) {
         log.error(`getLastSave -> next -> ${error}`);
       }

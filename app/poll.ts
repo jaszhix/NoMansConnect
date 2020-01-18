@@ -429,6 +429,7 @@ let pollSaveData: (opts: {
   init: boolean;
   machineId: string;
   NMSRunning?: boolean;
+  next?: (error: boolean | any[]) => void
 }) => void;
 
 let getLastSave = (opts) => {

@@ -1,6 +1,6 @@
 import React from 'react';
-import {cloneDeep, orderBy, uniq, uniqBy} from 'lodash';
-import {each, find, findIndex, filter} from '@jaszhix/utils';
+import {orderBy, uniq, uniqBy} from 'lodash';
+import {each, find, findIndex, filter, cloneDeep} from '@jaszhix/utils';
 
 import log from './log';
 import state from './state';

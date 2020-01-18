@@ -1,8 +1,8 @@
 import {remote} from 'electron';
 import os from 'os';
 import path from 'path';
-import {pick, uniqBy, cloneDeep} from 'lodash';
-import {each, filter, findIndex} from '@jaszhix/utils';
+import {pick, uniqBy} from 'lodash';
+import {each, filter, findIndex, cloneDeep} from '@jaszhix/utils';
 import initStore from '@jaszhix/state';
 
 import {handleRestart} from './dialog';

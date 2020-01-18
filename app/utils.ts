@@ -207,6 +207,7 @@ export const fromHex = (str: string, username: string, galaxy: number): NMSLocat
 
   if (!valid) return;
 
+  // @ts-ignore
   let manualLocation: NMSLocation = {
     username: username,
     positions: [Object.assign({}, defaultPosition, {name: '', image: ''})],
@@ -219,14 +220,14 @@ export const fromHex = (str: string, username: string, galaxy: number): NMSLocat
     PlanetIndex: 0,
     RealityIndex: 0,
     base: false,
-    baseData: false,
+    baseData: null,
     upvote: false,
     image: '',
     mods: [],
     tags: [],
     manuallyEntered: true,
     created: Date.now(),
-    apiVersion: 3
+    apiVersion: 3,
   };
 
   manualLocation = formatTranslatedID(manualLocation);

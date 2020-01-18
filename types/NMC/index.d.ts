@@ -270,7 +270,7 @@ declare global {
     planetData?: any;
     username: string;
     positions: NMSPosition[];
-    playerPosition: Transform; // deprecated
+    playerPosition?: Transform; // deprecated
     galaxy: number;
     distanceToCenter: number;
     jumps: number;
