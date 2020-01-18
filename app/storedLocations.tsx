@@ -1,6 +1,6 @@
 import state from './state';
 import React from 'react';
-import {truncate, delay} from 'lodash';
+import {truncate} from 'lodash';
 import {map, findIndex} from '@jaszhix/utils';
 import {whichToShow, cleanUp} from './utils';
 import {sortStoredByKeyMap} from './constants';
@@ -18,7 +18,6 @@ interface StoredLocationItemProps {
   useGAFormat: boolean;
   isCurrent: boolean;
   upvote: boolean;
-  i: number;
 }
 
 class StoredLocationItem extends React.Component<StoredLocationItemProps> {
@@ -29,27 +28,79 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps> {
     this.props.onClick(this.props.location);
   }
   render() {
-    if (!this.props.location || !this.props.location.dataId) return null;
+    const {
+      location,
+      upvote,
+      isSelected,
+      useGAFormat,
+      isCurrent
+    } = this.props;
+
+    if (!location || !location.dataId) return null;
 
     let rootClasses = 'ui segment cursorPointer StoredLocationItem__root';
     let pClasses = '';
 
-    if (this.props.upvote) rootClasses += ' upvote';
-    if (this.props.isSelected) rootClasses += ' selected';
-    if (this.props.location.isHidden) rootClasses += ' hidden';
+    if (upvote) rootClasses += ' upvote';
+    if (isSelected) rootClasses += ' selected';
+    if (location.isHidden) rootClasses += ' hidden';
 
-
-
-    let usesName = this.props.location.name && this.props.location.name.length > 0;
-    let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.dataId}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
-    let name = usesName ? this.props.location.name : idFormat;
-    let isMarquee = (this.props.isSelected) && name.length >= 25;
+    let usesName = location.name && location.name.length > 0;
+    let idFormat = `${useGAFormat ? location.translatedId : location.dataId}${useGAFormat && location.PlanetIndex > 0 ? ' P' + location.PlanetIndex.toString() : ''}`
+    let name = usesName ? location.name : idFormat;
+    let isMarquee = (isSelected && name.length >= 25);
     name = isMarquee ? name : truncate(name, {length: 23});
-    let isSpaceStation = this.props.location.dataId[this.props.location.dataId.length - 1] === '0';
-    let iconShown = this.props.upvote || this.props.isCurrent || this.props.location.isHidden;
-    let isValid = (this.props.location.playerPosition
-      || (this.props.location.positions && this.props.location.positions.length > 0 && this.props.location.positions[0].playerPosition))
-      && !this.props.location.manuallyEntered;
+    let isSpaceStation = location.dataId[location.dataId.length - 1] === '0';
+    let isValid = (location.playerPosition
+      || (location.positions && location.positions.length > 0 && location.positions[0].playerPosition))
+      && !location.manuallyEntered;
+    let icons = [];
+    let lastIcon;
+    let left = 4;
+
+    if (isCurrent) {
+      icons.push({
+        title: 'Current Location',
+        className: 'marker icon',
+      });
+    }
+
+    if (location.base) {
+      icons.push({
+        title: `${location.username === state.username ? 'Your' : location.username + '\'s'} Base`,
+        className: 'iconContainer',
+        src: baseIcon,
+      });
+    }
+
+    if (isSpaceStation) {
+      icons.push({
+        title: 'Space Station',
+        className: 'iconContainer spaceStation',
+        src: spaceStationIcon,
+      });
+    }
+
+    if (upvote) {
+      icons.push({
+        title: 'Favorite Location',
+        className: 'star icon',
+      });
+    }
+
+    if (location.isHidden) {
+      icons.push({
+        title: 'Hidden Location',
+        className: 'hide icon',
+      });
+    }
+
+    if (location.private) {
+      icons.push({
+        title: 'Private Location',
+        className: 'lock icon',
+      });
+    }
 
     switch (true) {
       case (isMarquee):
@@ -58,7 +109,7 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps> {
       case (name.length >= 25):
         pClasses = 'longName';
         break;
-      case (!usesName && this.props.useGAFormat):
+      case (!usesName && useGAFormat):
         pClasses = 'gaFormat';
         break;
     }
@@ -72,22 +123,44 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps> {
       <div
       className={rootClasses}
       onClick={this.handleClick}>
-        {this.props.location.base ?
-        <span
-        title={`${this.props.location.username === state.username ? 'Your' : this.props.location.username + '\'s'} Base`}
-        className={`iconContainer${iconShown ? ' secondPosition' : ''}`}>
-          <img src={baseIcon} />
-        </span> : null}
-        {isSpaceStation ?
-        <span title="Space Station" className={`iconContainer spaceStation${iconShown ? ' secondPosition' : ''}`}>
-          <img src={spaceStationIcon} />
-        </span> : null}
-        {iconShown ?
-        <i
-        title={this.props.location.isHidden ? 'Hidden Location' : this.props.isCurrent ? 'Current Location' : 'Favorite Location'}
-        className={`${this.props.location.isHidden ? 'hide' : this.props.isCurrent ? 'marker' : 'star'} icon`} /> : null}
+        {map(icons, (item, i) => {
+          let {title, className, src} = item;
+          let style;
+
+          if (i > 1 && !location.name && useGAFormat) return null;
+
+          if (i > 0) left += 27;
+          if (i > 2) left -= 5;
+
+          if (lastIcon && lastIcon.src) left += 5;
+
+          style = {left: `${left}px`};
+
+          lastIcon = item;
+
+          if (src) {
+            return (
+              <span
+              key={i}
+              title={title}
+              className={className}
+              style={style}>
+                <img src={src} />
+              </span>
+            );
+          }
+
+          return (
+            <i
+            key={i}
+            title={title}
+            className={className}
+            style={style} />
+          );
+        })}
         <p
-        className={pClasses}>
+        className={pClasses}
+        style={isMarquee ? {left: `${left}px`} : null}>
           <span>{name}</span>
         </p>
       </div>
@@ -321,7 +394,6 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
                   <StoredLocationItem
                   key={location.dataId}
                   ref={location.dataId}
-                  i={i}
                   onClick={this.handleSelect}
                   isSelected={selectedLocationId === location.dataId}
                   isCurrent={currentLocation === location.dataId}

@@ -111,7 +111,7 @@ LocationBox
   border-top: 2px solid #95220E !important;
   margin-top: initial !important;
   margin-bottom: 26px !important;
-  margin-right: initial !important;
+  margin-right: 26px !important;
   min-width: 386px;
   max-width: 386px;
   min-height: 245px;
@@ -467,7 +467,6 @@ Item
   .iconContainer {
     position: absolute !important;
     top: 4px !important;
-    left: 4px !important;
 
     img {
       width: 21px !important;
@@ -477,16 +476,16 @@ Item
     &.spaceStation {
       top: 3px !important;
     }
-
-    &.secondPosition {
-      left: 31px !important;
-    }
   }
 
   i {
     position: absolute;
     top: 3px;
     left: 6px;
+
+    &.lock {
+      top: 4px !important;
+    }
   }
 
   p {

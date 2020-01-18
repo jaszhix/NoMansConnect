@@ -1120,13 +1120,6 @@ export class LogModal extends React.Component<LogModalProps, LogModalState> {
 // @ts-ignore
 LogModal = onClickOutside(LogModal);
 
-const menuContainerStyle: CSSProperties = {
-  minWidth: '183px',
-  borderBottomLeftRadius: '0px',
-  borderBottomRightRadius: '0px',
-  borderTop: '1px solid rgb(149, 34, 14)'
-};
-
 interface SettingsModalProps {
   s: GlobalState;
   onSync: () => void;
