@@ -33,7 +33,6 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
   range: VisibleRange;
   connections: any[];
   recentExplorations: HTMLElement;
-  uiSegmentStyle: CSSProperties;
   throttledPagination: Function;
   scrollTimeout: NodeJS.Timeout;
 
@@ -54,14 +53,7 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
       }),
       state.connect(['remoteLocationsColumns', 'compactRemote'], () => setTimeout(() => this.setViewableRange(this.recentExplorations), 0)),
     ];
-    this.uiSegmentStyle = {
-      background: 'rgba(23, 26, 22, 0.9)',
-      display: 'inline-table',
-      borderTop: '2px solid #95220E',
-      textAlign: 'center',
-      WebkitUserSelect: 'none',
-      paddingRight: '0px'
-    };
+
     let checkRemote = () => {
       if (this.props.s.remoteLocations && this.props.s.remoteLocations.results) {
         this.recentExplorations.addEventListener('scroll', this.handleScroll);
@@ -137,6 +129,7 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
   render() {
     let p = this.props;
     let remoteLocationsWidth;
+
     if (p.s.remoteLocationsColumns === 1) {
       remoteLocationsWidth = '441px';
     } else if (p.s.remoteLocationsColumns === 2) {
@@ -144,25 +137,15 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
     } else {
       remoteLocationsWidth = '1300px';
     }
-    let containerStyle: CSSProperties = {
-      position: 'absolute',
-      right: '54px',
-      zIndex: 91,
+
+    let containerStyle: React.CSSProperties = {
       maxWidth: remoteLocationsWidth,
     };
-    let uiSegmentsStyle: CSSProperties = {
-      display: 'inline-flex',
-      paddingTop: '14px',
-      width: '400px !important'
-    };
-    let innerContainerStyle: CSSProperties = {
+
+    let innerContainerStyle: React.CSSProperties = {
       maxHeight: `${p.s.height - 125}px`,
       width: remoteLocationsWidth,
-      minWidth: '400px',
       maxWidth: remoteLocationsWidth,
-      overflowY: 'auto',
-      overflowX: 'hidden',
-      position: 'relative'
     };
 
     let leftOptions: MenuOption[] = [
@@ -321,24 +304,22 @@ class RemoteLocations extends React.Component<RemoteLocationsProps, RemoteLocati
     locations = undefined;
 
     return (
-      <div className="columns" style={containerStyle}>
-        <div className="ui segments" style={uiSegmentsStyle}>
-          <div className="ui segment" style={this.uiSegmentStyle}>
-            <h3>{title}</h3>
-            <div className="RemoteLocations__dropdownContainer">
-              <BasicDropdown
-              height={p.s.height}
-              width={350}
-              icon="sliders horizontal"
-              showValue={null}
-              persist={true}
-              options={leftOptions} />
-            </div>
-            <div
-            style={innerContainerStyle}
-            ref={this.getRef}>
-              {_locations}
-            </div>
+      <div className="columns RemoteLocations__root" style={containerStyle}>
+        <div className="ui segment RemoteLocations__container">
+          <h3>{title}</h3>
+          <BasicDropdown
+          className="RemoteLocations__dropdownContainer"
+          height={p.s.height}
+          width={350}
+          icon="sliders horizontal"
+          showValue={null}
+          persist={true}
+          options={leftOptions} />
+          <div
+          className="RemoteLocations__locationsContainer"
+          style={innerContainerStyle}
+          ref={this.getRef}>
+            {_locations}
           </div>
         </div>
       </div>

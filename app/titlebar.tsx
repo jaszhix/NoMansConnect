@@ -12,7 +12,7 @@ import {DropdownMenu, SaveEditorDropdownMenu, BaseDropdownMenu, NotificationDrop
 import {StatsContainer} from './modals';
 import {Search} from './search';
 
-const headerItemClasses = 'ui dropdown icon item App__titleBarControls';
+const headerItemClasses = 'ui dropdown icon item App__titleBarControls cursorDefault';
 
 interface TitleBarProps {
   s: GlobalState;

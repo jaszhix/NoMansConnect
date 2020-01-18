@@ -59,8 +59,6 @@ interface UsernameOverrideModalState {
 }
 
 export class UsernameOverrideModal extends React.Component<UsernameOverrideModalProps, UsernameOverrideModalState> {
-  modalStyle: CSSProperties;
-
   constructor(props) {
     super(props);
 
@@ -349,29 +347,6 @@ interface NotificationProps {
 LocationRegistrationModal = onClickOutside(LocationRegistrationModal);
 
 export class Notification extends React.Component<NotificationProps> {
-  modalStyle: CSSProperties;
-
-  constructor(props) {
-    super(props);
-
-    this.modalStyle = {
-      padding: '8px',
-      textAlign: 'center',
-      zIndex: '1001',
-      WebkitTransformOrigin: '50% 25%',
-      boxShadow: 'none',
-      borderTop: '2px solid #95220E',
-      border: '1px solid #DA2600',
-      width: '400px',
-      height: '145px',
-      position: 'absolute',
-      top: 'unset',
-      left: 'unset',
-      right: '30px',
-      bottom: '30px',
-      margin: 'auto'
-    };
-  }
   componentWillUnmount() {
     cleanUp(this);
   }
@@ -393,8 +368,7 @@ export class Notification extends React.Component<NotificationProps> {
     let renderedMessage = <ReactMarkdown className="md-p" source={message} />;
     return (
       <div
-      className={`ui small modal active${onClick ? ' cursorPointer' : ''}`}
-      style={this.modalStyle}>
+      className={`ui small modal active Notification__root${onClick ? ' cursorPointer' : ''}`}>
         <span className="close" />
         <div
         className={type === 'error' ? 'modal__error' : null}
@@ -455,15 +429,15 @@ class EventItem extends React.Component<EvenItemProps> {
   static defaultProps = {
     shouldShowPlanetType: true,
   };
-  constructor(props) {
-    super(props);
-  }
+
   componentDidMount() {
     ReactTooltip.rebuild();
   }
+
   componentWillUnmount() {
     cleanUp(this);
   }
+
   render() {
     let {profile, type, created, image, dataId, score, version, shouldShowPlanetType, isStart, isEnd, isLocation, location} = this.props;
     let isOwnLocation = profile ? profile.username === state.username : false;
@@ -1379,9 +1353,7 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
     }
 
     return (
-      <div
-      style={menuContainerStyle}
-      className="ui medium modal active modal__medium">
+      <div className="ui medium modal active modal__medium SettingsModal__root">
         <i
         className="window close outline icon modal__medium__close"
         onClick={this.handleClickOutside} />
@@ -1866,7 +1838,7 @@ export class StatsContainer extends React.Component<StatsContainerProps, StatsCo
     return (
       <Fragment>
         <div
-        className="ui dropdown icon item noDrag"
+        className="ui dropdown icon item noDrag cursorDefault"
         data-place="bottom"
         data-tip={tip('Global Stats')}
         onClick={this.handleOpen}>

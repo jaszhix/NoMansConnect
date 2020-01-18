@@ -12,8 +12,8 @@ import spaceStationIcon from './assets/images/spacestation_icon.png';
 import {BasicDropdown} from './dropdowns';
 
 interface StoredLocationItemProps {
-  onClick: Function;
-  location: any;
+  onClick: (location: NMSLocation) => void;
+  location: NMSLocation;
   isSelected: boolean;
   useGAFormat: boolean;
   isCurrent: boolean;
@@ -21,17 +21,7 @@ interface StoredLocationItemProps {
   i: number;
 }
 
-interface StoredLocationItemState {
-  hover: boolean;
-}
-
-class StoredLocationItem extends React.Component<StoredLocationItemProps, StoredLocationItemState> {
-  constructor(props) {
-    super(props);
-    this.state = {
-      hover: false
-    };
-  }
+class StoredLocationItem extends React.Component<StoredLocationItemProps> {
   componentWillUnmount() {
     cleanUp(this);
   }
@@ -40,57 +30,64 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps, Stored
   }
   render() {
     if (!this.props.location || !this.props.location.dataId) return null;
-    let uiSegmentStyle: CSSProperties = {
-      fontSize: '16px',
-      fontWeight: this.props.upvote ? 600 : 400,
-      cursor: 'pointer',
-      padding: '3px 12px 3px 3px',
-      background: this.state.hover || this.props.isSelected ? 'rgba(255, 255, 255, 0.1)' : 'inherit',
-      textAlign: 'right',
-      minHeight: '29px',
-      maxHeight: '29px',
-      opacity: this.props.location.isHidden ? 0.5 : 1
-    };
+
+    let rootClasses = 'ui segment cursorPointer StoredLocationItem__root';
+    let pClasses = '';
+
+    if (this.props.upvote) rootClasses += ' upvote';
+    if (this.props.isSelected) rootClasses += ' selected';
+    if (this.props.location.isHidden) rootClasses += ' hidden';
+
+
+
     let usesName = this.props.location.name && this.props.location.name.length > 0;
     let idFormat = `${this.props.useGAFormat ? this.props.location.translatedId : this.props.location.dataId}${this.props.useGAFormat && this.props.location.PlanetIndex > 0 ? ' P' + this.props.location.PlanetIndex.toString() : ''}`
     let name = usesName ? this.props.location.name : idFormat;
-    let isMarquee = (this.state.hover || this.props.isSelected) && name.length >= 25;
+    let isMarquee = (this.props.isSelected) && name.length >= 25;
     name = isMarquee ? name : truncate(name, {length: 23});
     let isSpaceStation = this.props.location.dataId[this.props.location.dataId.length - 1] === '0';
     let iconShown = this.props.upvote || this.props.isCurrent || this.props.location.isHidden;
+    let isValid = (this.props.location.playerPosition
+      || (this.props.location.positions && this.props.location.positions.length > 0 && this.props.location.positions[0].playerPosition))
+      && !this.props.location.manuallyEntered;
+
+    switch (true) {
+      case (isMarquee):
+        pClasses = 'marquee';
+        break;
+      case (name.length >= 25):
+        pClasses = 'longName';
+        break;
+      case (!usesName && this.props.useGAFormat):
+        pClasses = 'gaFormat';
+        break;
+    }
+
+    if (!isValid) {
+      if (pClasses.length) pClasses += ' ';
+      pClasses += 'manual';
+    }
+
     return (
       <div
-      className="ui segment"
-      style={uiSegmentStyle}
-      onMouseEnter={()=>this.setState({hover: true})}
-      onMouseLeave={()=>this.setState({hover: false})}
+      className={rootClasses}
       onClick={this.handleClick}>
         {this.props.location.base ?
         <span
         title={`${this.props.location.username === state.username ? 'Your' : this.props.location.username + '\'s'} Base`}
-        className="StoredLocationItem__iconSpan"
-        style={{left: `${iconShown ? 31 : 4}px`}}>
-          <img className="StoredLocationItem__icon" src={baseIcon} />
+        className={`iconContainer${iconShown ? ' secondPosition' : ''}`}>
+          <img src={baseIcon} />
         </span> : null}
         {isSpaceStation ?
-        <span title="Space Station" style={{position: 'absolute', left: `${iconShown ? 31 : 4}px`, top: '3px'}}>
-          <img className="StoredLocationItem__icon" src={spaceStationIcon} />
+        <span title="Space Station" className={`iconContainer spaceStation${iconShown ? ' secondPosition' : ''}`}>
+          <img src={spaceStationIcon} />
         </span> : null}
         {iconShown ?
         <i
         title={this.props.location.isHidden ? 'Hidden Location' : this.props.isCurrent ? 'Current Location' : 'Favorite Location'}
-        className={`StoredLocationItem__marker ${this.props.location.isHidden ? 'hide' : this.props.isCurrent ? 'marker' : 'star'} icon`} /> : null}
+        className={`${this.props.location.isHidden ? 'hide' : this.props.isCurrent ? 'marker' : 'star'} icon`} /> : null}
         <p
-        className={isMarquee ? 'marquee' : ''}
-        style={{
-          color: (this.props.location.playerPosition
-            || (this.props.location.positions && this.props.location.positions.length > 0 && this.props.location.positions[0].playerPosition))
-            && !this.props.location.manuallyEntered ? 'inherit' : '#7fa0ff',
-          maxWidth: `${isMarquee ? 200 : 177}px`,
-          whiteSpace: 'nowrap',
-          position: 'relative',
-          left: `${isMarquee ? 33 : name.length >= 25 ? 76 : !usesName && this.props.useGAFormat ? 56 : 86}px`,
-        }}>
+        className={pClasses}>
           <span>{name}</span>
         </p>
       </div>
@@ -99,7 +96,7 @@ class StoredLocationItem extends React.Component<StoredLocationItemProps, Stored
 }
 
 interface StoredLocationsProps {
-  storedLocations: any[];
+  storedLocations: NMSLocation[];
   selectedLocationId: string;
   selectedLocationEdit: boolean;
   selectedLocationPositionEdit: boolean;
@@ -112,15 +109,14 @@ interface StoredLocationsProps {
   sortStoredByKey: string;
   filterStoredByBase: boolean;
   filterStoredByScreenshot: boolean;
-  currentLocation: any;
+  currentLocation: string;
   favorites: string[];
-  onSelect: Function;
+  onSelect: (location: NMSLocation) => void;
 }
 
 interface StoredLocationsState {}
 
 class StoredLocations extends React.Component<StoredLocationsProps, StoredLocationsState> {
-  uiSegmentStyle: CSSProperties;
   range: VisibleRange;
   lastRange: VisibleRange;
   connectId: number;
@@ -132,17 +128,6 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
   constructor(props) {
     super(props);
 
-    this.uiSegmentStyle = {
-      background: 'rgba(23, 26, 22, 0.9)',
-      display: 'inline-table',
-      borderTop: '2px solid #95220E',
-      minWidth: '285px',
-      maxWidth: '285px',
-      textAlign: 'center',
-      paddingLeft: '0px',
-      paddingRight: '0px',
-      zIndex: 90
-    };
     this.range = {start: 0, length: 0};
     this.lastRange = {...this.range};
     this.needsUpdate = false;
@@ -227,7 +212,7 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
   scrollListener = () => {
     this.setViewableRange(this.storedLocationsRef);
   }
-  handleSelect = (location) => {
+  handleSelect = (location: NMSLocation) => {
     this.selecting = true;
     this.props.onSelect(location);
   }
@@ -313,32 +298,21 @@ class StoredLocations extends React.Component<StoredLocationsProps, StoredLocati
       }
     ];
     return (
-      <div className="ui segment StoredLocations__container">
-        <div
-        className="ui segment"
-        style={this.uiSegmentStyle}>
+      <div className="ui segment StoredLocations__root">
+        <div className="ui segment innerContainer">
           <h3>{`Stored Locations (${storedLocations.length})`}</h3>
-          <div style={{
-            position: 'absolute',
-            left: '17px',
-            top: '16px'
-          }}>
-            <BasicDropdown
-            height={height}
-            width={250}
-            icon="ellipsis horizontal"
-            showValue={null}
-            persist={true}
-            options={leftOptions} />
-          </div>
+          <BasicDropdown
+          className="optionsDropdown"
+          height={height}
+          width={250}
+          icon="ellipsis horizontal"
+          showValue={null}
+          persist={true}
+          options={leftOptions} />
           <div
           ref={this.getRef}
-          className="ui segments"
-          style={{
-            maxHeight: `${height - (selectedLocationId && !multiSelectedLocation ? needsExpand ? 565 : 404 : 125)}px`,
-            WebkitTransition: 'max-height 0.1s',
-            overflowY: 'auto',
-            overflowX: 'hidden'}}>
+          className="ui segments locationsContainer"
+          style={{maxHeight: `${height - (selectedLocationId && !multiSelectedLocation ? needsExpand ? 565 : 404 : 125)}px`}}>
             {map(storedLocations, (location, i) => {
               let isVisible = i >= this.range.start && i <= this.range.start + this.range.length;
 

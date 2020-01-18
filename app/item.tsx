@@ -9,7 +9,7 @@ interface ItemProps {
   onValueClick?: React.MouseEventHandler;
   label?: string;
   className?: string;
-  value?: NumberOrString;
+  value?: NumberOrString | React.ReactElement;
   icon?: string;
   disabled?: boolean;
   border?: boolean;

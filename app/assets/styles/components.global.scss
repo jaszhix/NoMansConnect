@@ -25,11 +25,35 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.RemoteLocations__dropdownContainer {
+.RemoteLocations__root {
+  display: inline-flex;
+  padding-top: 14px;
   position: absolute;
+  right: 54px;
+  z-index: 91;
+}
+
+.RemoteLocations__container {
+  display: inline-table;
+  background: rgba(23, 26, 22, 0.9) !important;
+  border-top: 2px solid #95220E !important;
+  text-align: center;
+  -webkit-user-select: none !important;
+  padding-right: 0px !important;
+}
+
+.RemoteLocations__dropdownContainer {
+  position: absolute !important;
   left: 17px;
   top: 13px;
   color: rgba(255, 255, 255, 0.95);
+}
+
+.RemoteLocations__locationsContainer {
+  min-width: 400px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
 }
 
 /*
@@ -77,6 +101,74 @@ Button
 /*
 LocationBox
 */
+
+.LocationBox__root {
+  -webkit-user-select: none !important;
+  display: inline-table;
+  position: inherit !important;
+  left: inherit !important;
+  background: rgb(23, 26, 22) !important;
+  border-top: 2px solid #95220E !important;
+  margin-top: initial !important;
+  margin-bottom: 26px !important;
+  margin-right: initial !important;
+  min-width: 386px;
+  max-width: 386px;
+  min-height: 245px;
+  max-height: 289px;
+  z-index: inherit !important;
+  opacity: 1;
+  text-align: left;
+
+  &.selectType {
+    position: fixed !important;
+    left: 28px !important;
+    background: rgba(23, 26, 22, 0.9) !important;
+    margin-top: 26px !important;
+    margin-right: initial !important;
+    z-index: 92 !important;
+  }
+
+  &.detailsOnly {
+    border-top: unset !important;
+    margin-bottom: unset !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    min-height: unset !important;
+    max-height: unset !important;
+    padding-top: 0px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    width: 100% !important;
+  }
+
+  &.needsExpand {
+    max-height: 500px !important;
+  }
+
+  &.compactRemote {
+    min-height: 68px !important;
+  }
+
+  &.compact {
+    min-width: 358px !important;
+  }
+
+  h3 {
+    font-size: 17.92px;
+    text-align: center;
+    max-height: 23px;
+    color: inherit;
+
+    &.longName {
+      font-size: 14px;
+    }
+
+    &.manual {
+      color: #7fa0ff;
+    }
+  }
+}
 
 .LocationBox__PositionEditContainer {
   height: 338px;
@@ -321,35 +413,106 @@ Item
   left: -43px;
 }
 
-.StoredLocations__container {
+.StoredLocations__root {
   display: inline-flex;
   background: transparent !important;
   -webkit-user-select: none !important;
+
+  .innerContainer {
+    display: inline-table;
+    background: rgba(23, 26, 22, 0.9) !important;
+    border-top: 2px solid #95220E !important;
+    min-width: 285px;
+    max-width: 285px;
+    text-align: center;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    z-index: 90;
+
+    .optionsDropdown {
+      position: absolute;
+      left: 17px;
+      top: 16px;
+    }
+
+    .locationsContainer {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+    }
+  }
 }
-.StoredLocations__uiSegment {
-  background: rgba(23, 26, 22, 0.9) !important;
-  display: inline-table !important;
-  border-top: 2px solid #95220E !important;
-  min-width: 285px !important;
-  max-width: 285px !important;
-  text-align: center !important;
-  padding-left: 0px !important;
-  padding-right: 0px !important;
-  z-index: 90 !important;
-}
-.StoredLocationItem__iconSpan {
-  position: absolute !important;
-  top: 4px !important;
-}
-.StoredLocationItem__icon {
-  width: 21px !important;
-  height: 21px !important;
-}
-.StoredLocationItem__marker {
-  position: absolute;
-  top: 3px;
-  left: 6px;
-  cursor: pointer;
+
+.StoredLocationItem__root {
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  padding: 3px 12px 3px 3px !important;
+  text-align: right;
+  min-height: 29px;
+  max-height: 29px;
+  opacity: 1 !important;
+  background: inherit;
+
+  &.upvote {
+    font-weight: 600 !important;
+  }
+
+  &.selected, &:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  &.hidden {
+    opacity: 0.5 !important;
+  }
+
+  .iconContainer {
+    position: absolute !important;
+    top: 4px !important;
+    left: 4px !important;
+
+    img {
+      width: 21px !important;
+      height: 21px !important;
+    }
+
+    &.spaceStation {
+      top: 3px !important;
+    }
+
+    &.secondPosition {
+      left: 31px !important;
+    }
+  }
+
+  i {
+    position: absolute;
+    top: 3px;
+    left: 6px;
+  }
+
+  p {
+    position: relative;
+    left: 86px;
+    max-width: 177px;
+    white-space: nowrap;
+    color: inherit;
+
+    &.marquee {
+      left: 33px;
+      max-width: 200px;
+    }
+
+    &.longName {
+      left: 76px;
+    }
+
+    &.gaFormat {
+      left: 56px;
+    }
+
+    &.manual {
+      color: #7fa0ff;
+    }
+  }
 }
 
 .Map3D__arrow {
@@ -370,6 +533,7 @@ Item
   padding: 4px 8px;
   letter-spacing: 3px;
   font-size: 16px;
+  z-index: 91;
 }
 .Map3D__hudUser {
   font-weight: 600;
@@ -484,6 +648,13 @@ Friend requests
 }
 .LogModal__button {
   width: 40px !important;
+}
+
+.SettingsModal__root {
+  min-width: 183px;
+  border-bottom-left-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+  border-top: 1px solid rgb(149, 34, 14) !important;
 }
 
 .SettingsModal__child {
@@ -712,6 +883,24 @@ Modals
   color: rgb(218, 38, 0);
 }
 
+.Notification__root {
+  padding: 8px;
+  text-align: center !important;
+  z-index: 1001 !important;
+  -webkit-transformOrigin: 50% 25% !important;
+  box-shadow: none !important;
+  border-top: 2px solid #95220E !important;
+  border: 1px solid #DA2600 !important;
+  width: 400px !important;
+  height: 145px;
+  position: absolute !important;
+  top: unset !important;
+  left: unset !important;
+  right: 30px;
+  bottom: 30px;
+  margin: auto !important;
+}
+
 .LegendColorPicker__container {
   position: absolute;
   top: 1px;
@@ -732,4 +921,78 @@ Modals
 .LegendColorPicker__shapeSelect > *,
 .LegendColorPicker__shapeSelect > * > * {
   font-size: 12px !important;
+}
+
+.TooltipChild__container {
+  display: inline-table;
+  text-align: left;
+  font-size: 16px;
+  border-top: 2px solid rgb(149, 34, 14);
+  letter-spacing: 3px;
+}
+
+.TooltipChild__header {
+  padding: 3px 5px !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid rgb(149, 34, 14) !important;
+}
+
+.TooltipChild__planet {
+  font-weight: 500;
+}
+
+.TooltipChild__explored {
+  padding: 0px 5px !important;
+}
+
+.GalacticMap__root {
+  background: rgba(23, 26, 22, 0.9) !important;
+  display: inline-table !important ;
+  border-top: 2px solid #95220E !important;
+  text-align: center !important;
+  position: absolute !important;
+  top: -11px !important;
+  left: 15px !important;
+  -webkit-transition: left 0.1s, background 0.1s, opacity 0.2s !important;
+  z-index: 90 !important;
+  -webkit-user-select: none !important;
+  min-width: 360px !important;
+  min-height: 360px !important;
+  opacity: 1 !important;
+
+  &.loading {
+    opacity: 0 !important;
+  }
+
+  h3.compact {
+    position: relative;
+    left: 63px;
+    text-align: left !important;
+  }
+
+  .mapHeader {
+    position: absolute;
+    top: 16px;
+
+    &.mapOptionsDropdown {
+      left: 48px;
+
+      &.map3d {
+        left: 16px;
+      }
+    }
+
+    &.galaxySelect {
+      right: 54px;
+
+      &.map3d {
+        right: 14px;
+      }
+    }
+  }
+}
+
+.GalacticMap__mapContainer {
+  position: relative;
+  left: -18px !important;
 }

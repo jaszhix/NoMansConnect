@@ -500,6 +500,23 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
     let name = edit && this.state.name.length > 0 ? this.state.name
       : location.username ? (location.name && location.name.length > 0 ? location.name : `${location.username} explored`)
       : 'Selected';
+    let isValid = (location.playerPosition
+      || (location.positions && location.positions.length > 0 && location.positions[0].playerPosition))
+      && !location.manuallyEntered;
+
+    let rootClasses = 'ui segment LocationBox__root';
+    let h3Classes = 'cursorPointer';
+
+    if (selectType) {
+      rootClasses += ' selectType';
+      h3Classes += ' cursorDefault';
+    };
+    if (detailsOnly) rootClasses += ' detailsOnly';
+    if (compact) rootClasses += ' compact';
+    if (needsExpand) rootClasses += ' needsExpand';
+    if (compactRemote) rootClasses += ' compactRemote';
+    if (name.length >= 28) h3Classes += ' longName';
+    if (!isValid) h3Classes += ' manual';
 
     if (this.state.positionSelect) {
       leftOptions.push({
@@ -620,34 +637,6 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
       });
     }
 
-    let visibleStyle: React.CSSProperties = {
-      background: selectType ? 'rgba(23, 26, 22, 0.9)' : 'rgb(23, 26, 22)',
-      display: detailsOnly ? 'WebkitBox' : 'inline-table',
-      opacity: 1,
-      borderTop: detailsOnly ? 'unset' : '2px solid #95220E',
-      textAlign: 'left',
-      marginTop: selectType ? '26px' : 'initial',
-      marginBottom: detailsOnly ? 'unset' : '26px',
-      marginRight: !selectType && i % 1 === 0 ? '26px' : 'initial',
-      minWidth: detailsOnly ? 'unset' : `${compact ? 358 : 386}px`,
-      maxWidth: detailsOnly ? 'unset' : '386px',
-      minHeight: detailsOnly ? 'unset' : compactRemote ? '68px' : '245px',
-      maxHeight: detailsOnly ? 'unset' : needsExpand ? '500px' : '289px',
-      zIndex: selectType ? 92 : 'inherit',
-      position: selectType ? 'fixed' : 'inherit',
-      left: selectType ? '28px' : 'inherit',
-      top: selectType ? `${height - (needsExpand ? 432 : 271)}px` : 'inherit',
-      WebkitUserSelect: 'none'
-    };
-
-    if (detailsOnly) {
-      Object.assign(visibleStyle, {
-        paddingTop: '0px',
-        paddingLeft: '0px',
-        paddingRight: '0px'
-      });
-    }
-
     let dropdown = (
       <BasicDropdown
       height={height}
@@ -661,21 +650,13 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
 
     return (
       <div
-      className="ui segment"
-      style={visibleStyle}
+      className={rootClasses}
+      style={{top: selectType ? `${height - (needsExpand ? 432 : 271)}px` : 'inherit'}}
       data-place="left"
       data-tip={this.props.isVisible && !selectType && compactRemote ? ReactDOMServer.renderToString(this.renderDetails()) : null}>
         {this.props.isVisible && !detailsOnly ? (
           <h3
-          style={{
-            fontSize: name.length > 28 ? '14px' : '17.92px',
-            textAlign: 'center',
-            maxHeight: '23px',
-            color: (location.playerPosition
-              || (location.positions && location.positions.length > 0 && location.positions[0].playerPosition))
-              && !location.manuallyEntered ? 'inherit' : '#7fa0ff',
-            cursor: selectType ? 'default' : 'pointer'
-          }}
+          className={h3Classes}
           onClick={() => state.set({selectedLocation: location, selectedGalaxy: location.galaxy})}>
             {name}
             {this.state.profile ?
@@ -835,10 +816,10 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             </div>
           </div>
         ) : selectType || (this.props.isVisible && !compactRemote) ? (
-          <div>
+          <React.Fragment>
             {detailsOnly ? dropdown : null}
             {this.renderDetails()}
-          </div>
+          </React.Fragment>
         ) : null}
       </div>
     );

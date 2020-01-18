@@ -5,6 +5,12 @@
 @import "./assets/styles/colorPicker.global.scss";
 @import "./assets/styles/spinners.global.scss";
 
+.ui.top.attached.menu > div.right.menu > div,
+.ui.top.attached.menu > div.right.menu > div > div > div,
+.ui.top.attached.menu > div.ui.dropdown.icon.item, th {
+  cursor: default !important;
+}
+
 .ui {
   border-radius: 0em !important;
 }
@@ -122,16 +128,16 @@ textarea:focus {
   cursor: default !important;
 }
 
+.cursorDefaultIcon {
+  cursor: default !important;
+  padding: 0px !important;
+}
+
 .iconTransparent {
   width: 250px;
   -webkit-user-select: initial;
   -webkit-app-region: no-drag;
   font-size: 15px;
-}
-
-.cursorDefaultIcon {
-  cursor: default;
-  padding: 0px;
 }
 
 .noDrag {

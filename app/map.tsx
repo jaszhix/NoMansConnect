@@ -25,24 +25,6 @@ import Map3D from './map3d';
 
 import {cleanUp} from './utils';
 
-const toolTipHeaderStyle: CSSProperties = {
-  padding: '3px 5px',
-  fontWeight: 600,
-  borderBottom: '1px solid rgb(149, 34, 14)'
-};
-const toolTipChildStyle: CSSProperties = {
-  fontWeight: 500
-}
-const toolTipExploredStyle: CSSProperties = {
-  padding: '0px 5px'
-};
-const toolTipContainerStyle: CSSProperties = {
-  display: 'inline-table',
-  textAlign: 'left',
-  fontSize: '16px',
-  borderTop: '2px solid rgb(149, 34, 14)',
-  letterSpacing: '3px',
-};
 const nonSelectable = ['Center', 'Selected'];
 
 let workerCount = 1;
@@ -67,11 +49,10 @@ class TooltipChild extends React.Component<TooltipChildProps> {
   render() {
     if (this.props.active || this.props.isSelected) {
       return (
-        <div className="ui segments" style={toolTipContainerStyle}>
+        <div className="ui segments TooltipChild__container">
           {this.props.payload[0].payload.user ?
           <div
-          className="ui segment"
-          style={toolTipHeaderStyle}>
+          className="ui segment TooltipChild__header">
             {`${this.props.payload[0].payload.user}`}
           </div> : null}
           {this.props.payload[0].payload.planetData ? map(this.props.payload[0].payload.planetData, (sector, i) => {
@@ -79,13 +60,12 @@ class TooltipChild extends React.Component<TooltipChildProps> {
             return (
               <div
               key={i}
-              className="ui segment"
-              style={toolTipHeaderStyle}>
+              className="ui segment TooltipChild__header">
                 {sector.username}
                 {map(sector.entries, (id, z) => {
                   return (
                     <div
-                    style={toolTipChildStyle}
+                    className="TooltipChild__planet"
                     key={z}>
                       {id}
                     </div>
@@ -97,8 +77,7 @@ class TooltipChild extends React.Component<TooltipChildProps> {
             return (
               <div
               key={i}
-              className="ui segment"
-              style={toolTipExploredStyle}>
+              className="ui segment TooltipChild__explored">
                 {/*
                 // @ts-ignore */}
                 {`${item.name}: ${item.name === 'Z' ? (0, 4096) - item.value : item.value}`}
@@ -702,8 +681,6 @@ interface GalacticMapState {
 };
 
 class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
-  mapWrapper: CSSProperties;
-  leftDropdownWrapper: CSSProperties;
   connections: any[];
 
   constructor(props) {
@@ -711,19 +688,10 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
     this.state = {
       init: true
     };
-    this.mapWrapper = {
-      position: 'relative',
-      left: '-18px'
-    };
-    this.leftDropdownWrapper = {
-      position: 'absolute',
-      right: this.props.map3d ? '38px' : '54px',
-      top: '16px'
-    };
-
   }
   componentDidMount() {
     state.set({navLoad: true});
+
     this.connections = [
       state.connect([
         'storedLocations',
@@ -816,7 +784,7 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
     if (p.selectedGalaxy < 0) {
       return null;
     }
-    let compact = p.width <= 1212 || p.height <= 850;
+
     let leftOptions = [
       {
         id: 'map3d',
@@ -898,49 +866,31 @@ class GalacticMap extends React.Component<GalacticMapProps, GalacticMapState> {
     }
 
     let size = p.width - (remoteLocationsWidth + 438);
+    let compact = p.width <= 1212 || p.height <= 850 || size < 420;
     let maxSize = p.height - 105;
     size = size > maxSize ? maxSize : size < 260 ? 260 : size;
 
     return (
       <div
-      className="ui segment"
-      style={{
-        background: 'rgba(23, 26, 22, 0.9)',
-        display: 'inline-table',
-        borderTop: '2px solid #95220E',
-        textAlign: 'center',
-        position: 'absolute',
-        top: '-11px',
-        left: '15px',
-        WebkitTransition: 'left 0.1s, background 0.1s, opacity 0.2s',
-        zIndex: p.map3d ? 0 : 90,
-        WebkitUserSelect: 'none',
-        minWidth: '360px',
-        minHeight: '360px',
-        opacity: this.state.init && !p.map3d ? 0 : 1
-      }}>
-        <h3 style={{textAlign: compact ? 'left' : 'inherit'}}>Galactic Map</h3>
+      className={`ui segment GalacticMap__root${this.state.init && !p.map3d ? ' loading' : ''}`}>
+        <h3 className={compact ? 'compact' : ''}>Galactic Map</h3>
+
         {p.galaxyOptions.length > 0 ?
-        <div style={this.leftDropdownWrapper}>
-          <BasicDropdown
-          height={p.height}
-          options={p.galaxyOptions}
-          selectedGalaxy={p.selectedGalaxy} />
-        </div> : null}
-        <div style={{
-          position: 'absolute',
-          left: compact ? 'initial' : p.map3d ? '16px' : '48px',
-          right: compact ? '143px' : 'initial',
-          top: '16px'
-        }}>
-          <BasicDropdown
-          height={p.height}
-          icon="ellipsis horizontal"
-          showValue={null}
-          persist={true}
-          options={leftOptions} />
-        </div>
-        <div style={this.mapWrapper}>
+        <BasicDropdown
+        className={`mapHeader galaxySelect${p.map3d ? ' map3d' : ''}`}
+        height={p.height}
+        options={p.galaxyOptions}
+        selectedGalaxy={p.selectedGalaxy} /> : null}
+
+        <BasicDropdown
+        className={`mapHeader mapOptionsDropdown${p.map3d ? ' map3d' : ''}`}
+        height={p.height}
+        icon="ellipsis horizontal"
+        showValue={null}
+        persist={true}
+        options={leftOptions} />
+
+        <div className="GalacticMap__mapContainer">
           {p.map3d ?
           <ErrorBoundary onError={this.resetMap3D}>
             <Map3D

@@ -89,7 +89,7 @@ export class BaseDropdownMenu extends React.Component<BaseDropdownMenuProps, Bas
     let p = this.props;
     return (
       <div
-      className={`ui dropdown icon item noDrag${this.state.open ? ' visible' : ''}`}
+      className={`ui dropdown icon item noDrag cursorDefault${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
       data-tip={tip('Save/Restore Bases')}>
@@ -206,7 +206,7 @@ export class SaveEditorDropdownMenu extends React.Component<SaveEditorDropdownMe
     );
     return (
       <div
-      className={`ui dropdown icon item noDrag${this.state.open ? ' visible' : ''}`}
+      className={`ui dropdown icon item noDrag cursorDefault${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
       data-tip={tip('Save Editor')}>
@@ -331,7 +331,7 @@ You should have received a copy of the GNU General Public License along with thi
     let p = this.props;
     return (
       <div
-      className={`ui dropdown icon item noDrag${this.state.open ? ' visible' : ''}`}
+      className={`ui dropdown icon item noDrag cursorDefault${this.state.open ? ' visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-place="bottom"
       data-tip={tip('Options')}>
@@ -597,7 +597,7 @@ export class NotificationDropdown extends React.Component<NotificationDropdownPr
     let height = this.props.height ? this.props.height : window.innerHeight;
     return (
       <div
-      className={`ui dropdown icon item noDrag${this.state.open ? ' active visible' : ''}`}
+      className={`ui dropdown icon item noDrag cursorDefault${this.state.open ? ' active visible' : ''}`}
       onClick={this.handleToggleOpen}
       data-tip={!this.state.open ? tip(`${this.props.options.length} new message${this.props.options.length > 1 ? 's' : ''}`) : ''}>
         <i className="envelope icon" />
