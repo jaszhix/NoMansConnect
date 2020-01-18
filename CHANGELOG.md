@@ -1,3 +1,14 @@
+# 1.10.0
+
+  * Added an option to mark locations private. Private locations are only visible to the author, and their friends.
+  * Added an option to customize the color and shape of the 2D map scatter points. Accessible by clicking a dot in the legend.
+  * Fixed a bug causing the 3D map to crash when switching from the 2D map.
+  * Fixed issues related to maximizing the window.
+  * Fixed current, selected location scatter points not always rendering correctly on the 2D map.
+  * Fixed map scatter point filtration preferences not persisting.
+  * Fixed screenshots being captured on every save, when automatic capturing is enabled.
+  * Fixed the location options dropdown toggle button not showing in the profile view.
+
 # 1.9.3
 
   * Fixed friend scatter points being too dark and hard to see on the 2D map.

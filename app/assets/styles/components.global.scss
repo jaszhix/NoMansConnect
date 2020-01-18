@@ -973,8 +973,12 @@ Modals
     position: absolute;
     top: 16px;
 
+    .text {
+      font-size: 16px;
+    }
+
     &.mapOptionsDropdown {
-      left: 48px;
+      left: 55px;
 
       &.map3d {
         left: 16px;
