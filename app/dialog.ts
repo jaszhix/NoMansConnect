@@ -55,42 +55,43 @@ export const handleWallpaper = () => {
   });
 };
 
-export const handleSetWallpaper = () => {
+export const handleSetWallpaper = async () => {
   if (state.wallpaper) {
     state.set({wallpaper: null}, handleWallpaper);
     return;
   }
-  dialog.showOpenDialog({
+
+  const value = await dialog.showOpenDialog({
     properties: ['openFile'],
     filters: [{name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif']},],
-  }, (cb) => {
-    if (cb && cb[0]) {
-      state.set({
-        wallpaper: cb[0]
-      }, handleWallpaper);
-    }
   });
+
+  if (!value) return;
+
+  state.set({
+    wallpaper: value.filePaths[0]
+  }, handleWallpaper);
 };
 
-export const handleSelectInstallDirectory = () => {
-  dialog.showOpenDialog({properties: ['openDirectory']}, (cb) => {
-    if (cb && cb[0]) {
-      state.set({
-        installDirectory: cb[0]
-      }, handleRestart);
-    }
-  });
+export const handleSelectInstallDirectory = async () => {
+  const value = await dialog.showOpenDialog({properties: ['openDirectory']});
+
+  if (!value) return;
+
+  state.set({
+    installDirectory: value.filePaths[0]
+  }, handleRestart);
 };
 
-export const handleSelectSaveDirectory = () => {
-  dialog.showOpenDialog({properties: ['openDirectory']}, (cb) => {
-    if (cb && cb[0]) {
-      state.set({
-        saveDirectory: cb[0],
-        title: 'No Man\'s Connect'
-      }, handleRestart);
-    }
-  });
+export const handleSelectSaveDirectory = async () => {
+  const value = await dialog.showOpenDialog({properties: ['openDirectory']});
+
+  if (!value) return;
+
+  state.set({
+    saveDirectory: value.filePaths[0],
+    title: 'No Man\'s Connect'
+  }, handleRestart);
 }
 
 export const handleUpgrade = (nextVersion) => {
@@ -109,6 +110,7 @@ export const handleUpgrade = (nextVersion) => {
 
   setTimeout(() => {
     dialog.showMessageBox({
+      // @ts-ignore
       title: 'No Man\'s Connect Upgrade',
       message: upgradeMessage,
       buttons: ['OK', 'Teleport to the Github releases page']
@@ -124,6 +126,7 @@ export const handleUpgrade = (nextVersion) => {
 
 export const handleSaveDataFailure = () => {
   dialog.showMessageBox({
+    // @ts-ignore
     title: 'Which platform do you use?',
     message: 'Save data not found. Select PS4 to skip this step, and disable PC specific features.',
     buttons: ['PC', 'PS4/XB1']
@@ -183,6 +186,7 @@ export const handleUsernameOverride = (username: string): void => {
 
 export const handleProtectedSession = (username = 'Explorer'): void => {
   dialog.showMessageBox({
+    // @ts-ignore
     title: `Protection Enabled For ${username}`,
     message: 'This username was protected by another user. When you protect your username, the app will associate your computer with your username to prevent impersonation. If this is in error, please open an issue on the Github repository.',
     buttons: ['OK', 'Send Recovery Email', 'Enter Recovery Token']
