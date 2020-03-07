@@ -113,7 +113,7 @@ export class BaseDropdownMenu extends React.Component<BaseDropdownMenuProps, Bas
             return (
               <div
               key={i}
-              id={i}
+              id={`${i}`}
               className="item dropdown__baseItem"
               onMouseEnter={this.handleOnMouseEnter}
               onMouseLeave={this.handleOnMouseLeave}>

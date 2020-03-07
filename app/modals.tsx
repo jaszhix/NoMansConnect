@@ -242,8 +242,8 @@ export class LocationRegistrationModal extends React.Component<LocationRegistrat
       this.state.galaxies.push({
         id: galaxy,
         label: galaxy,
-        onClick: ()=>this.setState({
-          galaxy: i,
+        onClick: () => this.setState({
+          galaxy: i as number,
           preventClose: false
         })
       });
@@ -314,7 +314,7 @@ export class LocationRegistrationModal extends React.Component<LocationRegistrat
     return (
       <div className="ui small modal active modal__compact">
         <span className="close" />
-        <div onClick={()=>this.setState({preventClose: true})}>
+        <div onClick={() => this.setState({preventClose: true})}>
           <BasicDropdown
           height={this.props.s.height}
           options={this.state.galaxies}
@@ -998,7 +998,7 @@ export class BaseRestorationModal extends React.Component<BaseRestorationModalPr
       && base.Name
       && base.BaseType.PersistentBaseTypes === 'HomePlanetBase'
     });
-    each(elgibleBases, (base, i) => {
+    each(elgibleBases, (base, i: number) => {
       baseOptions.push({
         id: base.Name,
         label: base.Name,
@@ -1028,7 +1028,7 @@ export class BaseRestorationModal extends React.Component<BaseRestorationModalPr
         <div>
           {`Select which base will be overwritten by ${this.props.baseData.restoreBase.Name}. At least one base item must be placed for the import to work.`}
         </div>
-        <div onClick={()=>this.setState({preventClose: true})}>
+        <div onClick={() => this.setState({preventClose: true})}>
           <BasicDropdown
           height={this.props.height}
           options={this.state.baseOptions}
@@ -1262,6 +1262,7 @@ export class SettingsModal extends React.Component<SettingsModalProps, SettingsM
     }
 
     dialog.showMessageBox({
+      // @ts-ignore
       title: 'Important Information',
       message: helpMessage,
       buttons: ['Cancel', `${profile.protected ? 'Unp' : 'P'}rotect Username`]

@@ -60,7 +60,7 @@ class Item extends React.Component<ItemProps> {
         <div
         ref={this.getRef}
         className={className}>
-          <ReactMarkdown className="md-p" source={value} />
+          <ReactMarkdown className="md-p" source={value as string} />
         </div>
       );
     }

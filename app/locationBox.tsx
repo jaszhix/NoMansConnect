@@ -42,7 +42,7 @@ interface LocationBoxProps {
   detailsOnly?: boolean;
   isOwnLocation: boolean;
   edit: boolean;
-  positionEdit: boolean;
+  positionEdit?: boolean;
   navLoad?: boolean;
   ps4User: boolean;
   isSelectedLocationRemovable: boolean;
@@ -55,16 +55,16 @@ interface LocationBoxProps {
   height: number;
   favorites: string[];
   onCompactRemoteSwitch?: () => void;
-  onEdit: () => void;
-  onPositionEdit: (value?) => void;
+  onEdit?: () => void;
+  onPositionEdit?: (value?) => void;
   onUpdate?: (dataId: string, data: any /* location */, remove?: boolean) => void;
-  onMarkCompatible: () => void;
-  onMarkPrivate: (location: NMSLocation) => void;
-  onDeleteScreen: () => void;
-  onUploadScreen: () => void;
-  onRemoveStoredLocation: () => void;
-  onSubmit: (name: string, description: string, tags: string[]) => void;
-  onFav: (location: any) => void;
+  onMarkCompatible?: () => void;
+  onMarkPrivate?: (location: NMSLocation) => void;
+  onDeleteScreen?: () => void;
+  onUploadScreen?: () => void;
+  onRemoveStoredLocation?: () => void;
+  onSubmit?: (name: string, description: string, tags: string[]) => void;
+  onFav?: (location: any) => void;
 }
 
 interface LocationBoxState {
@@ -87,6 +87,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
   static defaultProps = {
     name: '',
     description: '',
+    positionEdit: false,
   };
   static getDerivedStateFromProps = (nextProps, nextState) => {
     const stateUpdate: LocationBoxState = {};
@@ -381,7 +382,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
             {truncate(mod, {length: 43})}
           </div>
         );
-      })
+      }) as unknown as React.ReactElement<any, any>
     );
   }
   getRef = (ref) => {
@@ -526,7 +527,7 @@ class LocationBox extends React.Component<LocationBoxProps, LocationBoxState> {
         onClick: () => this.setState({positionSelect: false})
       });
       if (location.positions) {
-        each(location.positions, (position, i) => {
+        each(location.positions, (position, i: number) => {
           leftOptions.push({
             id: `position-${i}`,
             disabled: navLoad,
