@@ -45,10 +45,12 @@ export const handleRestart = () => {
 
 export const handleWallpaper = () => {
   let wallpaper: string = defaultWallpaper;
+
   if (state.wallpaper) {
-    wallpaper = `'file://${state.wallpaper}'`;
+    wallpaper = `'file://${state.wallpaper.replace(/\\/g, '/')}'`;
   }
-  v(document.body).css({
+
+  Object.assign(document.body.style, {
     backgroundImage: `url(${wallpaper})`,
     backgroundSize: 'cover',
     backgroundRepeat: 'no-repeat'
