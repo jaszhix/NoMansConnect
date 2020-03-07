@@ -1773,6 +1773,7 @@ class StatsModal extends React.Component<StatsModalProps, StatsModalState> {
                   return (
                     <Item
                     key={i}
+                    className="StatsModal__item"
                     label={username}
                     value={numberWithCommas(count)}
                     onValueClick={() => state.set({displayProfile: username})} />

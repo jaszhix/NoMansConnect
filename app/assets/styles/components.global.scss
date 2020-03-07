@@ -703,6 +703,10 @@ Friend requests
   padding: 0px !important;
 }
 
+.StatsModal__item:hover {
+  background: rgba(255, 255, 255, 0.1)
+}
+
 .UsernameOverrideModal__container {
   padding: 8px;
   text-align: center;
