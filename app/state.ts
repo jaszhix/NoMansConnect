@@ -3,7 +3,7 @@ import os from 'os';
 import path from 'path';
 import {pick, uniqBy} from 'lodash';
 import {each, filter, findIndex, cloneDeep} from '@jaszhix/utils';
-import initStore from '@jaszhix/state';
+import {init} from '@jaszhix/state';
 
 import {handleRestart} from './dialog';
 import log from './log';
@@ -15,7 +15,7 @@ import {showDefault} from './constants';
 const {dialog} = remote;
 const win = remote.getCurrentWindow();
 
-const state: GlobalState = initStore({
+const state: GlobalState = init({
   // Core
   knownProducts,
   galaxies,

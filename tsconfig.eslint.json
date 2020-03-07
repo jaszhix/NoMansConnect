@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "app/**/**/*.ts",
+    "app/**/**/*.tsx",
+    "app/**/**/*.js",
+    "test/**/*.ts",
+    "types",
+    "webpack.config.base.js",
+    "webpack.config.development.js",
+    "webpack.config.electron.js",
+    "webpack.config.eslint.js",
+    "webpack.config.production.js",
+    "webpack.config.renderer.dev.dll.js"
+  ]
+}
