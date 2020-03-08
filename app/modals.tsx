@@ -594,6 +594,8 @@ export class ProfileModal extends React.Component<ProfileModalProps, ProfileModa
     ajaxWorker.get(`/nmsprofile/${id}/`, {
       params: {
         apiVersion: state.apiVersion,
+        machineId: state.machineId,
+        username: state.username,
         discoveriesPage
       }
     }).then((profile) => {
