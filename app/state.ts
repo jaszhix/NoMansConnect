@@ -22,7 +22,7 @@ const state: GlobalState = init({
   defaultLegendKeys: Object.keys(showDefault),
   completedMigration: false,
   newUser: false,
-  version: '1.10.0',
+  version: '1.10.1',
   notification: {
     message: '',
     type: 'info',

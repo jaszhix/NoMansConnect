@@ -1,3 +1,10 @@
+# 1.10.1
+
+  * Fixed a regression from 1.10 causing the inability to select a custom wallpaper, save path, and install path from the settings.
+  * Fixed discoveries associated with private locations being listed in public profile timeline results.
+  * Minor style tweaks to the Global Stats view.
+  * Updated dependencies.
+
 # 1.10.0
 
   * Added an option to mark locations private. Private locations are only visible to the author, and their friends.
