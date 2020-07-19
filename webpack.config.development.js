@@ -8,7 +8,7 @@ import path from 'path';
 import {spawn, execSync} from 'child_process';
 import chalk from 'chalk';
 import webpack from 'webpack';
-import merge from 'webpack-merge';
+import {merge} from 'webpack-merge';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import baseConfig from './webpack.config.base';
 
@@ -26,7 +26,7 @@ if (!(fs.existsSync(dll) && fs.existsSync(manifest))) {
   execSync('npm run build-dll');
 }
 
-export default merge.smart(baseConfig, {
+export default merge(baseConfig, {
   mode: 'development',
   devtool: 'source-map',
 

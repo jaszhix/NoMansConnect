@@ -7,13 +7,13 @@ import path from 'path';
 import webpack from 'webpack';
 import ExtractTextPlugin from 'extract-text-webpack-plugin';
 import {BundleAnalyzerPlugin} from 'webpack-bundle-analyzer';
-import merge from 'webpack-merge';
+import {merge} from 'webpack-merge';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import TerserPlugin from 'terser-webpack-plugin';
 import SentryWebpackPlugin from '@sentry/webpack-plugin';
 import baseConfig from './webpack.config.base';
 
-const config = merge.smart(baseConfig, {
+const config = merge(baseConfig, {
   mode: 'production',
   devtool: 'source-map',
 

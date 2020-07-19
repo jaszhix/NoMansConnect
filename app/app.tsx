@@ -657,6 +657,7 @@ class App extends React.Component<GlobalState> {
   signSaveData = (saveData, cb) => {
     let absoluteSaveDir = this.state.saveFileName.split(dirSep);
     let _absoluteSaveDir = absoluteSaveDir.slice();
+    let saveFile = last(_absoluteSaveDir);
     absoluteSaveDir.splice(absoluteSaveDir.length - 1, 1);
     absoluteSaveDir = absoluteSaveDir.join(dirSep);
 
@@ -678,10 +679,10 @@ class App extends React.Component<GlobalState> {
       }
       fsWorker.backupSaveFile(
         absoluteSaveDir,
-        last(_absoluteSaveDir),
+        saveFile,
         (err) => {
           if (err) {
-            log.error('Unable to backup save file before writing: ', err);
+            log.error(`Unable to backup save file before writing:\n${absoluteSaveDir}\n${saveFile}`, err);
             state.set({navLoad: false});
             return;
           }
