@@ -43,6 +43,8 @@ NMC uses Matthew Humphrey's [nmssavetool](https://github.com/matthew-humphrey/nm
 
 [monkeyman192](https://github.com/monkeyman192) provided the formula for transferring base data to different locations.
 
+[bdew](https://github.com/bdew) provided code for decompressing the save file format in NMS Frontiers.
+
 Thanks to both of them, the supporters that have helped out with server maintenance, and bug reporters! A list of contributors can be found in the app's About dialog.
 
 ## Support

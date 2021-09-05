@@ -11,6 +11,7 @@
     "jsx": "react",
     "baseUrl": "./app",
     "typeRoots" : ["./types"],
+    "lib": ["DOM"]
   },
   "include": [
     "app"

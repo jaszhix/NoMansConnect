@@ -1,3 +1,7 @@
+# 1.10.2
+
+  * Updated compatibility for NMS Frontiers save files.
+
 # 1.10.1
 
   * Fixed a regression from 1.10 causing the inability to select a custom wallpaper, save path, and install path from the settings.

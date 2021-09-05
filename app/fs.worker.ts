@@ -9,6 +9,104 @@ import log from './log';
 
 const decoder = new StringDecoder('utf8');
 
+/**
+ * Helper for reading variable length sizes
+ * @param data buffer to read from
+ * @param start start position
+ * @param val initial value from tokne
+ * @returns decoded length and new read position
+ */
+ function readLength(
+  data: Buffer,
+  start: number,
+  val: number
+): [number, number] {
+  if (val < 15) return [val, start]; // Nothing to read
+
+  let pos = start;
+  let res = val;
+  let tmp = 0;
+
+  do {
+    tmp = data.readUInt8(pos++);
+    res += tmp;
+  } while (tmp === 255);
+  return [res, pos];
+}
+
+/*
+  Originally authored by bdew
+  https://gist.github.com/bdew/69252923b4abdffd5b825b70756a5800
+*/
+
+function decompressSave(data: Buffer): Buffer {
+  const outputs: Buffer[] = []; // Array of decompressed buffers
+  let readPtr = 0; // Current read position
+
+  while (readPtr < data.length) {
+    // Check magic number
+    if (data.readUInt32LE(readPtr) !== 0xfeeda1e5)
+      throw new Error(`Missing magic number at ${readPtr}`);
+
+    // Read header
+
+    const compSize = data.readInt32LE(readPtr + 4); // Compressed data size
+    const buffSize = data.readInt32LE(readPtr + 8); // Output size
+    readPtr += 16; // 4 bytes unknown (always 0?)
+
+    const blockEnd = readPtr + compSize; // End of current block in fiel
+    const writeBuf = Buffer.alloc(buffSize); // Output buffer
+
+    let chunk = 0; // Size of current chunk
+    let offset = 0; // Copy operation offset
+    let writePtr = 0; // Output buffer position
+
+    while (readPtr < blockEnd) {
+      // Read token
+      const token = data.readUInt8(readPtr++);
+
+      // Decode data length
+      [chunk, readPtr] = readLength(data, readPtr, token >> 4);
+
+      // Check overflow
+      if (writePtr + chunk > buffSize) {
+        throw new Error('Output buffer overflow');
+      }
+
+      // Copy data to output
+      data.copy(writeBuf, writePtr, readPtr, readPtr + chunk);
+      writePtr += chunk;
+      readPtr += chunk;
+
+      // If we aren't at the end - read offset for copy
+      if (readPtr < blockEnd) {
+        offset = data.readUInt16LE(readPtr);
+        readPtr += 2;
+      } else break;
+
+      // Decode copy length
+      [chunk, readPtr] = readLength(data, readPtr, token & 15);
+      chunk += 4;
+
+      // Check overflow
+      if (writePtr + chunk > buffSize) {
+        throw new Error('Output buffer overflow');
+      }
+
+      // Do copy (this can't be done with Buffer.copy since it doesn't handle overlaps)
+      for (; chunk > 0; chunk--) {
+        writeBuf.writeUInt8(writeBuf.readUInt8(writePtr - offset), writePtr++);
+      }
+    }
+
+    // Append to outputs
+    outputs.push(writeBuf.slice(0, writePtr));
+  }
+
+  // Last byte of output seems to be 0, strip it
+  return Buffer.concat(outputs).slice(0, -1);
+}
+
 const walk = (dir, done) => {
   let results = [];
   fs.readdir(dir, (err, list) => {
@@ -93,7 +191,7 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
         }
 
         if (json instanceof Buffer) {
-          const decodedJson = decoder.write(json);
+          const decodedJson = decoder.write(decompressSave(json));
           if (decodedJson.indexOf('\0') > -1) {
             lastModifiedSave.result = decodedJson.replace(/\0$/, '');
           } else {
@@ -102,6 +200,11 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
         } else if (typeof json === 'string' || json instanceof String) {
           lastModifiedSave.result = json;
         }
+
+        console.log('SAVE DATA', lastModifiedSave.result)
+
+        fs.writeFileSync('./test.json', lastModifiedSave.result)
+
         tryFn(() => {
           lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
           if (lastModifiedSave.result.F2P) {
