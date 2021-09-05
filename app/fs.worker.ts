@@ -201,10 +201,6 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
           lastModifiedSave.result = json;
         }
 
-        console.log('SAVE DATA', lastModifiedSave.result)
-
-        fs.writeFileSync('./test.json', lastModifiedSave.result)
-
         tryFn(() => {
           lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
           if (lastModifiedSave.result.F2P) {
