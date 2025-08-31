@@ -1,3 +1,9 @@
+⚠️ This project is no longer actively maintained.
+
+No Man's Connect served its purpose for several years, but ongoing support and updates are no longer feasible. Reverse engineering changes to the save file format, maintaining backend services, and modernizing dependencies would require more time and effort than I can sustainably give.
+
+If you're interested in reviving or forking it, feel free to do so under the GPLv3 license.
+
 # No Man's Connect
 
 This is a location manager that syncs your current game's coordinates, uploads them to a server, and indexes a list of everyone's coordinates using the app. It also provides a map that plots your coordinates relative to the center of the galaxy.
