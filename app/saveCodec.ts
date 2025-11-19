@@ -5,7 +5,8 @@
  * Based on the Python decoder-encode-nms.py script by Robert Maupin (2021)
  */
 
-import * as lz4 from 'lz4';
+// Use require for CommonJS lz4 module
+const lz4 = require('lz4');
 import * as fs from 'fs';
 import * as path from 'path';
 
