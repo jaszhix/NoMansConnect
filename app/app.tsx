@@ -15,6 +15,7 @@ import {dirSep, getLastGameModeSave, exc, formatBase, fsWorker, ajaxWorker} from
 import {pollSaveData} from './poll';
 import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
 import {parseSaveKeys} from './lang';
+import {compress, unfixIDEncoding} from './saveCodec';
 
 import ErrorBoundary from './errorBoundary';
 import {
@@ -642,16 +643,43 @@ class App extends React.Component<GlobalState> {
     }).catch(baseError);
   }
   _signSaveData = (absoluteSaveDir, slot, cb) => {
-    let command = `${process.platform !== 'win32' ? 'wine ' : ''}"${this.saveTool}" encrypt -g ${slot} -f "${this.saveJSON}" --save-dir "${absoluteSaveDir}"`;
-    console.log(command);
-    exc(command).then((res) => {
-      log.error('Successfully signed save data with nmssavetool.');
-      if (typeof cb === 'function') cb();
-    }).catch((e) => {
-      if (process.platform !== 'win32') {
-        log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?');
+    // Read the JSON save file and compress it
+    fs.readFile(this.saveJSON, 'utf8', (err, jsonData) => {
+      if (err) {
+        log.error('Error reading save JSON file:', err);
+        if (typeof cb === 'function') cb(err);
+        return;
       }
-      log.error('_signSaveData: ', e);
+
+      try {
+        // Convert JSON string to buffer
+        let jsonBuffer = Buffer.from(jsonData, 'utf8');
+        
+        // Unfix ID encoding (convert hex IDs back to binary)
+        jsonBuffer = unfixIDEncoding(jsonBuffer);
+        
+        // Compress the save data
+        const compressed = compress(jsonBuffer);
+        
+        // Determine the save file path based on slot
+        let saveFileName = slot === 0 ? 'save.hg' : `save${slot}.hg`;
+        const savePath = `${absoluteSaveDir}${dirSep}${saveFileName}`;
+        
+        // Write the compressed save file
+        fs.writeFile(savePath, compressed, (writeErr) => {
+          if (writeErr) {
+            log.error('Error writing compressed save file:', writeErr);
+            if (typeof cb === 'function') cb(writeErr);
+            return;
+          }
+          
+          log.error('Successfully compressed and wrote save data.');
+          if (typeof cb === 'function') cb();
+        });
+      } catch (e) {
+        log.error('Error compressing save data:', e);
+        if (typeof cb === 'function') cb(e);
+      }
     });
   }
   signSaveData = (saveData, cb) => {
