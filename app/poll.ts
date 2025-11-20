@@ -205,10 +205,10 @@ let processData = async (opts, saveData, location, refLocation, username, profil
   let image = '';
 
   let currentPosition = {
-    playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
-    playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
-    shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
-    shipTransform: saveData.result.SpawnStateData.ShipTransformAt,
+    playerPosition: saveData.result.BaseContext.SpawnStateData.PlayerPositionInSystem,
+    playerTransform: saveData.result.BaseContext.SpawnStateData.PlayerTransformAt,
+    shipPosition: saveData.result.BaseContext.SpawnStateData.ShipPositionInSystem,
+    shipTransform: saveData.result.BaseContext.SpawnStateData.ShipTransformAt,
   };
   let manuallyEntered = isEqual(defaultPosition, currentPosition);
   assignIn(currentPosition, {
