@@ -6,7 +6,7 @@ import JSZip from 'jszip';
 import {each, rEach, tryFn} from '@jaszhix/utils';
 import {parseSaveKeys} from './lang';
 import log from './log';
-import {decompress, fixIDEncoding} from './saveCodec';
+import {decodeSave} from './saveCodec';
 
 const decoder = new StringDecoder('utf8');
 
@@ -94,38 +94,56 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
         }
 
         if (json instanceof Buffer) {
-          // Decompress and fix ID encoding
-          let decompressed = decompress(json);
-          decompressed = fixIDEncoding(decompressed);
-          
-          const decodedJson = decoder.write(decompressed);
-          if (decodedJson.indexOf('\0') > -1) {
-            lastModifiedSave.result = decodedJson.replace(/\0$/, '');
-          } else {
-            lastModifiedSave.result = decodedJson;
-          }
+          // Decode the save file using the new API
+          decodeSave(json).then(({data, metadata}) => {
+            lastModifiedSave.result = data;
+            lastModifiedSave.metadata = metadata;
+            
+            tryFn(() => {
+              if (lastModifiedSave.result.F2P) {
+                lastModifiedSave.result = parseSaveKeys(lastModifiedSave.result);
+                lastModifiedSave.needsConversion = true;
+              }
+              let {int} = lastModifiedSave;
+              if (lastModifiedSave.result.version <= 4104) {
+                lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
+              } else {
+                lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
+              }
+            }, (err) => {
+              lastModifiedSave.result = null;
+              err.message += `\nThere was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`;
+              cb(err);
+              return;
+            });
+            cb(null, lastModifiedSave);
+          }).catch((decodeErr) => {
+            decodeErr.message = `Failed to decode save file: ${decodeErr.message}`;
+            cb(decodeErr);
+          });
         } else if (typeof json === 'string' || json instanceof String) {
           lastModifiedSave.result = json;
+          
+          tryFn(() => {
+            lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
+            if (lastModifiedSave.result.F2P) {
+              lastModifiedSave.result = parseSaveKeys(lastModifiedSave.result);
+              lastModifiedSave.needsConversion = true;
+            }
+            let {int} = lastModifiedSave;
+            if (lastModifiedSave.result.version <= 4104) {
+              lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
+            } else {
+              lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
+            }
+          }, (err) => {
+            lastModifiedSave.result = null;
+            err.message += `\nThere was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`;
+            cb(err);
+            return;
+          });
+          cb(null, lastModifiedSave);
         }
-
-        tryFn(() => {
-          lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
-          if (lastModifiedSave.result.F2P) {
-            lastModifiedSave.result = parseSaveKeys(lastModifiedSave.result);
-            lastModifiedSave.needsConversion = true;
-          }
-          let {int} = lastModifiedSave;
-          if (lastModifiedSave.result.version <= 4104) {
-            lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
-          } else {
-            lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
-          }
-        }, (err) => {
-          lastModifiedSave.result = null;
-          err.message += `\nThere was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`;
-          cb(err);
-        });
-        cb(null, lastModifiedSave);
       });
     }
 
