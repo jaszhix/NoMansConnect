@@ -79,7 +79,9 @@ export default merge(baseConfig, {
     publicPath,
     before() {
       if (process.env.START_HOT) {
-        spawn('npm', ['run', 'start-hot'], { shell: true, env: process.env, stdio: 'inherit' })
+        const env = {...process.env};
+        delete env.NODE_OPTIONS; // Remove NODE_OPTIONS for Electron
+        spawn('npm', ['run', 'start-hot'], { shell: true, env, stdio: 'inherit' })
           .on('close', code => process.exit(code))
           .on('error', spawnError => console.error(spawnError));
       }

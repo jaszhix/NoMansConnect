@@ -57,6 +57,7 @@ let scssLoaders1 = [
   {
     loader: 'sass-loader',
     options: {
+      implementation: require('sass'),
       sourceMap: true,
       sassOptions: {
         includePaths: [
@@ -81,6 +82,7 @@ let scssLoaders2 = [
   {
     loader: 'sass-loader',
     options: {
+      implementation: require('sass'),
       sourceMap: true,
       sassOptions: {
         includePaths: [
@@ -103,6 +105,10 @@ export default {
   module: {
     rules: [
       {
+        test: /\.node$/,
+        use: 'node-loader'
+      },
+      {
         test: /\.worker\.ts$/,
         use: [
           {
@@ -115,7 +121,7 @@ export default {
       },
       {
         test: /\.(js|jsx|mjs|ts|tsx)$/,
-        exclude: /(node_modules|bower_components)/,
+        exclude: /node_modules\/(?!(lz4-browser|js-xxhash))/,
         use: [
           {
             loader: 'lodash-loader'
@@ -254,5 +260,5 @@ export default {
     new webpack.optimize.ModuleConcatenationPlugin(),
   ],
 
-  externals: Object.keys(externals || {})
+  externals: Object.keys(externals || {}).filter(dep => dep !== 'lz4-browser')
 };

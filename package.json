@@ -287,10 +287,10 @@
     "lodash-webpack-plugin": "^0.11.5",
     "minimist": "^1.2.5",
     "node-loader": "^1.0.2",
-    "node-sass": "^4.14.1",
     "react-addons-test-utils": "^15.6.2",
     "react-test-renderer": "16.14.0",
     "redux-logger": "^3.0.6",
+    "sass": "^1.94.1",
     "sass-loader": "^8.0.2",
     "sinon": "^9.0.2",
     "source-map-loader": "^1.1.1",
@@ -347,10 +347,5 @@
     "vquery": "^5.0.1",
     "watch": "^1.0.2",
     "win-ps": "0.0.1"
-  },
-  "devEngines": {
-    "node": ">=10.x",
-    "npm": ">=6.x",
-    "yarn": ">=1.16.x"
   }
 }
