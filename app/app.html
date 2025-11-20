@@ -1,10 +1,4 @@
-<!doctype html>
-<html>
-
-<head>
-  <meta charset="utf-8">
-  <title>No Man's Connect</title>
-  <script>(function () {
+<!doctype html><html><head><meta charset="utf-8"><title>No Man's Connect</title><script>(function () {
       if (!process.env.HOT) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
@@ -12,12 +6,7 @@
         // HACK: Writing the script path should be done with webpack
         document.getElementsByTagName('head')[0].appendChild(link);
       }
-    }());</script>
-</head>
-
-<body>
-  <div id="app"></div>
-  <script id="surface-vertexShader" type="x-shader/x-vertex">uniform float sunVectorDelta;
+    }());</script></head><body><div id="app"></div><script id="surface-vertexShader" type="x-shader/x-vertex">uniform float sunVectorDelta;
     uniform float sunFragmentDelta;
     varying vec2 vUv;
     varying float randomNum;
@@ -39,8 +28,7 @@
                          vec4(position,1.0);
       vNormal = normalize( normalMatrix * normal );
       vUv = uv;
-    }</script>
-  <script id="surface-fragmentShader" type="x-shader/x-vertex">uniform sampler2D texture1;
+    }</script><script id="surface-fragmentShader" type="x-shader/x-vertex">uniform sampler2D texture1;
     uniform sampler2D textureColor;
     varying vec2 vUv;
     varying vec3 vNormal;
@@ -94,8 +82,7 @@
       desiredColor += colorCorrection;
 
       gl_FragColor = texture2D(texture1, vUv) + texture2D( texture1, uv2 ) - vec4( desiredColor, 1.0 ) * vec4(0.0,randomNum,randomNum,0.0) - vec4(desiredColor, min( max( 1.0 - darkness * ( pow( time, 6.0 ) - intensity ), 0.0 ), 1.0 )) ;
-    }</script>
-  <script>{
+    }</script><script>{
       const scripts = [];
 
       // Dynamically insert the DLL script in development env in the
@@ -117,7 +104,4 @@
           .map(script => '<script defer src="' + script + '"><\/script>')
           .join('')
       );
-    }</script>
-</body>
-
-</html>
+    }</script></body></html>
