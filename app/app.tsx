@@ -848,7 +848,7 @@ class App extends React.Component<GlobalState> {
         saveData.result.SpawnStateData.LastKnownPlayerState = 'InShip';
       }
 
-      assignIn(saveData.result.SpawnStateData, {
+      assignIn(saveData.result.BaseContext.SpawnStateData, {
         PlayerPositionInSystem: _location.playerPosition,
         PlayerTransformAt: _location.playerTransform,
         ShipPositionInSystem: _location.shipPosition,
