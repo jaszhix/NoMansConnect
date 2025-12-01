@@ -197,7 +197,7 @@ let processData = async (opts, saveData, location, refLocation, username, profil
 
   let refFav = findIndex(favorites || [], (fav) => fav === location.dataId);
   let upvote = refFav !== -1;
-  let {PlanetIndex} = saveData.result.PlayerStateData.UniverseAddress.GalacticAddress;
+  let {PlanetIndex} = saveData.result.BaseContext.PlayerStateData.UniverseAddress.GalacticAddress;
   let shouldCaptureScreenshot = !init
     && NMSRunning
     && state.autoCapture
@@ -205,10 +205,10 @@ let processData = async (opts, saveData, location, refLocation, username, profil
   let image = '';
 
   let currentPosition = {
-    playerPosition: saveData.result.SpawnStateData.PlayerPositionInSystem,
-    playerTransform: saveData.result.SpawnStateData.PlayerTransformAt,
-    shipPosition: saveData.result.SpawnStateData.ShipPositionInSystem,
-    shipTransform: saveData.result.SpawnStateData.ShipTransformAt,
+    playerPosition: saveData.result.BaseContext.SpawnStateData.PlayerPositionInSystem,
+    playerTransform: saveData.result.BaseContext.SpawnStateData.PlayerTransformAt,
+    shipPosition: saveData.result.BaseContext.SpawnStateData.ShipPositionInSystem,
+    shipTransform: saveData.result.BaseContext.SpawnStateData.ShipTransformAt,
   };
   let manuallyEntered = isEqual(defaultPosition, currentPosition);
   assignIn(currentPosition, {
@@ -223,7 +223,7 @@ let processData = async (opts, saveData, location, refLocation, username, profil
     assignIn(location, {
       username,
       positions: [currentPosition],
-      galaxy: saveData.result.PlayerStateData.UniverseAddress.RealityIndex,
+      galaxy: saveData.result.BaseContext.PlayerStateData.UniverseAddress.RealityIndex,
       distanceToCenter: calculateDistanceToCenter(location.VoxelX, location.VoxelY, location.VoxelZ),
       base: false,
       baseData: null,
@@ -295,7 +295,7 @@ let processData = async (opts, saveData, location, refLocation, username, profil
   }
 
   // Detect player bases
-  each(saveData.result.PlayerStateData.PersistentPlayerBases, (base, i) => {
+  each(saveData.result.BaseContext.PlayerStateData.PersistentPlayerBases, (base, i) => {
     if (!base || !base.BaseType) return;
 
     let galacticAddress;
@@ -320,7 +320,7 @@ let processData = async (opts, saveData, location, refLocation, username, profil
     if (refStoredLocation && (!refStoredLocation.base || !refStoredLocation.baseData)) {
       Object.assign(refStoredLocation, {
         base: true,
-        baseData: formatBase(saveData.result.PlayerStateData.PersistentPlayerBases[i]),
+        baseData: formatBase(saveData.result.BaseContext.PlayerStateData.PersistentPlayerBases[i]),
       });
 
       updateLocation({
@@ -444,7 +444,7 @@ let getLastSave = (opts) => {
     console.log('SAVE DATA: ', saveData)
     let refLocation: number, location, username;
     if (!state.ps4User) {
-      location = formatID(saveData.result.PlayerStateData.UniverseAddress);
+      location = formatID(saveData.result.BaseContext.PlayerStateData.UniverseAddress);
       delete location.RealityIndex;
       refLocation = findIndex(state.storedLocations, (item) => item && item.dataId === location.dataId);
       if (!state.username || state.username === 'Explorer') {

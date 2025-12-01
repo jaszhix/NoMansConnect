@@ -452,6 +452,62 @@ declare global {
     PlayerStateData: PlayerStateData;
     SpawnStateData: SpawnStateData;
     Version: number;
+    ActiveContext: string;
+    CommonStateData: {
+      SaveName: string;
+      TotalPlayTime: number;
+      UsesThirdPersonCharacterCam: boolean;
+      UsesThirdPersonVehicleCam: boolean;
+      UsesThirdPersonShipCam: boolean;
+      PhotoModeSettings: {
+        Fog: number;
+        CloudAmount: number;
+        SunDir: number[];
+        FoV: number;
+        DepthOfFieldSetting: string;
+      };
+      ByteBeatLibrary: {
+        MySongs: string[];
+        Playlist: string[];
+        Shuffle: boolean;
+        AutoplayOnFoot: boolean;
+        AutoplayInShip: boolean;
+      };
+    };
+    SeasonData: {
+      SeasonId: number;
+      StartTimeUTC: number;
+      EndTimeUTC: number;
+      Hash: number;
+      Title: string;
+    };
+    SeasonState: {
+      MilestoneValues: number[];
+      RewardCollected: number[];
+      PinnedStage: number;
+      PinnedMilestone: number;
+      RendezvousUAs: number[];
+    };
+    SeasonTransferInventoryData: {
+      SeasonId: number;
+      Layout: {
+        [key: string]: number;
+      };
+      Inventory: {
+        [key: string]: number;
+      };
+    };  
+    EarnedSeasonSpecialRewards: number[];
+    SaveUniversalId: string;
+    UsedPlatforms: string[];
+    UsedDiscoveryOwnersV2: {
+      [key: string]: number;
+    };
+    BaseContext: {
+      GameMode: number;
+      PlayerStateData: PlayerStateData;
+      SpawnStateData: SpawnStateData;
+    };
   }
 
   interface SaveDataMeta {

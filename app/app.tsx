@@ -15,6 +15,7 @@ import {dirSep, getLastGameModeSave, exc, formatBase, fsWorker, ajaxWorker} from
 import {pollSaveData} from './poll';
 import {handleWallpaper, handleUpgrade, baseError, handleSaveDataFailure} from './dialog';
 import {parseSaveKeys} from './lang';
+import {encodeSave} from './saveCodec';
 
 import ErrorBoundary from './errorBoundary';
 import {
@@ -605,7 +606,7 @@ class App extends React.Component<GlobalState> {
     state.set({navLoad: true});
 
     getLastGameModeSave(this.state.saveDirectory, this.state.ps4User).then((saveData: SaveDataMeta) => {
-      const {PersistentPlayerBases} = saveData.result.PlayerStateData;
+      const {PersistentPlayerBases} = saveData.result.BaseContext.PlayerStateData;
 
       if (baseData) {
         let index = findIndex(storedBases, (item) => item.Name === baseData.Name);
@@ -623,7 +624,7 @@ class App extends React.Component<GlobalState> {
         return;
       }
 
-      each(saveData.result.PlayerStateData.PersistentPlayerBases, (base: NMSBase) => {
+      each(saveData.result.BaseContext.PlayerStateData.PersistentPlayerBases, (base: NMSBase) => {
         if (!base.GalacticAddress || !base.Name) {
           return;
         }
@@ -642,16 +643,48 @@ class App extends React.Component<GlobalState> {
     }).catch(baseError);
   }
   _signSaveData = (absoluteSaveDir, slot, cb) => {
-    let command = `${process.platform !== 'win32' ? 'wine ' : ''}"${this.saveTool}" encrypt -g ${slot} -f "${this.saveJSON}" --save-dir "${absoluteSaveDir}"`;
-    console.log(command);
-    exc(command).then((res) => {
-      log.error('Successfully signed save data with nmssavetool.');
-      if (typeof cb === 'function') cb();
-    }).catch((e) => {
-      if (process.platform !== 'win32') {
-        log.error('Unable to re-encrypt the metadata file with nmssavetool.exe. Do you have Wine with the Mono runtime installed?');
+    // Read the save cache file
+    fs.readFile(this.saveJSON, 'utf8', (err, cacheData) => {
+      if (err) {
+        log.error('Error reading save cache file:', err);
+        if (typeof cb === 'function') cb(err);
+        return;
       }
-      log.error('_signSaveData: ', e);
+
+      try {
+        // Parse the cache file which contains both data and metadata
+        const cache = JSON.parse(cacheData);
+        const data = cache.data || cache; // Backward compatibility
+        const metadata = cache.metadata;
+        
+        if (!metadata) {
+          log.error('Error: Save cache missing metadata. Cannot encode save file.');
+          if (typeof cb === 'function') cb(new Error('Missing metadata'));
+          return;
+        }
+        
+        // Encode the save data using the new API
+        const compressed = encodeSave(data, metadata);
+        
+        // Determine the save file path based on slot
+        let saveFileName = slot === 0 ? 'save.hg' : `save${slot}.hg`;
+        const savePath = `${absoluteSaveDir}${dirSep}${saveFileName}`;
+        
+        // Write the compressed save file
+        fs.writeFile(savePath, compressed, (writeErr) => {
+          if (writeErr) {
+            log.error('Error writing compressed save file:', writeErr);
+            if (typeof cb === 'function') cb(writeErr);
+            return;
+          }
+          
+          log.error('Successfully encoded and wrote save data.');
+          if (typeof cb === 'function') cb();
+        });
+      } catch (e) {
+        log.error('Error encoding save data:', e);
+        if (typeof cb === 'function') cb(e);
+      }
     });
   }
   signSaveData = (saveData, cb) => {
@@ -665,7 +698,13 @@ class App extends React.Component<GlobalState> {
       saveData.result = parseSaveKeys(saveData.result, true);
     }
 
-    fsWorker.writeFile(this.saveJSON, JSON.stringify(saveData.result), {flag : 'w'}, (err, data) => {
+    // Store both data and metadata in the cache file
+    const cacheData = {
+      data: saveData.result,
+      metadata: saveData.metadata
+    };
+
+    fsWorker.writeFile(this.saveJSON, JSON.stringify(cacheData), {flag : 'w'}, (err, data) => {
       if (err) {
         log.error('Error occurred while attempting to write save file cache:');
         log.error(err);
@@ -695,7 +734,7 @@ class App extends React.Component<GlobalState> {
   handleRestoreBase = (base, confirmed = false) => {
     state.set({navLoad: true});
     getLastGameModeSave(this.state.saveDirectory, this.state.ps4User).then((saveData: SaveDataMeta) => {
-      const {PersistentPlayerBases} = saveData.result.PlayerStateData
+      const {PersistentPlayerBases} = saveData.result.BaseContext.PlayerStateData
       if (confirmed === false) {
         state.set({
           displayBaseRestoration: {
@@ -787,7 +826,7 @@ class App extends React.Component<GlobalState> {
         storedBase.Objects[i].Position = math.multiply(M, object.Position)._data;
       });
 
-      saveData.result.PlayerStateData.PersistentPlayerBases[refIndex].Objects = storedBase.Objects;
+      saveData.result.BaseContext.PlayerStateData.PersistentPlayerBases[refIndex].Objects = storedBase.Objects;
 
       this.signSaveData(saveData, () => state.set({displayBaseRestoration: null, navLoad: false}));
     }).catch((err) => {
@@ -809,14 +848,14 @@ class App extends React.Component<GlobalState> {
         saveData.result.SpawnStateData.LastKnownPlayerState = 'InShip';
       }
 
-      assignIn(saveData.result.SpawnStateData, {
+      assignIn(saveData.result.BaseContext.SpawnStateData, {
         PlayerPositionInSystem: _location.playerPosition,
         PlayerTransformAt: _location.playerTransform,
         ShipPositionInSystem: _location.shipPosition,
         ShipTransformAt: _location.shipTransform
       });
 
-      assignIn(saveData.result.PlayerStateData.UniverseAddress.GalacticAddress, {
+      assignIn(saveData.result.BaseContext.PlayerStateData.UniverseAddress.GalacticAddress, {
         PlanetIndex: _location.PlanetIndex,
         SolarSystemIndex: _location.SolarSystemIndex,
         VoxelX: _location.VoxelX,
@@ -828,7 +867,7 @@ class App extends React.Component<GlobalState> {
         saveData.result = utils[action](saveData, n);
       }
 
-      saveData.result.PlayerStateData.UniverseAddress.RealityIndex = _location.galaxy;
+      saveData.result.BaseContext.PlayerStateData.UniverseAddress.RealityIndex = _location.galaxy;
 
       this.signSaveData(saveData, () => {
         state.set({currentLocation: _location.dataId});

@@ -284,23 +284,23 @@ export const getLastGameModeSave = (saveDirectory: string, ps4User: boolean): Pr
 };
 
 export const repairInventory = (saveData) => {
-  let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
-  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
-    saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].DamageFactor = 0;
+  let primaryShipIndex = saveData.result.BaseContext.PlayerStateData.PrimaryShip;
+  each(saveData.result.BaseContext.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
+    saveData.result.BaseContext.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].DamageFactor = 0;
   });
 
-  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i) => {
-    saveData.result.PlayerStateData.Inventory.Slots[i].DamageFactor = 0;
+  each(saveData.result.BaseContext.PlayerStateData.Inventory.Slots, (slot, i) => {
+    saveData.result.BaseContext.PlayerStateData.Inventory.Slots[i].DamageFactor = 0;
   });
 
-  each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i) => {
-    saveData.result.PlayerStateData.WeaponInventory.Slots[i].DamageFactor = 0;
+  each(saveData.result.BaseContext.PlayerStateData.WeaponInventory.Slots, (slot, i) => {
+    saveData.result.BaseContext.PlayerStateData.WeaponInventory.Slots[i].DamageFactor = 0;
   });
   return saveData.result;
 };
 
 export const refuelEnergy = (saveData) => {
-  let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
+  let primaryShipIndex = saveData.result.BaseContext.PlayerStateData.PrimaryShip;
   let refillableTech = [
     // Suit inventory
     '^PROTECT',
@@ -332,51 +332,51 @@ export const refuelEnergy = (saveData) => {
     '^GRENADE'
   ];
 
-  saveData.result.PlayerStateData.ShipHealth = 8;
-  saveData.result.PlayerStateData.ShipShield = 200;
-  saveData.result.PlayerStateData.Health = 8;
-  saveData.result.PlayerStateData.Energy = 100;
-  saveData.result.PlayerStateData.Shield = 100;
-  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
+  saveData.result.BaseContext.PlayerStateData.ShipHealth = 8;
+  saveData.result.BaseContext.PlayerStateData.ShipShield = 200;
+  saveData.result.BaseContext.PlayerStateData.Health = 8;
+  saveData.result.BaseContext.PlayerStateData.Energy = 100;
+  saveData.result.BaseContext.PlayerStateData.Shield = 100;
+  each(saveData.result.BaseContext.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Technology' && refillableTech.indexOf(slot.Id) !== -1) {
-      saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].Amount = slot.MaxAmount;
+      saveData.result.BaseContext.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
-  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i) => {
+  each(saveData.result.BaseContext.PlayerStateData.Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Technology' && refillableTech.indexOf(slot.Id) !== -1) {
-      saveData.result.PlayerStateData.Inventory.Slots[i].Amount = slot.MaxAmount;
+      saveData.result.BaseContext.PlayerStateData.Inventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
-  each(saveData.result.PlayerStateData.WeaponInventory.Slots, (slot, i) => {
+  each(saveData.result.BaseContext.PlayerStateData.WeaponInventory.Slots, (slot, i) => {
     if (refillableTech.indexOf(slot.Id) !== -1) {
-      saveData.result.PlayerStateData.WeaponInventory.Slots[i].Amount = slot.MaxAmount;
+      saveData.result.BaseContext.PlayerStateData.WeaponInventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
   return saveData.result;
 };
 
 export const stockInventory = (saveData) => {
-  let primaryShipIndex = saveData.result.PlayerStateData.PrimaryShip;
-  each(saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
+  let primaryShipIndex = saveData.result.BaseContext.PlayerStateData.PrimaryShip;
+  each(saveData.result.BaseContext.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
-      saveData.result.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].Amount = slot.MaxAmount;
+      saveData.result.BaseContext.PlayerStateData.ShipOwnership[primaryShipIndex].Inventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
-  each(saveData.result.PlayerStateData.Inventory.Slots, (slot, i) => {
+  each(saveData.result.BaseContext.PlayerStateData.Inventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
-      saveData.result.PlayerStateData.Inventory.Slots[i].Amount = slot.MaxAmount;
+      saveData.result.BaseContext.PlayerStateData.Inventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
-  each(saveData.result.PlayerStateData.FreighterInventory.Slots, (slot, i) => {
+  each(saveData.result.BaseContext.PlayerStateData.FreighterInventory.Slots, (slot, i) => {
     if (slot.Type.InventoryType === 'Product' || slot.Type.InventoryType === 'Substance') {
-      saveData.result.PlayerStateData.FreighterInventory.Slots[i].Amount = slot.MaxAmount;
+      saveData.result.BaseContext.PlayerStateData.FreighterInventory.Slots[i].Amount = slot.MaxAmount;
     }
   });
   return saveData.result;
 };
 
 export const modifyUnits = (saveData, n=100000) => {
-  saveData.result.PlayerStateData.Units += n;
+  saveData.result.BaseContext.PlayerStateData.Units += n;
   return saveData.result;
 };
 

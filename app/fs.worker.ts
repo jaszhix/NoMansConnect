@@ -6,106 +6,9 @@ import JSZip from 'jszip';
 import {each, rEach, tryFn} from '@jaszhix/utils';
 import {parseSaveKeys} from './lang';
 import log from './log';
+import {decodeSave} from './saveCodec';
 
 const decoder = new StringDecoder('utf8');
-
-/**
- * Helper for reading variable length sizes
- * @param data buffer to read from
- * @param start start position
- * @param val initial value from tokne
- * @returns decoded length and new read position
- */
- function readLength(
-  data: Buffer,
-  start: number,
-  val: number
-): [number, number] {
-  if (val < 15) return [val, start]; // Nothing to read
-
-  let pos = start;
-  let res = val;
-  let tmp = 0;
-
-  do {
-    tmp = data.readUInt8(pos++);
-    res += tmp;
-  } while (tmp === 255);
-  return [res, pos];
-}
-
-/*
-  Originally authored by bdew
-  https://gist.github.com/bdew/69252923b4abdffd5b825b70756a5800
-*/
-
-function decompressSave(data: Buffer): Buffer {
-  const outputs: Buffer[] = []; // Array of decompressed buffers
-  let readPtr = 0; // Current read position
-
-  while (readPtr < data.length) {
-    // Check magic number
-    if (data.readUInt32LE(readPtr) !== 0xfeeda1e5)
-      throw new Error(`Missing magic number at ${readPtr}`);
-
-    // Read header
-
-    const compSize = data.readInt32LE(readPtr + 4); // Compressed data size
-    const buffSize = data.readInt32LE(readPtr + 8); // Output size
-    readPtr += 16; // 4 bytes unknown (always 0?)
-
-    const blockEnd = readPtr + compSize; // End of current block in fiel
-    const writeBuf = Buffer.alloc(buffSize); // Output buffer
-
-    let chunk = 0; // Size of current chunk
-    let offset = 0; // Copy operation offset
-    let writePtr = 0; // Output buffer position
-
-    while (readPtr < blockEnd) {
-      // Read token
-      const token = data.readUInt8(readPtr++);
-
-      // Decode data length
-      [chunk, readPtr] = readLength(data, readPtr, token >> 4);
-
-      // Check overflow
-      if (writePtr + chunk > buffSize) {
-        throw new Error('Output buffer overflow');
-      }
-
-      // Copy data to output
-      data.copy(writeBuf, writePtr, readPtr, readPtr + chunk);
-      writePtr += chunk;
-      readPtr += chunk;
-
-      // If we aren't at the end - read offset for copy
-      if (readPtr < blockEnd) {
-        offset = data.readUInt16LE(readPtr);
-        readPtr += 2;
-      } else break;
-
-      // Decode copy length
-      [chunk, readPtr] = readLength(data, readPtr, token & 15);
-      chunk += 4;
-
-      // Check overflow
-      if (writePtr + chunk > buffSize) {
-        throw new Error('Output buffer overflow');
-      }
-
-      // Do copy (this can't be done with Buffer.copy since it doesn't handle overlaps)
-      for (; chunk > 0; chunk--) {
-        writeBuf.writeUInt8(writeBuf.readUInt8(writePtr - offset), writePtr++);
-      }
-    }
-
-    // Append to outputs
-    outputs.push(writeBuf.slice(0, writePtr));
-  }
-
-  // Last byte of output seems to be 0, strip it
-  return Buffer.concat(outputs).slice(0, -1);
-}
 
 const walk = (dir, done) => {
   let results = [];
@@ -191,34 +94,56 @@ const getLastGameModeSave = (saveDirectory, ps4User, cb) => {
         }
 
         if (json instanceof Buffer) {
-          const decodedJson = decoder.write(decompressSave(json));
-          if (decodedJson.indexOf('\0') > -1) {
-            lastModifiedSave.result = decodedJson.replace(/\0$/, '');
-          } else {
-            lastModifiedSave.result = decodedJson;
-          }
+          // Decode the save file using the new API
+          decodeSave(json).then(({data, metadata}) => {
+            lastModifiedSave.result = data;
+            lastModifiedSave.metadata = metadata;
+            
+            tryFn(() => {
+              if (lastModifiedSave.result.F2P) {
+                lastModifiedSave.result = parseSaveKeys(lastModifiedSave.result);
+                lastModifiedSave.needsConversion = true;
+              }
+              let {int} = lastModifiedSave;
+              if (lastModifiedSave.result.version <= 4104) {
+                lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
+              } else {
+                lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
+              }
+            }, (err) => {
+              lastModifiedSave.result = null;
+              err.message += `\nThere was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`;
+              cb(err);
+              return;
+            });
+            cb(null, lastModifiedSave);
+          }).catch((decodeErr) => {
+            decodeErr.message = `Failed to decode save file: ${decodeErr.message}`;
+            cb(decodeErr);
+          });
         } else if (typeof json === 'string' || json instanceof String) {
           lastModifiedSave.result = json;
+          
+          tryFn(() => {
+            lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
+            if (lastModifiedSave.result.F2P) {
+              lastModifiedSave.result = parseSaveKeys(lastModifiedSave.result);
+              lastModifiedSave.needsConversion = true;
+            }
+            let {int} = lastModifiedSave;
+            if (lastModifiedSave.result.version <= 4104) {
+              lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
+            } else {
+              lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
+            }
+          }, (err) => {
+            lastModifiedSave.result = null;
+            err.message += `\nThere was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`;
+            cb(err);
+            return;
+          });
+          cb(null, lastModifiedSave);
         }
-
-        tryFn(() => {
-          lastModifiedSave.result = JSON.parse(lastModifiedSave.result);
-          if (lastModifiedSave.result.F2P) {
-            lastModifiedSave.result = parseSaveKeys(lastModifiedSave.result);
-            lastModifiedSave.needsConversion = true;
-          }
-          let {int} = lastModifiedSave;
-          if (lastModifiedSave.result.version <= 4104) {
-            lastModifiedSave.slot = int > 8 ? 4 : int > 5 ? 3 : int > 2 ? 2 : 1;
-          } else {
-            lastModifiedSave.slot = int > 7 ? 5 : int > 5 ? 4 : int > 3 ? 3 : int > 1 ? 2 : 1
-          }
-        }, (err) => {
-          lastModifiedSave.result = null;
-          err.message += `\nThere was an error parsing your last modified save file. Please verify the integrity of ${lastModifiedSave.path}`;
-          cb(err);
-        });
-        cb(null, lastModifiedSave);
       });
     }
 
