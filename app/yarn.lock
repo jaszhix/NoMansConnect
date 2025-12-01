@@ -2,3 +2,39 @@
 # yarn lockfile v1
 
 
+"base64-js@^1.3.1":
+  "integrity" "sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA=="
+  "resolved" "https://registry.npmjs.org/base64-js/-/base64-js-1.5.1.tgz"
+  "version" "1.5.1"
+
+"buffer@^6.0.3":
+  "integrity" "sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA=="
+  "resolved" "https://registry.npmjs.org/buffer/-/buffer-6.0.3.tgz"
+  "version" "6.0.3"
+  dependencies:
+    "base64-js" "^1.3.1"
+    "ieee754" "^1.2.1"
+
+"cuint@^0.2.2":
+  "integrity" "sha512-d4ZVpCW31eWwCMe1YT3ur7mUDnTXbgwyzaL320DrcRT45rfjYxkt5QWLrmOJ+/UEAI2+fQgKe/fCjR8l4TpRgw=="
+  "resolved" "https://registry.npmjs.org/cuint/-/cuint-0.2.2.tgz"
+  "version" "0.2.2"
+
+"ieee754@^1.2.1":
+  "integrity" "sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA=="
+  "resolved" "https://registry.npmjs.org/ieee754/-/ieee754-1.2.1.tgz"
+  "version" "1.2.1"
+
+"js-xxhash@^5.0.1":
+  "integrity" "sha512-OGuTCR9wqYqF2FrhjtGb6fx8Rm1jzhdpUEsY2sLkXbNYLzOS+XWcYT4KTUL7vnaRTmBuGuVpW1AK2zzxjgZXGg=="
+  "resolved" "https://registry.npmjs.org/js-xxhash/-/js-xxhash-5.0.1.tgz"
+  "version" "5.0.1"
+
+"lz4-browser@^1.4.0":
+  "integrity" "sha512-r3L65HW0CWqtmjp94hz8ykyfavZ2qwdm86Qy9R6bP0Odga0PxcUwQs4QHQJl5E3Mn153YbAiT65QlF2nMs0yhQ=="
+  "resolved" "https://registry.npmjs.org/lz4-browser/-/lz4-browser-1.4.0.tgz"
+  "version" "1.4.0"
+  dependencies:
+    "buffer" "^6.0.3"
+    "cuint" "^0.2.2"
+    "js-xxhash" "^5.0.1"

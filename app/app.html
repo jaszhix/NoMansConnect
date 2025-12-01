@@ -1,24 +1,12 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>No Man's Connect</title>
-    <script>
-      (function() {
-        if (!process.env.HOT) {
-          const link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.href = './dist/style.css';
-          // HACK: Writing the script path should be done with webpack
-          document.getElementsByTagName('head')[0].appendChild(link);
-        }
-      }());
-    </script>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script id="surface-vertexShader" type="x-shader/x-vertex">
-    uniform float sunVectorDelta;
+<!doctype html><html><head><meta charset="utf-8"><title>No Man's Connect</title><script>(function () {
+      if (!process.env.HOT) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = './dist/style.css';
+        // HACK: Writing the script path should be done with webpack
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+    }());</script></head><body><div id="app"></div><script id="surface-vertexShader" type="x-shader/x-vertex">uniform float sunVectorDelta;
     uniform float sunFragmentDelta;
     varying vec2 vUv;
     varying float randomNum;
@@ -40,11 +28,7 @@
                          vec4(position,1.0);
       vNormal = normalize( normalMatrix * normal );
       vUv = uv;
-    }
-    </script>
-    <!-- fragment shader a.k.a. pixel shader -->
-    <script id="surface-fragmentShader" type="x-shader/x-vertex">
-    uniform sampler2D texture1;
+    }</script><script id="surface-fragmentShader" type="x-shader/x-vertex">uniform sampler2D texture1;
     uniform sampler2D textureColor;
     varying vec2 vUv;
     varying vec3 vNormal;
@@ -98,32 +82,26 @@
       desiredColor += colorCorrection;
 
       gl_FragColor = texture2D(texture1, vUv) + texture2D( texture1, uv2 ) - vec4( desiredColor, 1.0 ) * vec4(0.0,randomNum,randomNum,0.0) - vec4(desiredColor, min( max( 1.0 - darkness * ( pow( time, 6.0 ) - intensity ), 0.0 ), 1.0 )) ;
-    }
-    </script>
-    <script>
-      {
-        const scripts = [];
+    }</script><script>{
+      const scripts = [];
 
-        // Dynamically insert the DLL script in development env in the
-        // renderer process
-        if (process.env.NODE_ENV === 'development') {
-          scripts.push('../dll/vendor.dll.js');
-        }
-
-        // Dynamically insert the bundled app script in the renderer process
-        const port = 3940;
-        scripts.push(
-          (process.env.HOT)
-            ? 'http://localhost:' + port + '/dist/bundle.js'
-            : './dist/bundle.js'
-        );
-
-        document.write(
-          scripts
-            .map(script => '<script defer src="' + script + '"><\/script>')
-            .join('')
-        );
+      // Dynamically insert the DLL script in development env in the
+      // renderer process
+      if (process.env.NODE_ENV === 'development') {
+        scripts.push('../dll/vendor.dll.js');
       }
-    </script>
-  </body>
-</html>
+
+      // Dynamically insert the bundled app script in the renderer process
+      const port = 3940;
+      scripts.push(
+        (process.env.HOT)
+          ? 'http://localhost:' + port + '/dist/bundle.js'
+          : './dist/bundle.js'
+      );
+
+      document.write(
+        scripts
+          .map(script => '<script defer src="' + script + '"><\/script>')
+          .join('')
+      );
+    }</script></body></html>
